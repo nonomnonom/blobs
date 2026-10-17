@@ -22,12 +22,65 @@ from evaluation.answers.compare_runs import compare as compare_answer_runs
 from evaluation.native.audit_native_prefill import audit as audit_native_prefill
 from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
+from evaluation.native.compare_native_smoke import compare as compare_native_smoke
 from evaluation.retrieval.host_replay import retrieval_query, select_evidence
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
 from evaluation.retrieval.title_coverage import inspect as inspect_titles
 
 
 class EvaluationInputTests(unittest.TestCase):
+    def test_native_smoke_comparison_requires_repeated_paired_device_evidence(self):
+        def report(model_sha, model_bytes, total_us, run_sha):
+            return dict(
+                format=1, complete=True,
+                checks={'exact_model_identity': True, 'installed_app_identity': True},
+                model={'bytes': model_bytes, 'sha256': model_sha},
+                application={'apk_sha256': 'a' * 64, 'test_apk_sha256': 'b' * 64},
+                device_fingerprint='emulator-fingerprint',
+                inputs={'run': {'file': 'run.json', 'sha256': run_sha}},
+                observations={'raw_answer': 'Answer [1].', 'answer_metrics': {
+                    'total_us': total_us, 'first_token_callback_us': 600_000,
+                    'prefill_us': 500_000, 'model_load_us': 100_000,
+                    'generation_loop_us': 300_000, 'prompt_tokens': 54,
+                    'output_tokens': 12,
+                }},
+            )
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            baseline, candidate = [], []
+            for index, total in enumerate((900_000, 1_000_000, 1_100_000)):
+                path = root / f'baseline-{index}.json'
+                path.write_text(json.dumps(report('c' * 64, 100, total, str(index) * 64)), encoding='utf-8')
+                baseline.append(path)
+            for index, total in enumerate((1_000_000, 1_100_000, 1_200_000)):
+                path = root / f'candidate-{index}.json'
+                path.write_text(json.dumps(report('d' * 64, 90, total, chr(97 + index) * 64)), encoding='utf-8')
+                candidate.append(path)
+            runtime = root / 'runtime.json'
+            runtime.write_text(json.dumps({'commit': 'pinned'}), encoding='utf-8')
+
+            result = compare_native_smoke(baseline, candidate, runtime)
+            self.assertEqual(result['baseline']['median']['total_ms'], 1000)
+            self.assertEqual(result['candidate']['median']['total_ms'], 1100)
+            self.assertAlmostEqual(result['candidate_vs_baseline_percent']['total_latency'], 10)
+
+            mutated = json.loads(candidate[-1].read_text(encoding='utf-8'))
+            mutated['device_fingerprint'] = 'different-emulator'
+            candidate[-1].write_text(json.dumps(mutated), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'same identified device'):
+                compare_native_smoke(baseline, candidate, runtime)
+
+    def test_native_smoke_comparison_requires_three_runs_per_model(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            run = root / 'one.json'
+            run.write_text('{}', encoding='utf-8')
+            runtime = root / 'runtime.json'
+            runtime.write_text(json.dumps({'commit': 'pinned'}), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'at least three'):
+                compare_native_smoke([run], [run], runtime)
+
     def test_answer_run_comparison_requires_identical_evidence_and_reports_mechanical_ids(self):
         common = dict(
             format=1, complete=True, runtime_commit='pinned', server_sha256='a' * 64,

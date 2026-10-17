@@ -24,6 +24,18 @@ Write local run output under `reports/`; that directory is ignored by Git. Do no
 
 Mechanical checks can validate source-ID syntax, supplied-source bounds, retrieval ordering, and configured thresholds. They do not establish factual support by themselves. Review claim-to-source support, contradiction, insufficiency handling, and misleading citation placement before promoting a model or prompt.
 
+For an Android native model smoke comparison, stage each locked GGUF with `native/stage_android_model.py`, run `NativeInferenceTest#realModelStreamsAndCancellationStopsNativeLoop` at least three times per model, and validate every raw run with `native/audit_native_smoke.py`. Then compare the audited reports:
+
+```powershell
+uv run --locked python -m evaluation.native.compare_native_smoke `
+  --baseline-audit reports/runs/baseline-1-audit.json reports/runs/baseline-2-audit.json reports/runs/baseline-3-audit.json `
+  --candidate-audit reports/runs/candidate-1-audit.json reports/runs/candidate-2-audit.json reports/runs/candidate-3-audit.json `
+  --runtime-lock ..\android\third_party\llama.lock.json `
+  --output reports/runs/native-model-comparison.json
+```
+
+The comparator requires identical app/test APK hashes, device fingerprint, and prompt token count. It reports median and range for model load, prefill, first token, total latency, and decode rate. Its fixed native smoke prompt is only a compatibility/latency probe; it does not rank grounded answer quality or predict phone performance. Keep broader RAG answer runs and source-level reviews separate.
+
 For a controlled prompt comparison, `answers/compare_runs.py` requires complete runs with the same pinned model, runtime, sampler, questions, and retrieved evidence. It reports answer text, mechanical citation-ID validity, and host latency; it does not score factual support. Example:
 
 ```powershell
