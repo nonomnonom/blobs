@@ -227,6 +227,7 @@ class PackageTests(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text('public source fixture', encoding='utf-8')
             for name in [
+                'android/.git/config',
                 'android/packages/library.blobs',
                 'android/.local/signing/key.jks',
                 'corpus/work/checkpoint.json',
@@ -259,6 +260,7 @@ class PackageTests(unittest.TestCase):
                 self.assertNotIn('blobs/AGENTS.md', names)
                 self.assertNotIn('blobs/DESIGN.md', names)
                 self.assertNotIn('blobs/UX-RESEARCH.md', names)
+                self.assertFalse(any(name.startswith('blobs/android/.git/') for name in names))
                 self.assertFalse(any(name.startswith(('blobs/android/packages/', 'blobs/android/.local/', 'blobs/corpus/work/', 'blobs/corpus/artifacts/')) for name in names))
                 self.assertFalse(any(name.endswith(('.jks', '.keystore', '.gguf')) for name in names))
             with self.assertRaises(FileExistsError):

@@ -43,7 +43,7 @@ def verification_guide(version, source_name):
 
 
 def write_source_archive(output):
-    excluded = {'.local', '.gradle', '.kotlin', '.idea', '.cxx', 'build', 'reports',
+    excluded = {'.git', '.local', '.gradle', '.kotlin', '.idea', '.cxx', 'build', 'reports',
                 '__pycache__', 'node_modules', 'evidence', '.venv', '.cache'}
     generated = {ROOT / 'packages', ROOT / 'release', ROOT.parent / 'corpus/work',
                  ROOT.parent / 'corpus/artifacts'}
