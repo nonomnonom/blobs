@@ -89,24 +89,51 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFile
         if (work.pendingImport != null || (work.busy && work.total > 0)) {
             PrimaryAction(R.string.view_import) { model.navigate(Page.IMPORT) }
         } else {
-            PrimaryAction(R.string.add_package, !work.busy, pickFile)
+            val missingModel = packages.none { it.kind == "model" }
+            val missingLibrary = packages.none { it.kind == "library" }
+            if (missingModel) {
+                PrimaryAction(R.string.download_model, !work.busy) {
+                    model.downloadPackage(model.catalog.recommendedModel)
+                }
+            } else if (missingLibrary) {
+                PrimaryAction(R.string.download_library, !work.busy) {
+                    model.downloadPackage(model.catalog.starterLibrary)
+                }
+            }
+            if (missingModel || missingLibrary) {
+                TextButton(
+                    onClick = pickFile,
+                    enabled = !work.busy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.have_local_packages))
+                }
+                Body(R.string.setup_download_note)
+            }
         }
         MenuRow(
-            if (packages.any { it.kind == "model" }) R.string.models else R.string.model_needed,
+            if (packages.any {
+                    it.kind == "model"
+                }
+            ) {
+                R.string.model_ready
+            } else {
+                R.string.model_needed
+            },
             packages.firstOrNull { it.kind == "model" }?.title
-                ?: stringResource(R.string.model_description)
+                ?: stringResource(R.string.model_download_description)
         ) { model.navigate(Page.MODELS) }
         MenuRow(
             if (packages.any {
                     it.kind == "library"
                 }
             ) {
-                R.string.library
+                R.string.library_ready
             } else {
                 R.string.library_needed
             },
             packages.firstOrNull { it.kind == "library" }?.title
-                ?: stringResource(R.string.library_description)
+                ?: stringResource(R.string.library_download_description)
         ) { model.navigate(Page.LIBRARY) }
         Text(
             stringResource(
@@ -118,7 +145,6 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFile
             ),
             style = MaterialTheme.typography.bodyMedium
         )
-        Body(R.string.local_setup)
     }
 }
 
@@ -145,6 +171,16 @@ fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFi
                 style = MaterialTheme.typography.titleLarge
             )
             Body(R.string.library_empty_body)
+            PrimaryAction(R.string.download_library, !work.busy) {
+                model.downloadPackage(model.catalog.starterLibrary)
+            }
+            TextButton(
+                onClick = pickFile,
+                enabled = !work.busy,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.have_local_packages))
+            }
         }
         libraries.forEachIndexed { index, pack ->
             PackageCard(
@@ -189,8 +225,16 @@ fun ModelsScreen(
         Heading(R.string.models)
         Body(R.string.models_help)
         if (work.busy) Body(R.string.busy_help)
-        packages.filter { it.kind == "model" }.forEach { PackageCard(it, work.busy, model) }
-        PrimaryAction(R.string.add_package, !work.busy, pickFile)
+        val models = packages.filter { it.kind == "model" }
+        models.forEach { PackageCard(it, work.busy, model) }
+        if (models.none { it.packageId == model.catalog.recommendedModel.manifest.id }) {
+            PrimaryAction(R.string.download_model, !work.busy) {
+                model.downloadPackage(model.catalog.recommendedModel)
+            }
+        }
+        TextButton(onClick = pickFile, enabled = !work.busy, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.add_package))
+        }
     }
 }
 

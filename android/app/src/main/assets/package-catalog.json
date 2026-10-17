@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "release_tag": "v0.3.0",
+  "packages": [
+    {
+      "file_name": "qwen3-small.blobs",
+      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.0/qwen3-small.blobs",
+      "archive_bytes": 1834426564,
+      "archive_sha256": "d6a0ab88f4016a07a97d2d0eac518c7973db7ce59cadba8e6e826a3c34210ee5",
+      "manifest": {
+        "format": 1,
+        "id": "qwen3-17b-q8",
+        "version": "90862c4b",
+        "kind": "model",
+        "title": "Qwen3 1.7B Q8",
+        "bytes": 1834426016,
+        "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/tree/90862c4b9d2787eaed51d12237eafdfe7c5f6077"
+      }
+    },
+    {
+      "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
+      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.0/wikipedia-en-top1m-mini-2026-04.blobs",
+      "archive_bytes": 1804630820,
+      "archive_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
+      "manifest": {
+        "format": 1,
+        "id": "wikipedia-top1m-mini",
+        "version": "2026-04.1",
+        "kind": "library",
+        "title": "Wikipedia Top 1M introductions",
+        "bytes": 5011431424,
+        "sha256": "4ae8d2b3315ffab81bef6968ff84934a987d28843d15caa3a2d920756228e395",
+        "license": "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs",
+        "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim"
+      }
+    }
+  ]
+}

@@ -402,7 +402,7 @@ class FootprintTests(unittest.TestCase):
                     license='CC0', origin='https://example.invalid/library')
             apk = root / 'apk.json'
             write_json(apk, dict(apk='app.apk', application_id='dev.blobs.app', version_code=1,
-                version_name='1.0', bytes=50, sha256='a' * 64, internet_permission=False,
+                version_name='1.0', bytes=50, sha256='a' * 64, internet_permission=True,
                 zip_alignment_16kb=True))
             installer = root / 'PackageInstaller.kt'
             installer.write_text(
@@ -436,14 +436,14 @@ class FootprintTests(unittest.TestCase):
                     license='Apache-2.0', origin='https://example.invalid/model')
             apk = root / 'apk.json'
             write_json(apk, dict(apk='app.apk', application_id='dev.blobs.app', version_code=1,
-                version_name='1.0', bytes=50, sha256='a' * 64, internet_permission=True,
+                version_name='1.0', bytes=50, sha256='a' * 64, internet_permission=False,
                 zip_alignment_16kb=True))
             installer = root / 'PackageInstaller.kt'
             installer.write_text('changed policy', encoding='utf-8')
-            with self.assertRaisesRegex(ValueError, 'offline aligned'):
+            with self.assertRaisesRegex(ValueError, 'package-download-enabled aligned'):
                 calculate(apk, [model, model], installer)
             value = json.loads(apk.read_text())
-            value['internet_permission'] = False
+            value['internet_permission'] = True
             write_json(root / 'good-apk.json', value)
             with self.assertRaisesRegex(ValueError, 'distinct'):
                 calculate(root / 'good-apk.json', [model, model], installer)

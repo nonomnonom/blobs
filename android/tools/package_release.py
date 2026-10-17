@@ -62,6 +62,22 @@ def write_source_archive(output):
             archive.write(ROOT.parent / name, 'blobs/' + name)
 
 
+def verify_catalog_packages(model, library, version):
+    catalog_path = ROOT / 'app/src/main/assets/package-catalog.json'
+    catalog = json.loads(catalog_path.read_text(encoding='utf-8'))
+    if catalog.get('release_tag') != f'v{version}' or catalog.get('format') != 1:
+        raise ValueError('APK version differs from the pinned download catalog')
+    expected = {item['manifest']['kind']: item for item in catalog.get('packages', [])}
+    for path, kind in ((model, 'model'), (library, 'library')):
+        item = expected.get(kind)
+        if item is None or path.name != item['file_name']:
+            raise ValueError(f'Release {kind} filename differs from the in-app download catalog')
+        if path.stat().st_size != item['archive_bytes'] or digest(path) != item['archive_sha256']:
+            raise ValueError(f'Release {kind} archive differs from the in-app download catalog')
+        if check_package(path) != item['manifest']:
+            raise ValueError(f'Release {kind} manifest differs from the in-app download catalog')
+
+
 @contextmanager
 def staged_release(destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -109,6 +125,7 @@ def main():
         raise ValueError('Release packages must use .blobs filenames')
     if args.model.name.casefold() == args.library.name.casefold():
         raise ValueError('Model and library package filenames must differ')
+    verify_catalog_packages(args.model, args.library, version)
     manifests = {name: check_package(source) for source, name in packages}
     if manifests[args.model.name]['kind'] != 'model' or manifests[args.library.name]['kind'] != 'library':
         raise ValueError('Expected one model package and one library package')
@@ -135,12 +152,12 @@ def write_release(destination, apk, version, report, signature, packages, manife
     (destination / 'INSTALL.md').write_text(
         f'# Blobs {version}\n\n'
         'Before copying files to a phone, follow `VERIFY.md` and compare the reported checksum-inventory digest with the value published alongside this release.\n\n'
-        f'1. Copy `blobs-{version}.apk`, `{packages[0][1]}` and `{packages[1][1]}` to local Android storage.\n'
-        f'2. Open `blobs-{version}.apk` and allow installation from that file source if Android requests it.\n'
-        f'3. Open Blobs. Choose **Add from this phone**, select `{packages[0][1]}`, review it and choose **Add package**.\n'
-        f'4. Add `{packages[1][1]}` the same way. Wait for verification and installation to finish.\n'
-        '5. Start a conversation. Tap a citation to read its saved passage or full source inside Blobs.\n\n'
-        'No account, Play Store or runtime internet is required.\n\n'
+        f'1. Install `blobs-{version}.apk` through Android.\n'
+        '2. Open Blobs and tap the model and library download buttons. The app checks each package before installation.\n'
+        '3. Start a conversation. Tap a citation to read its saved passage or full source inside Blobs.\n\n'
+        'The one-time setup downloads need an internet connection. Chat, search and answers work offline after setup. '
+        'For air-gapped setup, copy the APK and these packages to the phone and add them from local storage:\n\n'
+        + ''.join(f'- `{name}`\n' for _, name in packages) + '\n'
         f'Incoming packages occupy {incoming_bytes:,} bytes; installed payloads occupy {installed_bytes:,} bytes. '
         '`FOOTPRINT.json` records the edition total and import peak with its assumptions. '
         'Allow additional space for the APK, app data and at least 64 MiB import headroom. '

@@ -43,8 +43,8 @@ def read_apk_report(path: Path):
             not re.fullmatch(r'[a-f0-9]{64}', report['sha256']) or
             type(report['version_code']) is not int or report['version_code'] <= 0 or
             not isinstance(report['version_name'], str) or not report['version_name'] or
-            report['internet_permission'] is not False or report['zip_alignment_16kb'] is not True):
-        raise ValueError('APK report does not describe an offline aligned build')
+            report['internet_permission'] is not True or report['zip_alignment_16kb'] is not True):
+        raise ValueError('APK report does not describe a package-download-enabled aligned build')
     return report
 
 

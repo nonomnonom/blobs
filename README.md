@@ -1,14 +1,12 @@
 # Blobs
 
-Blobs is an offline Android research assistant. It searches a local knowledge library, runs a local language model, and keeps conversations, source passages, and settings on the device. The app has no `INTERNET` permission, account requirement, cloud API, or Google Play Services dependency.
+Blobs is an offline Android research assistant. It searches a local knowledge library, runs a local language model, and keeps conversations, source passages, and settings on the device. First-run setup can download the pinned model and library packages after the user taps Download; chat, search, inference, citations, and storage do not make network requests. Blobs has no account, cloud API, or Google Play Services dependency.
 
 The active implementation is in [`android/`](android/README.md). Reproducible corpus preparation and evaluation tools are in [`corpus/`](corpus/README.md).
 
-See the [bounty requirement and evidence matrix](docs/BOUNTY_COMPLIANCE.md) for the current implementation status and the proof still needed for submission.
-
 ## What is implemented
 
-- First-run setup for importing local model and knowledge packages.
+- First-run setup for downloading and verifying a model and knowledge library in the app, with local package import as an alternative.
 - Native CPU inference through a pinned llama.cpp revision.
 - SQLite FTS5 retrieval with immutable source evidence.
 - Streamed answers with `[S1]` source references and in-app article reading.
@@ -32,7 +30,7 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 .\gradlew.bat verify
 ```
 
-The first preparation/build needs network access on the development computer. The installed app and imported packages operate offline.
+The first preparation/build needs network access on the development computer. First-run catalog setup can also download the model and library after the user chooses; once both are installed, chat and research work offline. Local package installation supports air-gapped setup.
 
 See the [Android build and import guide](android/README.md), [architecture](android/docs/ARCHITECTURE.md), [testing](android/docs/TESTING.md), and [release guide](android/docs/RELEASE.md).
 
@@ -46,7 +44,7 @@ See the [Android build and import guide](android/README.md), [architecture](andr
 
 ## Distribution model
 
-The APK is kept small and offline. Model and library payloads are separate `.blobs` files that users select through Android's document picker. Blobs validates package structure, declared sizes, checksums, and compatibility before activation. A checksum detects corruption; it does not authenticate a publisher, so package provenance must be communicated by the distributor.
+The APK is kept small. On first run, users can download the pinned model and library `.blobs` packages from the matching public GitHub release. Blobs checks the HTTPS source, exact archive size and SHA-256, then passes each package through the same manifest, payload, compatibility, and storage validation used for local imports. Downloads run only after an explicit tap; after setup, research works offline. A local package import remains available for air-gapped setup and other editions. The release must publish the exact filenames and hashes pinned in `PackageCatalog.kt`.
 
 ## License
 

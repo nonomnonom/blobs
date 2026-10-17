@@ -20,6 +20,9 @@ SOURCE_REQUIRED = {
     "blobs/CONTRIBUTING.md",
     "blobs/android/docs/ARCHITECTURE.md",
     "blobs/android/docs/RELEASE.md",
+    "blobs/android/app/src/main/assets/package-catalog.json",
+    "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageCatalog.kt",
+    "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageDownloader.kt",
     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
     "blobs/android/tools/package_release.py",
     "blobs/android/tools/verify_release.py",
@@ -192,8 +195,8 @@ def verify_kit(directory: Path) -> dict:
         raise ValueError("APK byte count differs from its report")
     if apk_report.get("sha256") != digest(apk_path):
         raise ValueError("APK hash differs from its report")
-    if apk_report.get("internet_permission") is not False or apk_report.get("zip_alignment_16kb") is not True:
-        raise ValueError("APK report does not prove the offline and 16 KB packaging gates")
+    if apk_report.get("internet_permission") is not True or apk_report.get("zip_alignment_16kb") is not True:
+        raise ValueError("APK report does not prove package-download permission and 16 KB packaging")
     libraries = apk_report.get("native_libraries")
     if not isinstance(libraries, list):
         raise ValueError("APK report does not list native libraries")
@@ -237,6 +240,24 @@ def verify_kit(directory: Path) -> dict:
     if source_archives != [source_name]:
         raise ValueError("Source archive does not match the verified release version")
     source_files = verify_source_archive(files[source_name])
+    with zipfile.ZipFile(files[source_name]) as archive:
+        try:
+            catalog = json.loads(archive.read("blobs/android/app/src/main/assets/package-catalog.json"))
+        except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ValueError("Source archive has no valid in-app package catalog") from error
+    if catalog.get("format") != 1 or catalog.get("release_tag") != f"v{version}":
+        raise ValueError("In-app catalog release tag differs from the verified APK")
+    catalog_packages = {item.get("manifest", {}).get("kind"): item for item in catalog.get("packages", [])}
+    if set(catalog_packages) != {"model", "library"}:
+        raise ValueError("In-app catalog must contain one model and one library")
+    for package in packages:
+        item = catalog_packages[package["kind"]]
+        name = package["file"]
+        if (item.get("file_name") != name or item.get("archive_bytes") != package["package_bytes"] or
+                item.get("archive_sha256") != package["package_sha256"] or
+                item.get("url") != f"https://github.com/nonomnonom/blobs/releases/download/v{version}/{name}" or
+                item.get("manifest") != recorded_packages[name]):
+            raise ValueError(f"In-app catalog differs from the delivered {package['kind']} package")
 
     footprint = read_json(files["FOOTPRINT.json"])
     policy_path = "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
@@ -291,7 +312,7 @@ def verify_kit(directory: Path) -> dict:
             "bytes": apk_path.stat().st_size,
             "sha256": apk_report["sha256"],
             "abis": abis,
-            "internet_permission": False,
+            "internet_permission": True,
             "zip_alignment_16kb": True,
         },
         "packages": packages,

@@ -1,6 +1,6 @@
 # Release guide
 
-Blobs is distributed as an APK plus optional model and library `.blobs` packages. Packages stay separate so users can choose local assets and the APK remains small.
+Blobs is distributed as a small APK and two separate `.blobs` packages. The APK's first-run catalog points to the exact package filenames and hashes on the matching GitHub release; publish those files with the APK or its in-app downloads will not be available. Local package import remains an air-gapped alternative.
 
 ## Build a candidate
 
@@ -21,7 +21,7 @@ CI intentionally produces unsigned artifacts. Sign a public candidate in a prote
 On Windows, `tools/release.ps1` runs the host and Android gates, verifies the APK, signs it using local protected configuration, and optionally assembles an immutable kit:
 
 ```powershell
-.\tools\release.ps1 -Model .\packages\qwen3-small.blobs -Library .\packages\wikipedia-starter.blobs
+.\tools\release.ps1 -Model .\packages\qwen3-small.blobs -Library ..\corpus\artifacts\wikipedia-en-top1m-mini-2026-04.blobs
 ```
 
 Use `-CreateKey` only for the initial local signing setup. For another signing environment, set `BLOBS_KEYSTORE`, `BLOBS_STORE_PASSWORD`, `BLOBS_KEY_PASSWORD`, and `BLOBS_KEY_ALIAS`, then run `:app:assembleRelease`.
@@ -32,7 +32,7 @@ For manual assembly after testing and signing:
 uv run --locked --project ../corpus python tools/package_release.py --model PATH_TO_MODEL.blobs --library PATH_TO_LIBRARY.blobs
 ```
 
-The assembler refuses debug application IDs, unsigned APKs, incomplete package pairs, and an existing destination. It writes to a temporary directory, streams package verification, records an exact inventory and a `FOOTPRINT.json` with the selected assets' distribution, installed, and modeled import-peak bytes, then atomically publishes the completed edition.
+The assembler refuses debug application IDs, unsigned APKs, incomplete package pairs, and an existing destination. It writes to a temporary directory, streams package verification, records an exact inventory and a `FOOTPRINT.json` with the selected assets' distribution, installed, and modeled import-peak bytes, then atomically publishes the completed edition. For version `0.3.0`, retain these package names exactly: `qwen3-small.blobs` and `wikipedia-en-top1m-mini-2026-04.blobs`. Their archive sizes and SHA-256 hashes are pinned in `PackageCatalog.kt`.
 
 ## Verify after transport
 
@@ -48,11 +48,11 @@ Also inspect signing identity with `apksigner verify --verbose --print-certs` an
 
 ## Install
 
-1. Copy the APK and selected packages to local device storage.
-2. Install the APK through Android's package installer.
-3. Open Blobs and choose **Add from this phone**.
-4. Review and add a model package, then a library package.
-5. Start a conversation and open a citation to verify local reading.
+1. Install the APK through Android's package installer.
+2. Open Blobs and tap **Download the answer model** and **Download the knowledge library**. Blobs verifies each pinned archive and package before installing it.
+3. Start a conversation and open a citation. Chat and research run without network access after setup.
+
+For an air-gapped setup, copy the APK and both `.blobs` files to the phone, then add them from the local package option in setup. The public `v0.3.0` GitHub release must include the two exact `.blobs` filenames above for in-app downloads to work.
 
 Imports temporarily require the source file, staging copy, and installed payload. Keep the headroom shown by the app until installation completes. Removing the app removes private conversations and installed packages; export conversations and retain package backups before uninstalling.
 

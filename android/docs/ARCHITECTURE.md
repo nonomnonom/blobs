@@ -2,11 +2,13 @@
 
 ## Product boundary
 
-Blobs is a fully local Android application. The APK has no network permission. The app accepts model and knowledge packages selected by the user, validates and installs them into app-private storage, retrieves evidence from the active library, and generates an answer with the active local model.
+Blobs is an offline Android application with a deliberately small setup-only network boundary. First-run setup can download pinned model and library packages after an explicit user tap. The downloader accepts HTTPS from the fixed GitHub release and its asset hosts, resumes only when the entity tag matches, checks exact archive length and SHA-256, and then hands the package to `PackageInstaller` for the normal manifest, payload, storage, and format checks. Chat, retrieval, inference, citations, and reading do not use the network. Local package import remains available for air-gapped setup.
 
 ```mermaid
 flowchart LR
-    Picker[Android document picker] --> Installer[Package installer]
+    Catalog[Pinned package catalog] --> Downloader[User-started HTTPS download]
+    Downloader --> Installer[Package installer]
+    Picker[Android document picker] --> Installer
     Installer --> Store[App-private package store]
     User[Question] --> Retrieval[SQLite FTS5 retrieval]
     Store --> Retrieval
@@ -42,7 +44,7 @@ The JNI layer is intentionally narrow: load/unload a model, stream tokens, and c
 
 ## Security and privacy invariants
 
-- No network permission, account, analytics, or remote API.
+- No account, analytics, Google Play Services, or remote API. Network access is limited to explicitly started first-run package downloads; the research flow itself remains offline.
 - Retrieved content and model output are untrusted text.
 - SQL is parameterized and package paths are validated.
 - Package checksums detect corruption but do not establish publisher identity.

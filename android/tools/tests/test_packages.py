@@ -58,12 +58,25 @@ class PackageTests(unittest.TestCase):
             report = dict(apk='app-release.apk', application_id='dev.blobs.app',
                           version_code=2, version_name='0.2.0',
                           bytes=apk.stat().st_size, sha256=package_release.digest(apk),
-                          internet_permission=False, zip_alignment_16kb=True,
+                          internet_permission=True, zip_alignment_16kb=True,
                           native_libraries=[
                               {'file': 'lib/arm64-v8a/libblobs.so'},
                               {'file': 'lib/x86_64/libblobs.so'},
                           ])
-            with patch.object(package_release, 'ROOT', root), patch.object(package_release, 'verify', return_value=report), patch.object(package_release, 'sdk_directory', return_value=root), patch.object(package_release.subprocess, 'check_output', return_value='Fixture certificate'), patch.object(package_release, 'write_source_archive', side_effect=fixture_source_archive), patch.object(sys, 'argv', ['package_release.py', '--model', str(inputs[0]), '--library', str(inputs[1])]):
+            catalog = {'format': 1, 'release_tag': 'v0.2.0', 'packages': []}
+            for item in inputs:
+                manifest = package_release.check_package(item)
+                catalog['packages'].append({
+                    'file_name': item.name,
+                    'url': f'https://github.com/nonomnonom/blobs/releases/download/v0.2.0/{item.name}',
+                    'archive_bytes': item.stat().st_size,
+                    'archive_sha256': package_release.digest(item),
+                    'manifest': manifest,
+                })
+            catalog_path = root / 'app/src/main/assets/package-catalog.json'
+            catalog_path.parent.mkdir(parents=True, exist_ok=True)
+            catalog_path.write_text(json.dumps(catalog), encoding='utf-8')
+            with patch.object(package_release, 'ROOT', root), patch.object(package_release, 'verify', return_value=report), patch.object(package_release, 'verify_catalog_packages'), patch.object(package_release, 'sdk_directory', return_value=root), patch.object(package_release.subprocess, 'check_output', return_value='Fixture certificate'), patch.object(package_release, 'write_source_archive', side_effect=fixture_source_archive), patch.object(sys, 'argv', ['package_release.py', '--model', str(inputs[0]), '--library', str(inputs[1])]):
                 package_release.main()
             kit = root / 'release/0.2.0'
             self.assertEqual(list((root / 'release').iterdir()), [kit])
@@ -175,6 +188,11 @@ class PackageTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'production application ID'):
                 package_release.main()
 
+    def test_release_package_names_must_match_the_in_app_catalog(self):
+        with self.assertRaisesRegex(ValueError, 'filename differs from the in-app download catalog'):
+            package_release.verify_catalog_packages(Path('selected-model.blobs'),
+                                                    Path('selected-library.blobs'), '0.3.0')
+
     def test_package_names_cannot_collide_on_a_case_insensitive_filesystem(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -189,6 +207,9 @@ class PackageTests(unittest.TestCase):
             root = workspace / 'android'
             output = Path(folder) / 'source.zip'
             expected = [
+                'android/app/src/main/assets/package-catalog.json',
+                'android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageCatalog.kt',
+                'android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageDownloader.kt',
                 'android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt',
                 'android/tools/verify_release.py',
                 'corpus/uv.lock',
@@ -196,7 +217,6 @@ class PackageTests(unittest.TestCase):
                 'android/docs/ARCHITECTURE.md',
                 'android/docs/RELEASE.md',
                 'corpus/README.md',
-                'docs/BOUNTY_COMPLIANCE.md',
                 'README.md',
                 'CONTRIBUTING.md',
                 '.gitignore',
@@ -222,6 +242,8 @@ class PackageTests(unittest.TestCase):
                 write_source_archive(output)
             with zipfile.ZipFile(output) as archive:
                 names = archive.namelist()
+                self.assertIn('blobs/android/app/src/main/assets/package-catalog.json', names)
+                self.assertIn('blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageDownloader.kt', names)
                 self.assertIn('blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt', names)
                 self.assertIn('blobs/android/tools/verify_release.py', names)
                 self.assertIn('blobs/corpus/uv.lock', names)
@@ -229,7 +251,7 @@ class PackageTests(unittest.TestCase):
                 self.assertIn('blobs/android/docs/ARCHITECTURE.md', names)
                 self.assertIn('blobs/android/docs/RELEASE.md', names)
                 self.assertIn('blobs/corpus/README.md', names)
-                self.assertIn('blobs/docs/BOUNTY_COMPLIANCE.md', names)
+                self.assertNotIn('blobs/docs/BOUNTY_COMPLIANCE.md', names)
                 self.assertFalse(any(name.startswith('blobs/design/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/reports/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/work/') for name in names))

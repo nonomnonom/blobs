@@ -10,6 +10,7 @@ import dev.blobs.app.data.RecoveryExport
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.data.packages.PackageManifest
 import dev.blobs.app.data.preferences.PreferencesStore
 import dev.blobs.app.data.preferences.ThemeMode
@@ -71,6 +72,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     private val mutable = MutableStateFlow(ProductState())
     val state = mutable.asStateFlow()
     val work = container.work.state
+    val catalog = container.catalog
     private val conversation = MutableStateFlow("")
     val conversationId = conversation.asStateFlow()
     private val dao = container.database.conversations()
@@ -311,6 +313,13 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         if (container.work.install(uri, manifest)) {
             mutable.value = mutable.value.copy(importOrigin = mutable.value.page)
             dismissImport()
+            navigate(Page.IMPORT)
+        }
+    }
+
+    fun downloadPackage(asset: DownloadablePackage) {
+        if (container.work.downloadAndInstall(asset)) {
+            mutable.value = mutable.value.copy(importOrigin = mutable.value.page)
             navigate(Page.IMPORT)
         }
     }

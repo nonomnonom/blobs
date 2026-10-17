@@ -9,6 +9,8 @@ import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.BlobsDatabase
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.local.TurnEntity
+import dev.blobs.app.data.packages.DownloadablePackage
+import dev.blobs.app.data.packages.PackageDownloader
 import dev.blobs.app.data.packages.PackageInstaller
 import dev.blobs.app.data.packages.PackageManifest
 import dev.blobs.app.data.packages.PendingImport
@@ -41,13 +43,15 @@ data class WorkState(
     val importTitle: String = "",
     val importComplete: Boolean = false,
     val notice: Int? = null,
-    val pendingImport: PendingImport? = null
+    val pendingImport: PendingImport? = null,
+    val downloading: Boolean = false
 )
 
 class WorkController(
     private val db: BlobsDatabase,
     private val library: LibraryStore,
-    private val installer: PackageInstaller
+    private val installer: PackageInstaller,
+    private val downloader: PackageDownloader
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutable = MutableStateFlow(WorkState())
@@ -272,6 +276,7 @@ class WorkController(
                     mutable.value =
                         mutable.value.copy(progress = bytes)
                 }
+                downloader.removeInstalledArchive(uri)
                 mutable.value =
                     WorkState(
                         ready = true,
@@ -297,6 +302,64 @@ class WorkController(
                             R.string.import_failed
                         }
                     )
+            }
+        }
+        return true
+    }
+
+    @Synchronized
+    fun downloadAndInstall(asset: DownloadablePackage): Boolean {
+        if (!mutable.value.ready || mutable.value.busy) return false
+        val pending = mutable.value.pendingImport
+        if (pending != null && pending.manifest.key != asset.manifest.key) {
+            mutable.value = mutable.value.copy(notice = R.string.finish_pending_import)
+            return false
+        }
+        mutable.value = WorkState(
+            ready = true,
+            busy = true,
+            total = asset.archiveBytes,
+            importTitle = asset.manifest.title,
+            downloading = true
+        )
+        job = scope.launch {
+            try {
+                val file = downloader.download(asset) { bytes, total ->
+                    mutable.value = mutable.value.copy(progress = bytes, total = total)
+                }
+                val uri = Uri.fromFile(file)
+                require(installer.inspect(uri) == asset.manifest) { "PACKAGE_MANIFEST" }
+                mutable.value = mutable.value.copy(
+                    progress = 0,
+                    total = asset.manifest.bytes,
+                    downloading = false
+                )
+                installer.install(uri, asset.manifest) { bytes ->
+                    mutable.value = mutable.value.copy(progress = bytes)
+                }
+                downloader.removeInstalledArchive(uri)
+                mutable.value = WorkState(
+                    ready = true,
+                    notice = R.string.package_added,
+                    importTitle = asset.manifest.title,
+                    importComplete = true
+                )
+            } catch (_: CancellationException) {
+                mutable.value = WorkState(
+                    ready = true,
+                    notice = R.string.download_paused,
+                    pendingImport = runCatching { installer.pending() }.getOrNull()
+                )
+            } catch (error: Exception) {
+                mutable.value = WorkState(
+                    ready = true,
+                    pendingImport = runCatching { installer.pending() }.getOrNull(),
+                    notice = when (error.message) {
+                        "STORAGE" -> R.string.storage_failed
+                        "DOWNLOAD_HOST", "DOWNLOAD_REDIRECT" -> R.string.download_source_failed
+                        else -> R.string.download_failed
+                    }
+                )
             }
         }
         return true

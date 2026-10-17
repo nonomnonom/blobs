@@ -67,6 +67,12 @@ def unpack(package, target):
     return manifest
 
 
+def verify_report_library(case, manifest):
+    """Bind native retrieval evidence to the exact package being replayed."""
+    if case.get('library') != manifest:
+        raise ValueError('Native retrieval evidence uses a different library package')
+
+
 def retrieve(database, manifest, query):
     with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as db:
         db.execute('PRAGMA trusted_schema=OFF')
@@ -215,8 +221,7 @@ def main():
             if len(baseline_cases) != len(cases):
                 raise ValueError('Native report must contain matching baseline and candidate cases')
             for case in baseline_cases:
-                if case['library'] != baseline:
-                    raise ValueError('The baseline package differs from the native evidence')
+                verify_report_library(case, baseline)
                 query, _ = retrieval_spec(work / 'starter.sqlite', case['resolved_query'])
                 evidence, _ = retrieve(work / 'starter.sqlite', baseline, query)
                 same = evidence == case['evidence']
@@ -226,6 +231,8 @@ def main():
             save()
             print(f'Native starter parity passed for {len(baseline_cases)} cases.', flush=True)
         candidate = unpack(args.candidate, work / 'expanded.sqlite')
+        for case in cases:
+            verify_report_library(case, candidate)
         report['candidate'] = candidate
         save()
         for case in cases:

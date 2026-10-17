@@ -10,9 +10,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.lifecycle.ViewModelProvider
+import dev.blobs.app.data.packages.PackageCatalog
 import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.ui.Page
+import dev.blobs.app.ui.ProductViewModel
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -87,13 +92,46 @@ class LaunchTest {
 
     @Test
     @Suppress("DEPRECATION")
-    fun applicationHasNoNetworkPermission() {
+    fun applicationCanDownloadSetupPackages() {
         val activity = compose.activity
         val permissions =
             activity.packageManager
                 .getPackageInfo(activity.packageName, PackageManager.GET_PERMISSIONS)
                 .requestedPermissions
                 .orEmpty()
-        assertFalse(permissions.contains("android.permission.INTERNET"))
+        assertTrue(permissions.contains("android.permission.INTERNET"))
+    }
+
+    @Test
+    fun firstRunCatalogIsPinnedAndSetupOffersInAppDownloads() {
+        val catalog = PackageCatalog(compose.activity)
+        assertEquals(
+            "v0.3.0",
+            catalog.recommendedModel.url.substringAfter("/download/").substringBefore('/')
+        )
+        assertEquals("model", catalog.recommendedModel.manifest.kind)
+        assertEquals("library", catalog.starterLibrary.manifest.kind)
+        assertTrue(catalog.recommendedModel.archiveBytes > 1_000_000_000L)
+        assertTrue(catalog.starterLibrary.archiveSha256.matches(Regex("[a-f0-9]{64}")))
+
+        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        compose.waitUntil(10_000) { model.state.value.loaded }
+        compose.runOnUiThread { model.navigate(Page.INTRO) }
+        compose.onNodeWithText(compose.activity.getString(R.string.get_ready)).performClick()
+        compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
+        if (model.packages.value.none { it.kind == "model" } ||
+            model.packages.value.none { it.kind == "library" }
+        ) {
+            assertTrue(
+                compose.onAllNodesWithText(compose.activity.getString(R.string.download_model))
+                    .fetchSemanticsNodes().isNotEmpty() ||
+                    compose.onAllNodesWithText(
+                        compose.activity.getString(R.string.download_library)
+                    )
+                        .fetchSemanticsNodes().isNotEmpty()
+            )
+            compose.onNodeWithText(compose.activity.getString(R.string.have_local_packages))
+                .assertIsDisplayed()
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 Native offline research chat built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. The app imports local model and library packages, retrieves source passages, streams answers, and opens citations without leaving the app.
 
-The APK declares no `INTERNET` permission and has no Google Play Services dependency. A development computer prepares packages; the phone imports them through Android's document picker.
+The APK has no Google Play Services dependency. First-run setup offers one-time, user-started downloads for the pinned model and knowledge library. The app verifies the complete package archive and its manifest before using the existing package installer. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available for air-gapped setup and alternate packages.
 
 ## Requirements
 
@@ -37,7 +37,7 @@ uv run --locked --project ../corpus python tools/prepare_model.py small
 uv run --locked --project ../corpus python tools/build_package.py library corpus/starter.documents.jsonl packages/wikipedia-starter.blobs --id wikipedia-starter --version 2026-10-17.3 --title "Science and everyday questions" --license "CC BY-SA 4.0" --origin "https://en.wikipedia.org/"
 ```
 
-Generated packages are ignored by Git. Import them from the welcome flow or from **Settings → Models and libraries → Add from this phone**. The review screen shows package identity, size, license, and storage requirements before installation.
+Generated packages are ignored by Git. The recommended first-run packages are offered directly in setup. Alternate packages can be imported from the welcome flow or **Settings → Models and libraries → Add from this phone**. Every package goes through the same manifest, payload hash, compatibility, storage, and SQLite/GGUF validation before activation.
 
 ## Code ownership
 

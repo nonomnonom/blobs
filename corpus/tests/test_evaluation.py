@@ -23,7 +23,7 @@ from evaluation.native.audit_native_prefill import audit as audit_native_prefill
 from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
 from evaluation.native.compare_native_smoke import compare as compare_native_smoke
-from evaluation.retrieval.host_replay import retrieval_query, select_evidence
+from evaluation.retrieval.host_replay import retrieval_query, select_evidence, verify_report_library
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
 from evaluation.retrieval.title_coverage import inspect as inspect_titles
 
@@ -124,6 +124,14 @@ class EvaluationInputTests(unittest.TestCase):
                 '"litres" OR "per" OR "minute" OR "increasing" '
                 'OR "litres per" OR "per minute" OR "litres increasing" '
                 'OR title:"litre" OR title:"monotonic function"',
+            )
+
+    def test_host_replay_binds_native_evidence_to_exact_library_manifest(self):
+        manifest = dict(format=1, id='wikipedia-top1m-mini', version='2026-04.1', sha256='a' * 64)
+        verify_report_library(dict(library=manifest), manifest)
+        with self.assertRaisesRegex(ValueError, 'different library package'):
+            verify_report_library(
+                dict(library=dict(manifest, sha256='b' * 64)), manifest
             )
 
     def test_qwen35_2b_text_profile_preserves_publisher_sampling_contract(self):
