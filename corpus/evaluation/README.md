@@ -36,6 +36,8 @@ uv run --locked python -m evaluation.native.compare_native_smoke `
 
 The comparator requires identical app/test APK hashes, device fingerprint, and prompt token count. It reports median and range for model load, prefill, first token, total latency, and decode rate. Its fixed native smoke prompt is only a compatibility/latency probe; it does not rank grounded answer quality or predict phone performance. Keep broader RAG answer runs and source-level reviews separate.
 
+Curated, reviewed evidence is kept under [`results/`](results/); exploratory runs stay in ignored `reports/`. The [2026-10-18 model smoke snapshot](results/native-smoke-models-2026-10-18/comparison.json) includes all six raw runs, staging receipts, model-lock wrappers, per-run audits, and the aggregate comparison so the numbers can be checked from the public tree.
+
 For a controlled prompt comparison, `answers/compare_runs.py` requires complete runs with the same pinned model, runtime, sampler, questions, and retrieved evidence. It reports answer text, mechanical citation-ID validity, and host latency; it does not score factual support. Example:
 
 ```powershell

@@ -1,0 +1,230 @@
+{
+  "application": {
+    "apk_sha256": "36b576f0b788ce58848a498fe0a4ea8aa1d3800bd2c6e137a5d0ef089b96d2bc",
+    "test_apk_sha256": "85fa24c14237c966d8547c5d4ec929be50b050f31f8d6a2080eb26ede426ce8e"
+  },
+  "baseline": {
+    "apk_sha256": "36b576f0b788ce58848a498fe0a4ea8aa1d3800bd2c6e137a5d0ef089b96d2bc",
+    "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "median": {
+      "decode_tokens_per_second": 9.198880956131687,
+      "first_token_ms": 3492.491,
+      "model_load_ms": 404.151,
+      "output_tokens": 16,
+      "prefill_ms": 2138.24,
+      "total_ms": 5287.366
+    },
+    "model": {
+      "bytes": 1834426016,
+      "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a"
+    },
+    "prompt_tokens": 54,
+    "range": {
+      "decode_tokens_per_second": [
+        7.624377421931141,
+        10.84982619934657
+      ],
+      "first_token_ms": [
+        2981.549,
+        6232.635
+      ],
+      "model_load_ms": [
+        386.928,
+        688.212
+      ],
+      "output_tokens": [
+        16,
+        16
+      ],
+      "prefill_ms": [
+        1921.89,
+        2402.634
+      ],
+      "total_ms": [
+        5179.238,
+        7792.854
+      ]
+    },
+    "runs": [
+      {
+        "audit_file": "qwen3-1-7b-native-audit-20261018.json",
+        "audit_sha256": "cb5a66773280b09e090765c84ef65e6e768d1bd5a48398f6187e194033784936",
+        "decode_tokens_per_second": 10.84982619934657,
+        "first_token_ms": 6232.635,
+        "model_load_ms": 688.212,
+        "output_tokens": 16,
+        "prefill_ms": 1921.89,
+        "prompt_tokens": 54,
+        "raw_answer": "Photosynthesis converts light energy into chemical energy, as stated in source [1].",
+        "run_file": "evaluation/results/native-smoke-models-2026-10-18/runs/qwen3-1-7b-native-run-20261018.json",
+        "run_sha256": "0d9cb07c38d3df5d6c5528572f63fc973de22f2864839da84d612a072484b00f",
+        "total_ms": 7792.854
+      },
+      {
+        "audit_file": "qwen3-1-7b-rep2-native-audit-20261018.json",
+        "audit_sha256": "34db77eb78ab2243c902c5822ce58e31e591d8ad6294f69df398674d70c1acbb",
+        "decode_tokens_per_second": 7.624377421931141,
+        "first_token_ms": 2981.549,
+        "model_load_ms": 404.151,
+        "output_tokens": 16,
+        "prefill_ms": 2138.24,
+        "prompt_tokens": 54,
+        "raw_answer": "Photosynthesis converts light energy into chemical energy, as stated in source [1].",
+        "run_file": "evaluation/results/native-smoke-models-2026-10-18/runs/qwen3-1-7b-rep2-20261018-native-run.json",
+        "run_sha256": "eed6c6a47d24ca6432a2bb0b433d94f2ef5fc6f0a19d6c4452578efbc4adffd3",
+        "total_ms": 5179.238
+      },
+      {
+        "audit_file": "qwen3-1-7b-rep3-native-audit-20261018.json",
+        "audit_sha256": "a442ac9395af67f2e745961a935e28493cc68ca5f3168404d057f1996f577084",
+        "decode_tokens_per_second": 9.198880956131687,
+        "first_token_ms": 3492.491,
+        "model_load_ms": 386.928,
+        "output_tokens": 16,
+        "prefill_ms": 2402.634,
+        "prompt_tokens": 54,
+        "raw_answer": "Photosynthesis converts light energy into chemical energy, as stated in source [1].",
+        "run_file": "evaluation/results/native-smoke-models-2026-10-18/runs/qwen3-1-7b-rep3-20261018-native-run.json",
+        "run_sha256": "e83bca3714dc2ab0ec4b9f64f4104cfcb1b2c86ded3b0f174868956c500c079e",
+        "total_ms": 5287.366
+      }
+    ],
+    "test_apk_sha256": "85fa24c14237c966d8547c5d4ec929be50b050f31f8d6a2080eb26ede426ce8e"
+  },
+  "candidate": {
+    "apk_sha256": "36b576f0b788ce58848a498fe0a4ea8aa1d3800bd2c6e137a5d0ef089b96d2bc",
+    "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "median": {
+      "decode_tokens_per_second": 6.819852963970097,
+      "first_token_ms": 4864.52,
+      "model_load_ms": 632.331,
+      "output_tokens": 11,
+      "prefill_ms": 4198.016,
+      "total_ms": 6756.522
+    },
+    "model": {
+      "bytes": 1280835840,
+      "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223"
+    },
+    "prompt_tokens": 54,
+    "range": {
+      "decode_tokens_per_second": [
+        6.25250100040016,
+        7.134110908185289
+      ],
+      "first_token_ms": [
+        4837.49,
+        6276.286
+      ],
+      "model_load_ms": [
+        582.12,
+        1012.644
+      ],
+      "output_tokens": [
+        11,
+        11
+      ],
+      "prefill_ms": [
+        4188.005,
+        4473.042
+      ],
+      "total_ms": [
+        6472.905,
+        8008.811
+      ]
+    },
+    "runs": [
+      {
+        "audit_file": "qwen35-2b-native-audit-20261018.json",
+        "audit_sha256": "21a9e18a074a55d6de87ed8934a8c76a400eb49f2cd62cc3ac12630c273981ab",
+        "decode_tokens_per_second": 6.819852963970097,
+        "first_token_ms": 6276.286,
+        "model_load_ms": 1012.644,
+        "output_tokens": 11,
+        "prefill_ms": 4473.042,
+        "prompt_tokens": 54,
+        "raw_answer": "Photosynthesis converts light energy into chemical energy [1].",
+        "run_file": "evaluation/results/native-smoke-models-2026-10-18/runs/qwen35-2b-native-run-20261018.json",
+        "run_sha256": "b143b742f9253265c8e3f7c3c1d8f814265201a1d96d21a6fe6e5f661bad4e11",
+        "total_ms": 8008.811
+      },
+      {
+        "audit_file": "qwen35-2b-rep2-native-audit-20261018.json",
+        "audit_sha256": "f62d402859e1b9380685919ddf55fb53ca93c508c6503a6625a20f6c706560de",
+        "decode_tokens_per_second": 7.134110908185289,
+        "first_token_ms": 4837.49,
+        "model_load_ms": 582.12,
+        "output_tokens": 11,
+        "prefill_ms": 4198.016,
+        "prompt_tokens": 54,
+        "raw_answer": "Photosynthesis converts light energy into chemical energy [1].",
+        "run_file": "evaluation/results/native-smoke-models-2026-10-18/runs/qwen35-2b-rep2-20261018-native-run.json",
+        "run_sha256": "9e6b5dd08f74ab1452e3af8e1b3e46c587fe2a577ae8798d8097752fed8e2b76",
+        "total_ms": 6472.905
+      },
+      {
+        "audit_file": "qwen35-2b-rep3-native-audit-20261018.json",
+        "audit_sha256": "f61c5080c0b65e6738be11fba2ea3e041ad5e1a955cbd90c7da1ccd0962f71cf",
+        "decode_tokens_per_second": 6.25250100040016,
+        "first_token_ms": 4864.52,
+        "model_load_ms": 632.331,
+        "output_tokens": 11,
+        "prefill_ms": 4188.005,
+        "prompt_tokens": 54,
+        "raw_answer": "Photosynthesis converts light energy into chemical energy [1].",
+        "run_file": "evaluation/results/native-smoke-models-2026-10-18/runs/qwen35-2b-rep3-20261018-native-run.json",
+        "run_sha256": "bfae431b504c5c65b940561cf733891d39efbe71c483946ba4c39715903ce430",
+        "total_ms": 6756.522
+      }
+    ],
+    "test_apk_sha256": "85fa24c14237c966d8547c5d4ec929be50b050f31f8d6a2080eb26ede426ce8e"
+  },
+  "candidate_vs_baseline_percent": {
+    "decode_tokens_per_second": -25.862145662139525,
+    "first_token_latency": 39.28511197308742,
+    "total_latency": 27.78616044359328
+  },
+  "complete": true,
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "format": 1,
+  "inputs": {
+    "baseline_audits": [
+      {
+        "file": "evaluation/results/native-smoke-models-2026-10-18/audits/qwen3-1-7b-native-audit-20261018.json",
+        "sha256": "cb5a66773280b09e090765c84ef65e6e768d1bd5a48398f6187e194033784936"
+      },
+      {
+        "file": "evaluation/results/native-smoke-models-2026-10-18/audits/qwen3-1-7b-rep2-native-audit-20261018.json",
+        "sha256": "34db77eb78ab2243c902c5822ce58e31e591d8ad6294f69df398674d70c1acbb"
+      },
+      {
+        "file": "evaluation/results/native-smoke-models-2026-10-18/audits/qwen3-1-7b-rep3-native-audit-20261018.json",
+        "sha256": "a442ac9395af67f2e745961a935e28493cc68ca5f3168404d057f1996f577084"
+      }
+    ],
+    "candidate_audits": [
+      {
+        "file": "evaluation/results/native-smoke-models-2026-10-18/audits/qwen35-2b-native-audit-20261018.json",
+        "sha256": "21a9e18a074a55d6de87ed8934a8c76a400eb49f2cd62cc3ac12630c273981ab"
+      },
+      {
+        "file": "evaluation/results/native-smoke-models-2026-10-18/audits/qwen35-2b-rep2-native-audit-20261018.json",
+        "sha256": "f62d402859e1b9380685919ddf55fb53ca93c508c6503a6625a20f6c706560de"
+      },
+      {
+        "file": "evaluation/results/native-smoke-models-2026-10-18/audits/qwen35-2b-rep3-native-audit-20261018.json",
+        "sha256": "f61c5080c0b65e6738be11fba2ea3e041ad5e1a955cbd90c7da1ccd0962f71cf"
+      }
+    ],
+    "runtime_lock": {
+      "file": "../android/third_party/llama.lock.json",
+      "sha256": "d800db62c2036a984d924a3fe193df15cf17bf624aab459045556eb6c5a75003"
+    }
+  },
+  "interpretation": "A lower total/first-token latency or higher decode rate is favorable in this probe only. Raw answer text is retained for review; it is not a quality score.",
+  "runtime": {
+    "commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "lock_sha256": "d800db62c2036a984d924a3fe193df15cf17bf624aab459045556eb6c5a75003"
+  },
+  "scope": "Repeated native smoke comparison on one Android emulator, with the same app APK, instrumentation APK, fixed prompt and pinned llama.cpp runtime. This checks basic model compatibility and latency only; it is not RAG quality, phone performance, or a production-model selection."
+}

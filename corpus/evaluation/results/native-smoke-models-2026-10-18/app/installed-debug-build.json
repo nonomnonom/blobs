@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "complete": true,
+  "scope": "Direct adb installation verified by hashing installed app and instrumentation APKs against local build outputs.",
+  "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "application_id": "dev.blobs.app.debug",
+  "apk_sha256": "36b576f0b788ce58848a498fe0a4ea8aa1d3800bd2c6e137a5d0ef089b96d2bc",
+  "test_application_id": "dev.blobs.app.debug.test",
+  "test_apk_sha256": "85fa24c14237c966d8547c5d4ec929be50b050f31f8d6a2080eb26ede426ce8e"
+}

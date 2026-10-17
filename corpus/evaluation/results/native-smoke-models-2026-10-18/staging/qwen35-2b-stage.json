@@ -1,0 +1,30 @@
+{
+  "adb_version": "Android Debug Bridge version 1.0.41\nVersion 37.0.1-15733141\nInstalled as C:\\Users\\hi\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe\nRunning on Windows 10.0.26200",
+  "cleanup": "adb -s emulator-5554 shell rm -f /data/local/tmp/blobs-qwen35-2b-20261018.gguf",
+  "complete": true,
+  "device": {
+    "abi": "x86_64",
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys"
+  },
+  "format": 1,
+  "preflight_free_bytes": 2644041728,
+  "push_output": "D:\\rimbara\\blobs\\corpus\\work\\models\\Qwen3.5-2B-Q4_K_M.gguf: 1 file pushed, 0 skipped. 41.6 MB/s (1280835840 bytes in 29.388s)",
+  "remaining_free_bytes": 1363197952,
+  "required_free_bytes_exclusive": 1549271296,
+  "scope": "ADB staging evidence for a native test fixture. This is not model-package import, phone-performance evidence or a product-model selection.",
+  "serial": "emulator-5554",
+  "source": {
+    "bytes": 1280835840,
+    "file": "Qwen3.5-2B-Q4_K_M.gguf",
+    "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223"
+  },
+  "source_lock": {
+    "file": "work/evaluation/qwen35-2b-android-model-lock.json",
+    "sha256": "fa3681d2111fdf3eec1c22e2227b3f3bf4da8fb0b755e68192033a6f89ba6171"
+  },
+  "staged": {
+    "bytes": 1280835840,
+    "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223"
+  },
+  "target": "/data/local/tmp/blobs-qwen35-2b-20261018.gguf"
+}

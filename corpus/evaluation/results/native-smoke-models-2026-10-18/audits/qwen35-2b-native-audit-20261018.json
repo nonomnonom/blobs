@@ -1,0 +1,98 @@
+{
+  "application": {
+    "apk_sha256": "36b576f0b788ce58848a498fe0a4ea8aa1d3800bd2c6e137a5d0ef089b96d2bc",
+    "package": null,
+    "test_apk_sha256": "85fa24c14237c966d8547c5d4ec929be50b050f31f8d6a2080eb26ede426ce8e"
+  },
+  "checks": {
+    "answer_stage_order": true,
+    "exact_model_identity": true,
+    "exact_three_token_cancellation": true,
+    "generated_nonempty_answer": true,
+    "inputs_complete": true,
+    "installed_app_identity": true,
+    "missing_model_stopped_before_prompt": true,
+    "qwen35_non_thinking_prefix": true
+  },
+  "complete": true,
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "format": 1,
+  "inputs": {
+    "installed_app": {
+      "bytes": 542,
+      "file": "evaluation/results/native-smoke-models-2026-10-18/app/installed-debug-build.json",
+      "sha256": "68eb79e421f8b2dab2c7e94bbb7cf84799bee160497d1fee38a8bb15ad882c39"
+    },
+    "model_lock": {
+      "bytes": 804,
+      "file": "evaluation/results/native-smoke-models-2026-10-18/model-locks/qwen35-2b-lock.json",
+      "sha256": "fa3681d2111fdf3eec1c22e2227b3f3bf4da8fb0b755e68192033a6f89ba6171"
+    },
+    "run": {
+      "bytes": 1865,
+      "file": "evaluation/results/native-smoke-models-2026-10-18/runs/qwen35-2b-native-run-20261018.json",
+      "sha256": "b143b742f9253265c8e3f7c3c1d8f814265201a1d96d21a6fe6e5f661bad4e11"
+    },
+    "staging": {
+      "bytes": 1446,
+      "file": "evaluation/results/native-smoke-models-2026-10-18/staging/qwen35-2b-stage.json",
+      "sha256": "d7ad5ae1e4cf855fd9558de8ad9468f7ba460498b79a731ba69b6bbcb074d9da"
+    }
+  },
+  "interpretation": {
+    "packaging": "The raw verified GGUF was staged directly; normal .blobs import remains separate.",
+    "quality": "One short supported answer proves execution, not research-answer reliability.",
+    "timing": "Recorded stage durations describe this emulator run only."
+  },
+  "model": {
+    "bytes": 1280835840,
+    "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223"
+  },
+  "observations": {
+    "answer_metrics": {
+      "context_setup_us": 785157,
+      "first_token_callback_us": 6276286,
+      "generation_loop_us": 1612938,
+      "model_load_us": 1012644,
+      "non_thinking_prefix": true,
+      "output_tokens": 11,
+      "prefill_us": 4473042,
+      "prompt_tokens": 54,
+      "queue_us": 4,
+      "template_and_tokenize_us": 1021,
+      "token_callback_us": 450,
+      "total_us": 8008811
+    },
+    "cancellation_metrics": {
+      "context_setup_us": 46829,
+      "first_token_callback_us": 4477494,
+      "generation_loop_us": 528592,
+      "model_load_us": 804285,
+      "non_thinking_prefix": true,
+      "output_tokens": 3,
+      "prefill_us": 3619315,
+      "prompt_tokens": 36,
+      "queue_us": 0,
+      "template_and_tokenize_us": 327,
+      "token_callback_us": 173,
+      "total_us": 5210682
+    },
+    "failure_metrics": {
+      "context_setup_us": -1,
+      "first_token_callback_us": -1,
+      "generation_loop_us": -1,
+      "model_load_us": 168,
+      "non_thinking_prefix": false,
+      "output_tokens": 0,
+      "prefill_us": -1,
+      "prompt_tokens": -1,
+      "queue_us": 0,
+      "template_and_tokenize_us": -1,
+      "token_callback_us": 0,
+      "total_us": 318
+    },
+    "raw_answer": "Photosynthesis converts light energy into chemical energy [1]."
+  },
+  "scope": "Exact x86_64 emulator model compatibility, native generation, cancellation and failure-path evidence. This is not model-package import, broad answer quality, ARM execution or phone-performance evidence.",
+  "script_sha256": "63d60cc02e7143d44f1f55501f25a8fb97c4624bb0cf900c796cceb59bf70679"
+}

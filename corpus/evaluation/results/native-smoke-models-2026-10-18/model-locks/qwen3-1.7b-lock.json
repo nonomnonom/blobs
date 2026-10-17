@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "source_lock": "../android/models.lock.json#small",
+  "source_lock_sha256": "0019b21bd57031d23d0f0694316a0bfc30f031d6e97748cceb4fbd1ac08c30c5",
+  "model": {
+    "filename": "Qwen3-1.7B-Q8_0.gguf",
+    "bytes": 1834426016,
+    "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a"
+  }
+}
