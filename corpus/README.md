@@ -18,6 +18,40 @@ The pipeline acquires a pinned source archive, extracts bounded records, normali
 
 Core commands are exposed through `python -m blobs_corpus.<module>`. Use `--help` on a module before running it. Builders refuse existing output editions and publish through a temporary path so a failed run cannot replace verified data.
 
+### Rebuild the pinned Top 1M library
+
+Run these commands from this directory. The source archive is about 3 GB; acquisition verifies its locked size and SHA-256, and extraction checkpoints deterministic 5,000-entry shards so an interrupted run can resume. Extraction and package construction can take a long time on a development computer.
+
+```powershell
+uv run --locked python -m blobs_corpus.acquire `
+  sources/wikipedia-en-top1m-mini-2026-04.json work/sources
+
+uv run --locked python -m blobs_corpus.extract `
+  sources/wikipedia-en-top1m-mini-2026-04.json `
+  work/sources/wikipedia_en_top1m_mini_2026-04.zim `
+  work/extract/wikipedia-en-top1m-mini-2026-04
+
+uv run --locked python -m blobs_corpus.curate `
+  work/extract/wikipedia-en-top1m-mini-2026-04/manifest.json `
+  work/reviewed/wikipedia-en-top1m-mini-2026-04
+
+uv run --locked python -m blobs_corpus.export `
+  work/reviewed/wikipedia-en-top1m-mini-2026-04/manifest.json `
+  artifacts/records/wikipedia-en-top1m-mini-2026-04
+
+uv run --locked python -m blobs_corpus.package library `
+  artifacts/records/wikipedia-en-top1m-mini-2026-04/manifest.json `
+  artifacts/wikipedia-en-top1m-mini-2026-04.blobs `
+  --schema 3 `
+  --id wikipedia-top1m-mini `
+  --version 2026-04.1 `
+  --title "Wikipedia Top 1M introductions" `
+  --license "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs" `
+  --origin "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim"
+```
+
+The source lock captures snapshot, scope, license, origin, byte count, and digest. Review the generated curation report and package receipt before distributing an edition. Do not commit the raw archive, database, or `.blobs` package to Git; the repository's large reviewed record-shard policy uses Git LFS, while reproducible release packages are distributed separately.
+
 Example package build from normalized records:
 
 ```powershell
