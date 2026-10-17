@@ -52,6 +52,8 @@ uv run --locked python -m blobs_corpus.package library `
 
 The source lock captures snapshot, scope, license, origin, byte count, and digest. Review the generated curation report and package receipt before distributing an edition. Do not commit the raw archive, database, or `.blobs` package to Git; the repository's large reviewed record-shard policy uses Git LFS, while reproducible release packages are distributed separately.
 
+Extraction checkpoints are safe to resume after a normal interrupt. If the process is forcibly terminated, it can leave `work/extract/EDITION/.extract.lock`; confirm no extractor is still running before removing that stale file and resuming. Never remove the lock while an extraction process is active.
+
 Example package build from normalized records:
 
 ```powershell
