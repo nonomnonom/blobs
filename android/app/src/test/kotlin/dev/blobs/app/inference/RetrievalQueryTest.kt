@@ -32,6 +32,15 @@ class RetrievalQueryTest {
     }
 
     @Test
+    fun adjacentContentPhrasesAddSpecificityWithoutRemovingRecallTerms() {
+        assertEquals(
+            "\"trees\" OR \"reduce\" OR \"urban\" OR \"heat\" OR " +
+                "\"trees reduce\" OR \"reduce urban\" OR \"urban heat\"",
+            RetrievalQuery.match("How do trees reduce urban heat?")
+        )
+    }
+
+    @Test
     fun anInstructionVerbDoesNotCreateUnrelatedEvidenceForAnUnknownSubject() {
         assertEquals(
             "\"zqxvblobsunobtainium\"",

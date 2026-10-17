@@ -51,14 +51,18 @@ object RetrievalQuery {
     }
 
     fun match(question: String, titles: List<String> = emptyList()): String {
-        val terms = Regex("[\\p{L}\\p{N}]{2,}").findAll(normalized(question))
-            .map { it.value }.filter { it !in stopWords }.distinct().take(20)
-            .map { "\"$it\"" }.toList()
-        val phrases = titles.take(4).mapNotNull { title ->
+        val words = Regex("[\\p{L}\\p{N}]{2,}").findAll(normalized(question))
+            .map { it.value }.toList()
+        val terms = words.filter { it !in stopWords }.distinct().take(20)
+            .map { "\"$it\"" }
+        val phraseTerms = words.zipWithNext { left, right ->
+            if (left !in stopWords && right !in stopWords) "\"$left $right\"" else null
+        }.filterNotNull().distinct().take(20)
+        val titlePhrases = titles.take(4).mapNotNull { title ->
             val tokens = Regex("[\\p{L}\\p{N}]+").findAll(normalized(title))
                 .map { it.value }.joinToString(" ")
             tokens.takeIf { it.isNotEmpty() }?.let { "title:\"$it\"" }
         }
-        return (terms + phrases).distinct().joinToString(" OR ")
+        return (terms + phraseTerms + titlePhrases).distinct().joinToString(" OR ")
     }
 }

@@ -15,7 +15,7 @@ import zipfile
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
 LIBRARY_STORE_SHA256 = '0f9d163efecf80f4d8485be70369663554656c28987f6407853e4aec9372cda4'
-QUERY_SHA256 = '136427613783576c1188a157251241d9390d4f89913f58a4b56d0881ce56f7a5'
+QUERY_SHA256 = '5c0e307ccaa5a5f7043bc0878fca626b74dbfb0e11a0a1f99641b64592d2f79e'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
     'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',
@@ -134,11 +134,14 @@ def retrieval_spec(database, question):
         titles.append(title)
         if len(titles) == 4:
             break
-    terms = list(dict.fromkeys(
-        word for word in re.findall(r'[\w]{2,}', normalized, flags=re.UNICODE)
-        if word not in STOP_WORDS
-    ))[:20]
+    words = re.findall(r'[\w]{2,}', normalized, flags=re.UNICODE)
+    terms = list(dict.fromkeys(word for word in words if word not in STOP_WORDS))[:20]
     query = [f'"{term}"' for term in terms]
+    phrase_terms = list(dict.fromkeys(
+        f'"{left} {right}"' for left, right in zip(words, words[1:])
+        if left not in STOP_WORDS and right not in STOP_WORDS
+    ))[:20]
+    query.extend(phrase_terms)
     for title in titles:
         phrase = ' '.join(re.findall(r'[\w]+', unicodedata.normalize('NFKC', title).lower(), flags=re.UNICODE))
         if phrase:

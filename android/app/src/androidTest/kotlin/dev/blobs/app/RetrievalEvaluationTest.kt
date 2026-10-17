@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import android.util.AtomicFile
+import android.util.Base64
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.RetrievalQuery
@@ -32,9 +33,18 @@ class RetrievalEvaluationTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val output = File(context.filesDir, "retrieval-$runId.json")
         check(!output.exists())
-        val caseFile = File(requireNotNull(args.getString("casesPath")))
-        require(caseFile.length() in 1..512_000)
-        val caseBytes = caseFile.readBytes()
+        val casesPath = args.getString("casesPath")
+        val casesBase64 = args.getString("casesBase64")
+        require((casesPath != null) xor (casesBase64 != null))
+        val caseBytes = if (casesBase64 != null) {
+            require(casesBase64.length in 1..700_000)
+            Base64.decode(casesBase64, Base64.DEFAULT)
+        } else {
+            val caseFile = File(requireNotNull(casesPath))
+            require(caseFile.length() in 1..512_000)
+            caseFile.readBytes()
+        }
+        require(caseBytes.size in 1..512_000)
         val definition = JSONObject(caseBytes.toString(Charsets.UTF_8))
         require(definition.getInt("format") == 1)
         val cases = definition.getJSONArray("cases")
@@ -160,7 +170,7 @@ class RetrievalEvaluationTest {
                             put("base_fts_query", LibraryStore.searchTerms(query))
                             put(
                                 "query_policy",
-                                "source-name title phrases plus base lexical terms; versioned title/section indexes exclude structural reference sections except article openings"
+                                "base lexical terms plus adjacent content-word phrases and source-name title phrases; versioned title/section indexes exclude structural reference sections except article openings"
                             )
                             put("elapsed_ms", timings)
                             put("expected_titles_found", found)

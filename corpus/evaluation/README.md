@@ -23,3 +23,14 @@ uv run --locked --group evaluation python -m unittest discover -s tests
 Write local run output under `reports/`; that directory is ignored by Git. Do not overwrite a prior run. Record the model hash, prompt/template revision, sampler, runtime revision, input evidence, hardware/ABI, timings, and cancellation/timeout behavior with each result.
 
 Mechanical checks can validate source-ID syntax, supplied-source bounds, retrieval ordering, and configured thresholds. They do not establish factual support by themselves. Review claim-to-source support, contradiction, insufficiency handling, and misleading citation placement before promoting a model or prompt.
+
+For a controlled prompt comparison, `answers/compare_runs.py` requires complete runs with the same pinned model, runtime, sampler, questions, and retrieved evidence. It reports answer text, mechanical citation-ID validity, and host latency; it does not score factual support. Example:
+
+```powershell
+uv run --locked python -m evaluation.answers.compare_runs `
+  --baseline reports/runs/baseline.json `
+  --candidate reports/runs/candidate.json `
+  --output reports/runs/prompt-comparison.json
+```
+
+The output path must be new so earlier evidence is preserved. Review every answer against its cited passages before treating a prompt change as a quality improvement. Host timing is not a proxy for Android device performance.

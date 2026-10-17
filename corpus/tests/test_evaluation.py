@@ -18,6 +18,7 @@ from evaluation.answers.host_answers import (
     record_chat_chunk,
     sampling_for,
 )
+from evaluation.answers.compare_runs import compare as compare_answer_runs
 from evaluation.native.audit_native_prefill import audit as audit_native_prefill
 from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
@@ -27,6 +28,33 @@ from evaluation.retrieval.title_coverage import inspect as inspect_titles
 
 
 class EvaluationInputTests(unittest.TestCase):
+    def test_answer_run_comparison_requires_identical_evidence_and_reports_mechanical_ids(self):
+        common = dict(
+            format=1, complete=True, runtime_commit='pinned', server_sha256='a' * 64,
+            retrieval_report_sha256='b' * 64, retrieval_variant='installedLibrary',
+            sampling_profile='product', sampling={'temperature': 0.3}, context=4096,
+            threads=4, batch=256, ubatch=128, source_id_scheme='S-prefixed',
+            model={'sha256': 'c' * 64},
+            results=[dict(case_id='case-1', question='Q?', evidence=[{'title': 'Source'}],
+                           response={'content': 'Claim [S1] and [S2].'}, host_elapsed_ms=100)],
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            baseline = Path(folder) / 'baseline.json'
+            candidate = Path(folder) / 'candidate.json'
+            baseline.write_text(json.dumps(dict(common, system='Old prompt')), encoding='utf-8')
+            candidate.write_text(json.dumps(dict(common, system='New prompt', results=[
+                dict(common['results'][0], response={'content': 'Claim [S1].'}, host_elapsed_ms=80)
+            ])), encoding='utf-8')
+            result = compare_answer_runs(baseline, candidate)
+            self.assertEqual(result['candidate']['latency']['median_ms'], 80)
+            self.assertEqual(result['results'][0]['candidate_citation_ids'], ['S1'])
+            self.assertEqual(result['results'][0]['baseline_invalid_citation_ids'], ['S2'])
+            candidate.write_text(json.dumps(dict(common, system='New prompt', results=[
+                dict(common['results'][0], evidence=[{'title': 'Different source'}])
+            ])), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'identical questions and retrieved evidence'):
+                compare_answer_runs(baseline, candidate)
+
     def test_host_replay_name_routing_deduplicates_repeated_aliases(self):
         with tempfile.TemporaryDirectory() as folder:
             database = Path(folder) / 'names.sqlite'
@@ -41,6 +69,7 @@ class EvaluationInputTests(unittest.TestCase):
             self.assertEqual(
                 retrieval_query(database, 'litres per minute and litres increasing'),
                 '"litres" OR "per" OR "minute" OR "increasing" '
+                'OR "litres per" OR "per minute" OR "litres increasing" '
                 'OR title:"litre" OR title:"monotonic function"',
             )
 
