@@ -14,13 +14,16 @@ import zipfile
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = 'f86dc5f712a10654c47e6978fd10a25dc90776b540025d49adc8972cbdac65aa'
-QUERY_SHA256 = '37555a1e3ca5bbe613f1f4c6de82540ea1c227a4f385b6b1488b454c14a24186'
-SQL = '''SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,p.body,p.title AS opening_title,
-p.id AS passage_id,rank AS score
-FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid
-JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?
-ORDER BY rank,p.id LIMIT 48'''
+LIBRARY_STORE_SHA256 = '0f9d163efecf80f4d8485be70369663554656c28987f6407853e4aec9372cda4'
+QUERY_SHA256 = '136427613783576c1188a157251241d9390d4f89913f58a4b56d0881ce56f7a5'
+STOP_WORDS = {
+    'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
+    'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',
+    'they', 'its', 'these', 'those', 'compare', 'explain', 'between', 'difference',
+    'versus', 'could', 'do', 'did', 'be', 'it', 'into', 'also', 'tell', 'please', 'me',
+    'more', 'than', 'when', 'where', 'who', 'was', 'were', 'has', 'had', 'is', 'of',
+    'to', 'by', 'on', 'in', 'an', 'as', 'at', 'if', 'we', 'us', 'our', 'describe'
+}
 
 
 def sha(path):
@@ -64,15 +67,87 @@ def unpack(package, target):
     return manifest
 
 
-def retrieve(database, manifest, query, *, sql=SQL):
+def retrieve(database, manifest, query):
     with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as db:
         db.execute('PRAGMA trusted_schema=OFF')
         db.execute('PRAGMA query_only=ON')
-        if db.execute('PRAGMA user_version').fetchone()[0] != 2:
-            raise ValueError('This replay supports schema 2 only')
+        schema = db.execute('PRAGMA user_version').fetchone()[0]
+        if schema not in (2, 3):
+            raise ValueError(f'Unsupported library schema: {schema}')
         db.row_factory = sqlite3.Row
-        candidates = [dict(row) for row in db.execute(sql, (query,))] if query else []
+        if schema == 2:
+            statement = '''SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,
+                p.section,p.body,p.title AS opening_title,p.id AS passage_id,rank AS score
+                FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid
+                JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?
+                AND (p.title!='' OR lower(trim(p.section)) NOT IN
+                  ('references','external links','see also','further reading','bibliography'))
+                ORDER BY rank,p.id LIMIT 48'''
+        else:
+            statement = '''SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,
+                p.section,substr(d.body,s.start+1,s.end-s.start) AS body,p.title AS opening_title,
+                p.id AS passage_id,rank AS score
+                FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid
+                JOIN passage_spans s ON s.passage_id=p.id
+                JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?
+                AND (p.title!='' OR lower(trim(p.section)) NOT IN
+                  ('references','external links','see also','further reading','bibliography'))
+                ORDER BY rank,p.id LIMIT 48'''
+        candidates = [dict(row) for row in db.execute(statement, (query,))] if query else []
     return select_evidence(candidates, manifest), candidates
+
+
+def retrieval_spec(database, question):
+    """Mirror LibraryStore's unique source-name routing and FTS query construction."""
+    import sqlite3
+    import unicodedata
+    import re
+
+    normalized = unicodedata.normalize('NFKC', question).lower()
+    words = re.findall(r'[\w]+', normalized, flags=re.UNICODE)[:40]
+    candidates = []
+    for size in range(min(6, len(words)), 0, -1):
+        for start in range(len(words) - size + 1):
+            phrase = words[start:start + size]
+            key = ' '.join(phrase)
+            if 2 <= len(key) <= 600 and any(word not in STOP_WORDS for word in phrase):
+                candidates.append((key, set(range(start, start + size))))
+    with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as db:
+        names = list(dict.fromkeys(key for key, _ in candidates))
+        if names:
+            placeholders = ','.join('?' for _ in names)
+            rows = db.execute(
+                f'''SELECT n.name,min(d.title),min(d.id) FROM document_names n
+                    JOIN documents d ON d.id=n.doc_id WHERE n.name IN ({placeholders})
+                    GROUP BY n.name HAVING count(*)=1''', names).fetchall()
+            matches = {row[0]: (row[1], row[2]) for row in rows}
+        else:
+            matches = {}
+    occupied, titles = set(), []
+    for key, positions in candidates:
+        if key not in matches or occupied.intersection(positions):
+            continue
+        occupied.update(positions)
+        title = matches[key][0]
+        if title in titles:
+            continue
+        titles.append(title)
+        if len(titles) == 4:
+            break
+    terms = list(dict.fromkeys(
+        word for word in re.findall(r'[\w]{2,}', normalized, flags=re.UNICODE)
+        if word not in STOP_WORDS
+    ))[:20]
+    query = [f'"{term}"' for term in terms]
+    for title in titles:
+        phrase = ' '.join(re.findall(r'[\w]+', unicodedata.normalize('NFKC', title).lower(), flags=re.UNICODE))
+        if phrase:
+            query.append(f'title:"{phrase}"')
+    return ' OR '.join(dict.fromkeys(query)), titles
+
+
+def retrieval_query(database, question):
+    return retrieval_spec(database, question)[0]
 
 
 def select_evidence(candidates, manifest):
@@ -97,7 +172,7 @@ def select_evidence(candidates, manifest):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--native-report', type=Path, required=True)
-    parser.add_argument('--baseline', type=Path, required=True)
+    parser.add_argument('--baseline', type=Path)
     parser.add_argument('--candidate', type=Path, required=True)
     parser.add_argument('--work-directory', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -111,7 +186,8 @@ def main():
     native = json.loads(args.native_report.read_text(encoding='utf-8'))
     if not native['complete']:
         raise ValueError('Native comparison must be complete')
-    cases = [case for case in native['results'] if case['variant'] == 'candidateLibrary']
+    cases = [case for case in native['results']
+             if case['variant'] in {'candidateLibrary', 'installedLibrary'}]
     if not 1 <= len(cases) <= 100:
         raise ValueError('Invalid comparison case count')
     work = args.work_directory.resolve()
@@ -119,7 +195,7 @@ def main():
     report = dict(format=1, complete=False, sqlite=sqlite3.sqlite_version,
                   script_sha256=sha(Path(__file__)), native_report_sha256=sha(args.native_report),
                   native_sources=dict(library_store=LIBRARY_STORE_SHA256, query=QUERY_SHA256),
-                  scope='Host replay of a frozen unscoped single-library retrieval policy. Native starter parity is checked first. Host elapsed times are diagnostics, never phone latency or full-size Android import proof.',
+                  scope='Host replay of the pinned Android retrieval policy, including source-name routing, on the exact native-evaluated package. Host elapsed times are diagnostics, never phone latency or full-size Android import proof.',
                   cases=native['cases'], baseline_parity=[], results=[])
 
     def save():
@@ -130,25 +206,35 @@ def main():
 
     save()
     try:
-        baseline = unpack(args.baseline, work / 'starter.sqlite')
-        for case in cases:
-            if case['library'] != baseline:
-                raise ValueError('The baseline package differs from the native evidence')
-            evidence, _ = retrieve(work / 'starter.sqlite', baseline, case['fts_query'])
-            same = evidence == case['evidence']
-            report['baseline_parity'].append(dict(case_id=case['case_id'], identical=same))
-            if not same:
-                raise ValueError(f'Host/native evidence differs: {case["case_id"]}')
-        save()
-        print(f'Native parity passed for {len(cases)} starter cases. Unpacking the full candidate.', flush=True)
+        if args.baseline:
+            baseline = unpack(args.baseline, work / 'starter.sqlite')
+            baseline_cases = [case for case in native['results'] if case['variant'] == 'baselineLibrary']
+            if len(baseline_cases) != len(cases):
+                raise ValueError('Native report must contain matching baseline and candidate cases')
+            for case in baseline_cases:
+                if case['library'] != baseline:
+                    raise ValueError('The baseline package differs from the native evidence')
+                query, _ = retrieval_spec(work / 'starter.sqlite', case['resolved_query'])
+                evidence, _ = retrieve(work / 'starter.sqlite', baseline, query)
+                same = evidence == case['evidence']
+                report['baseline_parity'].append(dict(case_id=case['case_id'], identical=same))
+                if not same:
+                    raise ValueError(f'Host/native evidence differs: {case["case_id"]}')
+            save()
+            print(f'Native starter parity passed for {len(baseline_cases)} cases.', flush=True)
         candidate = unpack(args.candidate, work / 'expanded.sqlite')
         report['candidate'] = candidate
         save()
         for case in cases:
             started = time.monotonic()
-            evidence, candidates = retrieve(work / 'expanded.sqlite', candidate, case['fts_query'])
-            report['results'].append(dict(case_id=case['case_id'], fts_query=case['fts_query'],
+            query, titles = retrieval_spec(work / 'expanded.sqlite', case['resolved_query'])
+            evidence, candidates = retrieve(work / 'expanded.sqlite', candidate, query)
+            same = evidence == case['evidence']
+            report['results'].append(dict(case_id=case['case_id'], resolved_query=case['resolved_query'],
+                                          fts_query=query,
+                                          matched_titles=titles,
                                           elapsed_host_ms=(time.monotonic() - started) * 1000,
+                                          native_evidence_identical=same,
                                           evidence=evidence, candidates=candidates))
             save()
             print(f'{case["case_id"]}: ' + ', '.join(dict.fromkeys(row['title'] for row in evidence)), flush=True)

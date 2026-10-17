@@ -1,8 +1,9 @@
-from contextlib import redirect_stdout
+from contextlib import closing, redirect_stdout
 import hashlib
 import io
 import json
 from pathlib import Path
+import sqlite3
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -20,12 +21,29 @@ from evaluation.answers.host_answers import (
 from evaluation.native.audit_native_prefill import audit as audit_native_prefill
 from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
-from evaluation.retrieval.host_replay import select_evidence
+from evaluation.retrieval.host_replay import retrieval_query, select_evidence
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
 from evaluation.retrieval.title_coverage import inspect as inspect_titles
 
 
 class EvaluationInputTests(unittest.TestCase):
+    def test_host_replay_name_routing_deduplicates_repeated_aliases(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / 'names.sqlite'
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript('''
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT);
+                    CREATE TABLE document_names(name TEXT,doc_id TEXT);
+                    INSERT INTO documents VALUES ('litre','Litre'),('monotonic','Monotonic function');
+                    INSERT INTO document_names VALUES ('litres','litre'),('increasing','monotonic');
+                ''')
+                db.commit()
+            self.assertEqual(
+                retrieval_query(database, 'litres per minute and litres increasing'),
+                '"litres" OR "per" OR "minute" OR "increasing" '
+                'OR title:"litre" OR title:"monotonic function"',
+            )
+
     def test_qwen35_2b_text_profile_preserves_publisher_sampling_contract(self):
         sampling = sampling_for('qwen35-2b-text')
         self.assertEqual(

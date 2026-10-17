@@ -52,10 +52,13 @@ def main():
     if args.output.exists():
         raise FileExistsError(args.output)
     source = json.loads(args.input.read_text(encoding='utf-8'))
-    if not source['complete'] or not source['baseline_parity'] or not all(
-        row['identical'] for row in source['baseline_parity']
+    baseline_parity = source.get('baseline_parity', [])
+    candidate_parity = [row.get('native_evidence_identical') is True for row in source.get('results', [])]
+    if not source['complete'] or not (
+        (baseline_parity and all(row['identical'] for row in baseline_parity)) or
+        (candidate_parity and all(candidate_parity))
     ):
-        raise ValueError('Require a completed native/host parity report')
+        raise ValueError('Require completed native/host parity for every replayed candidate')
     case_ids = [row['case_id'] for row in source['results']]
     if not 1 <= len(case_ids) <= 100 or len(set(case_ids)) != len(case_ids):
         raise ValueError('Require 1..100 unique cases')

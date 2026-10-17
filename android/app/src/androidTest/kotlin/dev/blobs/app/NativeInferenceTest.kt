@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.GgufValidator
+import dev.blobs.app.data.packages.PackageManifest
 import dev.blobs.app.inference.AnswerText
 import dev.blobs.app.inference.GenerationMetrics
 import dev.blobs.app.inference.NativeBridge
@@ -69,7 +70,11 @@ class NativeInferenceTest {
         val modelPath = requireNotNull(
             args.getString(if (verifiedFile) "modelFile" else "modelPackage")
         )
-        val libraryPath = requireNotNull(args.getString("libraryPackage"))
+        val libraryPath = args.getString("libraryPackage")
+        val installedLibraryKey = args.getString("installedLibrary")
+        require((libraryPath != null) xor (installedLibraryKey != null)) {
+            "Provide exactly one of libraryPackage or installedLibrary"
+        }
         val runId = args.getString("runId") ?: UUID.randomUUID().toString()
         require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
         val question = args.getString("question")
@@ -109,7 +114,7 @@ class NativeInferenceTest {
         fun save() = saveReport(output, report)
         save()
         val installed = try {
-            listOf(modelPath, libraryPath).mapIndexed { index, path ->
+            listOf(modelPath, libraryPath.orEmpty()).mapIndexed { index, path ->
                 val kind = if (index == 0) "model" else "library"
                 if (index == 0 && verifiedFile) {
                     val expected = requireNotNull(args.getString("modelSha256"))
@@ -134,6 +139,43 @@ class NativeInferenceTest {
                         "Evaluation fixture; see its pinned model license",
                         "local:verified-fixture", 0
                     )
+                }
+                if (index == 1 && installedLibraryKey != null) {
+                    val pack = container.database.packages().all().single {
+                        it.key == installedLibraryKey
+                    }
+                    require(pack.kind == "library")
+                    val packageRoot = File(context.filesDir, "packages").canonicalFile
+                    val file = File(pack.path).canonicalFile
+                    check(file.path.startsWith(packageRoot.path + File.separator))
+                    check(file.isFile && file.length() == pack.bytes)
+                    val digest = MessageDigest.getInstance("SHA-256")
+                    file.inputStream().use { input ->
+                        val buffer = ByteArray(256 * 1024)
+                        while (true) {
+                            val length = input.read(buffer)
+                            if (length < 0) break
+                            digest.update(buffer, 0, length)
+                        }
+                    }
+                    check(digest.digest().joinToString("") { "%02x".format(it) } == pack.sha256)
+                    report.put(
+                        "library_manifest",
+                        JSONObject(
+                            PackageManifest(
+                                pack.packageId,
+                                pack.version,
+                                pack.kind,
+                                pack.title,
+                                pack.bytes,
+                                pack.sha256,
+                                pack.license,
+                                pack.origin
+                            ).json()
+                        )
+                    )
+                    save()
+                    return@mapIndexed pack
                 }
                 val uri = Uri.fromFile(File(path))
                 val manifest = container.installer.inspect(uri)
