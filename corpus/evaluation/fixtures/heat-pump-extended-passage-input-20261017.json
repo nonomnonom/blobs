@@ -1,0 +1,48 @@
+{
+  "cases": {
+    "cases": [
+      {
+        "expected_titles": [
+          "Heat pump"
+        ],
+        "id": "heat-pump",
+        "question": "How does a heat pump move heat instead of creating it?",
+        "review": "Retain energy input, transferred heat and the conditions of any efficiency comparison."
+      }
+    ],
+    "format": 1
+  },
+  "complete": true,
+  "format": 1,
+  "library_sha256": "b1d92ae3a2bdc9bbed516b07822770cf70ca52b4282f98f67ed3facda28f7cdf",
+  "parent_report_sha256": "078c82efc6069e731c2e4a56ab07c562149b76722c310f936d2ccb6628fde9e7",
+  "results": [
+    {
+      "case_id": "heat-pump",
+      "evidence": [
+        {
+          "edition": "Native query parity fixture · 2026-10-17.1 · b1d92ae3a2bdc9bbed516b07822770cf70ca52b4282f98f67ed3facda28f7cdf",
+          "id": "wikipedia-parity-2026-10-17.1-b1d92ae3a2bdc9bb/wiki-401cba47d29b882fadb681f3e7177dfe",
+          "license": "CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution/history: https://en.wikipedia.org/wiki/Heat_pump?action=history",
+          "publisher": "Wikipedia contributors",
+          "saved": "2026-10-17",
+          "section": "Heat pump",
+          "text": "External heat exchanger of an air-source heat pump for both heating and cooling Mitsubishi Electric heat pump interior air handler wall unit\n\nA heat pump is a device that uses mechanical or thermal energy to transfer heat from one space to another. The mechanical heat pump uses electric power to transfer heat by compression. Specifically, it transfers thermal energy by means of a heat pump and refrigeration cycle, cooling one space and warming the other.[1]\n\nIn winter, a heat pump can move heat from the cool outdoors to warm a house; in summer, it may also be designed to move heat from the house to the warmer outdoors, functioning in the same manner as an air conditioner. As it transfers rather than generates heat, it is more energy-efficient than heating by gas boiler.[2]\n\nIn a typical vapor-compression heat pump, a gaseous refrigerant is compressed so its pressure and temperature rise. When the pump operates as a heater in cold weather, the warmed gas flows to a heat exchanger in the indoor space, where some of its thermal energy is transferred to that space, causing the gas to condense into a liquid. The liquified refrigerant flows to a heat exchanger in the outdoor space, where the pressure falls, the liquid evaporates, and the temperature of the gas falls. Now colder than the temperature of the outdoor space being used as a heat source, it can again take up energy from the heat source, be compressed, and repeat the cycle.",
+          "title": "Heat pump",
+          "updated": "Snapshot 2026-09",
+          "url": "https://en.wikipedia.org/wiki/Heat_pump"
+        }
+      ],
+      "original_source_number": 1,
+      "variant": "reviewer_selected_passage"
+    }
+  ],
+  "scope": "Oracle diagnostic retaining every character of the earlier retrieved passage and appending only its missing paragraph tail. Not automatic retrieval; this exceeds the schema-2 per-passage limit and is not a product package.",
+  "selected_span": {
+    "document_id": "wiki-401cba47d29b882fadb681f3e7177dfe",
+    "end": 1450,
+    "offsets": "Unicode code points in normalized documents.body",
+    "old_end": 1281,
+    "start": 0
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "name": "retrieval-development-2026-10-17",
+  "purpose": "Development diagnostics, not a held-out benchmark. Expected titles are routing checks, not exhaustive relevance judgments or proof that a passage supports an answer.",
+  "cases": [
+    {"id":"urban-heat","question":"How do trees reduce urban heat? Explain with sources.","expected_titles":["Urban heat island","Urban forestry"],"review":"Check shade and transpiration evidence; avoid unrelated runoff and unsupported health claims."},
+    {"id":"heat-pump","question":"How does a heat pump move heat instead of creating it?","expected_titles":["Heat pump"],"review":"Retain energy input, transferred heat and the conditions of any efficiency comparison."},
+    {"id":"causation","question":"Why does correlation not prove causation?","expected_titles":["Correlation does not imply causation"],"review":"Need a causal limitation or counterexample, not just the word correlation."},
+    {"id":"renewables","question":"Compare solar energy and wind power for electricity generation.","expected_titles":["Solar energy","Wind power"],"review":"Inspect whether both sides have useful evidence, including variable output."},
+    {"id":"abbreviation-ai","question":"What is AI?","expected_titles":["Artificial intelligence"],"review":"A short acronym should not disappear from the query."},
+    {"id":"co2","question":"How does CO2 contribute to the greenhouse effect?","expected_titles":["Greenhouse effect"],"review":"Check the greenhouse mechanism rather than an incidental chemical formula."},
+    {"id":"named-rag","question":"What is retrieval-augmented generation?","expected_titles":["Retrieval-augmented generation"],"review":"Document title lookup should find a useful definition."},
+    {"id":"bayes","question":"How does Bayes' theorem update a probability with evidence?","expected_titles":["Bayes' theorem"],"review":"Preserve prior, likelihood and posterior distinctions."},
+    {"id":"follow-up","question":"How does it work?","previous_question":"What is a heat pump?","expected_titles":["Heat pump"],"review":"An explicit continuation should retain the previous subject."},
+    {"id":"topic-change","question":"Explain how the printing press changed access to books.","previous_question":"How do trees reduce urban heat?","expected_titles":["Printing press"],"review":"An independent question must not retain the old tree/heat topic."},
+    {"id":"freshness-limit","question":"Who won the national election held yesterday?","expected_titles":[],"review":"The question lacks a country and asks beyond this snapshot. Nonempty lexical matches are not an answerability guarantee."},
+    {"id":"unknown-term","question":"Describe zqxvblobsunobtainium.","expected_titles":[],"review":"No matches should yield the no-source path, without invented evidence."}
+  ]
+}

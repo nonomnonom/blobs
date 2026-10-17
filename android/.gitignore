@@ -1,0 +1,15 @@
+.gradle/
+.kotlin/
+.idea/
+.local/
+**/build/
+**/.cxx/
+local.properties
+*.iml
+*.jks
+*.keystore
+captures/
+third_party/llama.cpp-*/
+third_party/kleidiai-*/
+/packages/
+release/

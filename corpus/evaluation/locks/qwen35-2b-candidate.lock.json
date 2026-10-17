@@ -1,0 +1,82 @@
+{
+  "format": 1,
+  "observed_on": "2026-10-17",
+  "scope": "Bounded experimental candidate for lower-latency local text answering. This lock does not select a production model or authorize a download.",
+  "upstream": {
+    "repository": "Qwen/Qwen3.5-2B",
+    "revision": "d1b18ba725f2536e48f4910c4ecfbec5ea5bb2e7",
+    "license": {
+      "name": "Apache-2.0",
+      "bytes": 11544,
+      "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+      "url": "https://huggingface.co/Qwen/Qwen3.5-2B/resolve/d1b18ba725f2536e48f4910c4ecfbec5ea5bb2e7/LICENSE"
+    },
+    "metadata": {
+      "README.md": {
+        "bytes": 62814,
+        "sha256": "c0e83a849c776e6fa843d011f023132d942a0f0140d903205bf1c363adad2275",
+        "url": "https://huggingface.co/Qwen/Qwen3.5-2B/resolve/d1b18ba725f2536e48f4910c4ecfbec5ea5bb2e7/README.md"
+      },
+      "config.json": {
+        "bytes": 2908,
+        "sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+        "url": "https://huggingface.co/Qwen/Qwen3.5-2B/resolve/d1b18ba725f2536e48f4910c4ecfbec5ea5bb2e7/config.json"
+      },
+      "chat_template.jinja": {
+        "bytes": 7755,
+        "sha256": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80",
+        "url": "https://huggingface.co/Qwen/Qwen3.5-2B/resolve/d1b18ba725f2536e48f4910c4ecfbec5ea5bb2e7/chat_template.jinja"
+      }
+    },
+    "declared_model": {
+      "parameters": "2B",
+      "layers": 24,
+      "hidden_dimension": 2048,
+      "native_context_tokens": 262144,
+      "intended_use": "Prototyping, task-specific fine-tuning, and research or development at this parameter scale."
+    }
+  },
+  "quantization": {
+    "publisher": "Unsloth",
+    "repository": "unsloth/Qwen3.5-2B-GGUF",
+    "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+    "relationship": "The quantization publisher identifies Qwen/Qwen3.5-2B as the base. Blobs has not independently reproduced the conversion.",
+    "artifact": {
+      "filename": "Qwen3.5-2B-Q4_K_M.gguf",
+      "bytes": 1280835840,
+      "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf",
+      "pointer_url": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/raw/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf",
+      "allowed_hosts": [
+        "huggingface.co",
+        "cdn-lfs.huggingface.co",
+        "cdn-lfs-us-1.hf.co",
+        "cas-bridge.xethub.hf.co",
+        "us.aws.cdn.hf.co"
+      ]
+    }
+  },
+  "mode": {
+    "input": "text-only",
+    "enable_thinking": false,
+    "soft_switch_supported": false,
+    "reason": "Qwen3.5-2B defaults to non-thinking mode, and the publisher warns that its thinking mode is more prone to non-terminating loops."
+  },
+  "sampling": {
+    "profile": "qwen35-2b-text",
+    "source": "Publisher recommendation for non-thinking text tasks.",
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "top_k": 20,
+    "min_p": 0.0,
+    "presence_penalty": 2.0,
+    "repetition_penalty": 1.0,
+    "note": "The evaluator's output cap, seed, sampler order, context, threads and batch sizes remain explicit Blobs controls rather than publisher defaults."
+  },
+  "runtime": {
+    "repository": "ggml-org/llama.cpp",
+    "revision": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "support_reference": "https://github.com/ggml-org/llama.cpp/pull/19468",
+    "scope": "Pinned source contains Qwen3.5 model and tokenizer support. This does not prove this artifact's Android throughput or answer quality."
+  }
+}

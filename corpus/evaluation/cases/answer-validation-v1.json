@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "scope": "Prospective validation questions frozen before the structural-section and prompt experiments. Coverage comes from article titles in the 90-article real-source fixture, not generated answers. Inspect full passages and claim citations; title matches are not quality scores. Once used for tuning, this set is no longer held out.",
+  "cases": [
+    {"id":"resistance","question":"How does antimicrobial resistance develop?","expected_titles":["Antimicrobial resistance"],"review":"Explain selection or transfer of resistance; do not imply that the patient's body becomes resistant or provide treatment advice."},
+    {"id":"vaccine-memory","question":"How do vaccines help the immune system respond to later infection?","expected_titles":["Vaccine","Immune system"],"review":"Check antigen exposure and immune memory; avoid invented efficacy percentages or universal protection."},
+    {"id":"inflation-purchasing","question":"How does inflation affect purchasing power?","expected_titles":["Inflation"],"review":"Explain the relationship with the price level; distinguish general price changes from an individual's circumstances."},
+    {"id":"encryption-comparison","question":"How does public-key cryptography differ from symmetric cryptography?","expected_titles":["Public-key cryptography","Cryptography"],"review":"Both key arrangements need support. Do not turn the comparison into an unsupported absolute security ranking."},
+    {"id":"tectonics-earthquakes","question":"How are plate tectonics and earthquakes related?","expected_titles":["Plate tectonics","Earthquake"],"review":"Explain movement, faults and released stress only where supported; do not say all earthquakes occur at plate boundaries."},
+    {"id":"ocean-chemistry","question":"Why can increasing dissolved carbon dioxide cause ocean acidification?","expected_titles":["Ocean acidification"],"review":"Need the chemical mechanism or a clear admission that it is absent, not merely climate-related keywords."},
+    {"id":"opportunity-cost","question":"What is opportunity cost?","expected_titles":["Opportunity cost"],"review":"A short, supported definition should identify the foregone alternative without an unrelated survey."},
+    {"id":"selection-evolution","question":"How does natural selection differ from evolution?","expected_titles":["Natural selection","Evolution"],"review":"Distinguish a mechanism from the broader change; do not say selection is the only mechanism."},
+    {"id":"peer-review-limits","question":"Why does peer review not guarantee that a research result is correct?","expected_titles":["Peer review"],"review":"Cite actual limitations. Do not invent a failure rate or imply all peer review is ineffective."},
+    {"id":"sleep-timing","question":"How do circadian rhythms relate to sleep timing?","expected_titles":["Circadian rhythm","Sleep"],"review":"Explain timing rather than prescribing treatment or inventing a universal required duration."},
+    {"id":"current-inflation-limit","question":"What is the exact inflation rate in Indonesia today?","expected_titles":[],"review":"The static corpus cannot establish today's exact rate. No historical number may be presented as current."},
+    {"id":"unseen-subject-limit","question":"What is velorixunobtainium?","expected_titles":[],"review":"No-source handling or explicit lack of evidence; do not invent a definition."}
+  ]
+}

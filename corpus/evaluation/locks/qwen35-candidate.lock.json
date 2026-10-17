@@ -1,0 +1,34 @@
+{
+  "format": 1,
+  "license": {
+    "name": "Apache-2.0",
+    "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+    "url": "https://huggingface.co/Qwen/Qwen3.5-4B/resolve/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/LICENSE"
+  },
+  "mode": {
+    "enable_thinking": false,
+    "note": "Use the artifact template parameter; the publisher does not support the original Qwen3 soft thinking switch. Host comparison uses explicit Jinja kwargs. Native template compatibility still needs proof."
+  },
+  "model": {
+    "allowed_hosts": [
+      "huggingface.co",
+      "cdn-lfs.huggingface.co",
+      "cdn-lfs-us-1.hf.co",
+      "cas-bridge.xethub.hf.co",
+      "us.aws.cdn.hf.co"
+    ],
+    "bytes": 2740937888,
+    "filename": "Qwen3.5-4B-Q4_K_M.gguf",
+    "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+    "url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-Q4_K_M.gguf"
+  },
+  "quantization_publisher": "Unsloth",
+  "repository": "unsloth/Qwen3.5-4B-GGUF",
+  "revision": "e87f176479d0855a907a41277aca2f8ee7a09523",
+  "scope": "Experimental text-only quality comparison, not a production selection.",
+  "upstream": {
+    "observed_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "relationship": "The quantization publisher identifies this base model; its exact conversion commit has not been independently reproduced.",
+    "repository": "Qwen/Qwen3.5-4B"
+  }
+}

@@ -1,0 +1,286 @@
+"""Verify a Blobs offline release kit after copying or downloading it."""
+
+import argparse
+import hashlib
+import json
+from pathlib import Path, PurePosixPath
+import re
+import zipfile
+
+from build_package import verify_package
+
+
+CHECKSUMS = "SHA256SUMS.txt"
+CHECKSUM_LINE = re.compile(r"([0-9a-f]{64})  ([^\r\n]+)")
+VERSION = re.compile(r"[0-9A-Za-z][0-9A-Za-z.+-]{0,63}")
+SOURCE_REQUIRED = {
+    "blobs/.gitattributes",
+    "blobs/README.md",
+    "blobs/CONTRIBUTING.md",
+    "blobs/android/docs/ARCHITECTURE.md",
+    "blobs/android/docs/RELEASE.md",
+    "blobs/android/tools/package_release.py",
+    "blobs/android/tools/verify_release.py",
+    "blobs/corpus/README.md",
+    "blobs/corpus/pyproject.toml",
+    "blobs/corpus/uv.lock",
+}
+SOURCE_FORBIDDEN_PREFIXES = (
+    "blobs/design/",
+    "blobs/android/.local/",
+    "blobs/android/packages/",
+    "blobs/android/release/",
+    "blobs/corpus/artifacts/",
+    "blobs/corpus/reports/",
+    "blobs/corpus/work/",
+)
+SOURCE_FORBIDDEN_SUFFIXES = (".gguf", ".jks", ".keystore")
+
+
+def digest(path: Path) -> str:
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def read_json(path: Path):
+    def reject_duplicates(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"Duplicate JSON key in {path.name}: {key}")
+            result[key] = value
+        return result
+
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=reject_duplicates)
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError(f"Invalid JSON: {path.name}") from error
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a JSON object: {path.name}")
+    return value
+
+
+def safe_relative(name: str) -> PurePosixPath:
+    if "\\" in name:
+        raise ValueError(f"Backslashes are not allowed in release paths: {name}")
+    relative = PurePosixPath(name)
+    if relative.is_absolute() or not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
+        raise ValueError(f"Unsafe release path: {name}")
+    return relative
+
+
+def files_in(root: Path) -> dict[str, Path]:
+    files = {}
+    folded = {}
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise ValueError(f"Release kits cannot contain symbolic links: {path.relative_to(root)}")
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root).as_posix()
+        key = relative.casefold()
+        if key in folded:
+            raise ValueError(f"Case-insensitive path collision: {folded[key]} and {relative}")
+        folded[key] = relative
+        files[relative] = path
+    return files
+
+
+def expected_checksums(path: Path) -> dict[str, str]:
+    if path.stat().st_size > 4 * 1024 * 1024:
+        raise ValueError("Checksum inventory is unexpectedly large")
+    expected = {}
+    folded = {}
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        match = CHECKSUM_LINE.fullmatch(line)
+        if match is None:
+            raise ValueError(f"Invalid checksum line {number}")
+        checksum, name = match.groups()
+        relative = safe_relative(name).as_posix()
+        if relative == CHECKSUMS:
+            raise ValueError("The checksum inventory cannot contain itself")
+        key = relative.casefold()
+        if key in folded:
+            raise ValueError(f"Duplicate checksum path: {folded[key]} and {relative}")
+        folded[key] = relative
+        expected[relative] = checksum
+    if not expected:
+        raise ValueError("Checksum inventory is empty")
+    return expected
+
+
+def verify_source_archive(path: Path) -> int:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            names = []
+            folded = set()
+            for item in archive.infolist():
+                if item.is_dir():
+                    continue
+                name = safe_relative(item.filename).as_posix()
+                if (item.external_attr >> 16) & 0o170000 == 0o120000:
+                    raise ValueError(f"Source archive contains a symbolic link: {name}")
+                key = name.casefold()
+                if key in folded:
+                    raise ValueError(f"Source archive path collision: {name}")
+                folded.add(key)
+                names.append(name)
+    except zipfile.BadZipFile as error:
+        raise ValueError("Invalid source archive") from error
+    missing = SOURCE_REQUIRED - set(names)
+    if missing:
+        raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+    forbidden = [
+        name
+        for name in names
+        if name.startswith(SOURCE_FORBIDDEN_PREFIXES) or name.casefold().endswith(SOURCE_FORBIDDEN_SUFFIXES)
+    ]
+    if forbidden:
+        raise ValueError(f"Source archive contains generated or private artifacts: {forbidden[0]}")
+    return len(names)
+
+
+def verify_kit(directory: Path) -> dict:
+    root = directory.resolve(strict=True)
+    if not root.is_dir():
+        raise ValueError("Release kit must be a directory")
+    files = files_in(root)
+    checksum_path = files.get(CHECKSUMS)
+    if checksum_path is None:
+        raise ValueError(f"Missing {CHECKSUMS}")
+    expected = expected_checksums(checksum_path)
+    actual = set(files) - {CHECKSUMS}
+    if actual != set(expected):
+        missing = sorted(set(expected) - actual)
+        extra = sorted(actual - set(expected))
+        raise ValueError(f"Release inventory differs; missing={missing}, extra={extra}")
+    for name, checksum in expected.items():
+        if digest(files[name]) != checksum:
+            raise ValueError(f"Checksum mismatch: {name}")
+
+    required = {
+        "APK-VERIFICATION.json",
+        "INSTALL.md",
+        "PACKAGES.json",
+        "PREPARATION.md",
+        "SIGNATURE.txt",
+        "THIRD_PARTY_NOTICES.md",
+        "VERIFY.md",
+    }
+    missing = required - actual
+    if missing:
+        raise ValueError(f"Release kit is missing required files: {sorted(missing)}")
+    if not any(name.startswith("licenses/") for name in actual):
+        raise ValueError("Release kit does not contain offline license texts")
+    if not files["SIGNATURE.txt"].read_text(encoding="utf-8").strip():
+        raise ValueError("Signature report is empty")
+
+    apk_report = read_json(files["APK-VERIFICATION.json"])
+    if apk_report.get("application_id") != "dev.blobs.app":
+        raise ValueError("APK report does not identify the production application")
+    version = apk_report.get("version_name")
+    if not isinstance(version, str) or VERSION.fullmatch(version) is None:
+        raise ValueError("APK report has an invalid version")
+    apk_name = apk_report.get("apk")
+    if apk_name != f"blobs-{version}.apk" or apk_name not in actual:
+        raise ValueError("APK filename does not match the verified release version")
+    apk_path = files[apk_name]
+    if type(apk_report.get("bytes")) is not int or apk_report["bytes"] != apk_path.stat().st_size:
+        raise ValueError("APK byte count differs from its report")
+    if apk_report.get("sha256") != digest(apk_path):
+        raise ValueError("APK hash differs from its report")
+    if apk_report.get("internet_permission") is not False or apk_report.get("zip_alignment_16kb") is not True:
+        raise ValueError("APK report does not prove the offline and 16 KB packaging gates")
+    libraries = apk_report.get("native_libraries")
+    if not isinstance(libraries, list):
+        raise ValueError("APK report does not list native libraries")
+    try:
+        abis = sorted({item["file"].split("/")[1] for item in libraries})
+    except (KeyError, IndexError, TypeError, AttributeError) as error:
+        raise ValueError("APK report has an invalid native-library inventory") from error
+    if abis != ["arm64-v8a", "x86_64"]:
+        raise ValueError(f"APK report has unexpected ABIs: {abis}")
+
+    recorded_packages = read_json(files["PACKAGES.json"])
+    package_names = sorted(name for name in actual if name.endswith(".blobs"))
+    if len(package_names) != 2 or set(recorded_packages) != set(package_names):
+        raise ValueError("Expected exactly the two packages recorded in PACKAGES.json")
+    kinds = set()
+    packages = []
+    for name in package_names:
+        if safe_relative(name).parent != PurePosixPath("."):
+            raise ValueError("Packages must be top-level release files")
+        manifest = verify_package(files[name])
+        if manifest != recorded_packages[name]:
+            raise ValueError(f"Package manifest differs from PACKAGES.json: {name}")
+        kinds.add(manifest["kind"])
+        packages.append(
+            {
+                "file": name,
+                "kind": manifest["kind"],
+                "id": manifest["id"],
+                "version": manifest["version"],
+                "payload_bytes": manifest["bytes"],
+                "payload_sha256": manifest["sha256"],
+                "package_bytes": files[name].stat().st_size,
+                "package_sha256": expected[name],
+            }
+        )
+    if kinds != {"library", "model"}:
+        raise ValueError("Release kit must contain one model and one library package")
+
+    source_name = f"blobs-{version}-source.zip"
+    source_archives = sorted(name for name in actual if name.endswith("-source.zip"))
+    if source_archives != [source_name]:
+        raise ValueError("Source archive does not match the verified release version")
+    source_files = verify_source_archive(files[source_name])
+
+    install = files["INSTALL.md"].read_text(encoding="utf-8")
+    for name in [apk_name, *package_names]:
+        if f"`{name}`" not in install:
+            raise ValueError(f"INSTALL.md does not name delivered file: {name}")
+
+    return {
+        "format": 1,
+        "complete": True,
+        "version": version,
+        "application_id": apk_report["application_id"],
+        "apk": {
+            "file": apk_name,
+            "bytes": apk_path.stat().st_size,
+            "sha256": apk_report["sha256"],
+            "abis": abis,
+            "internet_permission": False,
+            "zip_alignment_16kb": True,
+        },
+        "packages": packages,
+        "source_archive": {
+            "file": source_name,
+            "files": source_files,
+            "bytes": files[source_name].stat().st_size,
+            "sha256": expected[source_name],
+        },
+        "checksums": {
+            "file": CHECKSUMS,
+            "entries": len(expected),
+            "sha256": digest(checksum_path),
+        },
+        "kit_files": len(files),
+        "kit_bytes": sum(path.stat().st_size for path in files.values()),
+        "scope": "Transport integrity, package payloads, recorded APK gates and source-kit composition; rerun verify_apk.py and apksigner for an independent APK inspection.",
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("directory", type=Path)
+    args = parser.parse_args()
+    try:
+        result = verify_kit(args.directory)
+    except (OSError, UnicodeError, ValueError, zipfile.BadZipFile) as error:
+        parser.exit(1, f"FAIL: {error}\n")
+    print(json.dumps(result, indent=2))
+
+
+if __name__ == "__main__":
+    main()

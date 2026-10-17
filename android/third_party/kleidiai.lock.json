@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/ARM-software/kleidiai",
+  "version": "v1.31.0",
+  "archive_url": "https://github.com/ARM-software/kleidiai/releases/download/v1.31.0/kleidiai-v1.31.0-src.zip",
+  "archive_sha256": "e569260f92914e393fbaa959671cd66740d87005ce237114f64689359fa6c81b",
+  "archive_bytes": 6339615,
+  "digest_source": "https://api.github.com/repos/ARM-software/kleidiai/releases/tags/v1.31.0"
+}

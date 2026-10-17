@@ -1,0 +1,9 @@
+.venv/
+.cache/
+work/
+__pycache__/
+*.pyc
+artifacts/*.blobs
+artifacts/.package-*/
+artifacts/.build-*/
+artifacts/records/.export-*/

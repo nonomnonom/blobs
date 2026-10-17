@@ -1,0 +1,196 @@
+package dev.blobs.app
+
+import android.net.Uri
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
+import androidx.lifecycle.ViewModelProvider
+import androidx.test.platform.app.InstrumentationRegistry
+import dev.blobs.app.data.library.Evidence
+import dev.blobs.app.data.local.ConversationEntity
+import dev.blobs.app.data.local.TurnEntity
+import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.ui.Page
+import dev.blobs.app.ui.ProductViewModel
+import java.io.File
+import java.util.UUID
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+
+class UiParityTest {
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    private fun text(id: Int) = compose.activity.getString(id)
+
+    @Test
+    fun importReviewReturnsToOriginAndRejectsDuplicatesWithoutLosingDraft() {
+        val container = (compose.activity.application as BlobsApplication).container
+        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val file = File(compose.activity.cacheDir, "ui-import.blobs")
+        InstrumentationRegistry.getInstrumentation().context.assets.open("corpus-fixture.blobs")
+            .use { input -> file.outputStream().use { input.copyTo(it) } }
+        val uri = Uri.fromFile(file)
+        val manifest = runBlocking { container.installer.inspect(uri) }
+        try {
+            runBlocking { container.preferences.welcome() }
+            compose.waitUntil(10_000) { model.state.value.loaded && model.work.value.ready }
+            compose.runOnUiThread {
+                model.draft("Preserve this import draft")
+                model.navigate(Page.LIBRARY)
+                model.inspect(uri)
+                model.dismissImport()
+            }
+            compose.waitForIdle()
+            assertEquals(null, model.state.value.importUri)
+            assertEquals(null, model.state.value.manifest)
+            compose.runOnUiThread { model.inspect(uri) }
+            compose.waitUntil(10_000) { model.state.value.manifest != null }
+            runBlocking { container.preferences.setTextScale(2f) }
+            compose.waitUntil(10_000) { model.state.value.options.textScale == 2f }
+            compose.onNodeWithText(text(R.string.add)).assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.cancel)).assertIsDisplayed()
+            compose.onNodeWithContentDescription(text(R.string.back)).performClick()
+            assertEquals(null, model.state.value.importUri)
+            assertEquals(Page.LIBRARY, model.state.value.page)
+            assertEquals("Preserve this import draft", model.state.value.draft)
+            runBlocking { container.preferences.setTextScale(1f) }
+            compose.runOnUiThread { model.inspect(uri) }
+            compose.waitUntil(10_000) { model.state.value.manifest != null }
+            compose.onNodeWithText(text(R.string.add)).performClick()
+            compose.waitUntil(10_000) { model.work.value.importComplete }
+            compose.onNodeWithText(text(R.string.done)).performScrollTo().performClick()
+            assertEquals(Page.LIBRARY, model.state.value.page)
+            compose.runOnUiThread { model.inspect(uri) }
+            compose.waitUntil(10_000) { model.state.value.manifest != null }
+            runBlocking { container.preferences.setTextScale(2f) }
+            compose.waitUntil(10_000) { model.state.value.options.textScale == 2f }
+            compose.onNodeWithText(
+                text(R.string.already_added)
+            ).assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.add)).assertIsNotEnabled()
+            compose.onNodeWithText(text(R.string.cancel)).performClick()
+            runBlocking { container.preferences.setTextScale(1f) }
+            compose.onNodeWithContentDescription(text(R.string.back)).performClick()
+            compose.onNodeWithText("Preserve this import draft").assertIsDisplayed()
+            val export = File(compose.activity.cacheDir, "ui-conversations.md")
+            compose.runOnUiThread { model.export(compose.activity, Uri.fromFile(export)) }
+            compose.waitUntil(10_000) { model.state.value.notice == R.string.export_saved }
+            org.junit.Assert.assertTrue(export.readText().contains("Preserve this import draft"))
+            export.delete()
+        } finally {
+            runBlocking {
+                container.preferences.setTextScale(1f)
+                container.database.packages().all().find { it.key == manifest.key }?.let {
+                    container.installer.remove(it)
+                }
+            }
+            file.delete()
+        }
+    }
+
+    @Test
+    fun readingControlsKeepDraftAndOpenSavedSourcesAtDoubleText() {
+        val container = (compose.activity.application as BlobsApplication).container
+        val id = "ui-${UUID.randomUUID()}"
+        val source = Evidence(
+            "saved-test-source", "UI test source", "Test publisher", "", "Test fixture",
+            "2026-10-17", "2026-10-17", "Saved passage", "A saved passage for the UI test.", "test"
+        )
+        runBlocking {
+            container.preferences.welcome()
+            container.preferences.setThemeMode(ThemeMode.LIGHT)
+            container.preferences.setTextScale(2f)
+            container.database.conversations().save(
+                ConversationEntity(id, "UI reading test", "", 1, 1)
+            )
+            container.database.conversations().saveTurn(
+                TurnEntity(
+                    "$id-turn", id, "UI reading test", "A saved answer [1].", "STOPPED",
+                    "Test model", "*", Evidence.encode(listOf(source)), 1
+                )
+            )
+            container.preferences.selectConversation(id)
+        }
+        try {
+            val conversation =
+                runBlocking { requireNotNull(container.database.conversations().find(id)) }
+            compose.runOnUiThread {
+                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                    .openConversation(conversation)
+            }
+            compose.waitUntil(10_000) {
+                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                    .conversationId.value == id
+            }
+            compose.activityRule.scenario.recreate()
+            compose.waitUntil(10_000) {
+                compose.onAllNodesWithText(text(R.string.follow_up))
+                    .fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.follow_up_hint))
+                .performTextInput("Keep this follow-up")
+            compose.onNodeWithText(text(R.string.reading)).performClick()
+            compose.onNodeWithText(text(R.string.follow_up)).assertIsDisplayed().performClick()
+            compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
+            val selectedTitle = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                .selectedModel()?.title ?: text(R.string.model_missing)
+            compose.onNodeWithContentDescription(
+                compose.activity.getString(R.string.model_choice, selectedTitle)
+            ).performClick()
+            compose.onNodeWithText(text(R.string.manage_models)).assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.done)).performClick()
+            compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.reading)).performClick()
+            val label = compose.activity.getString(R.string.read_source, 1, source.title)
+            compose.onAllNodesWithContentDescription(label)[0].performScrollTo().performClick()
+            compose.onNodeWithText(source.text).assertIsDisplayed()
+            compose.onNodeWithContentDescription(text(R.string.back)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.history)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.search_history))
+                .performTextInput("no-match-for-this-ui-test")
+            compose.onNodeWithText(text(R.string.history_no_match)).performScrollTo()
+                .assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.clear_search)).performScrollTo().performClick()
+            compose.onNodeWithContentDescription(text(R.string.search_history))
+                .performTextInput("UI reading")
+            compose.onNode(hasText("UI reading test") and hasClickAction()).performClick()
+            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
+            compose.activityRule.scenario.recreate()
+            compose.waitUntil(10_000) {
+                compose.onAllNodesWithText(text(R.string.follow_up))
+                    .fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
+            runBlocking {
+                assertEquals(
+                    "Keep this follow-up",
+                    container.database.conversations().find(id)?.draft
+                )
+                assertEquals(
+                    "STOPPED",
+                    container.database.conversations().turns(id).single().status
+                )
+            }
+        } finally {
+            runBlocking {
+                container.preferences.setTextScale(1f)
+                container.preferences.setThemeMode(ThemeMode.SYSTEM)
+                container.preferences.selectConversation("")
+                container.database.conversations().delete(id)
+            }
+        }
+    }
+}

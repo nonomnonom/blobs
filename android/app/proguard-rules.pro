@@ -1,0 +1,2 @@
+-keep class dev.blobs.app.inference.NativeBridge { *; }
+-keep class dev.blobs.app.inference.TokenSink { *; }

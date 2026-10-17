@@ -1,0 +1,9 @@
+# Corpus preparation and data notices
+
+`libzim` 3.13.1 is a host-side Python binding to libzim, licensed GPL-3.0-or-later. Its installed license is preserved in [licenses/python-libzim-GPL-3.0.txt](licenses/python-libzim-GPL-3.0.txt). Source distributions, wheel hashes and versions are pinned in `uv.lock`; upstream source is [openzim/python-libzim](https://github.com/openzim/python-libzim). The APK does not embed this dependency. Redistribution of preparation tooling must retain applicable GPL obligations; this does not assign an owner-selected license to Blobs' original application code.
+
+`selectolax` 1.0.0 uses the Lexbor HTML parser. Its MIT notice is preserved in [licenses/selectolax-MIT.txt](licenses/selectolax-MIT.txt). See [selectolax](https://github.com/rushter/selectolax) and [Lexbor](https://github.com/lexbor/lexbor) for upstream source and notices. Development environments and third-party wheels are not included in source bundles; the lock file recreates them.
+
+Wikipedia text remains attributed to Wikipedia contributors under the applicable [CC BY-SA 4.0 text](licenses/CC-BY-SA-4.0.txt). Blobs extracts/reformats text, removes page navigation and images, and converts tables to text rows. Each normalized article contains its canonical URL, contributor/history URL, archive identity and available revision identity. The source archive's publisher is openZIM/Kiwix; that does not replace Wikipedia contributor attribution. Do not reuse images or treat arbitrary linked third-party content as uniformly licensed Wikipedia text.
+
+The original Android contract-test article is explicitly CC0-1.0 and contains imaginary measurements. It is not included in the knowledge pack. See [Android notices](../android/THIRD_PARTY_NOTICES.md) for runtime, model and application ownership.

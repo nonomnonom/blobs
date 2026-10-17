@@ -1,0 +1,1010 @@
+{
+  "title": "Science and everyday questions",
+  "edition": "2026-10-17",
+  "documents": 100,
+  "sha256": "3bc0d81346db9588337a046e8e53a90b079d71d3308269d059a066aeb5d0dbdc",
+  "license": "CC BY-SA 4.0",
+  "adaptation": "Wikipedia plain text extracted by TextExtracts and split into passages; source URLs retain revision IDs.",
+  "sources": [
+    {
+      "id": "24544",
+      "title": "Photosynthesis",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379238357",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-08T19:44:08Z",
+      "saved": "2026-10-17T03:52:09.037324+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "4230",
+      "title": "Cell (biology)",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379223019",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-08T17:47:29Z",
+      "saved": "2026-10-17T03:52:09.850763+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "9236",
+      "title": "Evolution",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379899421",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T15:11:35Z",
+      "saved": "2026-10-17T03:52:10.850293+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "21147",
+      "title": "Natural selection",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1373147121",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-04T07:46:36Z",
+      "saved": "2026-10-17T03:52:11.885333+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "7955",
+      "title": "DNA",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379332306",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-09T08:37:08Z",
+      "saved": "2026-10-17T03:52:12.896179+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "12266",
+      "title": "Genetics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380286629",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-14T21:39:58Z",
+      "saved": "2026-10-17T03:52:13.873522+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "9632",
+      "title": "Ecosystem",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1369245800",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-13T19:53:17Z",
+      "saved": "2026-10-17T03:52:14.455983+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "45086",
+      "title": "Biodiversity",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380599758",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T19:05:33Z",
+      "saved": "2026-10-17T03:52:15.454704+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "47503",
+      "title": "Carbon cycle",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378653676",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-05T13:39:00Z",
+      "saved": "2026-10-17T03:52:16.224242+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "200167",
+      "title": "Water cycle",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1368240581",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-07T22:11:22Z",
+      "saved": "2026-10-17T03:52:16.986137+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "5042951",
+      "title": "Climate change",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377826917",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-01T10:04:24Z",
+      "saved": "2026-10-17T03:54:44.317073+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "12395",
+      "title": "Greenhouse effect",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1368916930",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-11T21:04:09Z",
+      "saved": "2026-10-17T03:54:46.201154+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "25784",
+      "title": "Renewable energy",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380061620",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-13T15:08:04Z",
+      "saved": "2026-10-17T03:54:48.064789+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "27743",
+      "title": "Solar energy",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378294361",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-03T21:20:27Z",
+      "saved": "2026-10-17T03:54:49.471806+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "277289",
+      "title": "Wind power",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377654224",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-30T10:47:41Z",
+      "saved": "2026-10-17T03:54:51.101009+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "22153",
+      "title": "Nuclear power",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377638624",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-30T08:09:19Z",
+      "saved": "2026-10-17T03:54:52.912844+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "24130",
+      "title": "Energy storage",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380503638",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T03:27:51Z",
+      "saved": "2026-10-17T03:54:54.748945+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "201485",
+      "title": "Lithium-ion battery",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380093173",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-13T19:08:51Z",
+      "saved": "2026-10-17T03:54:56.605735+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "68316",
+      "title": "Heat pump",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380594737",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T18:25:01Z",
+      "saved": "2026-10-17T03:54:58.171250+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "32236",
+      "title": "Urban heat island",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379941570",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T20:52:21Z",
+      "saved": "2026-10-17T03:55:00.094652+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "3178571",
+      "title": "Reflective surfaces (climate engineering)",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1375971651",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-21T05:16:00Z",
+      "saved": "2026-10-17T03:55:01.764916+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "610845",
+      "title": "Urban forestry",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379951557",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T22:06:25Z",
+      "saved": "2026-10-17T03:55:03.809024+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "214701",
+      "title": "Water purification",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380238036",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-14T16:20:39Z",
+      "saved": "2026-10-17T03:55:05.644966+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "156787",
+      "title": "Desalination",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1373720568",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-07T15:32:33Z",
+      "saved": "2026-10-17T03:55:07.249035+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "2801560",
+      "title": "Ocean acidification",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1372947827",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-03T03:26:56Z",
+      "saved": "2026-10-17T03:55:09.054249+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "24944",
+      "title": "Plate tectonics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1376119468",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-22T04:38:20Z",
+      "saved": "2026-10-17T03:55:10.449625+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "10106",
+      "title": "Earthquake",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379800890",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T01:01:50Z",
+      "saved": "2026-10-17T03:55:11.843612+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "32571",
+      "title": "Volcano",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380352685",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T05:37:21Z",
+      "saved": "2026-10-17T03:55:13.431889+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "38579",
+      "title": "Gravity",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1374741444",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-13T21:35:36Z",
+      "saved": "2026-10-17T03:55:15.046625+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "12024",
+      "title": "General relativity",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380339177",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T03:38:00Z",
+      "saved": "2026-10-17T03:55:16.836567+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "25202",
+      "title": "Quantum mechanics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379866426",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T09:39:56Z",
+      "saved": "2026-10-17T03:56:09.891382+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "29952",
+      "title": "Thermodynamics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379354456",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-09T13:00:08Z",
+      "saved": "2026-10-17T03:56:11.590142+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "9891",
+      "title": "Entropy",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380489591",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T01:14:16Z",
+      "saved": "2026-10-17T03:56:13.592229+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "9550",
+      "title": "Electricity",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379297547",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-09T02:47:47Z",
+      "saved": "2026-10-17T03:56:15.440073+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "9532",
+      "title": "Electromagnetism",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378561958",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-05T00:57:53Z",
+      "saved": "2026-10-17T03:56:17.030727+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "27709",
+      "title": "Semiconductor",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380042956",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-13T12:37:12Z",
+      "saved": "2026-10-17T03:56:18.651541+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "30011",
+      "title": "Transistor",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379214217",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-08T16:37:47Z",
+      "saved": "2026-10-17T03:56:20.503441+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "7878457",
+      "title": "Computer",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379398229",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-09T19:31:32Z",
+      "saved": "2026-10-17T03:56:22.287236+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "775",
+      "title": "Algorithm",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378914632",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-06T22:05:34Z",
+      "saved": "2026-10-17T03:56:23.849896+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "6511",
+      "title": "Computational complexity",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378898911",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-06T20:22:28Z",
+      "saved": "2026-10-17T03:56:25.396803+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "233488",
+      "title": "Machine learning",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378799175",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-06T04:59:14Z",
+      "saved": "2026-10-17T03:57:18.438936+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "1164",
+      "title": "Artificial intelligence",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380434171",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T18:10:24Z",
+      "saved": "2026-10-17T03:57:20.262038+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "21523",
+      "title": "Neural network (machine learning)",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380409648",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T15:25:37Z",
+      "saved": "2026-10-17T03:57:22.054059+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "73248112",
+      "title": "Large language model",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380435450",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T18:18:22Z",
+      "saved": "2026-10-17T03:57:23.890182+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "75229858",
+      "title": "Retrieval-augmented generation",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377227095",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-28T11:20:51Z",
+      "saved": "2026-10-17T03:57:25.275738+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "18934432",
+      "title": "Cryptography",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380545951",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T11:26:23Z",
+      "saved": "2026-10-17T03:57:27.068818+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "24222",
+      "title": "Public-key cryptography",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379508921",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-10T11:38:57Z",
+      "saved": "2026-10-17T03:57:28.645190+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "7398",
+      "title": "Computer security",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379749587",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-11T18:56:42Z",
+      "saved": "2026-10-17T03:57:30.705984+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "22194",
+      "title": "Operating system",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378031792",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-02T15:15:18Z",
+      "saved": "2026-10-17T03:57:32.291103+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "8377",
+      "title": "Database",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379695165",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-11T11:10:25Z",
+      "saved": "2026-10-17T03:57:34.103941+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "14539",
+      "title": "Internet",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379179209",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-08T11:10:23Z",
+      "saved": "2026-10-17T03:58:06.866057+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "26685",
+      "title": "Statistics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380061538",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-13T15:07:25Z",
+      "saved": "2026-10-17T03:58:08.710578+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "22934",
+      "title": "Probability",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378066471",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-02T19:44:53Z",
+      "saved": "2026-10-17T03:58:10.371274+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "49569",
+      "title": "Bayes' theorem",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380204666",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-14T11:27:27Z",
+      "saved": "2026-10-17T03:58:12.142497+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "39834",
+      "title": "Correlation does not imply causation",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1371652483",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-27T17:21:12Z",
+      "saved": "2026-10-17T03:58:14.359540+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "26833",
+      "title": "Scientific method",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1376633181",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-25T09:22:33Z",
+      "saved": "2026-10-17T03:58:15.788508+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "163180",
+      "title": "Randomized controlled trial",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1350325633",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-04-21T07:55:36Z",
+      "saved": "2026-10-17T03:58:17.588315+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "24116",
+      "title": "Peer review",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380605653",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T19:52:07Z",
+      "saved": "2026-10-17T03:58:19.207128+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "69415",
+      "title": "Economic growth",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377649084",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-30T09:56:50Z",
+      "saved": "2026-10-17T03:58:21.023028+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "38286",
+      "title": "Inflation",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380085884",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-13T18:16:37Z",
+      "saved": "2026-10-17T03:58:22.463865+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "45528",
+      "title": "Opportunity cost",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1369366993",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-14T14:59:05Z",
+      "saved": "2026-10-17T03:59:15.394413+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "29664",
+      "title": "Supply and demand",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378800284",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-06T05:04:27Z",
+      "saved": "2026-10-17T03:59:16.956155+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "61193",
+      "title": "Externality",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378346810",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-04T02:28:07Z",
+      "saved": "2026-10-17T03:59:18.757486+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "173155",
+      "title": "Public good",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1375915847",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-20T21:14:03Z",
+      "saved": "2026-10-17T03:59:20.372633+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "11924",
+      "title": "Game theory",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380391659",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T13:26:12Z",
+      "saved": "2026-10-17T03:59:22.421292+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "7959",
+      "title": "Democracy",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380234194",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-14T15:50:38Z",
+      "saved": "2026-10-17T03:59:24.070830+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "28561",
+      "title": "Separation of powers",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380349474",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T04:56:01Z",
+      "saved": "2026-10-17T03:59:25.432367+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "25166191",
+      "title": "Rule of law",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380562646",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T14:24:12Z",
+      "saved": "2026-10-17T03:59:27.264318+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "13831",
+      "title": "Human rights",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379988533",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-13T02:54:03Z",
+      "saved": "2026-10-17T03:59:29.142503+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "13692155",
+      "title": "Philosophy",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380597871",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T18:48:01Z",
+      "saved": "2026-10-17T03:59:30.932356+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "9258",
+      "title": "Ethics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379332693",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-09T08:42:01Z",
+      "saved": "2026-10-17T04:00:03.521634+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "46426065",
+      "title": "Logic",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379948534",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T21:42:17Z",
+      "saved": "2026-10-17T04:00:05.339958+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "276872",
+      "title": "Critical thinking",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1371668361",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-27T19:27:23Z",
+      "saved": "2026-10-17T04:00:08.196381+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "47278",
+      "title": "Cognitive bias",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379095929",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-07T23:04:20Z",
+      "saved": "2026-10-17T04:00:09.918150+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "59160",
+      "title": "Confirmation bias",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1370294982",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-20T07:18:49Z",
+      "saved": "2026-10-17T04:00:11.745818+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "31217535",
+      "title": "Memory",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380372913",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T10:17:04Z",
+      "saved": "2026-10-17T04:00:13.556426+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "27834",
+      "title": "Sleep",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380418043",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-15T16:24:46Z",
+      "saved": "2026-10-17T04:00:15.347692+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "56565",
+      "title": "Circadian rhythm",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377863336",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-01T16:14:21Z",
+      "saved": "2026-10-17T04:00:17.231796+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "189037",
+      "title": "Exercise",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1368687839",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-08-10T14:33:24Z",
+      "saved": "2026-10-17T04:00:18.826272+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "21525",
+      "title": "Nutrition",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378158507",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-03T05:30:07Z",
+      "saved": "2026-10-17T04:00:20.395497+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "14958",
+      "title": "Immune system",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378735926",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-05T23:42:40Z",
+      "saved": "2026-10-17T04:01:13.483601+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "32653",
+      "title": "Vaccine",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1376748103",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-26T01:02:05Z",
+      "saved": "2026-10-17T04:01:15.284614+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "1805",
+      "title": "Antibiotic",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379880384",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T12:14:34Z",
+      "saved": "2026-10-17T04:01:17.093724+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "1914",
+      "title": "Antimicrobial resistance",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378645032",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-05T12:16:05Z",
+      "saved": "2026-10-17T04:01:18.907610+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "185259",
+      "title": "Germ theory of disease",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1363463071",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-07-10T09:44:01Z",
+      "saved": "2026-10-17T04:01:20.285904+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "463734",
+      "title": "Public health",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1376316409",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-23T11:50:11Z",
+      "saved": "2026-10-17T04:01:21.699467+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "627",
+      "title": "Agriculture",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378829864",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-06T10:25:49Z",
+      "saved": "2026-10-17T04:01:23.512370+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "216143",
+      "title": "Sustainable agriculture",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379456467",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-10T02:58:32Z",
+      "saved": "2026-10-17T04:01:25.139416+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "37738",
+      "title": "Soil",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380531112",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-16T08:01:38Z",
+      "saved": "2026-10-17T04:01:26.525729+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "42261",
+      "title": "Irrigation",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1378700011",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-05T19:17:12Z",
+      "saved": "2026-10-17T04:01:28.277002+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "14914",
+      "title": "Industrial Revolution",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379294769",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-09T02:32:44Z",
+      "saved": "2026-10-17T04:02:01.382450+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "23295",
+      "title": "Printing press",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379445153",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-10T01:22:46Z",
+      "saved": "2026-10-17T04:02:02.964970+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "25532",
+      "title": "Renaissance",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379286815",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-09T01:53:24Z",
+      "saved": "2026-10-17T04:02:04.772107+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "14400",
+      "title": "History of science",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379869734",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-12T10:22:16Z",
+      "saved": "2026-10-17T04:02:06.817040+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "14220",
+      "title": "History of mathematics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1380006857",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-13T06:12:20Z",
+      "saved": "2026-10-17T04:02:08.599526+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "22760983",
+      "title": "Linguistics",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1377932952",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-02T01:02:11Z",
+      "saved": "2026-10-17T04:02:10.168860+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "18614",
+      "title": "Language acquisition",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1375526787",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-18T09:24:43Z",
+      "saved": "2026-10-17T04:02:11.971697+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "9252",
+      "title": "Education",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1375869623",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-09-20T15:58:26Z",
+      "saved": "2026-10-17T04:02:13.794985+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "18839",
+      "title": "Music",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379056263",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-07T17:29:23Z",
+      "saved": "2026-10-17T04:02:15.604431+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    },
+    {
+      "id": "752",
+      "title": "Art",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/w/index.php?oldid=1379246852",
+      "license": "CC BY-SA 4.0; https://creativecommons.org/licenses/by-sa/4.0/; adapted into plain text and passages. Article history at the source address identifies contributors.",
+      "updated": "2026-10-08T20:59:49Z",
+      "saved": "2026-10-17T04:02:17.438765+00:00",
+      "collection": "Wikipedia \u00b7 Science & everyday questions"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "tag": "b11669",
+  "commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+  "asset": {
+    "filename": "llama-b11669-bin-win-cpu-x64.zip",
+    "bytes": 19537886,
+    "sha256": "37b3efcf962847ca869745fd4ccf7f5e7e8dacfeff9fa3523b4ca8cdc66d632b",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-cpu-x64.zip",
+    "allowed_hosts": [
+      "github.com",
+      "release-assets.githubusercontent.com"
+    ]
+  }
+}

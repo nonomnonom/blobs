@@ -1,0 +1,168 @@
+{
+  "format": 1,
+  "complete": true,
+  "scope": "Diagnostic with one reviewer-selected explanatory passage per question. This is an oracle context ablation, NOT automatic retrieval, NOT an answer-quality score and NOT product behavior. It tests whether distractors or generator fidelity dominate the observed errors.",
+  "parent_report_sha256": "3567fee924d25e8bccf6f54bfbebe1bafcb5889a5313c2b168bb5c297dfb982c",
+  "cases": {
+    "format": 1,
+    "name": "retrieval-development-2026-10-17",
+    "purpose": "Development diagnostics, not a held-out benchmark. Expected titles are routing checks, not exhaustive relevance judgments or proof that a passage supports an answer.",
+    "cases": [
+      {
+        "id": "urban-heat",
+        "question": "How do trees reduce urban heat? Explain with sources.",
+        "expected_titles": [
+          "Urban heat island",
+          "Urban forestry"
+        ],
+        "review": "Check shade and transpiration evidence; avoid unrelated runoff and unsupported health claims."
+      },
+      {
+        "id": "heat-pump",
+        "question": "How does a heat pump move heat instead of creating it?",
+        "expected_titles": [
+          "Heat pump"
+        ],
+        "review": "Retain energy input, transferred heat and the conditions of any efficiency comparison."
+      },
+      {
+        "id": "causation",
+        "question": "Why does correlation not prove causation?",
+        "expected_titles": [
+          "Correlation does not imply causation"
+        ],
+        "review": "Need a causal limitation or counterexample, not just the word correlation."
+      },
+      {
+        "id": "renewables",
+        "question": "Compare solar energy and wind power for electricity generation.",
+        "expected_titles": [
+          "Solar energy",
+          "Wind power"
+        ],
+        "review": "Inspect whether both sides have useful evidence, including variable output."
+      },
+      {
+        "id": "abbreviation-ai",
+        "question": "What is AI?",
+        "expected_titles": [
+          "Artificial intelligence"
+        ],
+        "review": "A short acronym should not disappear from the query."
+      },
+      {
+        "id": "co2",
+        "question": "How does CO2 contribute to the greenhouse effect?",
+        "expected_titles": [
+          "Greenhouse effect"
+        ],
+        "review": "Check the greenhouse mechanism rather than an incidental chemical formula."
+      },
+      {
+        "id": "named-rag",
+        "question": "What is retrieval-augmented generation?",
+        "expected_titles": [
+          "Retrieval-augmented generation"
+        ],
+        "review": "Document title lookup should find a useful definition."
+      },
+      {
+        "id": "bayes",
+        "question": "How does Bayes' theorem update a probability with evidence?",
+        "expected_titles": [
+          "Bayes' theorem"
+        ],
+        "review": "Preserve prior, likelihood and posterior distinctions."
+      },
+      {
+        "id": "follow-up",
+        "question": "How does it work?",
+        "previous_question": "What is a heat pump?",
+        "expected_titles": [
+          "Heat pump"
+        ],
+        "review": "An explicit continuation should retain the previous subject."
+      },
+      {
+        "id": "topic-change",
+        "question": "Explain how the printing press changed access to books.",
+        "previous_question": "How do trees reduce urban heat?",
+        "expected_titles": [
+          "Printing press"
+        ],
+        "review": "An independent question must not retain the old tree/heat topic."
+      },
+      {
+        "id": "freshness-limit",
+        "question": "Who won the national election held yesterday?",
+        "expected_titles": [],
+        "review": "The question lacks a country and asks beyond this snapshot. Nonempty lexical matches are not an answerability guarantee."
+      },
+      {
+        "id": "unknown-term",
+        "question": "Describe zqxvblobsunobtainium.",
+        "expected_titles": [],
+        "review": "No matches should yield the no-source path, without invented evidence."
+      }
+    ]
+  },
+  "results": [
+    {
+      "case_id": "heat-pump",
+      "variant": "reviewer_selected_passage",
+      "evidence": [
+        {
+          "id": "wikipedia-parity-2026-10-17.1-b1d92ae3a2bdc9bb/wiki-401cba47d29b882fadb681f3e7177dfe",
+          "title": "Heat pump",
+          "publisher": "Wikipedia contributors",
+          "url": "https://en.wikipedia.org/wiki/Heat_pump",
+          "license": "CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution/history: https://en.wikipedia.org/wiki/Heat_pump?action=history",
+          "updated": "Snapshot 2026-09",
+          "saved": "2026-10-17",
+          "section": "Heat pump",
+          "text": "External heat exchanger of an air-source heat pump for both heating and cooling Mitsubishi Electric heat pump interior air handler wall unit\n\nA heat pump is a device that uses mechanical or thermal energy to transfer heat from one space to another. The mechanical heat pump uses electric power to transfer heat by compression. Specifically, it transfers thermal energy by means of a heat pump and refrigeration cycle, cooling one space and warming the other.[1]\n\nIn winter, a heat pump can move heat from the cool outdoors to warm a house; in summer, it may also be designed to move heat from the house to the warmer outdoors, functioning in the same manner as an air conditioner. As it transfers rather than generates heat, it is more energy-efficient than heating by gas boiler.[2]\n\nIn a typical vapor-compression heat pump, a gaseous refrigerant is compressed so its pressure and temperature rise. When the pump operates as a heater in cold weather, the warmed gas flows to a heat exchanger in the indoor space, where some of its thermal energy is transferred to that space, causing the gas to condense into a liquid. The liquified refrigerant flows to a heat exchanger in the outdoor space, where the pressure falls, the liquid evaporates, and the temperature of the gas falls.",
+          "edition": "Native query parity fixture · 2026-10-17.1 · b1d92ae3a2bdc9bbed516b07822770cf70ca52b4282f98f67ed3facda28f7cdf"
+        }
+      ],
+      "original_source_number": 1
+    },
+    {
+      "case_id": "abbreviation-ai",
+      "variant": "reviewer_selected_passage",
+      "evidence": [
+        {
+          "id": "wikipedia-parity-2026-10-17.1-b1d92ae3a2bdc9bb/wiki-aef977fc2141d0a33cb702dadf489df7",
+          "title": "Artificial intelligence",
+          "publisher": "Wikipedia contributors",
+          "url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+          "license": "CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution/history: https://en.wikipedia.org/wiki/Artificial_intelligence?action=history",
+          "updated": "Snapshot 2026-09",
+          "saved": "2026-10-17",
+          "section": "Artificial intelligence",
+          "text": "Artificial intelligence (AI) is the capability of computational systems to perform tasks typically associated with human intelligence, such as learning, reasoning, problem-solving, perception, and decision-making. It is a field of research in engineering, mathematics, and computer science that develops and studies methods and software that enable machines to perceive their environment and use learning and intelligence to take actions that maximise their chances of achieving defined goals.[1]\n\nHigh-profile applications of AI include advanced web search engines, chatbots, virtual assistants, autonomous vehicles, play and analysis in strategy games (e.g., chess and Go), and content generation (e.g. images, audio, and videos).",
+          "edition": "Native query parity fixture · 2026-10-17.1 · b1d92ae3a2bdc9bbed516b07822770cf70ca52b4282f98f67ed3facda28f7cdf"
+        }
+      ],
+      "original_source_number": 1
+    },
+    {
+      "case_id": "co2",
+      "variant": "reviewer_selected_passage",
+      "evidence": [
+        {
+          "id": "wikipedia-parity-2026-10-17.1-b1d92ae3a2bdc9bb/wiki-24ef1a588aa8242ed43193766154fd5f",
+          "title": "Climate change",
+          "publisher": "Wikipedia contributors",
+          "url": "https://en.wikipedia.org/wiki/Climate_change",
+          "license": "CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution/history: https://en.wikipedia.org/wiki/Climate_change?action=history",
+          "updated": "Snapshot 2026-09",
+          "saved": "2026-10-17",
+          "section": "Greenhouse gases",
+          "text": "CO2 concentrations over the last 800,000 years as measured from ice cores (blue/green) and directly (black)\n\nGreenhouse gases are transparent to sunlight, and thus allow it to pass through the atmosphere to heat the Earth's surface. The Earth radiates it as heat, and greenhouse gases absorb a portion of it. This absorption slows the rate at which heat escapes into space, trapping heat near the Earth's surface and warming it over time.[105]\n\nWhile water vapour (≈50%) and clouds (≈25%) are the biggest contributors to the greenhouse effect, they primarily change as a function of temperature and are therefore mostly considered to be feedbacks that change climate sensitivity. On the other hand, concentrations of gases such as CO2 (≈20%), tropospheric ozone,[106] CFCs and nitrous oxide are added or removed independently from temperature, and are therefore considered to be external forcings that change global temperatures.[107]\n\nBefore the Industrial Revolution, naturally occurring amounts of greenhouse gases caused the air near the surface to be about 33 °C warmer than it would have been in their absence.[108][109] Human activity since the Industrial Revolution, mainly extracting and burning fossil fuels (coal, oil, and natural gas),[110] has increased the amount of greenhouse gases in the atmosphere.",
+          "edition": "Native query parity fixture · 2026-10-17.1 · b1d92ae3a2bdc9bbed516b07822770cf70ca52b4282f98f67ed3facda28f7cdf"
+        }
+      ],
+      "original_source_number": 3
+    }
+  ]
+}

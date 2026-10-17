@@ -1,0 +1,8 @@
+*.log
+*.pyc
+__pycache__/
+.pytest_cache/
+.DS_Store
+Thumbs.db
+design/
+corpus/reports/
