@@ -10,6 +10,8 @@ from .acquire import digest
 from .extract import verified_shards, write_json, write_lines
 from .records import documents
 
+SUPPORTED_SOURCES = {'wikipedia-en-top', 'wikipedia-en-top1m-mini'}
+
 
 def exclusion(document):
     path = document.get('provenance', {}).get('entry_path', '')
@@ -24,8 +26,8 @@ def curate(source: Path, output: Path):
     original = verified_shards(source)
     if not original['complete']:
         raise ValueError('Finish extraction before review')
-    if original['source']['id'] != 'wikipedia-en-top' or original.get('curation'):
-        raise ValueError('This review policy applies once to the raw English top extraction')
+    if original['source']['id'] not in SUPPORTED_SOURCES or original.get('curation'):
+        raise ValueError('This review policy applies once to a supported raw Kiwix English top extraction')
     if output.exists():
         raise FileExistsError(output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -65,6 +67,7 @@ def curate(source: Path, output: Path):
             totals.update(counts)
         manifest['totals'] = dict(totals)
         manifest['curation'] = dict(policy='Kiwix article-only review v1',
+                                    source_id=original['source']['id'],
                                     policy_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                                     input_manifest_sha256=digest(source),
                                     input_totals=original['totals'], excluded_documents=excluded)

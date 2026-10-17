@@ -235,6 +235,24 @@ class BuildTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 curate(root / 'manifest.json', root / 'reviewed')
 
+    def test_review_accepts_pinned_top_mini_source(self):
+        lock = dict(LOCK, id='wikipedia-en-top1m-mini')
+        item = article(
+            b'<p>This article has enough explanatory text to satisfy the extraction quality threshold.</p>',
+            'Article', 'Article', lock)
+        with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
+            root = Path(folder)
+            shard = root / 'documents.jsonl.gz'
+            write_lines(shard, [item])
+            info = dict(name=shard.name, bytes=shard.stat().st_size,
+                        sha256=hashlib.sha256(shard.read_bytes()).hexdigest())
+            write_json(root / 'manifest.json', dict(
+                format=1, source=lock, complete=True, next_entry=1, totals={'documents': 1},
+                shards=[dict(start=0, end=1, counts={'documents': 1}, files={'documents': info})]))
+            reviewed = curate(root / 'manifest.json', root / 'reviewed')
+            self.assertEqual(reviewed['curation']['source_id'], 'wikipedia-en-top1m-mini')
+            self.assertEqual([doc['title'] for doc in documents(root / 'reviewed/manifest.json')], ['Article'])
+
     def test_title_and_section_search_is_explicitly_versioned(self):
         item = article(b'<p>This original explanatory text contains no article name. It is deliberately long enough to be a valid fixture.</p><h2>Observations</h2><p>A second paragraph contains the evidence.</p>', 'Thermodynamics', 'Thermodynamics', LOCK)
         with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
