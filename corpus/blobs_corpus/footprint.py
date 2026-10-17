@@ -18,14 +18,19 @@ def sha(path: Path):
 
 
 def read_installer_policy(path: Path):
-    text = path.read_text(encoding='utf-8')
+    source = path.read_bytes()
+    text = source.decode('utf-8')
+    return installer_policy_text(text, hashlib.sha256(source).hexdigest())
+
+
+def installer_policy_text(text: str, source_sha256: str):
     headroom = re.findall(r'expected\.bytes - resumeBytes \+ (\d+)L \* 1024 \* 1024', text)
     caps = re.findall(r'expected\.bytes < ([\d_]+)L', text)
     if headroom != ['64'] or caps != ['48_000_000_000']:
         raise ValueError('Android import storage policy changed; review this calculator')
     return dict(import_headroom_bytes=int(headroom[0]) * 1024 * 1024,
                 installed_payload_cap_bytes=int(caps[0].replace('_', '')),
-                source_sha256=sha(path))
+                source_sha256=source_sha256)
 
 
 def read_apk_report(path: Path):
@@ -113,6 +118,16 @@ def calculate(apk_report_path: Path, package_paths, installer_source: Path):
             update='Not included. Updating while an old edition remains installed needs old payload + incoming package + new staging payload.',
             importer=('Before each fresh import, the app requires device allocatable bytes to be '
                       'strictly greater than the listed threshold.')))
+
+
+def release_report(apk_report_path: Path, package_paths, installer_source: Path):
+    """Create a path-independent footprint manifest suitable for a release kit."""
+    result = calculate(apk_report_path, package_paths, installer_source)
+    result['apk_report']['file'] = 'APK-VERIFICATION.json'
+    result['installer_policy']['file'] = (
+        'android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt'
+    )
+    return result
 
 
 def main():

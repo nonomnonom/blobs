@@ -13,6 +13,7 @@ import zipfile
 from verify_apk import verify, sdk_directory
 from build_package import verify_package
 from verify_release import verify_kit
+from blobs_corpus.footprint import release_report as build_footprint_report
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,8 +34,8 @@ def verification_guide(version, source_name):
         '```text\n'
         'python blobs/android/tools/verify_release.py PATH_TO_THIS_RELEASE_FOLDER\n'
         '```\n\n'
-        'The command checks the complete file inventory, every SHA-256 entry, both streamed '
-        'package payloads, the recorded offline APK gates and the source archive contents. '
+        'The command checks `FOOTPRINT.json`, the recorded storage and import peaks, every SHA-256 entry, '
+        'both streamed package payloads, the recorded offline APK gates and the source archive contents. '
         'It prints the SHA-256 of `SHA256SUMS.txt`; compare that value with the digest published '
         'alongside the release. For an independent APK inspection, also run `verify_apk.py` and '
         '`apksigner verify --verbose --print-certs` as described in `PREPARATION.md`.\n'
@@ -141,6 +142,7 @@ def write_release(destination, apk, version, report, signature, packages, manife
         '5. Start a conversation. Tap a citation to read its saved passage or full source inside Blobs.\n\n'
         'No account, Play Store or runtime internet is required.\n\n'
         f'Incoming packages occupy {incoming_bytes:,} bytes; installed payloads occupy {installed_bytes:,} bytes. '
+        '`FOOTPRINT.json` records the edition total and import peak with its assumptions. '
         'Allow additional space for the APK, app data and at least 64 MiB import headroom. '
         'After a successful import, the original package may be moved off the phone if a safe reinstall copy exists. '
         'To update an existing installation, install an APK signed with the same key over it. '
@@ -151,6 +153,12 @@ def write_release(destination, apk, version, report, signature, packages, manife
     shutil.copytree(ROOT / 'app/src/main/assets/licenses', destination / 'licenses', dirs_exist_ok=True)
     delivered_report = dict(report, apk=f'blobs-{version}.apk')
     (destination / 'APK-VERIFICATION.json').write_text(json.dumps(delivered_report, indent=2), encoding='utf-8')
+    footprint = build_footprint_report(
+        destination / 'APK-VERIFICATION.json',
+        [destination / name for _, name in packages],
+        ROOT / 'app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt',
+    )
+    (destination / 'FOOTPRINT.json').write_text(json.dumps(footprint, indent=2), encoding='utf-8')
     (destination / 'SIGNATURE.txt').write_text(signature, encoding='utf-8')
     (destination / 'PACKAGES.json').write_text(json.dumps(manifests, indent=2), encoding='utf-8')
     source_name = f'blobs-{version}-source.zip'

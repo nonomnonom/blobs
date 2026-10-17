@@ -32,7 +32,7 @@ For manual assembly after testing and signing:
 uv run --locked --project ../corpus python tools/package_release.py --model PATH_TO_MODEL.blobs --library PATH_TO_LIBRARY.blobs
 ```
 
-The assembler refuses debug application IDs, unsigned APKs, incomplete package pairs, and an existing destination. It writes to a temporary directory, streams package verification, records an exact inventory, and atomically publishes the completed edition.
+The assembler refuses debug application IDs, unsigned APKs, incomplete package pairs, and an existing destination. It writes to a temporary directory, streams package verification, records an exact inventory and a `FOOTPRINT.json` with the selected assets' distribution, installed, and modeled import-peak bytes, then atomically publishes the completed edition.
 
 ## Verify after transport
 
@@ -42,7 +42,7 @@ Run the verifier included in the source tree or assembled kit:
 uv run --locked --project ../corpus python tools/verify_release.py PATH_TO_RELEASE_FOLDER
 ```
 
-It rejects missing, extra, renamed, or changed files; verifies package payload CRC, size, and SHA-256; checks recorded APK gates; and validates source-archive composition. Publish the reported `SHA256SUMS.txt` digest beside a release so reviewers have an independent inventory anchor.
+It rejects missing, extra, renamed, or changed files; verifies package payload CRC, size, and SHA-256; recomputes the storage and import peaks from the delivered APK and package payloads; checks recorded APK gates; and validates source-archive composition. The footprint includes only measured APK/package bytes and modeled import staging; it excludes Android app data, conversations, filesystem overhead, device RAM, and performance. Publish the reported `SHA256SUMS.txt` digest beside a release so reviewers have an independent inventory anchor.
 
 Also inspect signing identity with `apksigner verify --verbose --print-certs` and rerun `tools/verify_apk.py` against the distributed APK.
 

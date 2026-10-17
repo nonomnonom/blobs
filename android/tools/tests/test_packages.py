@@ -18,7 +18,14 @@ import verify_release
 def fixture_source_archive(path):
     with zipfile.ZipFile(path, 'x') as archive:
         for name in sorted(verify_release.SOURCE_REQUIRED):
-            archive.writestr(name, 'fixture source')
+            relative = name.removeprefix('blobs/')
+            source = (package_release.ROOT / relative.removeprefix('android/'))
+            if not relative.startswith('android/'):
+                source = package_release.ROOT.parent / relative
+            if source.is_file():
+                archive.write(source, name)
+            else:
+                archive.writestr(name, 'fixture source')
 
 
 class PackageTests(unittest.TestCase):
@@ -30,10 +37,16 @@ class PackageTests(unittest.TestCase):
             apk.write_bytes(b'APK fixture; signature and APK inspection are mocked in this packaging test')
             for relative in ('docs/RELEASE.md', 'THIRD_PARTY_NOTICES.md',
                              'app/src/main/assets/licenses/TEST.txt',
+                             'app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt',
                              'app/build/reports/release-evidence/old-build.txt'):
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text('Original fixture text', encoding='utf-8')
+            installer = root / 'app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt'
+            installer.write_text(
+                'expected.bytes - resumeBytes + 64L * 1024 * 1024\nexpected.bytes < 48_000_000_000L\n',
+                encoding='utf-8',
+            )
             inputs = []
             for kind, payload in [('model', b'GGUF fixture'), ('library', b'Original library fixture')]:
                 raw = root / f'{kind}.raw'
@@ -42,7 +55,8 @@ class PackageTests(unittest.TestCase):
                 package(raw, target, kind=kind, id=kind, version='1', title=kind,
                         license='CC0', origin='local:test')
                 inputs.append(target)
-            report = dict(application_id='dev.blobs.app', version_name='0.2.0',
+            report = dict(apk='app-release.apk', application_id='dev.blobs.app',
+                          version_code=2, version_name='0.2.0',
                           bytes=apk.stat().st_size, sha256=package_release.digest(apk),
                           internet_permission=False, zip_alignment_16kb=True,
                           native_libraries=[
@@ -55,6 +69,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(list((root / 'release').iterdir()), [kit])
             self.assertIn('selected-model.blobs', (kit / 'INSTALL.md').read_text())
             self.assertIn('selected-library.blobs', (kit / 'INSTALL.md').read_text())
+            self.assertTrue(json.loads((kit / 'FOOTPRINT.json').read_text())['checks']['bounty_storage_limit']['passes'])
             self.assertEqual(json.loads((kit / 'APK-VERIFICATION.json').read_text())['apk'], 'blobs-0.2.0.apk')
             self.assertFalse((kit / 'evidence').exists(), 'Old runtime evidence must not enter a new release')
             for line in (kit / 'SHA256SUMS.txt').read_text().splitlines():

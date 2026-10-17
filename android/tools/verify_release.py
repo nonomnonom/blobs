@@ -8,6 +8,7 @@ import re
 import zipfile
 
 from build_package import verify_package
+from blobs_corpus.footprint import BOUNTY_LIMIT_BYTES, installer_policy_text, storage_values
 
 
 CHECKSUMS = "SHA256SUMS.txt"
@@ -19,6 +20,7 @@ SOURCE_REQUIRED = {
     "blobs/CONTRIBUTING.md",
     "blobs/android/docs/ARCHITECTURE.md",
     "blobs/android/docs/RELEASE.md",
+    "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
     "blobs/android/tools/package_release.py",
     "blobs/android/tools/verify_release.py",
     "blobs/corpus/README.md",
@@ -160,6 +162,7 @@ def verify_kit(directory: Path) -> dict:
 
     required = {
         "APK-VERIFICATION.json",
+        "FOOTPRINT.json",
         "INSTALL.md",
         "PACKAGES.json",
         "PREPARATION.md",
@@ -235,6 +238,44 @@ def verify_kit(directory: Path) -> dict:
         raise ValueError("Source archive does not match the verified release version")
     source_files = verify_source_archive(files[source_name])
 
+    footprint = read_json(files["FOOTPRINT.json"])
+    policy_path = "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
+    with zipfile.ZipFile(files[source_name]) as archive:
+        policy_source = archive.read(f"blobs/{policy_path}")
+    policy = installer_policy_text(policy_source.decode("utf-8"), hashlib.sha256(policy_source).hexdigest())
+    expected_policy = dict(file=policy_path, **policy)
+    if footprint.get("format") != 1 or footprint.get("complete") is not True:
+        raise ValueError("FOOTPRINT.json is incomplete or unsupported")
+    if footprint.get("apk_report") != dict(file="APK-VERIFICATION.json", sha256=digest(files["APK-VERIFICATION.json"]), value=apk_report):
+        raise ValueError("FOOTPRINT.json does not identify this APK report")
+    if footprint.get("installer_policy") != expected_policy:
+        raise ValueError("FOOTPRINT.json does not match the delivered installer policy")
+    import_order = footprint.get("import_order")
+    if (not isinstance(import_order, list) or len(import_order) != len(package_names) or
+            len(set(import_order)) != len(import_order) or set(import_order) != set(package_names)):
+        raise ValueError("FOOTPRINT.json has an invalid package import order")
+    by_name = {item["file"]: item for item in packages}
+    ordered_packages = [
+        dict(manifest={"bytes": by_name[name]["payload_bytes"]},
+             package={"file": name, "bytes": by_name[name]["package_bytes"]})
+        for name in import_order
+    ]
+    expected_storage = storage_values(ordered_packages, apk_path.stat().st_size,
+                                      policy["import_headroom_bytes"])
+    if footprint.get("storage") != expected_storage:
+        raise ValueError("FOOTPRINT.json storage values differ from delivered APK and packages")
+    checks = footprint.get("checks", {})
+    steady = apk_path.stat().st_size + expected_storage["installed_payload_bytes"]
+    if (checks.get("bounty_storage_limit", {}).get("limit_bytes") != BOUNTY_LIMIT_BYTES or
+            checks.get("bounty_storage_limit", {}).get("known_steady_bytes") != steady or
+            checks.get("bounty_storage_limit", {}).get("passes") is not (steady <= BOUNTY_LIMIT_BYTES) or
+            checks.get("android_installed_payload_cap", {}).get("selected_bytes") != expected_storage["installed_payload_bytes"] or
+            checks.get("android_installed_payload_cap", {}).get("limit_bytes") != policy["installed_payload_cap_bytes"] or
+            checks.get("android_installed_payload_cap", {}).get("passes") is not (
+                expected_storage["installed_payload_bytes"] < policy["installed_payload_cap_bytes"]
+            )):
+        raise ValueError("FOOTPRINT.json does not prove the storage limits for this edition")
+
     install = files["INSTALL.md"].read_text(encoding="utf-8")
     for name in [apk_name, *package_names]:
         if f"`{name}`" not in install:
@@ -259,6 +300,14 @@ def verify_kit(directory: Path) -> dict:
             "files": source_files,
             "bytes": files[source_name].stat().st_size,
             "sha256": expected[source_name],
+        },
+        "footprint": {
+            "distribution_bytes": expected_storage["distribution_bytes"],
+            "installed_payload_bytes": expected_storage["installed_payload_bytes"],
+            "known_steady_bytes": steady,
+            "bounty_limit_bytes": BOUNTY_LIMIT_BYTES,
+            "bounty_limit_passes": checks["bounty_storage_limit"]["passes"],
+            "peak_retained_import_bytes": expected_storage["retained_sources"]["peak_bytes"],
         },
         "checksums": {
             "file": CHECKSUMS,
