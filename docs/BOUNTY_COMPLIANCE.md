@@ -8,13 +8,13 @@ Status means:
 - **PARTIAL**: some evidence exists, with a known gap.
 - **OPEN**: no sufficient evidence yet.
 
-Last reviewed: 2026-10-17.
+Last reviewed: 2026-10-18.
 
 | Requirement | Status | Current evidence and remaining proof |
 |---|---|---|
 | Android and compatible GrapheneOS hardware | PARTIAL | Android debug build and emulator instrumentation run. GrapheneOS hardware and a physical Android device remain unverified. |
 | Maximum 12 GB RAM | PARTIAL | The app ran inference in an emulator configured with 8 GiB. A repeatable peak-process-RAM report and real-device measurement are still needed. |
-| Maximum 50 GB for app and offline assets | PARTIAL | The release footprint tool accounts for APK and imported package sizes. A completed, signed release-kit footprint report is still needed. |
+| Maximum 50 GB for app and offline assets | PARTIAL | Local signed kit 0.2.1 verifies at 3.85 GB distribution, 6.26 GB installed payload, and 10.12 GB modeled import peak with source packages retained. The kit is not yet built from the current public commit or published. Accounting excludes filesystem overhead, user data, and update coexistence; see its `FOOTPRINT.json`. |
 | Fully offline after installation; no network requests during use | PASS (static/build checks) | The app does not declare Android's `INTERNET` permission, and the APK verification gate checks the offline boundary. Add an airplane-mode demonstration before submission. |
 | Core functionality does not require Google Play Services | PARTIAL | The app is built from AndroidX and native dependencies. Verify the final release dependency report and an AOSP/GrapheneOS run. |
 | Useful explanations, comparison, synthesis, and reasoning | PARTIAL | A versioned 40-question source-grounded evaluation exists. Eight paired model answers have been recorded; they need claim-to-source review and broader quality scoring. |
@@ -39,7 +39,7 @@ Last reviewed: 2026-10-17.
 
 ## Submission proof still required
 
-1. Produce a signed, immutable release kit; verify its APK, package hashes, and total storage footprint.
+1. Build a new signed, immutable kit from the exact public source commit; local kit 0.2.1 predates later corpus commits. Verify its APK, package hashes, and total storage footprint before publication.
 2. Run the exact release on compatible Android hardware, record peak RAM, answer timing, and airplane-mode behavior; separately verify GrapheneOS if compatible hardware is available.
 3. Compare a versioned question set against web-search-plus-frontier reference answers with a stated rubric and blind human spot checks. Keep all raw answers and scores.
 4. Record the required public demo, then submit its link, the exact repository commit, and a screenshot to the bounty.
