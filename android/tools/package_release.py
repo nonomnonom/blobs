@@ -42,12 +42,12 @@ def verification_guide(version, source_name):
 
 
 def write_source_archive(output):
-    excluded = {'.local', '.gradle', '.kotlin', '.idea', '.cxx', 'build',
+    excluded = {'.local', '.gradle', '.kotlin', '.idea', '.cxx', 'build', 'reports',
                 '__pycache__', 'node_modules', 'evidence', '.venv', '.cache'}
     generated = {ROOT / 'packages', ROOT / 'release', ROOT.parent / 'corpus/work',
                  ROOT.parent / 'corpus/artifacts'}
     with zipfile.ZipFile(output, 'x', zipfile.ZIP_DEFLATED) as archive:
-        for base in [ROOT, ROOT.parent / 'corpus', ROOT.parent / '.github']:
+        for base in [ROOT, ROOT.parent / 'corpus', ROOT.parent / '.github', ROOT.parent / 'docs']:
             for directory, folders, files in os.walk(base):
                 folders[:] = sorted(p for p in folders if p not in excluded and
                                     Path(directory) / p not in generated and

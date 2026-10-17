@@ -4,6 +4,8 @@ Blobs is an offline Android research assistant. It searches a local knowledge li
 
 The active implementation is in [`android/`](android/README.md). Reproducible corpus preparation and evaluation tools are in [`corpus/`](corpus/README.md).
 
+See the [bounty requirement and evidence matrix](docs/BOUNTY_COMPLIANCE.md) for the current implementation status and the proof still needed for submission.
+
 ## What is implemented
 
 - First-run setup for importing local model and knowledge packages.

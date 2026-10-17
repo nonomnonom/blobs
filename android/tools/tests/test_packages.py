@@ -170,8 +170,41 @@ class PackageTests(unittest.TestCase):
 
     def test_source_delivery_keeps_package_installer_code_but_excludes_generated_assets(self):
         with tempfile.TemporaryDirectory() as folder:
+            workspace = Path(folder) / 'workspace'
+            root = workspace / 'android'
             output = Path(folder) / 'source.zip'
-            write_source_archive(output)
+            expected = [
+                'android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt',
+                'android/tools/verify_release.py',
+                'corpus/uv.lock',
+                'corpus/blobs_corpus/curate.py',
+                'android/docs/ARCHITECTURE.md',
+                'android/docs/RELEASE.md',
+                'corpus/README.md',
+                'docs/BOUNTY_COMPLIANCE.md',
+                'README.md',
+                'CONTRIBUTING.md',
+                '.gitignore',
+                '.gitattributes',
+            ]
+            for name in expected:
+                path = workspace / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('public source fixture', encoding='utf-8')
+            for name in [
+                'android/packages/library.blobs',
+                'android/.local/signing/key.jks',
+                'corpus/work/checkpoint.json',
+                'corpus/artifacts/records/shard.jsonl.gz',
+                'corpus/reports/private-run.json',
+                'corpus/evaluation/reports/template.md',
+                'android/build/generated.txt',
+            ]:
+                path = workspace / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('generated fixture', encoding='utf-8')
+            with patch.object(package_release, 'ROOT', root):
+                write_source_archive(output)
             with zipfile.ZipFile(output) as archive:
                 names = archive.namelist()
                 self.assertIn('blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt', names)
@@ -181,8 +214,11 @@ class PackageTests(unittest.TestCase):
                 self.assertIn('blobs/android/docs/ARCHITECTURE.md', names)
                 self.assertIn('blobs/android/docs/RELEASE.md', names)
                 self.assertIn('blobs/corpus/README.md', names)
+                self.assertIn('blobs/docs/BOUNTY_COMPLIANCE.md', names)
                 self.assertFalse(any(name.startswith('blobs/design/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/reports/') for name in names))
+                self.assertFalse(any(name.startswith('blobs/corpus/work/') for name in names))
+                self.assertFalse(any(name.startswith('blobs/corpus/artifacts/') for name in names))
                 self.assertNotIn('blobs/AGENTS.md', names)
                 self.assertNotIn('blobs/DESIGN.md', names)
                 self.assertNotIn('blobs/UX-RESEARCH.md', names)
