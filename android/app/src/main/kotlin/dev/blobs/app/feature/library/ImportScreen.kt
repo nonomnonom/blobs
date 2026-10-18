@@ -2,9 +2,7 @@ package dev.blobs.app.feature.library
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -13,9 +11,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.ui.Body
@@ -26,11 +24,14 @@ import dev.blobs.app.ui.ProductState
 import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.Scene
 import dev.blobs.app.ui.ScrollPage
+import dev.blobs.app.ui.SetupProgress
 import dev.blobs.app.ui.fileSize
 
 @Composable
 fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) {
     var cancelling by rememberSaveable { mutableStateOf(false) }
+    val packages by model.packages.collectAsStateWithLifecycle()
+    val readyKinds = packages.map { it.kind }.toSet()
     val running = work.busy && work.total > 0
     val checking = running && work.progress == work.total
     val failed = work.notice in setOf(
@@ -42,7 +43,7 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
     ScrollPage {
         Text(
             stringResource(
-                if (work.downloading) R.string.download_boundary else R.string.import_boundary
+                if (work.inAppDownload) R.string.download_boundary else R.string.import_boundary
             ),
             style = MaterialTheme.typography.bodySmall
         )
@@ -59,6 +60,7 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                 work.importComplete -> R.string.import_ready_title
                 failed -> R.string.import_error_title
                 work.downloading -> R.string.download_title
+                work.inAppDownload && running -> R.string.download_install_title
                 checking -> R.string.import_checking_title
                 running -> R.string.import_title
                 work.pendingImport != null -> R.string.import_paused_title
@@ -68,10 +70,16 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
         val title = work.importTitle.ifBlank { work.pendingImport?.manifest?.title.orEmpty() }
         if (title.isNotEmpty()) Text(title, style = MaterialTheme.typography.titleMedium)
         if (running) {
-            Body(if (work.downloading) R.string.download_body else R.string.import_body)
-            LinearProgressIndicator(progress = {
-                (work.progress.toFloat() / work.total).coerceIn(0f, 1f)
-            }, modifier = Modifier.fillMaxWidth())
+            Body(
+                when {
+                    work.downloading -> R.string.download_body
+                    work.inAppDownload -> R.string.download_install_body
+                    else -> R.string.import_body
+                }
+            )
+            SetupProgress(
+                if (work.inAppDownload) work.setupProgress(readyKinds) else work.phaseProgress
+            )
             Text(
                 stringResource(
                     if (work.downloading) R.string.download_progress else R.string.import_progress,

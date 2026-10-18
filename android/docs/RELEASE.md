@@ -52,7 +52,7 @@ Also inspect signing identity with `apksigner verify --verbose --print-certs` an
 2. Open Blobs and tap **Download the answer model** and **Download the knowledge library**. Blobs verifies each pinned archive and package before installing it.
 3. Start a conversation and open a citation. Chat and research run without network access after setup.
 
-For an air-gapped setup, copy the APK and both `.blobs` files to the phone, then add them from the local package option in setup. The public `v0.3.0` GitHub release must include the two exact `.blobs` filenames above for in-app downloads to work.
+For an air-gapped setup, copy the APK and both `.blobs` files to the phone, then add them later from **Settings → Add from this phone**. First-run setup stays focused on downloading the model and library in the app. The public `v0.3.0` GitHub release must include the two exact `.blobs` filenames above for in-app downloads to work.
 
 Imports temporarily require the source file, staging copy, and installed payload. Keep the headroom shown by the app until installation completes. Removing the app removes private conversations and installed packages; export conversations and retain package backups before uninstalling.
 

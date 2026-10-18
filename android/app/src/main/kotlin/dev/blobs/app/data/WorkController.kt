@@ -44,8 +44,40 @@ data class WorkState(
     val importComplete: Boolean = false,
     val notice: Int? = null,
     val pendingImport: PendingImport? = null,
-    val downloading: Boolean = false
-)
+    val downloading: Boolean = false,
+    val inAppDownload: Boolean = false,
+    val packageKind: String = "",
+    val downloadTotal: Long = 0,
+    val installTotal: Long = 0
+) {
+    val phaseProgress: Float
+        get() {
+            val denominator = downloadTotal + installTotal
+            if (denominator <= 0) {
+                return if (total > 0) (progress.toFloat() / total).coerceIn(0f, 1f) else 0f
+            }
+            val completed = if (downloading) {
+                progress.coerceAtMost(downloadTotal)
+            } else {
+                downloadTotal + progress.coerceAtMost(installTotal)
+            }
+            return (completed.toDouble() / denominator).toFloat().coerceIn(0f, 1f)
+        }
+
+    fun setupProgress(readyKinds: Set<String>): Float {
+        val kinds = setOf("model", "library")
+        val ready = kinds.intersect(readyKinds)
+        var progress = ready.size.toFloat()
+        if (inAppDownload && packageKind in kinds && packageKind !in ready) {
+            progress += when {
+                importComplete -> 1f
+                busy -> phaseProgress
+                else -> 0f
+            }
+        }
+        return (progress / kinds.size).coerceIn(0f, 1f)
+    }
+}
 
 class WorkController(
     private val db: BlobsDatabase,
@@ -320,7 +352,11 @@ class WorkController(
             busy = true,
             total = asset.archiveBytes,
             importTitle = asset.manifest.title,
-            downloading = true
+            downloading = true,
+            inAppDownload = true,
+            packageKind = asset.manifest.kind,
+            downloadTotal = asset.archiveBytes,
+            installTotal = asset.manifest.bytes
         )
         job = scope.launch {
             try {
@@ -342,7 +378,9 @@ class WorkController(
                     ready = true,
                     notice = R.string.package_added,
                     importTitle = asset.manifest.title,
-                    importComplete = true
+                    importComplete = true,
+                    inAppDownload = true,
+                    packageKind = asset.manifest.kind
                 )
             } catch (_: CancellationException) {
                 mutable.value = WorkState(

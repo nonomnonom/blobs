@@ -55,7 +55,6 @@ import dev.blobs.app.feature.settings.AboutScreen
 import dev.blobs.app.feature.settings.AppearanceScreen
 import dev.blobs.app.feature.settings.DataScreen
 import dev.blobs.app.feature.settings.SettingsScreen
-import dev.blobs.app.feature.welcome.IntroScreen
 import dev.blobs.app.feature.welcome.WelcomeScreen
 import dev.blobs.app.ui.theme.BlobsTheme
 
@@ -141,9 +140,7 @@ fun BlobsApp(container: AppContainer) {
                             }
                         }
                     } else if (!state.options.welcomed || state.page == Page.WELCOME) {
-                        WelcomeScreen(theme.preferencesUnavailable, prepare = {
-                            model.welcome(true)
-                        }, haveFiles = model::startWithFiles, explore = { model.welcome(false) })
+                        WelcomeScreen(theme.preferencesUnavailable, prepare = model::welcome)
                     } else {
                         Column(
                             Modifier.widthIn(
@@ -167,6 +164,11 @@ fun BlobsApp(container: AppContainer) {
                                     stringResource(
                                         if (reviewingImport) {
                                             R.string.review_package
+                                        } else if (state.page == Page.IMPORT &&
+                                            state.importOrigin == Page.SETUP &&
+                                            work.inAppDownload
+                                        ) {
+                                            R.string.setup_progress_title
                                         } else if (state.page == Page.CHAT &&
                                             turns.isEmpty()
                                         ) {
@@ -205,13 +207,10 @@ fun BlobsApp(container: AppContainer) {
                                     GlyphButton(R.drawable.ic_settings, R.string.settings) {
                                         model.navigate(Page.SETTINGS)
                                     }
-                                } else if (state.page == Page.INTRO ||
+                                } else if (state.page == Page.SETUP &&
                                     (
-                                        state.page == Page.SETUP &&
-                                            (
-                                                packages.none { it.kind == "model" } ||
-                                                    packages.none { it.kind == "library" }
-                                                )
+                                        packages.none { it.kind == "model" } ||
+                                            packages.none { it.kind == "library" }
                                         )
                                 ) {
                                     androidx.compose.foundation.layout.Spacer(
@@ -271,8 +270,7 @@ fun BlobsApp(container: AppContainer) {
                                         when (page) {
                                             Page.CHAT -> ChatScreen(state, turns, work, model)
                                             Page.WELCOME -> Unit
-                                            Page.INTRO -> IntroScreen { model.navigate(Page.SETUP) }
-                                            Page.SETUP -> SetupScreen(packages, model, pickFile)
+                                            Page.SETUP -> SetupScreen(packages, model)
                                             Page.IMPORT -> ImportScreen(state, work, model)
                                             Page.HISTORY -> HistoryScreen(
                                                 conversations,
@@ -327,8 +325,7 @@ fun BlobsApp(container: AppContainer) {
 private fun pageTitle(page: Page): Int = when (page) {
     Page.CHAT -> R.string.chat_title
     Page.WELCOME -> R.string.app_wordmark
-    Page.INTRO -> R.string.meet_blobs
-    Page.SETUP -> R.string.prepare
+    Page.SETUP -> R.string.setup_progress_title
     Page.IMPORT -> R.string.import_header
     Page.HISTORY, Page.DATA -> R.string.history
     Page.LIBRARY -> R.string.library

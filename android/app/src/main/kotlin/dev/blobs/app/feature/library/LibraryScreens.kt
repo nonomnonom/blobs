@@ -1,8 +1,5 @@
 package dev.blobs.app.feature.library
 
-import android.app.ActivityManager
-import android.content.Context
-import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -57,35 +54,27 @@ import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.Scene
 import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.SearchField
+import dev.blobs.app.ui.SetupProgress
 import dev.blobs.app.ui.fileSize
 
 @Composable
-fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFile: () -> Unit) {
+fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
     val work by model.work.collectAsStateWithLifecycle()
-    val ready = packages.any { it.kind == "model" } && packages.any { it.kind == "library" }
-    val context = LocalContext.current
-    val memory =
-        remember {
-            ActivityManager.MemoryInfo().also {
-                (
-                    context.getSystemService(
-                        Context.ACTIVITY_SERVICE
-                    ) as ActivityManager
-                    ).getMemoryInfo(it)
-            }
-        }
+    val readyKinds = packages.map { it.kind }.toSet()
+    val ready = setOf("model", "library").all { it in readyKinds }
     ScrollPage {
         Scene(
             if (ready) R.drawable.ready_world else R.drawable.library_world,
             if (ready) 240 else 140
         )
-        Heading(if (ready) R.string.ready_title else R.string.setup_title)
         if (ready) {
             Body(R.string.ready_body)
+            SetupProgress(work.setupProgress(readyKinds))
             PrimaryAction(R.string.start_chat) { model.finishSetup() }
             return@ScrollPage
         }
         Body(R.string.setup_body)
+        SetupProgress(work.setupProgress(readyKinds))
         if (work.pendingImport != null || (work.busy && work.total > 0)) {
             PrimaryAction(R.string.view_import) { model.navigate(Page.IMPORT) }
         } else {
@@ -95,56 +84,33 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFile
                 PrimaryAction(R.string.download_model, !work.busy) {
                     model.downloadPackage(model.catalog.recommendedModel)
                 }
-            } else if (missingLibrary) {
-                PrimaryAction(R.string.download_library, !work.busy) {
+            }
+            if (missingLibrary) {
+                val downloadLibrary = {
                     model.downloadPackage(model.catalog.starterLibrary)
+                }
+                if (missingModel) {
+                    OutlinedButton(
+                        onClick = downloadLibrary,
+                        enabled = !work.busy,
+                        modifier = Modifier.fillMaxWidth().height(54.dp)
+                    ) {
+                        Text(stringResource(R.string.download_library))
+                    }
+                } else {
+                    PrimaryAction(R.string.download_library, !work.busy, downloadLibrary)
                 }
             }
             if (missingModel || missingLibrary) {
-                TextButton(
-                    onClick = pickFile,
-                    enabled = !work.busy,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.have_local_packages))
-                }
-                Body(R.string.setup_download_note)
+                Body(
+                    if (missingModel && missingLibrary) {
+                        R.string.setup_download_note
+                    } else {
+                        R.string.setup_remaining_download_note
+                    }
+                )
             }
         }
-        MenuRow(
-            if (packages.any {
-                    it.kind == "model"
-                }
-            ) {
-                R.string.model_ready
-            } else {
-                R.string.model_needed
-            },
-            packages.firstOrNull { it.kind == "model" }?.title
-                ?: stringResource(R.string.model_download_description)
-        ) { model.navigate(Page.MODELS) }
-        MenuRow(
-            if (packages.any {
-                    it.kind == "library"
-                }
-            ) {
-                R.string.library_ready
-            } else {
-                R.string.library_needed
-            },
-            packages.firstOrNull { it.kind == "library" }?.title
-                ?: stringResource(R.string.library_download_description)
-        ) { model.navigate(Page.LIBRARY) }
-        Text(
-            stringResource(
-                R.string.device_details,
-                Build.MODEL,
-                Build.VERSION.RELEASE,
-                fileSize(memory.totalMem),
-                fileSize(android.os.StatFs(context.filesDir.path).availableBytes)
-            ),
-            style = MaterialTheme.typography.bodyMedium
-        )
     }
 }
 

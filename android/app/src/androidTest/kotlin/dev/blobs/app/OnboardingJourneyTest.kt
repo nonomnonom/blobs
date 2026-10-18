@@ -2,6 +2,7 @@ package dev.blobs.app
 
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -61,19 +62,21 @@ class OnboardingJourneyTest {
                 compose.runOnUiThread { model.navigate(Page.WELCOME) }
             }
             if (compose.onAllNodesWithText(
-                    text(R.string.meet_blobs)
+                    text(R.string.prepare)
                 ).fetchSemanticsNodes().isNotEmpty()
             ) {
                 capture("01-welcome")
-                compose.onNodeWithText(text(R.string.meet_blobs)).performScrollTo().performClick()
-                compose.onNodeWithContentDescription(text(R.string.back)).performClick()
-                compose.onNodeWithText(text(R.string.have_files)).assertIsDisplayed()
-                compose.onNodeWithText(text(R.string.meet_blobs)).performScrollTo().performClick()
+                compose.onAllNodesWithText("I already have the files").assertCountEquals(0)
+                compose.onNodeWithText(text(R.string.prepare)).performScrollTo().performClick()
             } else {
-                compose.runOnUiThread { model.navigate(Page.INTRO) }
+                compose.runOnUiThread { model.welcome() }
             }
-            capture("02-intro")
-            compose.onNodeWithText(text(R.string.get_ready)).assertIsDisplayed().performClick()
+            compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
+            compose.onNodeWithText(text(R.string.download_model))
+                .performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(text(R.string.download_library))
+                .performScrollTo().assertIsDisplayed()
+            compose.onAllNodesWithText(text(R.string.have_local_packages)).assertCountEquals(0)
             capture("03-setup")
             for ((name, key) in listOf("model" to "modelPackage", "library" to "libraryPackage")) {
                 val path = requireNotNull(args.getString(key))

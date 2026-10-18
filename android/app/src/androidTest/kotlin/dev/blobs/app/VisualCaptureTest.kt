@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -51,14 +52,20 @@ class VisualCaptureTest {
         }
         compose.activityRule.scenario.recreate()
         compose.waitUntil(10_000) {
-            compose.onAllNodesWithText(text(R.string.explore)).fetchSemanticsNodes().isNotEmpty() ||
-                compose.onAllNodesWithText(
-                    text(R.string.question_hint)
-                ).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithText(text(R.string.prepare)).fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithText(text(R.string.question_hint)).fetchSemanticsNodes()
+                    .isNotEmpty()
         }
-        if (compose.onAllNodesWithText(text(R.string.explore)).fetchSemanticsNodes().isNotEmpty()) {
+        if (compose.onAllNodesWithText(text(R.string.prepare)).fetchSemanticsNodes().isNotEmpty()) {
             capture("welcome")
-            compose.onNodeWithText(text(R.string.explore)).performScrollTo().performClick()
+        }
+        runBlocking {
+            (compose.activity.application as BlobsApplication).container.preferences.welcome()
+        }
+        compose.activityRule.scenario.recreate()
+        compose.waitUntil(10_000) {
+            compose.onAllNodesWithContentDescription(text(R.string.history)).fetchSemanticsNodes()
+                .isNotEmpty()
         }
         compose.onNodeWithContentDescription(text(R.string.history)).performClick()
         compose.onNodeWithContentDescription(text(R.string.new_chat)).performClick()

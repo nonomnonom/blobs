@@ -31,7 +31,6 @@ import kotlinx.coroutines.withContext
 enum class Page {
     CHAT,
     WELCOME,
-    INTRO,
     SETUP,
     IMPORT,
     HISTORY,
@@ -119,13 +118,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         return true
     }
 
-    fun welcome(setup: Boolean) = action {
-        if (setup) mutable.value = mutable.value.copy(page = Page.WELCOME)
-        container.preferences.welcome()
-        if (setup) navigate(Page.INTRO) else goHome()
-    }
-
-    fun startWithFiles() = action {
+    fun welcome() = action {
         mutable.value = mutable.value.copy(page = Page.WELCOME)
         container.preferences.welcome()
         navigate(Page.SETUP)

@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,12 +32,7 @@ import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.theme.BlobsTheme
 
 @Composable
-fun WelcomeScreen(
-    preferencesUnavailable: Boolean = false,
-    prepare: () -> Unit = {},
-    haveFiles: () -> Unit = {},
-    explore: () -> Unit = {}
-) {
+fun WelcomeScreen(preferencesUnavailable: Boolean = false, prepare: () -> Unit = {}) {
     Column(
         modifier =
         Modifier
@@ -85,13 +79,7 @@ fun WelcomeScreen(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            PrimaryAction(R.string.meet_blobs, onClick = prepare)
-            TextButton(onClick = haveFiles, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.have_files))
-            }
-            TextButton(onClick = explore, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.explore), textAlign = TextAlign.Center)
-            }
+            PrimaryAction(R.string.prepare, onClick = prepare)
             if (preferencesUnavailable) {
                 Text(
                     text = stringResource(R.string.preferences_unavailable),

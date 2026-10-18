@@ -1,6 +1,7 @@
 package dev.blobs.app
 
 import android.content.pm.PackageManager
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -57,15 +58,11 @@ class LaunchTest {
             val app = compose.activity.application as BlobsApplication
             app.container.preferences.setTextScale(1f)
             app.container.preferences.setThemeMode(ThemeMode.SYSTEM)
+            app.container.preferences.welcome()
         }
         compose.waitUntil(10_000) {
-            compose.onAllNodesWithText(text(R.string.explore)).fetchSemanticsNodes().isNotEmpty() ||
-                compose.onAllNodesWithContentDescription(
-                    text(R.string.history)
-                ).fetchSemanticsNodes().isNotEmpty()
-        }
-        if (compose.onAllNodesWithText(text(R.string.explore)).fetchSemanticsNodes().isNotEmpty()) {
-            compose.onNodeWithText(text(R.string.explore)).performScrollTo().performClick()
+            compose.onAllNodesWithContentDescription(text(R.string.history))
+                .fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithContentDescription(text(R.string.history)).performClick()
         compose.onNodeWithContentDescription(text(R.string.new_chat)).performClick()
@@ -116,22 +113,19 @@ class LaunchTest {
 
         val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded }
-        compose.runOnUiThread { model.navigate(Page.INTRO) }
-        compose.onNodeWithText(compose.activity.getString(R.string.get_ready)).performClick()
+        compose.runOnUiThread { model.navigate(Page.WELCOME) }
+        compose.onAllNodesWithText("I already have the files").assertCountEquals(0)
+        compose.onNodeWithText(compose.activity.getString(R.string.prepare)).performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
         if (model.packages.value.none { it.kind == "model" } ||
             model.packages.value.none { it.kind == "library" }
         ) {
-            assertTrue(
-                compose.onAllNodesWithText(compose.activity.getString(R.string.download_model))
-                    .fetchSemanticsNodes().isNotEmpty() ||
-                    compose.onAllNodesWithText(
-                        compose.activity.getString(R.string.download_library)
-                    )
-                        .fetchSemanticsNodes().isNotEmpty()
-            )
-            compose.onNodeWithText(compose.activity.getString(R.string.have_local_packages))
-                .assertIsDisplayed()
+            compose.onNodeWithText(compose.activity.getString(R.string.download_model))
+                .performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(compose.activity.getString(R.string.download_library))
+                .performScrollTo().assertIsDisplayed()
+            compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))
+                .assertCountEquals(0)
         }
     }
 }
