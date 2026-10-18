@@ -32,6 +32,9 @@ object RetrievalQuery {
     private fun normalized(text: String): String =
         Normalizer.normalize(text, Normalizer.Form.NFKC).lowercase(Locale.ROOT)
 
+    fun nameKey(text: String): String =
+        Regex("[\\p{L}\\p{N}]+").findAll(normalized(text)).joinToString(" ") { it.value }
+
     data class NameCandidate(val key: String, val words: IntRange)
 
     fun names(question: String): List<NameCandidate> {

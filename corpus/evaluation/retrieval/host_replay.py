@@ -12,10 +12,12 @@ import tempfile
 import time
 import zipfile
 
+from blobs_corpus.names import name_key
+
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = '406f6b10a07376981809bb3dc7b70e1e0f3f3080802ec2e5633dd9ec6fcfe00f'
-QUERY_SHA256 = '5c0e307ccaa5a5f7043bc0878fca626b74dbfb0e11a0a1f99641b64592d2f79e'
+LIBRARY_STORE_SHA256 = '38706635cdff3037029f1f49487f37f0f46d7fe8223e716ff9858bf97f444be5'
+QUERY_SHA256 = 'cbad4adfb4926deabef6171d7e157a8469e4db37d90ac590a6d1e659679c3357'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
     'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',
@@ -73,7 +75,7 @@ def verify_report_library(case, manifest):
         raise ValueError('Native retrieval evidence uses a different library package')
 
 
-def retrieve(database, manifest, query):
+def retrieve(database, manifest, query, *, priority_ids=()):
     with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as db:
         db.execute('PRAGMA trusted_schema=OFF')
         db.execute('PRAGMA query_only=ON')
@@ -99,18 +101,61 @@ def retrieve(database, manifest, query):
                 AND (p.title!='' OR lower(trim(p.section)) NOT IN
                   ('references','external links','see also','further reading','bibliography'))
                 ORDER BY rank,p.id LIMIT 48'''
-        candidates = [dict(row) for row in db.execute(statement, (query,))] if query else []
+        if priority_ids:
+            placeholders = ','.join('?' for _ in priority_ids)
+            statement = statement.replace(
+                'ORDER BY rank,p.id',
+                f"ORDER BY CASE WHEN p.title!='' AND d.id IN ({placeholders}) THEN 0 ELSE 1 END,rank,p.id",
+            )
+        candidates = [dict(row) for row in db.execute(statement, (query, *priority_ids))] if query else []
     return select_evidence(candidates, manifest), candidates
+
+
+def direct_title_ids(database, question, titles):
+    """Return exact canonical-title routes selected by the Android name matcher."""
+    if not titles:
+        return []
+    words = name_key(question).split()[:40]
+    candidates = []
+    for size in range(min(6, len(words)), 0, -1):
+        for start in range(len(words) - size + 1):
+            phrase = words[start:start + size]
+            key = ' '.join(phrase)
+            if 2 <= len(key) <= 600 and any(word not in STOP_WORDS for word in phrase):
+                candidates.append((key, set(range(start, start + size))))
+    keys = list(dict.fromkeys(key for key, _ in candidates))
+    if not keys:
+        return []
+    with closing(sqlite3.connect(database.resolve().as_uri() + '?mode=ro', uri=True)) as db:
+        exists = db.execute(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='document_names'"
+        ).fetchone()[0]
+        if not exists:
+            return []
+        rows = db.execute(
+            '''SELECT n.name,min(d.title),min(d.id) FROM document_names n
+               JOIN documents d ON d.id=n.doc_id WHERE n.name IN ('''
+            + ','.join('?' for _ in keys)
+            + ''') GROUP BY n.name HAVING count(*)=1''', keys,
+        ).fetchall()
+    matches = {key: (title, doc_id) for key, title, doc_id in rows}
+    title_set = set(titles)
+    occupied, ids = set(), []
+    for key, positions in candidates:
+        match = matches.get(key)
+        if match is None or match[0] not in title_set or occupied.intersection(positions):
+            continue
+        occupied.update(positions)
+        title = match[0]
+        if key == name_key(title) and match[1] not in ids:
+            ids.append(match[1])
+    return ids
 
 
 def retrieval_spec(database, question):
     """Mirror LibraryStore's unique source-name routing and FTS query construction."""
     import sqlite3
-    import unicodedata
-    import re
-
-    normalized = unicodedata.normalize('NFKC', question).lower()
-    words = re.findall(r'[\w]+', normalized, flags=re.UNICODE)[:40]
+    words = name_key(question).split()[:40]
     candidates = []
     for size in range(min(6, len(words)), 0, -1):
         for start in range(len(words) - size + 1):
@@ -140,7 +185,7 @@ def retrieval_spec(database, question):
         titles.append(title)
         if len(titles) == 4:
             break
-    words = re.findall(r'[\w]{2,}', normalized, flags=re.UNICODE)
+    words = [word for word in name_key(question).split() if len(word) >= 2]
     terms = list(dict.fromkeys(word for word in words if word not in STOP_WORDS))[:20]
     query = [f'"{term}"' for term in terms]
     phrase_terms = list(dict.fromkeys(
@@ -149,7 +194,7 @@ def retrieval_spec(database, question):
     ))[:20]
     query.extend(phrase_terms)
     for title in titles:
-        phrase = ' '.join(re.findall(r'[\w]+', unicodedata.normalize('NFKC', title).lower(), flags=re.UNICODE))
+        phrase = name_key(title)
         if phrase:
             query.append(f'title:"{phrase}"')
     return ' OR '.join(dict.fromkeys(query)), titles
@@ -222,8 +267,10 @@ def main():
                 raise ValueError('Native report must contain matching baseline and candidate cases')
             for case in baseline_cases:
                 verify_report_library(case, baseline)
-                query, _ = retrieval_spec(work / 'starter.sqlite', case['resolved_query'])
-                evidence, _ = retrieve(work / 'starter.sqlite', baseline, query)
+                query, titles = retrieval_spec(work / 'starter.sqlite', case['resolved_query'])
+                priority_ids = direct_title_ids(work / 'starter.sqlite', case['resolved_query'], titles)
+                evidence, _ = retrieve(work / 'starter.sqlite', baseline, query,
+                                       priority_ids=priority_ids)
                 same = evidence == case['evidence']
                 report['baseline_parity'].append(dict(case_id=case['case_id'], identical=same))
                 if not same:
@@ -238,7 +285,9 @@ def main():
         for case in cases:
             started = time.monotonic()
             query, titles = retrieval_spec(work / 'expanded.sqlite', case['resolved_query'])
-            evidence, candidates = retrieve(work / 'expanded.sqlite', candidate, query)
+            priority_ids = direct_title_ids(work / 'expanded.sqlite', case['resolved_query'], titles)
+            evidence, candidates = retrieve(work / 'expanded.sqlite', candidate, query,
+                                            priority_ids=priority_ids)
             same = evidence == case['evidence']
             report['results'].append(dict(case_id=case['case_id'], resolved_query=case['resolved_query'],
                                           fts_query=query,

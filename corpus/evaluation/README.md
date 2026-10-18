@@ -43,3 +43,17 @@ uv run --locked --project . python -m evaluation.answers.benchmark_summary `
 The checked-in baseline keeps per-case host elapsed time, first-content time, model prefill and generation time/rate, prompt size, source count, and execution status. It omits generated answers and passages. It does not score answer quality. The raw run remains in ignored `reports/runs/`; the baseline records its SHA-256 and all model, runtime, case, retrieval, and prompt hashes needed to identify the exact experiment. Re-run into a new output path; tools refuse to overwrite existing evidence.
 
 Evaluation cases and model/runtime locks are versioned. A new run is a development measurement once inspected or used to change implementation; do not describe it as a held-out quality set.
+
+## Reproduce travel-library retrieval smoke
+
+This checks whether a fixed set of travel questions retrieves their expected source documents from the exact Wikivoyage package. It records titles and host retrieval time only; it neither stores passages nor grades model answers. The result is a host diagnostic, not a prediction of phone latency. Run from `corpus/`:
+
+```powershell
+uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
+  --library-package work/packages/wikivoyage-en-2026-09-v2.blobs `
+  --cases evaluation/cases/travel-retrieval-smoke-v1.json `
+  --work-directory work/reports/travel-retrieval-smoke-v1 `
+  --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v1-host.json
+```
+
+The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Future topic libraries, such as survival, should use their own package identity and topic-specific retrieval cases; they can share the same schema and retrieval implementation while keeping source licensing and update cadence independent.

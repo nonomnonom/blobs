@@ -7,6 +7,8 @@ import dev.blobs.app.data.local.PackageEntity
 import java.io.File
 
 class LibraryStore {
+    private data class NameMatch(val key: String, val title: String, val id: String)
+
     fun validate(file: File, catalogDigestPinned: Boolean = false) {
         open(file.path).use { db ->
             if (!catalogDigestPinned) {
@@ -122,8 +124,13 @@ class LibraryStore {
                 val filter = ids?.joinToString(",", " AND d.id IN (", ")") { "?" }.orEmpty()
                 val schema = version(db)
                 val current = schema >= 2L
+                val titleMatches = if (current && hasNames(db)) {
+                    matchingTitles(db, question, ids)
+                } else {
+                    emptyList()
+                }
                 val query = if (current && hasNames(db)) {
-                    RetrievalQuery.match(question, matchingTitles(db, question, ids))
+                    RetrievalQuery.match(question, titleMatches.map { it.title })
                 } else {
                     terms
                 }
@@ -143,11 +150,22 @@ class LibraryStore {
                 } else {
                     ""
                 }
+                val directTitleIds = titleMatches.filter {
+                    it.key == RetrievalQuery.nameKey(it.title)
+                }.map { it.id }.distinct()
+                val titlePriority = if (directTitleIds.isEmpty()) {
+                    ""
+                } else {
+                    val placeholders = directTitleIds.joinToString(",") { "?" }
+                    "CASE WHEN p.title!='' AND d.id IN ($placeholders) THEN 0 ELSE 1 END, "
+                }
                 db.prepare(
-                    "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?$filter$contentFilter ORDER BY $ranking,p.id LIMIT 48"
+                    "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?$filter$contentFilter ORDER BY $titlePriority$ranking,p.id LIMIT 48"
                 ).use { statement ->
                     statement.bindText(1, query)
-                    ids?.forEachIndexed { index, id -> statement.bindText(index + 2, id) }
+                    var parameter = 2
+                    ids?.forEach { id -> statement.bindText(parameter++, id) }
+                    directTitleIds.forEach { id -> statement.bindText(parameter++, id) }
                     buildList { while (statement.step()) add(read(statement, pack)) }
                         .withIndex().toList()
                 }
@@ -254,7 +272,7 @@ class LibraryStore {
         db: SQLiteConnection,
         question: String,
         scope: List<String>?
-    ): List<String> {
+    ): List<NameMatch> {
         val candidates = RetrievalQuery.names(question)
         val keys = candidates.map { it.key }.distinct()
         if (keys.isEmpty()) return emptyList()
@@ -266,21 +284,28 @@ class LibraryStore {
             buildMap {
                 while (statement.step()) {
                     if (scope == null || statement.getText(2) in scope) {
-                        put(statement.getText(0), statement.getText(1))
+                        put(
+                            statement.getText(0),
+                            NameMatch(
+                                key = statement.getText(0),
+                                title = statement.getText(1),
+                                id = statement.getText(2)
+                            )
+                        )
                     }
                 }
             }
         }
         val occupied = mutableSetOf<Int>()
-        val titles = mutableSetOf<String>()
+        val titles = linkedMapOf<String, NameMatch>()
         for (candidate in candidates) {
-            val title = matches[candidate.key] ?: continue
+            val match = matches[candidate.key] ?: continue
             if (candidate.words.any { it in occupied }) continue
             occupied.addAll(candidate.words)
-            titles.add(title)
+            titles.putIfAbsent(match.id, match)
             if (titles.size == 4) break
         }
-        return titles.toList()
+        return titles.values.toList()
     }
 
     private fun version(db: SQLiteConnection): Long = db.prepare("PRAGMA user_version").use {

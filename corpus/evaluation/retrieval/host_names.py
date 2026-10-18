@@ -9,12 +9,11 @@ import time
 
 from blobs_corpus.extract import write_json
 from blobs_corpus.names import name_key
-from .host_replay import retrieve, sha, unpack, SQL
+from .host_replay import direct_title_ids, retrieve, sha, unpack
 
 
-LIBRARY_STORE_SHA256 = '4103061279727186f3fb0be62f17c9a8396312e9f3957dd321f3f8e47aabecae'
-QUERY_SHA256 = '136427613783576c1188a157251241d9390d4f89913f58a4b56d0881ce56f7a5'
-CONTENT_SQL = SQL.replace('ORDER BY', "AND (p.title!='' OR lower(trim(p.section)) NOT IN ('references','external links','see also','further reading','bibliography')) ORDER BY")
+LIBRARY_STORE_SHA256 = '38706635cdff3037029f1f49487f37f0f46d7fe8223e716ff9858bf97f444be5'
+QUERY_SHA256 = 'cbad4adfb4926deabef6171d7e157a8469e4db37d90ac590a6d1e659679c3357'
 
 
 def expanded_query(database, question, base_query, stop_words):
@@ -88,7 +87,8 @@ def main():
             if baseline != case['library']:
                 raise ValueError('Native library identity differs')
             query, titles = expanded_query(baseline_db, case['resolved_query'], case['base_fts_query'], stop_words)
-            evidence, _ = retrieve(baseline_db, baseline, query, sql=CONTENT_SQL)
+            priority_ids = direct_title_ids(baseline_db, case['resolved_query'], titles)
+            evidence, _ = retrieve(baseline_db, baseline, query, priority_ids=priority_ids)
             same = evidence == case['evidence']
             report['baseline_parity'].append(dict(case_id=case['case_id'], identical=same, matched_titles=titles))
             if not same:
@@ -106,7 +106,8 @@ def main():
             base_elapsed = (time.monotonic() - base_start) * 1000
             start = time.monotonic()
             query, titles = expanded_query(database, case['resolved_query'], case['base_fts_query'], stop_words)
-            evidence, candidates = retrieve(database, candidate, query, sql=CONTENT_SQL)
+            priority_ids = direct_title_ids(database, case['resolved_query'], titles)
+            evidence, candidates = retrieve(database, candidate, query, priority_ids=priority_ids)
             report['results'].append(dict(case_id=case['case_id'], resolved_query=case['resolved_query'],
                                           fts_query=query, matched_titles=titles, evidence=evidence,
                                           base_policy=dict(fts_query=case['base_fts_query'], evidence=base_evidence,

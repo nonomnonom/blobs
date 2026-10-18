@@ -118,6 +118,11 @@ class LibraryRetrievalTest {
                 store.retrieve(listOf(pack), "What is CO₂?", null).first().id
             )
             assertTrue(store.retrieve(listOf(pack), "What is sharedname?", null).isEmpty())
+            assertEquals(
+                "names/jakarta",
+                store.retrieve(listOf(pack), "What should I know before visiting Jakarta?", null)
+                    .first().id
+            )
             val scoped = store.retrieve(listOf(pack), "What is AI?", setOf("names/phonetic"))
             assertEquals(listOf("names/phonetic"), scoped.map { it.id })
             assertTrue(store.retrieve(listOf(pack), "What is CO₂?", setOf("names/ai")).isEmpty())
@@ -154,8 +159,19 @@ class LibraryRetrievalTest {
                     "Carbon dioxide",
                     "A molecule with one carbon atom and two oxygen atoms."
                 ),
-                Triple("phonetic", "Phonetic table", "The sound ai is listed in this table.")
-            )
+                Triple("phonetic", "Phonetic table", "The sound ai is listed in this table."),
+                Triple(
+                    "jakarta",
+                    "Jakarta",
+                    "Jakarta is a travel destination with airports, routes, neighborhoods and transit."
+                )
+            ) + (1..32).map { index ->
+                Triple(
+                    "noise$index",
+                    "Travel discussion $index",
+                    "What should I know before visiting a place? This discussion explains travel planning and advice."
+                )
+            }
             for ((id, title, body) in docs) {
                 db.prepare(
                     "INSERT INTO documents VALUES (?,?,'Author','local:test','CC0','today','today',?,'Test')"
@@ -176,7 +192,7 @@ class LibraryRetrievalTest {
                 }
             }
             db.prepare(
-                "INSERT INTO document_names VALUES ('ai','ai'),('co2','co2'),('sharedname','ai'),('sharedname','co2')"
+                "INSERT INTO document_names VALUES ('ai','ai'),('co2','co2'),('jakarta','jakarta'),('sharedname','ai'),('sharedname','co2')"
             ).use { it.step() }
             db.prepare("INSERT INTO passages_fts(passages_fts) VALUES ('rebuild')").use {
                 it.step()

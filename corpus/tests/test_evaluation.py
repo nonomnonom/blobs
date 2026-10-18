@@ -24,8 +24,15 @@ from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
 from evaluation.native.build_answer_contract_fixture import build as build_answer_contract_fixture
 from evaluation.native.compare_native_smoke import compare as compare_native_smoke
-from evaluation.retrieval.host_replay import retrieval_query, select_evidence, verify_report_library
+from evaluation.retrieval.host_replay import (
+    direct_title_ids,
+    retrieve,
+    retrieval_query,
+    select_evidence,
+    verify_report_library,
+)
 from evaluation.retrieval.package_report import build_report as build_package_retrieval_report
+from evaluation.retrieval.retrieval_smoke import build_report as build_retrieval_smoke_report
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
 from evaluation.retrieval.title_coverage import inspect as inspect_titles
 from evaluation.retrieval.title_coverage import inspect_database as inspect_package_titles
@@ -145,6 +152,48 @@ class EvaluationInputTests(unittest.TestCase):
                 'OR title:"litre" OR title:"monotonic function"',
             )
 
+    def test_host_replay_prioritizes_a_unique_exact_title_before_the_evidence_limit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / 'travel.sqlite'
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript('''
+                    PRAGMA user_version=2;
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT,publisher TEXT,url TEXT,
+                        license TEXT,updated TEXT,saved TEXT,body TEXT,collection TEXT);
+                    CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT,body TEXT,
+                        section TEXT,title TEXT);
+                    CREATE TABLE document_names(name TEXT,doc_id TEXT,
+                        PRIMARY KEY(name,doc_id)) WITHOUT ROWID;
+                    CREATE VIRTUAL TABLE passages_fts USING fts5(
+                        body,title,section,content='passages',content_rowid='id');
+                    INSERT INTO passages_fts(passages_fts,rank)
+                        VALUES ('rank','bm25(1.0,6.0,2.0)');
+                ''')
+                for index in range(60):
+                    item_id, title = f'noise-{index}', f'Travel guide {index}'
+                    db.execute('INSERT INTO documents VALUES (?,?,?,?,?,?,?,?,?)',
+                               (item_id,title,'Author','local:test','CC0','today','today',
+                                'What should I know before visiting a place? This guide has travel information.',
+                                'Travel'))
+                    db.execute('INSERT INTO passages(doc_id,body,section,title) VALUES (?,?,?,?)',
+                               (item_id,'What should I know before visiting a place? This guide has travel information.',
+                                'Guide',title))
+                db.execute('INSERT INTO documents VALUES (?,?,?,?,?,?,?,?,?)',
+                           ('jakarta','Jakarta','Author','local:test','CC0','today','today',
+                            'Travel guide information.','Travel'))
+                db.execute('INSERT INTO passages(doc_id,body,section,title) VALUES (?,?,?,?)',
+                           ('jakarta','Travel guide information.','Guide','Jakarta'))
+                db.execute("INSERT INTO document_names VALUES ('jakarta','jakarta')")
+                db.execute("INSERT INTO passages_fts(passages_fts) VALUES ('rebuild')")
+                db.commit()
+
+            manifest = dict(id='travel', version='1', sha256='a' * 64, title='Travel')
+            self.assertNotEqual(retrieve(database, manifest, '"travel"')[0][0]['title'], 'Jakarta')
+            priority = direct_title_ids(database, 'What is Jakarta?', ['Jakarta'])
+            self.assertEqual(priority, ['jakarta'])
+            evidence, _ = retrieve(database, manifest, '"travel"', priority_ids=priority)
+            self.assertEqual(evidence[0]['title'], 'Jakarta')
+
     def test_host_replay_binds_native_evidence_to_exact_library_manifest(self):
         manifest = dict(format=1, id='wikipedia-top1m-mini', version='2026-04.1', sha256='a' * 64)
         verify_report_library(dict(library=manifest), manifest)
@@ -171,6 +220,33 @@ class EvaluationInputTests(unittest.TestCase):
         )
         self.assertTrue(all(row['variant'] == 'candidateLibrary' for row in report['results']))
         self.assertTrue(all(isinstance(row['evidence'], list) for row in report['results']))
+
+    def test_retrieval_smoke_reports_title_coverage_without_passage_text(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            library = build_answer_contract_fixture(root / 'fixture')
+            database = root / 'fixture-library.sqlite'
+            from evaluation.retrieval.host_replay import unpack
+            manifest = unpack(library, database)
+            with closing(sqlite3.connect(database)) as db:
+                title = db.execute('SELECT title FROM documents ORDER BY title LIMIT 1').fetchone()[0]
+            cases = root / 'cases.json'
+            cases.write_text(json.dumps({
+                'format': 1,
+                'id': 'retrieval-smoke-test',
+                'library': {'id': manifest['id'], 'version': manifest['version'],
+                            'payload_sha256': manifest['sha256']},
+                'cases': [{'id': 'exact-title', 'question': f'Tell me about {title}',
+                           'expected_document_titles': [title]}],
+            }), encoding='utf-8')
+
+            report = build_retrieval_smoke_report(library, cases, root / 'work')
+
+        self.assertTrue(report['complete'])
+        self.assertEqual(report['summary']['expected_title_recall'], 1.0)
+        serialized = json.dumps(report)
+        self.assertNotIn('text', report['results'][0])
+        self.assertNotIn('body', serialized)
 
     def test_qwen35_2b_text_profile_preserves_publisher_sampling_contract(self):
         sampling = sampling_for('qwen35-2b-text')

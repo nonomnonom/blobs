@@ -9,6 +9,7 @@ from blobs_corpus.package import verify_package
 from .host_replay import (
     LIBRARY_STORE_SHA256,
     QUERY_SHA256,
+    direct_title_ids,
     retrieve,
     retrieval_spec,
     sha,
@@ -65,7 +66,8 @@ def build_report(package_path: Path, cases_path: Path, work_directory: Path):
             raise ValueError('Package manifest changed during retrieval replay')
         for case in cases:
             query, titles = retrieval_spec(database, case['question'])
-            evidence, _ = retrieve(database, manifest, query)
+            priority_ids = direct_title_ids(database, case['question'], titles)
+            evidence, _ = retrieve(database, manifest, query, priority_ids=priority_ids)
             report['results'].append(dict(
                 case_id=case['id'], question=case['question'], variant='candidateLibrary',
                 resolved_query=case['question'], fts_query=query, matched_titles=titles,
