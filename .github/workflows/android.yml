@@ -106,6 +106,7 @@ jobs:
           target: default
           arch: x86_64
           working-directory: android
+          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: bash ./gradlew connectedDebugAndroidTest --console=plain
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
