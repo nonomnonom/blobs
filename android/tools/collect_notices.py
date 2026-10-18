@@ -19,7 +19,8 @@ def inspect(data, owner):
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         for name in archive.namelist():
             leaf = name.rsplit('/', 1)[-1].lower()
-            if leaf.startswith(('license', 'notice', 'copyright')) and not name.endswith('/'):
+            if (leaf.startswith(('license', 'notice', 'copyright')) and
+                    not name.endswith('/') and not leaf.endswith('.class')):
                 content = archive.read(name).decode('utf-8', errors='replace')
                 digest = hashlib.sha256(content.encode()).hexdigest()
                 entry = notices.setdefault(digest, [content, set()])
@@ -56,7 +57,7 @@ for line in (ROOT / 'app/gradle.lockfile').read_text().splitlines():
 for content, owners in notices.values():
     output.append('\n' + '\n'.join(sorted(owners)) + '\n\n' + content)
 target = ROOT / 'app/src/main/assets/licenses/Runtime-dependencies.txt'
-target.write_text('\n\n'.join(output) + '\n', encoding='utf-8')
+target.write_text('\n\n'.join(output).rstrip('\n') + '\n', encoding='utf-8')
 print(f'Collected {len(notices)} distinct upstream notice texts into {target.name}')
 if missing:
     print('No POM license element: ' + ', '.join(missing))

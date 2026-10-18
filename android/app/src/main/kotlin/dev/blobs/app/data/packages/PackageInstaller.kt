@@ -5,11 +5,13 @@ import android.net.Uri
 import android.os.storage.StorageManager
 import android.util.AtomicFile
 import dev.blobs.app.data.library.LibraryStore
+import dev.blobs.app.data.library.UserLibraryPackage
 import dev.blobs.app.data.local.PackageDao
 import dev.blobs.app.data.local.PackageEntity
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.io.OutputStream
 import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 import kotlinx.coroutines.CancellationException
@@ -31,6 +33,7 @@ class PackageInstaller(
 ) {
     private val mutations = Mutex()
     private val root = File(context.filesDir, "packages").apply { mkdirs() }
+    private val userLibraries = UserLibraryPackage(context)
     private val downloadRoot = File(context.filesDir, "package-downloads").canonicalFile
     private val journal = AtomicFile(File(context.filesDir, "pending-import.json"))
 
@@ -69,6 +72,23 @@ class PackageInstaller(
     suspend fun inspect(uri: Uri): PackageManifest = withContext(Dispatchers.IO) {
         stream(uri).use { readManifest(it) }
     }
+
+    suspend fun importDocuments(uris: List<Uri>, progress: (Long, Long) -> Unit): PackageEntity =
+        withContext(Dispatchers.IO) {
+            val archive = userLibraries.prepare(uris)
+            try {
+                val uri = Uri.fromFile(archive)
+                val manifest = inspect(uri)
+                install(uri, manifest) { bytes -> progress(bytes, manifest.bytes) }
+            } finally {
+                archive.delete()
+            }
+        }
+
+    suspend fun exportCollection(pack: PackageEntity, output: OutputStream) =
+        withContext(Dispatchers.IO) {
+            userLibraries.export(pack, library, output)
+        }
 
     suspend fun install(
         uri: Uri,

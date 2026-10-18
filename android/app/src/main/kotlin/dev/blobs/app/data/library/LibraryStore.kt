@@ -6,6 +6,18 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.blobs.app.data.local.PackageEntity
 import java.io.File
 
+data class LibraryDocument(
+    val id: String,
+    val title: String,
+    val publisher: String,
+    val url: String,
+    val license: String,
+    val updated: String,
+    val saved: String,
+    val body: String,
+    val collection: String
+)
+
 class LibraryStore {
     private data class NameMatch(val key: String, val title: String, val id: String)
     private data class RetrievalCandidate(
@@ -83,7 +95,7 @@ class LibraryStore {
     }
 
     fun browse(packages: List<PackageEntity>, query: String, offset: Int = 0): List<Evidence> =
-        packages.filter { it.kind == "library" }.flatMap { pack ->
+        packages.filter { it.kind == "library" && it.enabled }.flatMap { pack ->
             open(pack.path).use { db ->
                 db.prepare(
                     "SELECT id,title,publisher,url,license,updated,saved,collection,substr(body,1,300) FROM documents WHERE title LIKE ? ESCAPE '\\' OR publisher LIKE ? ESCAPE '\\' ORDER BY title,id LIMIT ?"
@@ -112,6 +124,27 @@ class LibraryStore {
         }
     }
 
+    fun documentsForExport(pack: PackageEntity): List<LibraryDocument> {
+        require(pack.kind == "library")
+        return open(pack.path).use { db ->
+            db.prepare(
+                "SELECT id,title,publisher,url,license,updated,saved,body,collection FROM documents ORDER BY id"
+            ).use { statement ->
+                buildList {
+                    while (statement.step()) {
+                        add(
+                            LibraryDocument(
+                                statement.getText(0), statement.getText(1), statement.getText(2),
+                                statement.getText(3), statement.getText(4), statement.getText(5),
+                                statement.getText(6), statement.getText(7), statement.getText(8)
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun retrieve(
         packages: List<PackageEntity>,
         question: String,
@@ -120,7 +153,7 @@ class LibraryStore {
         if (scope?.isEmpty() == true) return emptyList()
         val terms = searchTerms(question)
         if (terms.isEmpty()) return emptyList()
-        return packages.filter { it.kind == "library" }.flatMap { pack ->
+        return packages.filter { it.kind == "library" && it.enabled }.flatMap { pack ->
             val ids = scope?.filter {
                 it.startsWith(pack.key + "/")
             }?.map { it.substringAfter('/') }

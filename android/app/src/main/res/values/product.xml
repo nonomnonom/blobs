@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="have_local_packages">I have a model or library file</string>
     <string name="download_model">Download model</string>
     <string name="download_library">Download library</string>
     <string name="download_selected_model">Download model</string>
@@ -53,7 +52,15 @@
     <string name="recommended">Recommended</string>
     <string name="setup_library_title">Start with your source library.</string>
     <string name="setup_library_body">Blobs needs this small starter library to find passages and cite its answers. It stays on your phone and works offline.</string>
-    <string name="add_package">Add from this phone</string>
+    <string name="add_package">Add a library file</string>
+    <string name="add_documents">Add your files</string>
+    <string name="add_documents_summary">TXT, Markdown, CSV, JSON, or text PDFs</string>
+    <string name="import_documents_title">Your files</string>
+    <string name="preparing_documents">Reading your files and saving them on this phone.</string>
+    <string name="collection_added">Your collection is ready offline.</string>
+    <string name="collection_toggle">Use this collection</string>
+    <string name="collection_toggle_help">Find answers in these files</string>
+    <string name="export_collection">Export JSON pack</string>
     <string name="start_chat">Ask your first question</string>
     <string name="home_title">Hello,\ncurious.</string>
     <string name="question_hint">Ask a question…</string>
@@ -218,7 +225,7 @@
     <string name="privacy">Privacy</string>
     <string name="privacy_body">Your questions, drafts, answers, and files stay in Blobs on this phone. There is no account, analytics, cloud AI, or live web search.\n\nWhen you’re online, Blobs checks for new models and libraries when it opens (at most once a day), when you visit Explore, or when you ask it to check. Your questions and chats are never sent, and Blobs does not send a unique phone ID. Model and library files download only after you tap Download. Chat, search, answers, citations, and reading work without a connection. You can also add files from your phone.\n\nAndroid backups are disabled. Uninstalling Blobs removes its private data. Export conversations before uninstalling if you want to keep them.</string>
     <string name="help">Help</string>
-    <string name="help_body">Getting started\nChoose a suggested model and download the starter library. Add more libraries anytime, or add a .blobs file from your phone. Blobs checks files before adding them.\n\nAsk a question\nAsk for an explanation, comparison, or summary. Choose which sources to use for your next answer. Blobs only knows what is in your saved libraries; it cannot look up current events.\n\nRead sources\nTap a numbered citation or a source to read the passage behind an answer. Credits and original links are available with each source.\n\nIf an answer stops\nYou can keep what is written so far and try again. To continue an interrupted download, return to its setup.\n\nIf a model will not run\nClose other apps or choose a smaller model. Download size does not guarantee it will run well.\n\nKeep your conversations\nExport before clearing app data or uninstalling. Exports can be read, but they cannot be restored.</string>
+    <string name="help_body">Getting started\nChoose a suggested model and download the starter library. Add more libraries anytime, or add TXT, Markdown, CSV, JSON, and text-based PDF files from your phone. Your files are saved on this phone and stay available offline.\n\nAsk a question\nAsk for an explanation, comparison, or summary. Choose which sources to use for your next answer. Blobs only knows what is in your saved libraries; it cannot look up current events.\n\nRead sources\nTap a numbered citation or a source to read the passage behind an answer. Credits and original links are available with each source.\n\nManage your library\nTurn a collection off when you do not want Blobs to search it. Export your own collection as a JSON pack to keep a copy or move it to another phone.\n\nIf an answer stops\nYou can keep what is written so far and try again. To continue an interrupted download, return to its setup.\n\nIf a model will not run\nClose other apps or choose a smaller model. Download size does not guarantee it will run well.\n\nKeep your conversations\nExport before clearing app data or uninstalling. Exports can be read, but they cannot be restored.</string>
     <string name="about">About Blobs</string>
     <string name="about_body">Blobs\nA curious companion for big questions.\n\nAnswers run on your phone, with sources from the libraries you choose. Your conversations and downloads stay close.\n\nMade with care and open-source tools. See third-party notices below.</string>
     <string name="licenses">Third-party notices</string>
@@ -228,7 +235,13 @@
     <string name="memory_failed">There was not enough memory to continue. Close other apps or choose a smaller model, then try again.</string>
     <string name="empty_scope">Choose at least one source before asking. Your draft is still here.</string>
     <string name="storage_failed">There is not enough space to add this. Your saved files are safe.</string>
-    <string name="import_failed">This file could not be added. Choose a complete .blobs file and try again. Your saved files are safe.</string>
+    <string name="import_failed">This file could not be added. Check its format and try again. Your saved files are safe.</string>
+    <string name="unsupported_document">Choose a TXT, Markdown, CSV, JSON, or PDF file.</string>
+    <string name="document_too_large">This collection is too large to add. Try fewer or smaller files.</string>
+    <string name="document_invalid">This file could not be read. Check that it is valid and try again.</string>
+    <string name="pdf_no_text">This PDF has no selectable text. Scanned pages need text recognition before you add them.</string>
+    <string name="pdf_password">This PDF is password protected. Remove its password and try again.</string>
+    <string name="pdf_unsupported_encryption">This kind of protected PDF is not supported yet.</string>
     <string name="package_added">Ready to use.</string>
     <string name="import_cancelled">Stopped. Your saved files are unchanged.</string>
     <string name="export_saved">Your conversations have been exported.</string>

@@ -16,6 +16,9 @@ interface PackageDao {
     @Upsert
     suspend fun save(value: PackageEntity)
 
+    @Query("UPDATE packages SET enabled = :enabled WHERE `key` = :key AND kind = 'library'")
+    suspend fun setEnabled(key: String, enabled: Boolean)
+
     @Query("DELETE FROM packages WHERE `key` = :key")
     suspend fun delete(key: String)
 }

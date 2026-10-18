@@ -49,6 +49,7 @@ android {
     }
 
     buildFeatures { compose = true }
+    packaging.resources.excludes += "META-INF/LICENSE.md"
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -88,6 +89,11 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.sqlite.bundled)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.pdfbox.android) {
+        exclude(group = "org.bouncycastle")
+    }
+    implementation(libs.bouncycastle.prov)
+    implementation(libs.bouncycastle.util)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)

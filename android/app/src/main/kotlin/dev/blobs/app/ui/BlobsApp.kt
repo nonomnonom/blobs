@@ -24,8 +24,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -76,6 +78,7 @@ fun BlobsApp(container: AppContainer) {
     val thread by model.conversationId.collectAsStateWithLifecycle()
     val conversations by model.conversations.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var exportingCollection by remember { mutableStateOf<String?>(null) }
     val documentContract = remember {
         object : ActivityResultContracts.OpenDocument() {
             override fun createIntent(context: Context, input: Array<String>): Intent =
@@ -107,7 +110,31 @@ fun BlobsApp(container: AppContainer) {
         ) { uri ->
             uri?.let { model.exportRecovery(context, it) }
         }
+    val collectionExporter = rememberLauncherForActivityResult(
+        LocalCreateDocument("application/json")
+    ) { uri ->
+        val key = exportingCollection
+        if (uri != null && key != null) {
+            packages.firstOrNull { it.key == key }?.let { model.exportCollection(context, it, uri) }
+        }
+        exportingCollection = null
+    }
+    val localDocumentsContract = remember {
+        object : ActivityResultContracts.OpenMultipleDocuments() {
+            override fun createIntent(context: Context, input: Array<String>): Intent =
+                super.createIntent(context, input).putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+        }
+    }
+    val documentsPicker = rememberLauncherForActivityResult(localDocumentsContract) { uris ->
+        if (uris.isNotEmpty()) model.importDocuments(uris, context)
+    }
     val pickFile = { picker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }
+    val pickDocuments = { documentsPicker.launch(arrayOf("*/*")) }
+    val exportCollection: (dev.blobs.app.data.local.PackageEntity) -> Unit = { pack ->
+        exportingCollection = pack.key
+        val fileName = pack.title.replace(Regex("[^\\p{L}\\p{N}._ -]"), "_").take(80)
+        collectionExporter.launch("$fileName.blobs.json")
+    }
     val density = LocalDensity.current
     val reviewingImport = state.importUri != null
     BackHandler(
@@ -286,7 +313,13 @@ fun BlobsApp(container: AppContainer) {
                                                 work.busy,
                                                 model
                                             )
-                                            Page.LIBRARY -> LibraryScreen(packages, model, pickFile)
+                                            Page.LIBRARY -> LibraryScreen(
+                                                packages,
+                                                model,
+                                                pickFile,
+                                                pickDocuments,
+                                                exportCollection
+                                            )
                                             Page.MODELS -> ModelsScreen(
                                                 packages,
                                                 work,

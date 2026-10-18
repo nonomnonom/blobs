@@ -66,7 +66,7 @@ class OnboardingJourneyTest {
                 ).fetchSemanticsNodes().isNotEmpty()
             ) {
                 capture("01-welcome")
-                compose.onAllNodesWithText(text(R.string.have_local_packages)).assertCountEquals(0)
+                compose.onAllNodesWithText(text(R.string.add_package)).assertCountEquals(0)
                 compose.onNodeWithText(text(R.string.choose_model)).performScrollTo().performClick()
             } else {
                 compose.runOnUiThread { model.welcome() }
@@ -75,7 +75,7 @@ class OnboardingJourneyTest {
             compose.onNodeWithText(text(R.string.download_selected_model))
                 .performScrollTo().assertIsDisplayed()
             compose.onAllNodesWithText(text(R.string.download_library)).assertCountEquals(0)
-            compose.onAllNodesWithText(text(R.string.have_local_packages)).assertCountEquals(0)
+            compose.onAllNodesWithText(text(R.string.add_package)).assertCountEquals(0)
             capture("03-setup")
             for ((name, key) in listOf("model" to "modelPackage", "library" to "libraryPackage")) {
                 val path = requireNotNull(args.getString(key))

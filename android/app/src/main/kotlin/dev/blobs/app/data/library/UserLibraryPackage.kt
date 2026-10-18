@@ -1,0 +1,463 @@
+package dev.blobs.app.data.library
+
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.SQLiteStatement
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException
+import com.tom_roush.pdfbox.text.PDFTextStripper
+import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.packages.PackageManifest
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.io.OutputStreamWriter
+import java.io.Writer
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.util.UUID
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import org.json.JSONArray
+import org.json.JSONObject
+
+data class UserDocument(
+    val id: String,
+    val title: String,
+    val publisher: String,
+    val url: String,
+    val license: String,
+    val updated: String,
+    val saved: String,
+    val body: String
+)
+
+class UserLibraryPackage(private val context: Context) {
+    suspend fun prepare(uris: List<Uri>): File {
+        require(uris.isNotEmpty() && uris.size <= MAX_DOCUMENTS) { "DOCUMENT_COUNT" }
+        val jobContext = currentCoroutineContext()
+        val budget = InputBudget()
+        val imported = try {
+            uris.mapIndexed { index, uri ->
+                jobContext.ensureActive()
+                read(uri, index, budget, jobContext::ensureActive)
+            }
+        } catch (pack: CollectionPackSelected) {
+            require(uris.size == 1) { "PACK_MIXED_IMPORT" }
+            pack.documents.map { ImportedDocument(it, pack.title) }
+        }
+        require(
+            imported.sumOf { it.document.body.codePointCount(0, it.document.body.length) } <=
+                MAX_COLLECTION_CODEPOINTS
+        ) {
+            "COLLECTION_TOO_LARGE"
+        }
+        val packTitle = imported.firstOrNull()?.collectionTitle ?: collectionTitle(imported)
+        val documents = imported.mapIndexed { index, item ->
+            item.document.copy(id = "document-${(index + 1).toString().padStart(4, '0')}")
+        }
+        val database = File.createTempFile("blobs-user-library-", ".sqlite", context.cacheDir)
+        val archive = File.createTempFile("blobs-user-library-", ".blobs", context.cacheDir)
+        try {
+            jobContext.ensureActive()
+            buildDatabase(database, packTitle, documents, jobContext::ensureActive)
+            val manifest = PackageManifest(
+                id = "user-${UUID.randomUUID().toString().replace("-", "").take(24)}",
+                version = "1",
+                kind = "library",
+                title = packTitle,
+                bytes = database.length(),
+                sha256 = sha256(database),
+                license = "User-provided documents",
+                origin = "local:user-documents"
+            )
+            ZipOutputStream(FileOutputStream(archive)).use { output ->
+                jobContext.ensureActive()
+                output.putNextEntry(ZipEntry("manifest.json"))
+                output.write(manifest.json().toByteArray(StandardCharsets.UTF_8))
+                output.closeEntry()
+                output.putNextEntry(ZipEntry("library.sqlite"))
+                database.inputStream().use { input -> input.copyTo(output) }
+                output.closeEntry()
+            }
+            return archive
+        } catch (error: Exception) {
+            archive.delete()
+            throw error
+        } finally {
+            database.delete()
+        }
+    }
+
+    fun export(pack: PackageEntity, library: LibraryStore, output: OutputStream) {
+        val documents = library.documentsForExport(pack)
+        require(documents.isNotEmpty() && documents.size <= MAX_DOCUMENTS)
+        OutputStreamWriter(output, StandardCharsets.UTF_8).buffered().use { writer ->
+            writer.append("{\"format\":\"blobs-collection\",\"version\":1,\"title\":")
+            writer.append(JSONObject.quote(pack.title))
+            writer.append(",\"documents\":[")
+            documents.forEachIndexed { index, document ->
+                if (index > 0) writer.append(',')
+                writer.append("{\"title\":${JSONObject.quote(document.title)}")
+                writer.append(",\"publisher\":${JSONObject.quote(document.publisher)}")
+                writer.append(",\"url\":${JSONObject.quote(document.url)}")
+                writer.append(",\"license\":${JSONObject.quote(document.license)}")
+                writer.append(",\"updated\":${JSONObject.quote(document.updated)}")
+                writer.append(",\"saved\":${JSONObject.quote(document.saved)}")
+                writer.append(",\"body\":${JSONObject.quote(document.body)}}")
+            }
+            writer.append("]}")
+        }
+    }
+
+    private fun read(
+        uri: Uri,
+        index: Int,
+        budget: InputBudget,
+        checkActive: () -> Unit
+    ): ImportedDocument {
+        val name = displayName(uri).ifBlank { "Document ${index + 1}" }
+        val extension = name.substringAfterLast('.', "").lowercase()
+        require(extension in setOf("txt", "md", "markdown", "csv", "json", "pdf")) {
+            "UNSUPPORTED_DOCUMENT"
+        }
+        val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
+            val output = java.io.ByteArrayOutputStream()
+            val buffer = ByteArray(16 * 1024)
+            while (true) {
+                checkActive()
+                val count = input.read(buffer)
+                if (count < 0) break
+                budget.add(count)
+                val perFileLimit = if (extension == "json") MAX_IMPORT_BYTES else MAX_FILE_BYTES
+                require(output.size() + count <= perFileLimit) { "DOCUMENT_TOO_LARGE" }
+                output.write(buffer, 0, count)
+            }
+            output.toByteArray()
+        } ?: throw IOException("Cannot read document")
+        val text = when (extension) {
+            "pdf" -> readPdf(bytes, checkActive)
+            "json" -> readJsonOrDocumentPack(bytes, name)
+            else -> strictUtf8(bytes)
+        }
+        val body = text.replace("\r\n", "\n").replace('\r', '\n').trim()
+        require(body.isNotEmpty()) { if (extension == "pdf") "PDF_NO_TEXT" else "EMPTY_DOCUMENT" }
+        require(body.codePointCount(0, body.length) <= MAX_DOCUMENT_CODEPOINTS) {
+            "DOCUMENT_TOO_LARGE"
+        }
+        require('\u0000' !in body) { "DOCUMENT_INVALID" }
+        val title = name.substringBeforeLast('.', name).trim().ifBlank { "Untitled document" }
+        val now = java.time.Instant.now().toString()
+        return ImportedDocument(
+            document = UserDocument(
+                id = "",
+                title = title.take(300),
+                publisher = "Your files",
+                url = "",
+                license = "User-provided content",
+                updated = "",
+                saved = now,
+                body = body
+            )
+        )
+    }
+
+    private fun displayName(uri: Uri): String = runCatching {
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0).orEmpty() else ""
+            }.orEmpty()
+    }.getOrDefault("").ifBlank { uri.lastPathSegment.orEmpty() }
+
+    private fun readJsonOrDocumentPack(bytes: ByteArray, name: String): String {
+        val text = strictUtf8(bytes)
+        val root = runCatching { JSONObject(text) }.getOrNull() ?: return text
+        if (root.optString("format") != PACK_FORMAT) return text
+        require(root.optInt("version") == PACK_VERSION) { "PACK_VERSION" }
+        val collectionTitle = root.optString("title").trim()
+        require(collectionTitle.length in 1..MAX_TITLE_LENGTH) { "PACK_INVALID" }
+        val rows = root.optJSONArray("documents") ?: throw IllegalArgumentException("PACK_INVALID")
+        require(rows.length() in 1..MAX_DOCUMENTS) { "DOCUMENT_COUNT" }
+        val packDocuments = (0 until rows.length()).map { index ->
+            val row = rows.optJSONObject(index) ?: throw IllegalArgumentException("PACK_INVALID")
+            val title = row.optString("title").trim()
+            val body = row.optString("body").trim()
+            require(title.isNotBlank() && title.length <= 300 && body.isNotBlank()) {
+                "PACK_INVALID"
+            }
+            require(body.codePointCount(0, body.length) <= MAX_DOCUMENT_CODEPOINTS) {
+                "DOCUMENT_TOO_LARGE"
+            }
+            require('\u0000' !in body) { "PACK_INVALID" }
+            UserDocument(
+                id = "",
+                title = title,
+                publisher = row.optString("publisher", collectionTitle).take(300),
+                url = row.optString("url").take(2000),
+                license = row.optString("license", "User-provided content").take(4000),
+                updated = row.optString("updated").take(80),
+                saved = row.optString("saved").take(80),
+                body = body
+            )
+        }
+        require(
+            packDocuments.sumOf { it.body.codePointCount(0, it.body.length) } <=
+                MAX_COLLECTION_CODEPOINTS
+        ) {
+            "COLLECTION_TOO_LARGE"
+        }
+        throw CollectionPackSelected(collectionTitle, packDocuments)
+    }
+
+    private fun readPdf(bytes: ByteArray, checkActive: () -> Unit): String {
+        PDFBoxResourceLoader.init(context)
+        try {
+            PDDocument.load(ByteArrayInputStream(bytes)).use { document ->
+                checkActive()
+                require(!document.isEncrypted) { "PDF_PASSWORD" }
+                require(document.numberOfPages in 1..MAX_PDF_PAGES) { "PDF_PAGE_COUNT" }
+                val stripper = PDFTextStripper().apply { sortByPosition = true }
+                val writer = LimitedWriter(MAX_DOCUMENT_CODEPOINTS, checkActive)
+                stripper.writeText(document, writer)
+                return writer.text()
+            }
+        } catch (error: InvalidPasswordException) {
+            throw IllegalArgumentException("PDF_PASSWORD", error)
+        } catch (error: NoClassDefFoundError) {
+            throw IllegalArgumentException("PDF_UNSUPPORTED_ENCRYPTION", error)
+        }
+    }
+
+    private fun strictUtf8(bytes: ByteArray): String = StandardCharsets.UTF_8.newDecoder()
+        .onMalformedInput(CodingErrorAction.REPORT)
+        .onUnmappableCharacter(CodingErrorAction.REPORT)
+        .decode(ByteBuffer.wrap(bytes)).toString()
+
+    private fun collectionTitle(documents: List<ImportedDocument>): String {
+        if (documents.size == 1) return documents.first().document.title.take(MAX_TITLE_LENGTH)
+        return "Imported documents (${documents.size})"
+    }
+
+    private fun buildDatabase(
+        file: File,
+        title: String,
+        documents: List<UserDocument>,
+        checkActive: () -> Unit
+    ) {
+        val db = BundledSQLiteDriver().open(file.path)
+        try {
+            execute(db, "PRAGMA journal_mode=DELETE")
+            execute(db, "PRAGMA user_version=3")
+            execute(
+                db,
+                "CREATE TABLE documents(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,publisher TEXT NOT NULL,url TEXT NOT NULL,license TEXT NOT NULL,updated TEXT NOT NULL,saved TEXT NOT NULL,body TEXT NOT NULL,collection TEXT NOT NULL)"
+            )
+            execute(db, "CREATE INDEX documents_title ON documents(title,id)")
+            execute(
+                db,
+                "CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT NOT NULL,section TEXT NOT NULL,title TEXT NOT NULL)"
+            )
+            execute(
+                db,
+                "CREATE VIRTUAL TABLE passages_fts USING fts5(body,title,section,content='',tokenize='unicode61')"
+            )
+            execute(
+                db,
+                "INSERT INTO passages_fts(passages_fts,rank) VALUES ('rank','bm25(1.0,6.0,2.0)')"
+            )
+            execute(db, "CREATE INDEX passages_document ON passages(doc_id)")
+            execute(
+                db,
+                "CREATE TABLE passage_spans(passage_id INTEGER PRIMARY KEY,start INTEGER NOT NULL,end INTEGER NOT NULL,section_path TEXT NOT NULL)"
+            )
+            execute(db, "BEGIN IMMEDIATE")
+            insertDocuments(db, title, documents, checkActive)
+            execute(db, "INSERT INTO passages_fts(passages_fts,rank) VALUES ('integrity-check',1)")
+            execute(db, "COMMIT")
+            db.prepare("PRAGMA quick_check").use { check(it.step() && it.getText(0) == "ok") }
+        } catch (error: Exception) {
+            runCatching { execute(db, "ROLLBACK") }
+            throw error
+        } finally {
+            db.close()
+        }
+    }
+
+    private fun insertDocuments(
+        db: SQLiteConnection,
+        collection: String,
+        documents: List<UserDocument>,
+        checkActive: () -> Unit
+    ) {
+        val documentInsert = db.prepare(
+            "INSERT INTO documents VALUES (?,?,?,?,?,?,?,?,?)"
+        )
+        val passageInsert = db.prepare(
+            "INSERT INTO passages(id,doc_id,section,title) VALUES (?,?,?,?)"
+        )
+        val ftsInsert = db.prepare(
+            """
+            INSERT INTO passages_fts(rowid,body,title,section)
+            VALUES (?,?,?,?)
+            """.trimIndent()
+        )
+        val spanInsert = db.prepare("INSERT INTO passage_spans VALUES (?,?,?,?)")
+        try {
+            var passageId = 1L
+            documents.forEach { document ->
+                checkActive()
+                bind(
+                    documentInsert,
+                    listOf(
+                        document.id,
+                        document.title,
+                        document.publisher,
+                        document.url,
+                        document.license,
+                        document.updated,
+                        document.saved,
+                        document.body,
+                        collection
+                    )
+                )
+                spans(document.body).forEachIndexed { index, span ->
+                    checkActive()
+                    passageInsert.bindLong(1, passageId)
+                    passageInsert.bindText(2, document.id)
+                    passageInsert.bindText(3, document.title)
+                    passageInsert.bindText(4, if (index == 0) document.title else "")
+                    passageInsert.step()
+                    passageInsert.reset()
+                    passageInsert.clearBindings()
+                    ftsInsert.bindLong(1, passageId)
+                    ftsInsert.bindText(2, span.text)
+                    ftsInsert.bindText(3, if (index == 0) document.title else "")
+                    ftsInsert.bindText(4, document.title)
+                    ftsInsert.step()
+                    ftsInsert.reset()
+                    ftsInsert.clearBindings()
+                    spanInsert.bindLong(1, passageId)
+                    spanInsert.bindLong(2, span.startCodePoint.toLong())
+                    spanInsert.bindLong(3, span.endCodePoint.toLong())
+                    spanInsert.bindText(4, JSONArray().put(document.title).toString())
+                    spanInsert.step()
+                    spanInsert.reset()
+                    spanInsert.clearBindings()
+                    passageId++
+                }
+            }
+        } finally {
+            documentInsert.close()
+            passageInsert.close()
+            ftsInsert.close()
+            spanInsert.close()
+        }
+    }
+
+    private fun bind(statement: SQLiteStatement, values: List<String>) {
+        values.forEachIndexed { index, value -> statement.bindText(index + 1, value) }
+        statement.step()
+        statement.reset()
+        statement.clearBindings()
+    }
+
+    private fun execute(db: SQLiteConnection, sql: String) {
+        db.prepare(sql).use { it.step() }
+    }
+
+    private fun spans(body: String): List<Span> {
+        val result = mutableListOf<Span>()
+        var start = 0
+        while (start < body.length) {
+            while (start < body.length && body[start].isWhitespace()) start++
+            if (start >= body.length) break
+            val remaining = body.codePointCount(start, body.length)
+            var end = body.offsetByCodePoints(start, minOf(PASSAGE_LENGTH, remaining))
+            if (end < body.length) {
+                val window = body.substring(start, end)
+                val paragraph = window.lastIndexOf("\n\n").takeIf { it >= PASSAGE_LENGTH / 2 }
+                val sentence = listOf(". ", "? ", "! ").map { window.lastIndexOf(it) + 1 }
+                    .filter { it >= PASSAGE_LENGTH / 2 }.maxOrNull()
+                val whitespace = maxOf(window.lastIndexOf(' '), window.lastIndexOf('\n'))
+                val relative = paragraph?.plus(2) ?: sentence ?: whitespace.takeIf { it > 0 }
+                if (relative != null) end = start + relative
+            }
+            while (end > start && body[end - 1].isWhitespace()) end--
+            if (end <= start) end = body.offsetByCodePoints(start, 1)
+            val startCodePoint = body.codePointCount(0, start)
+            val endCodePoint = body.codePointCount(0, end)
+            result.add(Span(startCodePoint, endCodePoint, body.substring(start, end)))
+            start = end
+        }
+        return result
+    }
+
+    private fun sha256(file: File): String = file.inputStream().use { input ->
+        val digest = MessageDigest.getInstance("SHA-256")
+        val buffer = ByteArray(64 * 1024)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            digest.update(buffer, 0, count)
+        }
+        digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private data class ImportedDocument(
+        val document: UserDocument,
+        val collectionTitle: String? = null
+    )
+    private data class Span(val startCodePoint: Int, val endCodePoint: Int, val text: String)
+    private class InputBudget(var bytes: Long = 0) {
+        fun add(count: Int) {
+            bytes += count
+            require(bytes <= MAX_IMPORT_BYTES) { "IMPORT_TOO_LARGE" }
+        }
+    }
+    private class CollectionPackSelected(val title: String, val documents: List<UserDocument>) :
+        IllegalArgumentException("COLLECTION_PACK")
+
+    private class LimitedWriter(
+        private val maxCodePoints: Int,
+        private val checkActive: () -> Unit
+    ) : Writer() {
+        private val output = StringBuilder()
+
+        override fun write(cbuf: CharArray, off: Int, len: Int) {
+            checkActive()
+            require(output.length + len <= maxCodePoints * 2) { "DOCUMENT_TOO_LARGE" }
+            output.append(cbuf, off, len)
+        }
+
+        override fun flush() = Unit
+        override fun close() = Unit
+        fun text(): String {
+            val value = output.toString()
+            require(value.codePointCount(0, value.length) <= maxCodePoints) { "DOCUMENT_TOO_LARGE" }
+            return value
+        }
+    }
+
+    companion object {
+        const val PACK_FORMAT = "blobs-collection"
+        const val PACK_VERSION = 1
+        private const val MAX_DOCUMENTS = 50
+        private const val MAX_PDF_PAGES = 200
+        private const val MAX_FILE_BYTES = 10 * 1024 * 1024
+        private const val MAX_IMPORT_BYTES = 25 * 1024 * 1024
+        private const val MAX_DOCUMENT_CODEPOINTS = 1_000_000
+        private const val MAX_COLLECTION_CODEPOINTS = 5_000_000
+        private const val MAX_TITLE_LENGTH = 160
+        private const val PASSAGE_LENGTH = 1400
+    }
+}

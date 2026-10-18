@@ -3,6 +3,7 @@ package dev.blobs.app.feature.library
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,7 +34,11 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
     var cancelling by rememberSaveable { mutableStateOf(false) }
     val packages by model.packages.collectAsStateWithLifecycle()
     val readyKinds = packages.map { it.kind }.toSet()
-    val running = work.busy && work.total > 0
+    val preparingDocuments = work.busy &&
+        work.packageKind == "library" &&
+        !work.inAppDownload &&
+        work.total == 0L
+    val running = work.busy && (work.total > 0 || preparingDocuments)
     val checking = running && work.progress == work.total
     val failed = work.notice in setOf(
         R.string.import_failed,
@@ -88,15 +93,24 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                     else -> R.string.import_body
                 }
             )
-            if (!work.inAppDownload) SetupProgress(work.phaseProgress)
-            Text(
-                stringResource(
-                    if (work.downloading) R.string.download_progress else R.string.import_progress,
-                    fileSize(work.progress),
-                    fileSize(work.total)
+            if (preparingDocuments) {
+                CircularProgressIndicator()
+                Body(R.string.preparing_documents)
+            } else {
+                if (!work.inAppDownload) SetupProgress(work.phaseProgress)
+                Text(
+                    stringResource(
+                        if (work.downloading) {
+                            R.string.download_progress
+                        } else {
+                            R.string.import_progress
+                        },
+                        fileSize(work.progress),
+                        fileSize(work.total)
+                    )
                 )
-            )
-            if (checking) Body(R.string.checking_file)
+                if (checking) Body(R.string.checking_file)
+            }
             PrimaryAction(R.string.pause_import, onClick = model::stop)
         } else if (work.pendingImport != null) {
             Body(if (failed) work.notice ?: R.string.import_failed else R.string.paused_import)

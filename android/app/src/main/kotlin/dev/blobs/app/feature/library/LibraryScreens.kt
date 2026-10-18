@@ -26,6 +26,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -348,7 +350,13 @@ private fun OptionalLibraryOption(
 }
 
 @Composable
-fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFile: () -> Unit) {
+fun LibraryScreen(
+    packages: List<PackageEntity>,
+    model: ProductViewModel,
+    pickFile: () -> Unit,
+    pickDocuments: () -> Unit,
+    exportCollection: (PackageEntity) -> Unit
+) {
     val work by model.work.collectAsStateWithLifecycle()
     val catalog by model.catalogState.collectAsStateWithLifecycle()
     val large = LocalDensity.current.fontScale >= 1.5f
@@ -376,21 +384,17 @@ fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFi
                 model.downloadPackage(catalog.packages.single { it.role == PackageRole.STARTER })
             }
             TextButton(
-                onClick = pickFile,
+                onClick = pickDocuments,
                 enabled = !work.busy,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(R.string.have_local_packages))
+                Text(stringResource(R.string.add_documents))
             }
         }
         libraries.forEachIndexed { index, pack ->
-            PackageCard(
-                pack,
-                work.busy,
-                model,
-                artwork =
-                index == 0
-            )
+            PackageCard(pack, work.busy, model, artwork = index == 0) {
+                exportCollection(pack)
+            }
         }
         Heading(R.string.explore_title)
         Body(R.string.explore_body)
@@ -418,6 +422,12 @@ fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFi
                 stringResource(R.string.import_summary),
                 !work.busy,
                 pickFile
+            )
+            MenuRow(
+                R.string.add_documents,
+                stringResource(R.string.add_documents_summary),
+                !work.busy,
+                pickDocuments
             )
             MenuRow(R.string.settings, stringResource(R.string.settings_body)) {
                 model.navigate(Page.SETTINGS)
@@ -505,7 +515,8 @@ private fun PackageCard(
     pack: PackageEntity,
     busy: Boolean,
     model: ProductViewModel,
-    artwork: Boolean = false
+    artwork: Boolean = false,
+    onExport: () -> Unit = {}
 ) {
     var removing by remember { mutableStateOf(false) }
     val packages by model.packages.collectAsStateWithLifecycle()
@@ -539,6 +550,27 @@ private fun PackageCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(pack.license, style = MaterialTheme.typography.bodyMedium)
+                if (pack.kind == "library") {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.collection_toggle))
+                            Text(
+                                stringResource(R.string.collection_toggle_help),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = pack.enabled,
+                            onCheckedChange = { model.setLibraryEnabled(pack, it) },
+                            enabled = !busy
+                        )
+                    }
+                }
                 FlowRow(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -546,6 +578,9 @@ private fun PackageCard(
                     if (pack.kind == "library") {
                         TextButton(onClick = { model.navigate(Page.BROWSE) }) {
                             Text(stringResource(R.string.take_look))
+                        }
+                        TextButton(onClick = onExport, enabled = !busy) {
+                            Text(stringResource(R.string.export_collection))
                         }
                     }
                     if (pack.kind == "model") {

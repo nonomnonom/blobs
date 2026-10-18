@@ -314,6 +314,34 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun importDocuments(uris: List<Uri>, context: Context) {
+        if (work.value.pendingImport != null) {
+            navigate(Page.IMPORT)
+            return
+        }
+        if (container.work.importDocuments(
+                uris,
+                context.getString(R.string.import_documents_title)
+            )
+        ) {
+            navigate(Page.IMPORT)
+        }
+    }
+
+    fun setLibraryEnabled(pack: PackageEntity, enabled: Boolean) = action {
+        if (pack.kind != "library" || work.value.busy) return@action
+        container.work.mutate {
+            container.database.packages().setEnabled(pack.key, enabled)
+        }
+    }
+
+    fun exportCollection(context: Context, pack: PackageEntity, uri: Uri) = action {
+        withContext(Dispatchers.IO) {
+            val output = requireNotNull(context.contentResolver.openOutputStream(uri))
+            container.installer.exportCollection(pack, output)
+        }
+    }
+
     fun dismissImport() {
         inspectionJob?.cancel()
         mutable.value = mutable.value.copy(manifest = null, importUri = null)

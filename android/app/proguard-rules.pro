@@ -1,2 +1,4 @@
 -keep class dev.blobs.app.inference.NativeBridge { *; }
 -keep class dev.blobs.app.inference.TokenSink { *; }
+-dontwarn org.bouncycastle.cert.**
+-dontwarn org.bouncycastle.cms.**

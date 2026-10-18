@@ -353,6 +353,59 @@ class WorkController(
     }
 
     @Synchronized
+    fun importDocuments(uris: List<Uri>, title: String): Boolean {
+        if (!mutable.value.ready || mutable.value.busy) return false
+        if (mutable.value.pendingImport != null) {
+            mutable.value = mutable.value.copy(notice = R.string.finish_pending_import)
+            return false
+        }
+        require(uris.isNotEmpty())
+        mutable.value = WorkState(
+            ready = true,
+            busy = true,
+            importTitle = title,
+            packageKind = "library"
+        )
+        job = scope.launch {
+            try {
+                val pack = installer.importDocuments(uris) { progress, total ->
+                    mutable.value = mutable.value.copy(progress = progress, total = total)
+                }
+                mutable.value = WorkState(
+                    ready = true,
+                    notice = R.string.collection_added,
+                    importTitle = pack.title,
+                    importComplete = true,
+                    packageKind = "library"
+                )
+            } catch (_: CancellationException) {
+                mutable.value = WorkState(
+                    ready = true,
+                    pendingImport = runCatching { installer.pending() }.getOrNull(),
+                    notice = R.string.download_paused
+                )
+            } catch (error: Exception) {
+                mutable.value = WorkState(
+                    ready = true,
+                    notice = when (error.message) {
+                        "STORAGE" -> R.string.storage_failed
+                        "PDF_NO_TEXT" -> R.string.pdf_no_text
+                        "PDF_PASSWORD" -> R.string.pdf_password
+                        "PDF_UNSUPPORTED_ENCRYPTION" -> R.string.pdf_unsupported_encryption
+                        "PDF_PAGE_COUNT", "DOCUMENT_TOO_LARGE", "COLLECTION_TOO_LARGE",
+                        "IMPORT_TOO_LARGE" -> R.string.document_too_large
+                        "UNSUPPORTED_DOCUMENT" -> R.string.unsupported_document
+                        "DOCUMENT_INVALID", "PACK_INVALID", "PACK_VERSION" ->
+                            R.string.document_invalid
+                        else -> R.string.import_failed
+                    }
+                )
+            }
+        }
+        return true
+    }
+
+    @Synchronized
     fun downloadAndInstall(asset: DownloadablePackage): Boolean {
         if (!mutable.value.ready || mutable.value.busy) return false
         val pending = mutable.value.pendingImport
