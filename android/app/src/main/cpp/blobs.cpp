@@ -30,7 +30,7 @@ struct Measurements {
     JNIEnv *env;
     jlongArray output;
     Clock::time_point start = Clock::now();
-    std::array<jlong, 13> values;
+    std::array<jlong, 14> values;
     Measurements(JNIEnv *env, jlongArray output) : env(env), output(output) {
         values.fill(-1);
         values[7] = values[10] = values[11] = 0;
@@ -50,6 +50,16 @@ struct Measurements {
 };
 bool abort_decode(void *) { return cancelled.load(); }
 bool load_progress(float, void *) { return !cancelled.load(); }
+int context_capacity(int prompt_tokens, int requested_output_tokens) {
+    constexpr int minimum_context = 512;
+    constexpr int maximum_context = 4096;
+    const int output_tokens = std::clamp(requested_output_tokens, 0, 768);
+    const int required = prompt_tokens + output_tokens;
+    int capacity = minimum_context;
+    while (capacity < required && capacity < maximum_context) capacity *= 2;
+    if (capacity < required) throw std::runtime_error("CONTEXT_FULL");
+    return capacity;
+}
 std::string utf8(JNIEnv *env, jbyteArray bytes) {
     std::string value(env->GetArrayLength(bytes), '\0');
     env->GetByteArrayRegion(bytes, 0, value.size(), reinterpret_cast<jbyte *>(value.data()));
@@ -67,7 +77,7 @@ extern "C" JNIEXPORT jint JNICALL
 Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
     JNIEnv *env, jobject, jbyteArray path, jbyteArray system, jbyteArray user, jint limit, jint threads, jobject sink,
     jlongArray metrics) {
-    if (!metrics || env->GetArrayLength(metrics) != 13) {
+    if (!metrics || env->GetArrayLength(metrics) != 14) {
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "METRICS_SIZE");
         return 3;
     }
@@ -111,7 +121,8 @@ Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
         preparing.stop();
         Stage allocating{measured.values[4]};
         auto cp = llama_context_default_params();
-        cp.n_ctx = 4096; cp.n_batch = 256; cp.n_ubatch = 128;
+        cp.n_ctx = context_capacity(count, limit); cp.n_batch = 256; cp.n_ubatch = 128;
+        measured.values[13] = cp.n_ctx;
         cp.n_threads = threads; cp.n_threads_batch = threads;
         cp.abort_callback = abort_decode;
         using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;

@@ -547,6 +547,8 @@ class NativeInferenceTest {
         assertTrue(metrics.firstTokenCallbackUs >= metrics.prefillUs)
         assertTrue(metrics.totalUs >= metrics.firstTokenCallbackUs)
         assertTrue(metrics.modelLoadUs >= 0 && metrics.contextSetupUs >= 0)
+        assertTrue(metrics.contextTokens >= metrics.promptTokens + SMOKE_MAX_OUTPUT_TOKENS)
+        assertEquals(512L, metrics.contextTokens)
         assertEquals(selectedThreads.toLong(), metrics.inferenceThreads)
         bridge.reset()
         var tokens = 0
@@ -603,6 +605,7 @@ class NativeInferenceTest {
         put("output_tokens", outputTokens)
         put("non_thinking_prefix", nonThinkingPrefix)
         put("inference_threads", inferenceThreads)
+        put("context_tokens", contextTokens)
     }
 
     private fun String.sha256(): String = MessageDigest.getInstance("SHA-256")

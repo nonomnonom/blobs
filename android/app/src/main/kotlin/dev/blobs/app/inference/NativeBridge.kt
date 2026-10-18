@@ -10,7 +10,7 @@ class TokenSink(private val receive: (ByteArray) -> Unit) {
 }
 
 class GenerationMetrics {
-    internal val values = LongArray(13) { -1 }
+    internal val values = LongArray(14) { -1 }
 
     val totalUs: Long get() = values[0]
     val queueUs: Long get() = values[1]
@@ -25,6 +25,7 @@ class GenerationMetrics {
     val outputTokens: Long get() = values[10]
     val nonThinkingPrefix: Boolean get() = values[11] == 1L
     val inferenceThreads: Long get() = values[12]
+    val contextTokens: Long get() = values[13]
 }
 
 class NativeBridge {

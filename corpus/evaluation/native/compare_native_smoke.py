@@ -51,7 +51,7 @@ def summarize(paths):
         metrics = observation.get('inference_metrics')
         if not isinstance(metrics, dict):
             raise ValueError('Native smoke audit lacks stage metrics')
-        required = ('total_us', 'first_token_callback_us', 'prefill_us', 'model_load_us',
+        required = ('total_us', 'first_token_callback_us', 'context_setup_us', 'prefill_us', 'model_load_us',
                     'generation_loop_us', 'prompt_tokens', 'output_tokens', 'inference_threads')
         if any(type(metrics.get(field)) is not int or metrics[field] < 0 for field in required):
             raise ValueError('Native smoke metrics are incomplete or invalid')
@@ -68,6 +68,7 @@ def summarize(paths):
             prompt_tokens=metrics['prompt_tokens'], output_tokens=metrics['output_tokens'],
             total_ms=metrics['total_us'] / 1000,
             first_token_ms=metrics['first_token_callback_us'] / 1000,
+            context_setup_ms=metrics['context_setup_us'] / 1000,
             prefill_ms=metrics['prefill_us'] / 1000,
             model_load_ms=metrics['model_load_us'] / 1000,
             inference_threads=metrics['inference_threads'],
@@ -76,7 +77,7 @@ def summarize(paths):
                                       if metrics['generation_loop_us'] else None),
         ))
 
-    fields = ('total_ms', 'first_token_ms', 'prefill_ms', 'model_load_ms',
+    fields = ('total_ms', 'first_token_ms', 'context_setup_ms', 'prefill_ms', 'model_load_ms',
               'decode_tokens_per_second', 'output_tokens', 'inference_threads')
     medians = {field: statistics.median(row[field] for row in rows) for field in fields}
     ranges = {field: [min(row[field] for row in rows), max(row[field] for row in rows)]
@@ -138,6 +139,7 @@ def compare(baseline_paths, candidate_paths, runtime_lock_path: Path):
         candidate_vs_baseline_percent=dict(
             total_latency=100 * (after['total_ms'] / before['total_ms'] - 1),
             first_token_latency=100 * (after['first_token_ms'] / before['first_token_ms'] - 1),
+            context_setup_latency=100 * (after['context_setup_ms'] / before['context_setup_ms'] - 1),
             decode_tokens_per_second=100 * (after['decode_tokens_per_second'] /
                                             before['decode_tokens_per_second'] - 1)),
         interpretation=('A lower total/first-token latency or higher decode rate is favorable in this '

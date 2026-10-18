@@ -79,7 +79,7 @@ class EvaluationInputTests(unittest.TestCase):
                 inputs={'run': {'file': 'run.json', 'sha256': run_sha}},
                 observations={'inference_metrics': {
                     'total_us': total_us, 'first_token_callback_us': 600_000,
-                    'prefill_us': 500_000, 'model_load_us': 100_000,
+                    'context_setup_us': 200_000, 'prefill_us': 500_000, 'model_load_us': 100_000,
                     'generation_loop_us': 300_000, 'prompt_tokens': 54,
                     'output_tokens': 12, 'inference_threads': 2,
                 }},
@@ -114,6 +114,8 @@ class EvaluationInputTests(unittest.TestCase):
             self.assertNotEqual(result['application']['baseline'], result['application']['candidate'])
             self.assertNotIn('raw_answer', json.dumps(result))
             self.assertAlmostEqual(result['candidate_vs_baseline_percent']['total_latency'], 10)
+            self.assertEqual(result['baseline']['median']['context_setup_ms'], 200)
+            self.assertEqual(result['candidate_vs_baseline_percent']['context_setup_latency'], 0)
 
             mutated = json.loads(candidate[-1].read_text(encoding='utf-8'))
             mutated['device_fingerprint'] = 'different-emulator'
@@ -412,7 +414,8 @@ class EvaluationInputTests(unittest.TestCase):
                                   user_sha256='e' * 64, max_output_tokens=96),
                     inference_metrics=dict(prompt_tokens=10, output_tokens=3, non_thinking_prefix=True,
                                            inference_threads=2, total_us=100,
-                                           first_token_callback_us=80, prefill_us=70),
+                                           first_token_callback_us=80, prefill_us=70,
+                                           context_tokens=512),
                     cancellation_result=1,
                     cancellation_metrics=dict(output_tokens=3, non_thinking_prefix=True),
                     failure_metrics=dict(total_us=1, first_token_callback_us=-1, output_tokens=0)),
@@ -438,6 +441,15 @@ class EvaluationInputTests(unittest.TestCase):
             self.assertTrue(result['complete'])
             self.assertTrue(all(result['checks'].values()))
             self.assertNotIn('raw_answer', json.dumps(result))
+            values['run.json']['inference_metrics']['context_tokens'] = 105
+            paths['run.json'].write_text(json.dumps(values['run.json']), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'context_capacity_sufficient'):
+                audit_native_smoke(
+                    paths['run.json'], paths['staging.json'], paths['lock.json'],
+                    paths['installed.json'], 'b' * 64, 'c' * 64
+                )
+            values['run.json']['inference_metrics']['context_tokens'] = 512
+            paths['run.json'].write_text(json.dumps(values['run.json']), encoding='utf-8')
             values['installed.json']['test_apk_sha256'] = 'd' * 64
             paths['installed.json'].write_text(
                 json.dumps(values['installed.json']), encoding='utf-8'

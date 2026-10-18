@@ -8,6 +8,12 @@ That emulator's medians were 2.835 seconds for the full native call, 684 ms to t
 
 A same-build thread sweep on that four-core emulator kept the model, runtime, prompt, and 71-token output length fixed across three runs per setting. Adaptive 4-thread inference measured 32.90 tokens/s median; fixed 3 threads measured 31.17, 2 threads 24.33, and 1 thread 13.34. The comparison reports are [`4 vs 3`](../baselines/native-thread-sweep-qwen3-06b-2026-10-19/adaptive-4-vs-fixed-3.json), [`4 vs 2`](../baselines/native-thread-sweep-qwen3-06b-2026-10-19/adaptive-4-vs-fixed-2.json), and [`4 vs 1`](../baselines/native-thread-sweep-qwen3-06b-2026-10-19/adaptive-4-vs-fixed-1.json); per-run inputs and audits are in [`the sweep evidence folder`](../evidence/native-thread-sweep-qwen3-06b-2026-10-19/). This result supports the current four-thread choice on this emulator only; it is not a reason to force that choice on other devices.
 
+## Adaptive context allocation probe
+
+The native path now allocates the smallest 512-token power-of-two context that can hold the tokenized prompt and requested output, up to the existing 4,096-token ceiling. The product requests at most 768 output tokens and rejects prompts above 3,072 tokens, so the current maximum workload still fits. The instrumentation records `context_tokens` and checks that the selected context covers the full prompt plus output budget. Smaller allocations reduce unused KV-cache reservation for short questions.
+
+The three-run probe in [`the context-capacity evidence folder`](../evidence/native-context-capacity-adaptive-x86_64-android16-2026-10-19/) held the exact model, runtime, prompt, and 71-token output fixed. Median context setup fell from 169.094 ms to 24.021 ms (-85.8%), and first-token callback time fell from 684.478 ms to 528.656 ms (-22.8%). Total native-call latency measured 3,008 ms versus the 2,835 ms baseline (+6.1%); decode throughput measured 29.09 versus 33.85 tokens/s (-14.1%). This probe demonstrates lower setup time and first-token latency, but not a total-latency or decode-throughput win; the small emulator run group is too noisy for a broad performance claim. Repeat on additional device profiles before drawing device-wide conclusions.
+
 ## Run a measurement
 
 The extraction command below runs from `android/`. Run the staging, audit, and summary commands from `corpus/`. Build the debug app and instrumentation APK first. Extract the fixture's `model.gguf` payload from the v0.3.3 `qwen3-integration.blobs` package, preserving the filename required by the lock:

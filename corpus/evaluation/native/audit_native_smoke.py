@@ -77,6 +77,16 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         thread_selection_valid = False
     cancellation = run.get('cancellation_metrics', {})
     failure = run.get('failure_metrics', {})
+    context_tokens = inference.get('context_tokens')
+    context_capacity_valid = (
+        context_tokens is None or (
+            type(context_tokens) is int and
+            context_tokens in {512, 1024, 2048, 4096} and
+            type(inference.get('prompt_tokens')) is int and
+            type(workload.get('max_output_tokens')) is int and
+            context_tokens >= inference['prompt_tokens'] + workload['max_output_tokens']
+        )
+    )
     checks = dict(
         inputs_complete=run.get('complete') is True and staging.get('complete') is True and
                         installed.get('complete') is True,
@@ -91,6 +101,7 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
                                    inference['prompt_tokens'] > 0 and
                                    type(inference.get('output_tokens')) is int and
                                    inference['output_tokens'] > 0),
+        context_capacity_sufficient=bool(context_capacity_valid),
         thread_selection_valid=thread_selection_valid,
         inference_stage_order=(type(inference.get('total_us')) is int and
                                type(inference.get('first_token_callback_us')) is int and
