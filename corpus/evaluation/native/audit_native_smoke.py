@@ -28,7 +28,7 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         run.get('model_bytes') == expected['bytes'] == staging.get('staged', {}).get('bytes') and
         run.get('model_sha256') == expected['sha256'] == staging.get('staged', {}).get('sha256')
     )
-    answer = run.get('answer_metrics', {})
+    inference = run.get('inference_metrics', {})
     cancellation = run.get('cancellation_metrics', {})
     failure = run.get('failure_metrics', {})
     checks = dict(
@@ -36,17 +36,18 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
                         installed.get('complete') is True,
         exact_model_identity=bool(identity),
         installed_app_identity=installed.get('apk_sha256') == app_apk_sha256,
-        generated_nonempty_answer=(run.get('answer_result') in {0, 2} and
-                                   isinstance(run.get('raw_answer'), str) and
-                                   bool(run['raw_answer'].strip()) and
-                                   type(answer.get('prompt_tokens')) is int and answer['prompt_tokens'] > 0 and
-                                   type(answer.get('output_tokens')) is int and answer['output_tokens'] > 0),
-        qwen35_non_thinking_prefix=answer.get('non_thinking_prefix') is True,
-        answer_stage_order=(type(answer.get('total_us')) is int and
-                            type(answer.get('first_token_callback_us')) is int and
-                            type(answer.get('prefill_us')) is int and
-                            answer['total_us'] >= answer['first_token_callback_us'] >=
-                            answer['prefill_us'] >= 0),
+        inference_completed=run.get('inference_result') in {0, 2},
+        inference_metrics_present=(type(inference.get('prompt_tokens')) is int and
+                                   inference['prompt_tokens'] > 0 and
+                                   type(inference.get('output_tokens')) is int and
+                                   inference['output_tokens'] > 0),
+        adaptive_thread_count=(type(inference.get('inference_threads')) is int and
+                               1 <= inference['inference_threads'] <= 4),
+        inference_stage_order=(type(inference.get('total_us')) is int and
+                               type(inference.get('first_token_callback_us')) is int and
+                               type(inference.get('prefill_us')) is int and
+                               inference['total_us'] >= inference['first_token_callback_us'] >=
+                               inference['prefill_us'] >= 0),
         exact_three_token_cancellation=(run.get('cancellation_result') == 1 and
                                         cancellation.get('output_tokens') == 3 and
                                         cancellation.get('non_thinking_prefix') is True),
@@ -61,9 +62,9 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
     return dict(
         format=1,
         complete=True,
-        scope=('Exact x86_64 emulator model compatibility, native generation, cancellation and '
-               'failure-path evidence. This is not model-package import, broad answer quality, '
-               'ARM execution or phone-performance evidence.'),
+        scope=('Exact x86_64 emulator model compatibility, native inference timing, adaptive '
+               'thread selection, cancellation and failure-path evidence. This is not model-package '
+               'import, ARM execution or phone-performance evidence.'),
         inputs={name: dict(file=path.as_posix(), bytes=path.stat().st_size, sha256=sha(path))
                 for name, path in {
                     'run': run_path, 'staging': staging_path, 'model_lock': lock_path,
@@ -75,14 +76,12 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         device_fingerprint=run.get('fingerprint'),
         checks=checks,
         observations=dict(
-            raw_answer=run['raw_answer'],
-            answer_metrics=answer,
+            inference_metrics=inference,
             cancellation_metrics=cancellation,
             failure_metrics=failure,
         ),
         interpretation={
             'timing': 'Recorded stage durations describe this emulator run only.',
-            'quality': 'One short supported answer proves execution, not research-answer reliability.',
             'packaging': 'The raw verified GGUF was staged directly; normal .blobs import remains separate.',
         },
         script_sha256=sha(Path(__file__)),

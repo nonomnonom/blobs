@@ -70,6 +70,10 @@ uv run --locked python -m blobs_corpus.package library \
 
 Inspect the module help for the current schema and required metadata. Generated `.blobs` files and build workspaces are ignored by Git.
 
+### Add topic libraries
+
+Keep the starter, travel, survival, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, curation snapshot, package receipt, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
+
 ## Data integrity
 
 - Inputs are pinned by origin, revision, byte length, and SHA-256.
@@ -81,6 +85,6 @@ Inspect the module help for the current schema and required metadata. Generated 
 
 Large reviewed record shards under `artifacts/records/` use Git LFS. Model weights, raw downloads, extracted databases, generated packages, caches, and reports stay outside Git.
 
-Optional host-side answer and retrieval checks are documented in [`evaluation/README.md`](evaluation/README.md). They are not part of the Android runtime or required to build the app.
+Optional host-side retrieval replay and inference-performance measurements are documented in [`evaluation/README.md`](evaluation/README.md). They do not score generated-answer quality and are not part of the Android runtime or required to build the app.
 
 See [data notices](THIRD_PARTY_NOTICES.md) for Wikipedia attribution and host-side dependency licenses.

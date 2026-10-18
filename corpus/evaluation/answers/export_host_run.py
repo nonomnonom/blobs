@@ -50,7 +50,7 @@ def export_run(run: dict, cases: dict, run_path: Path, cases_path: Path):
             raise ValueError(f'Unknown or duplicate result case: {case_id!r}')
         if row.get('question') != definitions_by_id[case_id].get('question'):
             raise ValueError(f'Run question differs from the pinned case: {case_id}')
-        if row.get('status') not in {'RECORDED', 'ERROR'}:
+        if row.get('status') not in {'RECORDED', 'NO_SOURCES', 'ERROR'}:
             raise ValueError(f'Unsupported generation status for {case_id}')
         results_by_id[case_id] = row
     if set(results_by_id) != set(definitions_by_id):
@@ -65,6 +65,8 @@ def export_run(run: dict, cases: dict, run_path: Path, cases_path: Path):
         if not isinstance(answer, str):
             raise ValueError(f'Answer content is not text for {case_id}')
         evidence = _evidence(row)
+        if row['status'] == 'NO_SOURCES' and (answer or evidence):
+            raise ValueError(f'NO_SOURCES result must not contain an answer or evidence for {case_id}')
         source_ids = [int(value) for group in re.findall(r'\[(S\d+(?:\s*,\s*S\d+)*)\]', answer)
                       for value in re.findall(r'S(\d+)', group)]
         evidence_titles = {item.get('title', '').casefold() for item in evidence}

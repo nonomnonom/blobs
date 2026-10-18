@@ -30,7 +30,7 @@ struct Measurements {
     JNIEnv *env;
     jlongArray output;
     Clock::time_point start = Clock::now();
-    std::array<jlong, 12> values;
+    std::array<jlong, 13> values;
     Measurements(JNIEnv *env, jlongArray output) : env(env), output(output) {
         values.fill(-1);
         values[7] = values[10] = values[11] = 0;
@@ -65,13 +65,18 @@ Java_dev_blobs_app_inference_NativeBridge_stop(JNIEnv *, jobject) { cancelled = 
 
 extern "C" JNIEXPORT jint JNICALL
 Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
-    JNIEnv *env, jobject, jbyteArray path, jbyteArray system, jbyteArray user, jint limit, jobject sink,
+    JNIEnv *env, jobject, jbyteArray path, jbyteArray system, jbyteArray user, jint limit, jint threads, jobject sink,
     jlongArray metrics) {
-    if (!metrics || env->GetArrayLength(metrics) != 12) {
+    if (!metrics || env->GetArrayLength(metrics) != 13) {
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "METRICS_SIZE");
         return 3;
     }
+    if (threads < 1 || threads > 4) {
+        env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "THREAD_COUNT");
+        return 3;
+    }
     Measurements measured(env, metrics);
+    measured.values[12] = threads;
     std::lock_guard<std::mutex> lock(owner);
     measured.values[1] = elapsed_us(measured.start);
     try {
@@ -107,7 +112,7 @@ Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
         Stage allocating{measured.values[4]};
         auto cp = llama_context_default_params();
         cp.n_ctx = 4096; cp.n_batch = 256; cp.n_ubatch = 128;
-        cp.n_threads = 4; cp.n_threads_batch = 4;
+        cp.n_threads = threads; cp.n_threads_batch = threads;
         cp.abort_callback = abort_decode;
         using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;
         Context context(llama_init_from_model(model.get(), cp), llama_free);

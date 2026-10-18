@@ -34,16 +34,16 @@ def summarize(paths):
     rows = []
     for path, report in zip(paths, reports):
         observation = report['observations']
-        metrics = observation.get('answer_metrics')
+        metrics = observation.get('inference_metrics')
         if not isinstance(metrics, dict):
             raise ValueError('Native smoke audit lacks stage metrics')
         required = ('total_us', 'first_token_callback_us', 'prefill_us', 'model_load_us',
-                    'generation_loop_us', 'prompt_tokens', 'output_tokens')
+                    'generation_loop_us', 'prompt_tokens', 'output_tokens', 'inference_threads')
         if any(type(metrics.get(field)) is not int or metrics[field] < 0 for field in required):
             raise ValueError('Native smoke metrics are incomplete or invalid')
         if (not metrics['prompt_tokens'] or not metrics['output_tokens'] or
-                not metrics['generation_loop_us'] or not observation.get('raw_answer')):
-            raise ValueError('Native smoke did not produce a measured answer')
+                not metrics['generation_loop_us'] or not 1 <= metrics['inference_threads'] <= 4):
+            raise ValueError('Native smoke did not produce complete inference measurements')
         if not metrics['total_us'] >= metrics['first_token_callback_us'] >= metrics['prefill_us']:
             raise ValueError('Native smoke timing stages are out of order')
         rows.append(dict(
@@ -56,13 +56,13 @@ def summarize(paths):
             first_token_ms=metrics['first_token_callback_us'] / 1000,
             prefill_ms=metrics['prefill_us'] / 1000,
             model_load_ms=metrics['model_load_us'] / 1000,
+            inference_threads=metrics['inference_threads'],
             decode_tokens_per_second=(metrics['output_tokens'] * 1_000_000 / metrics['generation_loop_us']
                                       if metrics['generation_loop_us'] else None),
-            raw_answer=observation['raw_answer'],
         ))
 
     fields = ('total_ms', 'first_token_ms', 'prefill_ms', 'model_load_ms',
-              'decode_tokens_per_second', 'output_tokens')
+              'decode_tokens_per_second', 'output_tokens', 'inference_threads')
     medians = {field: statistics.median(row[field] for row in rows) for field in fields}
     ranges = {field: [min(row[field] for row in rows), max(row[field] for row in rows)]
               for field in fields}
@@ -108,7 +108,7 @@ def compare(baseline_paths, candidate_paths, runtime_lock_path: Path):
             decode_tokens_per_second=100 * (after['decode_tokens_per_second'] /
                                             before['decode_tokens_per_second'] - 1)),
         interpretation=('A lower total/first-token latency or higher decode rate is favorable in this '
-                        'probe only. Raw answer text is retained for review; it is not a quality score.'),
+                        'probe only. It measures app/runtime behavior, not generated-content quality.'),
     )
 
 

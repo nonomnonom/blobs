@@ -25,6 +25,7 @@ from evaluation.native.audit_product_answer import audit as audit_product_answer
 from evaluation.native.build_answer_contract_fixture import build as build_answer_contract_fixture
 from evaluation.native.compare_native_smoke import compare as compare_native_smoke
 from evaluation.retrieval.host_replay import retrieval_query, select_evidence, verify_report_library
+from evaluation.retrieval.package_report import build_report as build_package_retrieval_report
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
 from evaluation.retrieval.title_coverage import inspect as inspect_titles
 from evaluation.retrieval.title_coverage import inspect_database as inspect_package_titles
@@ -54,11 +55,11 @@ class EvaluationInputTests(unittest.TestCase):
                 application={'apk_sha256': 'a' * 64, 'test_apk_sha256': 'b' * 64},
                 device_fingerprint='emulator-fingerprint',
                 inputs={'run': {'file': 'run.json', 'sha256': run_sha}},
-                observations={'raw_answer': 'Answer [1].', 'answer_metrics': {
+                observations={'inference_metrics': {
                     'total_us': total_us, 'first_token_callback_us': 600_000,
                     'prefill_us': 500_000, 'model_load_us': 100_000,
                     'generation_loop_us': 300_000, 'prompt_tokens': 54,
-                    'output_tokens': 12,
+                    'output_tokens': 12, 'inference_threads': 2,
                 }},
             )
 
@@ -79,6 +80,8 @@ class EvaluationInputTests(unittest.TestCase):
             result = compare_native_smoke(baseline, candidate, runtime)
             self.assertEqual(result['baseline']['median']['total_ms'], 1000)
             self.assertEqual(result['candidate']['median']['total_ms'], 1100)
+            self.assertEqual(result['baseline']['median']['inference_threads'], 2)
+            self.assertNotIn('raw_answer', json.dumps(result))
             self.assertAlmostEqual(result['candidate_vs_baseline_percent']['total_latency'], 10)
 
             mutated = json.loads(candidate[-1].read_text(encoding='utf-8'))
@@ -149,6 +152,25 @@ class EvaluationInputTests(unittest.TestCase):
             verify_report_library(
                 dict(library=dict(manifest, sha256='b' * 64)), manifest
             )
+
+    def test_package_retrieval_report_binds_exact_library_and_preserves_all_cases(self):
+        cases_path = Path(__file__).resolve().parents[1] / 'evaluation/cases/answer-contract-development-v2.json'
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            library = build_answer_contract_fixture(root / 'fixture')
+            library_sha256 = hashlib.sha256(library.read_bytes()).hexdigest()
+            report = build_package_retrieval_report(library, cases_path, root / 'work')
+
+        self.assertTrue(report['complete'])
+        self.assertEqual(report['package']['manifest']['id'], 'answer-contract-fixture')
+        self.assertEqual(report['package']['package_sha256'], library_sha256)
+        self.assertEqual(len(report['results']), 6)
+        self.assertEqual(
+            [row['case_id'] for row in report['results']],
+            [case['id'] for case in json.loads(cases_path.read_text(encoding='utf-8'))['cases']['cases']],
+        )
+        self.assertTrue(all(row['variant'] == 'candidateLibrary' for row in report['results']))
+        self.assertTrue(all(isinstance(row['evidence'], list) for row in report['results']))
 
     def test_qwen35_2b_text_profile_preserves_publisher_sampling_contract(self):
         sampling = sampling_for('qwen35-2b-text')
@@ -262,9 +284,10 @@ class EvaluationInputTests(unittest.TestCase):
             model_hash = 'a' * 64
             values = {
                 'run.json': dict(complete=True, model_bytes=100, model_sha256=model_hash,
-                    fingerprint='fixture', answer_result=0, raw_answer='Supported answer.',
-                    answer_metrics=dict(prompt_tokens=10, output_tokens=3, non_thinking_prefix=True,
-                                        total_us=100, first_token_callback_us=80, prefill_us=70),
+                    fingerprint='fixture', inference_result=0,
+                    inference_metrics=dict(prompt_tokens=10, output_tokens=3, non_thinking_prefix=True,
+                                           inference_threads=2, total_us=100,
+                                           first_token_callback_us=80, prefill_us=70),
                     cancellation_result=1,
                     cancellation_metrics=dict(output_tokens=3, non_thinking_prefix=True),
                     failure_metrics=dict(total_us=1, first_token_callback_us=-1, output_tokens=0)),
@@ -281,6 +304,7 @@ class EvaluationInputTests(unittest.TestCase):
                 paths['installed.json'], 'b' * 64, 'c' * 64)
             self.assertTrue(result['complete'])
             self.assertTrue(all(result['checks'].values()))
+            self.assertNotIn('raw_answer', json.dumps(result))
             values['run.json']['cancellation_metrics']['output_tokens'] = 4
             paths['run.json'].write_text(json.dumps(values['run.json']), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'exact_three_token_cancellation'):

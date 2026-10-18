@@ -14,7 +14,7 @@ import zipfile
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = '0f9d163efecf80f4d8485be70369663554656c28987f6407853e4aec9372cda4'
+LIBRARY_STORE_SHA256 = '406f6b10a07376981809bb3dc7b70e1e0f3f3080802ec2e5633dd9ec6fcfe00f'
 QUERY_SHA256 = '5c0e307ccaa5a5f7043bc0878fca626b74dbfb0e11a0a1f99641b64592d2f79e'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',

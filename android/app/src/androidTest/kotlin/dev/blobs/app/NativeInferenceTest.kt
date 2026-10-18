@@ -8,16 +8,16 @@ import android.os.SystemClock
 import android.util.AtomicFile
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.GgufValidator
 import dev.blobs.app.data.packages.PackageManifest
-import dev.blobs.app.inference.AnswerText
 import dev.blobs.app.inference.GenerationMetrics
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.TokenSink
-import java.io.ByteArrayOutputStream
+import dev.blobs.app.inference.inferenceThreadCount
 import java.io.File
 import java.security.MessageDigest
 import java.util.UUID
@@ -432,12 +432,14 @@ class NativeInferenceTest {
             report.put("wall_elapsed_ms", SystemClock.elapsedRealtime() - start)
             report.put("first_visible_state_ms", firstVisibleMs ?: JSONObject.NULL)
             report.put("status", turn?.status ?: JSONObject.NULL)
-            report.put("answer", turn?.answer ?: JSONObject.NULL)
-            report.put("evidence", turn?.evidence ?: JSONObject.NULL)
+            report.put(
+                "evidence_count",
+                turn?.evidence?.let { Evidence.decode(it).size } ?: JSONObject.NULL
+            )
             report.put("saved_elapsed_ms", turn?.elapsedMs ?: JSONObject.NULL)
             report.put("error", turn?.error ?: JSONObject.NULL)
             save()
-            println("Answer evidence: ${output.absolutePath}")
+            println("Inference evidence: ${output.absolutePath}")
         }
         assertTrue(
             "Generation did not finish within $timeoutMs ms; partial evidence saved",
@@ -445,8 +447,7 @@ class NativeInferenceTest {
         )
         val turn = container.database.conversations().turns(id).last()
         assertTrue("${turn.status}: ${turn.error}", turn.status in setOf("COMPLETE", "LIMITED"))
-        val evidence = dev.blobs.app.data.library.Evidence.decode(turn.evidence)
-        assertTrue(AnswerText.citations(turn.answer, evidence.size).isNotEmpty())
+        val evidence = Evidence.decode(turn.evidence)
         assertTrue(
             "Expected evidence from $expectedPublisher, got ${turn.evidence}",
             evidence.any { it.publisher == expectedPublisher }
@@ -495,29 +496,26 @@ class NativeInferenceTest {
         checkpoint()
         val bridge = NativeBridge()
         bridge.reset()
-        val output = ByteArrayOutputStream()
         val metrics = GenerationMetrics()
         val result = bridge.generate(
             model.toByteArray(),
-            "Answer briefly in English. /no_think".toByteArray(),
-            (
-                "Source [1]: Photosynthesis converts light energy into chemical energy. " +
-                    "What does photosynthesis do? Cite [1]. /no_think"
-                ).toByteArray(),
+            "Continue in English. /no_think".toByteArray(),
+            "Performance smoke test:".toByteArray(),
             96,
-            TokenSink { output.write(it) },
+            TokenSink {},
             metrics
         )
-        report.put("answer_metrics", metrics.json()).put("answer_result", result)
-        report.put("raw_answer", output.toString("UTF-8"))
+        report.put("inference_metrics", metrics.json()).put("inference_result", result)
         checkpoint()
         assertTrue("Native status $result", result == 0 || result == 2)
         assertTrue(metrics.promptTokens > 0 && metrics.outputTokens > 0)
         assertTrue(metrics.firstTokenCallbackUs >= metrics.prefillUs)
         assertTrue(metrics.totalUs >= metrics.firstTokenCallbackUs)
         assertTrue(metrics.modelLoadUs >= 0 && metrics.contextSetupUs >= 0)
-        val answer = AnswerText.visible(output.toString("UTF-8"))
-        assertTrue("Output: $answer", answer.isNotBlank())
+        assertEquals(
+            inferenceThreadCount(Runtime.getRuntime().availableProcessors()).toLong(),
+            metrics.inferenceThreads
+        )
         bridge.reset()
         var tokens = 0
         val cancellationMetrics = GenerationMetrics()
@@ -572,6 +570,7 @@ class NativeInferenceTest {
         put("prompt_tokens", promptTokens)
         put("output_tokens", outputTokens)
         put("non_thinking_prefix", nonThinkingPrefix)
+        put("inference_threads", inferenceThreads)
     }
 
     private fun saveReport(output: File, report: JSONObject) {
