@@ -46,7 +46,7 @@ def write_source_archive(output):
     excluded = {'.git', '.local', '.gradle', '.kotlin', '.idea', '.cxx', 'build', 'reports',
                 '__pycache__', 'node_modules', 'evidence', '.venv', '.cache'}
     generated = {ROOT / 'packages', ROOT / 'release', ROOT.parent / 'corpus/work',
-                 ROOT.parent / 'corpus/artifacts'}
+                 ROOT.parent / 'corpus/artifacts', ROOT.parent / 'corpus/evaluation/results'}
     with zipfile.ZipFile(output, 'x', zipfile.ZIP_DEFLATED) as archive:
         for base in [ROOT, ROOT.parent / 'corpus', ROOT.parent / '.github', ROOT.parent / 'docs']:
             for directory, folders, files in os.walk(base):

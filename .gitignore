@@ -6,3 +6,4 @@ __pycache__/
 Thumbs.db
 design/
 corpus/reports/
+corpus/evaluation/results/

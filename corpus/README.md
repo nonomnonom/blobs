@@ -81,4 +81,6 @@ Inspect the module help for the current schema and required metadata. Generated 
 
 Large reviewed record shards under `artifacts/records/` use Git LFS. Model weights, raw downloads, extracted databases, generated packages, caches, and reports stay outside Git.
 
+Optional host-side answer and retrieval checks are documented in [`evaluation/README.md`](evaluation/README.md). They are not part of the Android runtime or required to build the app.
+
 See [data notices](THIRD_PARTY_NOTICES.md) for Wikipedia attribution and host-side dependency licenses.

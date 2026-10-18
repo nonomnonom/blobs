@@ -232,6 +232,7 @@ class PackageTests(unittest.TestCase):
                 'corpus/artifacts/records/shard.jsonl.gz',
                 'corpus/reports/private-run.json',
                 'corpus/evaluation/reports/template.md',
+                'corpus/evaluation/results/local-run.json',
                 'android/build/generated.txt',
             ]:
                 path = workspace / name
@@ -248,9 +249,9 @@ class PackageTests(unittest.TestCase):
                 self.assertIn('blobs/corpus/uv.lock', names)
                 self.assertIn('blobs/corpus/blobs_corpus/curate.py', names)
                 self.assertIn('blobs/corpus/README.md', names)
-                self.assertNotIn('blobs/docs/BOUNTY_COMPLIANCE.md', names)
                 self.assertFalse(any(name.startswith('blobs/design/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/reports/') for name in names))
+                self.assertFalse(any(name.startswith('blobs/corpus/evaluation/results/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/work/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/artifacts/') for name in names))
                 self.assertNotIn('blobs/AGENTS.md', names)

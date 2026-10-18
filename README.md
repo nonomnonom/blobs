@@ -39,7 +39,8 @@ See the [Android build and import guide](android/README.md) and [corpus preparat
 | Path | Purpose |
 | --- | --- |
 | `android/` | Kotlin/Compose app, JNI runtime, package tools, tests, and Android notices |
-| `corpus/` | uv-managed corpus extraction, normalization, packaging, evaluation, and data notices |
+| `android/corpus/` | Versioned source records for the in-app starter library |
+| `corpus/` | uv-managed corpus extraction, normalization, packaging, evaluation, Git LFS records, and data notices |
 | `.github/` | CI, dependency updates, and pull-request template |
 
 ## Distribution model
