@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.AtomicFile
+import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -40,7 +41,8 @@ class PackageCatalog internal constructor(
     private val publicKey: PublicKey,
     private val endpoint: URL,
     private val openConnection: (URL) -> HttpURLConnection,
-    private val hasInternet: () -> Boolean = { true }
+    private val hasInternet: () -> Boolean = { true },
+    private val additionalPublicKeys: List<PublicKey> = emptyList()
 ) {
     constructor(context: Context) : this(
         fallbackCatalog = context.assets.open(FILE_NAME).bufferedReader().use { it.readText() },
@@ -50,8 +52,15 @@ class PackageCatalog internal constructor(
         ),
         endpoint = URL(CATALOG_URL),
         openConnection = { it.openConnection() as HttpURLConnection },
-        hasInternet = { context.hasValidatedInternet() }
+        hasInternet = { context.hasValidatedInternet() },
+        additionalPublicKeys = listOf(
+            loadPublicKey(
+                context.assets.open(ROTATED_PUBLIC_KEY_FILE).bufferedReader().use { it.readText() }
+            )
+        )
     )
+
+    private val trustedPublicKeys = listOf(publicKey) + additionalPublicKeys
 
     private val cacheFile = AtomicFile(File(cacheDirectory, CACHED_CATALOG_FILE))
     private val etagFile = File(cacheDirectory, ETAG_FILE)
@@ -106,7 +115,10 @@ class PackageCatalog internal constructor(
                 cacheDirectory.mkdirs()
                 runCatching { writeAtomically(checkedFile, now.toString().toByteArray()) }
                 val result = runCatching { fetchCatalog() }
-                val outcome = result.getOrElse { CatalogRefreshOutcome.UNAVAILABLE }
+                val outcome = result.getOrElse {
+                    Log.w(TAG, "Unable to refresh the download list", it)
+                    CatalogRefreshOutcome.UNAVAILABLE
+                }
                 mutableSnapshot.value = mutableSnapshot.value.copy(
                     lastCheckedAt = now,
                     refreshing = false
@@ -134,6 +146,9 @@ class PackageCatalog internal constructor(
                     }
                 }
                 val response = opened.responseCode
+                if (response == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                    return CatalogRefreshOutcome.UNCHANGED
+                }
                 if (response in 300..399) {
                     val location = opened.getHeaderField("Location")
                         ?: throw IOException("CATALOG_REDIRECT")
@@ -146,9 +161,6 @@ class PackageCatalog internal constructor(
                     current = next
                     connection = null
                     continue
-                }
-                if (response == HttpURLConnection.HTTP_NOT_MODIFIED) {
-                    return CatalogRefreshOutcome.UNCHANGED
                 }
                 if (response !=
                     HttpURLConnection.HTTP_OK
@@ -172,7 +184,7 @@ class PackageCatalog internal constructor(
                     }
                     output.toByteArray()
                 }
-                val parsed = verifyAndParse(envelope.toString(Charsets.UTF_8), publicKey)
+                val parsed = verifyAndParse(envelope.toString(Charsets.UTF_8), trustedPublicKeys)
                 writeAtomically(cacheFile.baseFile, envelope)
                 opened.getHeaderField("ETag")?.takeIf(String::isNotBlank)?.let {
                     writeAtomically(etagFile, it.toByteArray(Charsets.UTF_8))
@@ -194,7 +206,7 @@ class PackageCatalog internal constructor(
     private fun initialSnapshot(fallbackCatalog: String): CatalogSnapshot {
         val fallback = parseCatalog(fallbackCatalog)
         val cached = runCatching {
-            verifyAndParse(cacheFile.baseFile.readText(Charsets.UTF_8), publicKey)
+            verifyAndParse(cacheFile.baseFile.readText(Charsets.UTF_8), trustedPublicKeys)
         }.getOrNull()
         val lastChecked = checkedFile.takeIf(File::isFile)
             ?.readText(Charsets.UTF_8)?.toLongOrNull()
@@ -214,8 +226,10 @@ class PackageCatalog internal constructor(
     companion object {
         const val FILE_NAME = "package-catalog.json"
         const val PUBLIC_KEY_FILE = "catalog-public-key.pem"
+        private const val ROTATED_PUBLIC_KEY_FILE = "catalog-public-key-v2.pem"
         const val CATALOG_URL =
-            "https://huggingface.co/datasets/blobs-app/blobs-catalog/resolve/main/catalog.signed.json"
+            "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/main/catalog.signed.json"
+        private const val TAG = "PackageCatalog"
         private const val CACHED_CATALOG_FILE = "catalog.signed.json"
         private const val ETAG_FILE = "catalog.etag"
         private const val CHECKED_FILE = "last-check.txt"
@@ -308,15 +322,25 @@ class PackageCatalog internal constructor(
         internal fun verifyAndParse(
             envelopeText: String,
             publicKey: PublicKey
+        ): List<DownloadablePackage> = verifyAndParse(envelopeText, listOf(publicKey))
+
+        internal fun verifyAndParse(
+            envelopeText: String,
+            publicKeys: List<PublicKey>
         ): List<DownloadablePackage> {
             val envelope = JSONObject(envelopeText)
             require(envelope.getInt("format") == 1) { "CATALOG_FORMAT" }
             val payload = Base64.getDecoder().decode(envelope.getString("payload"))
             val signatureBytes = Base64.getDecoder().decode(envelope.getString("signature"))
-            val verifier = Signature.getInstance("SHA256withECDSA")
-            verifier.initVerify(publicKey)
-            verifier.update(payload)
-            require(verifier.verify(signatureBytes)) { "CATALOG_SIGNATURE" }
+            val verified = publicKeys.any { key ->
+                runCatching {
+                    Signature.getInstance("SHA256withECDSA").apply {
+                        initVerify(key)
+                        update(payload)
+                    }.verify(signatureBytes)
+                }.getOrDefault(false)
+            }
+            require(verified) { "CATALOG_SIGNATURE" }
             return parseCatalog(payload.toString(Charsets.UTF_8))
         }
 

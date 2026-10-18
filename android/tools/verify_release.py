@@ -258,10 +258,16 @@ def verify_kit(directory: Path) -> dict:
     for package in packages:
         name = package["file"]
         item = catalog_packages.get(name)
+        url = item.get("url", "") if item else ""
+        github_release_url = f"https://github.com/nonomnonom/blobs/releases/download/v{version}/{name}"
+        hf_package_url = re.fullmatch(
+            rf"https://huggingface\.co/datasets/nonomnonom/blobs-catalog/resolve/[a-f0-9]{{40}}/packages/{re.escape(name)}",
+            url,
+        )
         if (item is None or item.get("manifest", {}).get("kind") != package["kind"] or
                 item.get("download_bytes") != package["package_bytes"] or
                 item.get("download_sha256") != package["package_sha256"] or
-                item.get("url") != f"https://github.com/nonomnonom/blobs/releases/download/v{version}/{name}" or
+                (url != github_release_url and hf_package_url is None) or
                 item.get("manifest") != recorded_packages[name]):
             raise ValueError(f"In-app catalog differs from the delivered {package['kind']} package")
 

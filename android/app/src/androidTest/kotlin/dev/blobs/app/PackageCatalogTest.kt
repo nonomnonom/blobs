@@ -39,6 +39,20 @@ class PackageCatalogTest {
     }
 
     @Test
+    fun acceptsCatalogSignedByEitherKeyDuringRotation() {
+        val oldKey = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
+        val newKey = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
+        val envelope = signedEnvelope(catalogPayload(), newKey)
+
+        val packages = PackageCatalog.verifyAndParse(
+            envelope,
+            listOf(oldKey.public, newKey.public)
+        )
+
+        assertEquals("Research model", packages.first().manifest.title)
+    }
+
+    @Test
     fun rejectsCatalogChangedAfterSigning() {
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
         val envelope = signedEnvelope(catalogPayload(), pair)

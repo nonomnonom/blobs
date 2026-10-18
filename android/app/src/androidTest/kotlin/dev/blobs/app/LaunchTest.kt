@@ -13,6 +13,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.ViewModelProvider
+import dev.blobs.app.data.packages.CatalogRefreshOutcome
+import dev.blobs.app.data.packages.CatalogSource
 import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.PackageCatalog
@@ -105,9 +107,13 @@ class LaunchTest {
     @Test
     fun firstRunCatalogIsPinnedAndSetupOffersInAppDownloads() {
         val catalog = PackageCatalog(compose.activity)
-        assertEquals(
-            "v0.3.1",
-            catalog.models.first().url.substringAfter("/download/").substringBefore('/')
+        assertTrue(
+            catalog.models.first().url.matches(
+                Regex(
+                    "https://huggingface\\.co/datasets/nonomnonom/blobs-catalog/resolve/" +
+                        "[a-f0-9]{40}/packages/qwen3-integration\\.blobs"
+                )
+            )
         )
         assertEquals(3, catalog.models.size)
         assertEquals("gemma4-e2b-q4", catalog.models[1].manifest.id)
@@ -205,5 +211,43 @@ class LaunchTest {
             compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))
                 .assertCountEquals(0)
         }
+    }
+
+    @ManualCheck
+    @Test
+    fun starterLibraryFromHubAppearsInYourLibrary() {
+        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val catalog = model.catalog
+        runBlocking {
+            (compose.activity.application as BlobsApplication).container.preferences.welcome()
+        }
+        compose.waitUntil(10_000) {
+            model.state.value.loaded && model.state.value.options.welcomed
+        }
+        assertTrue(
+            runBlocking { catalog.refreshNow() } in
+                setOf(CatalogRefreshOutcome.UPDATED, CatalogRefreshOutcome.UNCHANGED)
+        )
+        assertEquals(CatalogSource.REMOTE, catalog.state.value.source)
+
+        val starter = catalog.starterLibrary
+        if (model.packages.value.none {
+                it.packageId == starter.manifest.id && it.version == starter.manifest.version
+            }
+        ) {
+            model.downloadPackage(starter)
+        }
+        compose.waitUntil(120_000) {
+            model.packages.value.any {
+                it.packageId == starter.manifest.id && it.version == starter.manifest.version
+            }
+        }
+        compose.runOnUiThread { model.navigate(Page.LIBRARY) }
+        compose.waitUntil(10_000) { model.state.value.page == Page.LIBRARY }
+        compose.waitUntil(10_000) {
+            compose.onAllNodesWithText(starter.manifest.title)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText(starter.manifest.title).performScrollTo().assertIsDisplayed()
     }
 }

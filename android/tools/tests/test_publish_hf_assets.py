@@ -1,0 +1,64 @@
+import hashlib
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from publish_hf_assets import pin_uploaded_assets
+
+
+class PublishHfAssetsTest(unittest.TestCase):
+    def test_pins_only_verified_local_packages_to_the_uploaded_revision(self):
+        payload = b"verified package"
+        revision = "a" * 40
+        catalog = {
+            "packages": [
+                {
+                    "file_name": "starter.blobs",
+                    "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.2/starter.blobs",
+                    "download_bytes": len(payload),
+                    "download_sha256": hashlib.sha256(payload).hexdigest(),
+                },
+                {
+                    "file_name": "frontier.gguf",
+                    "url": "https://huggingface.co/google/model/resolve/" + "b" * 40 + "/frontier.gguf",
+                    "download_bytes": 10,
+                    "download_sha256": "c" * 64,
+                },
+            ]
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            package_path = Path(directory) / "starter.blobs"
+            package_path.write_bytes(payload)
+
+            published = pin_uploaded_assets(catalog, revision, Path(directory))
+
+        self.assertEqual(
+            published["packages"][0]["url"],
+            "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/" +
+            f"{revision}/packages/starter.blobs",
+        )
+        self.assertIn("google/model/resolve/", published["packages"][1]["url"])
+
+    def test_rejects_packages_that_changed_after_the_catalog_was_written(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package_path = Path(directory) / "starter.blobs"
+            package_path.write_bytes(b"changed package")
+            catalog = {
+                "packages": [
+                    {
+                        "file_name": package_path.name,
+                        "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.2/starter.blobs",
+                        "download_bytes": 7,
+                        "download_sha256": "0" * 64,
+                    }
+                ]
+            }
+
+            with self.assertRaisesRegex(ValueError, "Package size differs"):
+                pin_uploaded_assets(catalog, "a" * 40, Path(directory))
+
+
+if __name__ == "__main__":
+    unittest.main()

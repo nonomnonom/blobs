@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "release_tag": "v0.3.1",
+  "release_tag": "v0.3.2",
   "packages": [
     {
       "file_name": "qwen3-integration.blobs",
-      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.1/qwen3-integration.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/6fc319a6f035c9b070663c514f6466b708686356/packages/qwen3-integration.blobs",
       "download_format": "blobs",
       "download_bytes": 639447235,
       "download_sha256": "0089dba9c9af05ebecb3a0110866f0716f439da2cb6d7d90a66a911062305e43",
@@ -91,7 +91,7 @@
     },
     {
       "file_name": "wikipedia-starter-schema3.blobs",
-      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.1/wikipedia-starter-schema3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/6fc319a6f035c9b070663c514f6466b708686356/packages/wikipedia-starter-schema3.blobs",
       "download_format": "blobs",
       "download_bytes": 3828868,
       "download_sha256": "d893c8b5c21596d11db3260b77b8be88cf3cab813e34065f4c0a1bfeacfe0ff9",
@@ -119,7 +119,7 @@
     },
     {
       "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
-      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.1/wikipedia-en-top1m-mini-2026-04.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/6fc319a6f035c9b070663c514f6466b708686356/packages/wikipedia-en-top1m-mini-2026-04.blobs",
       "download_format": "blobs",
       "download_bytes": 1804630820,
       "download_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
