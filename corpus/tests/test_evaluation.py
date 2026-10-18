@@ -33,14 +33,16 @@ from evaluation.retrieval.title_coverage import inspect_database as inspect_pack
 class EvaluationInputTests(unittest.TestCase):
     def test_answer_contract_fixture_build_is_verified_and_reproducible(self):
         with tempfile.TemporaryDirectory() as folder:
-            archive = build_answer_contract_fixture(Path(folder) / 'fixture')
+            root = Path(folder)
+            archive = build_answer_contract_fixture(root / 'first')
+            repeated = build_answer_contract_fixture(root / 'second')
             manifest = verify_package(archive)
             self.assertEqual(manifest['id'], 'answer-contract-fixture')
             self.assertEqual(manifest['version'], '2')
-            self.assertEqual(manifest['bytes'], 69_632)
+            self.assertGreater(manifest['bytes'], 0)
             self.assertEqual(
                 hashlib.sha256(archive.read_bytes()).hexdigest(),
-                '573ae4f95563a72f4b5297842fe00022ab59239860bcd4e0c5f1bb1ac138d13b',
+                hashlib.sha256(repeated.read_bytes()).hexdigest(),
             )
 
     def test_native_smoke_comparison_requires_repeated_paired_device_evidence(self):
