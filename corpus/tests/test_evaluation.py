@@ -60,19 +60,22 @@ class EvaluationInputTests(unittest.TestCase):
         workload = dict(id='native-inference-smoke-v1', system_sha256='f' * 64,
                         user_sha256='e' * 64, max_output_tokens=96)
 
-        def report(total_us, run_sha, app_sha, test_sha):
+        def report(total_us, run_sha, app_sha, test_sha, thread_mode='adaptive'):
             return dict(
                 format=1, complete=True,
-                checks={'exact_model_identity': True, 'installed_build_identity': True},
+                checks={'exact_model_identity': True, 'installed_build_identity': True,
+                        'thread_selection_valid': True},
                 model={'bytes': 100, 'sha256': 'c' * 64},
                 application={'apk_sha256': app_sha, 'test_apk_sha256': test_sha},
                 device_fingerprint='emulator-fingerprint',
                 device_profile=dict(fingerprint='emulator-fingerprint', model='Pixel_8_API_36',
                                     device='emu64xa', api=36, abi='x86_64',
-                                    available_processors=4, max_heap_bytes=536870912,
+                                    available_processors=2, max_heap_bytes=536870912,
                                     serial='emulator-5554'),
                 runtime_commit='a' * 40,
                 workload=workload,
+                thread_mode=thread_mode,
+                requested_inference_threads=2 if thread_mode == 'fixed' else None,
                 inputs={'run': {'file': 'run.json', 'sha256': run_sha}},
                 observations={'inference_metrics': {
                     'total_us': total_us, 'first_token_callback_us': 600_000,
@@ -93,7 +96,8 @@ class EvaluationInputTests(unittest.TestCase):
             for index, total in enumerate((1_000_000, 1_100_000, 1_200_000)):
                 path = root / f'candidate-{index}.json'
                 path.write_text(json.dumps(report(total, chr(97 + index) * 64,
-                                                  'd' * 64, 'e' * 64)), encoding='utf-8')
+                                                  'd' * 64, 'e' * 64, 'fixed')),
+                                encoding='utf-8')
                 candidate.append(path)
             runtime = root / 'runtime.json'
             runtime.write_text(json.dumps({'commit': 'a' * 40}), encoding='utf-8')
@@ -397,6 +401,7 @@ class EvaluationInputTests(unittest.TestCase):
             values = {
                 'run.json': dict(complete=True, model_bytes=100, model_sha256=model_hash,
                     fingerprint='fixture', inference_result=0,
+                    thread_mode='fixed', requested_inference_threads=2,
                     device_profile=dict(fingerprint='fixture', model='fixture', device='fixture',
                                         api=36, abi='x86_64', available_processors=4,
                                         max_heap_bytes=536870912),

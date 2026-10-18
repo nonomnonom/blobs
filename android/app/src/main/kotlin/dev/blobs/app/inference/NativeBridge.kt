@@ -39,15 +39,28 @@ class NativeBridge {
         limit: Int,
         sink: TokenSink,
         metrics: GenerationMetrics = GenerationMetrics()
-    ): Int = generateMeasured(
+    ): Int = generateWithThreads(
         path,
         system,
         user,
         limit,
         inferenceThreadCount(Runtime.getRuntime().availableProcessors()),
         sink,
-        metrics.values
+        metrics
     )
+
+    internal fun generateWithThreads(
+        path: ByteArray,
+        system: ByteArray,
+        user: ByteArray,
+        limit: Int,
+        threads: Int,
+        sink: TokenSink,
+        metrics: GenerationMetrics
+    ): Int {
+        require(threads in 1..MAX_INFERENCE_THREADS)
+        return generateMeasured(path, system, user, limit, threads, sink, metrics.values)
+    }
 
     private external fun generateMeasured(
         path: ByteArray,

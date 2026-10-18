@@ -474,6 +474,11 @@ class NativeInferenceTest {
         val args = InstrumentationRegistry.getArguments()
         val runId = args.getString("runId") ?: UUID.randomUUID().toString()
         require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
+        val requestedThreads = args.getString("smokeThreads")?.toIntOrNull()
+        require(requestedThreads == null || requestedThreads in 1..4)
+        val selectedThreads = requestedThreads
+            ?: inferenceThreadCount(Runtime.getRuntime().availableProcessors())
+        val threadMode = if (requestedThreads == null) "adaptive" else "fixed"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val reportFile = File(context.filesDir, "native-$runId.json")
         check(!reportFile.exists())
@@ -491,6 +496,8 @@ class NativeInferenceTest {
             put("run_id", runId)
             put("complete", false)
             put("fingerprint", Build.FINGERPRINT)
+            put("thread_mode", threadMode)
+            put("requested_inference_threads", requestedThreads ?: JSONObject.NULL)
             put(
                 "device_profile",
                 JSONObject().apply {
@@ -524,11 +531,12 @@ class NativeInferenceTest {
         val bridge = NativeBridge()
         bridge.reset()
         val metrics = GenerationMetrics()
-        val result = bridge.generate(
+        val result = bridge.generateWithThreads(
             model.toByteArray(),
             SMOKE_SYSTEM_PROMPT.toByteArray(),
             SMOKE_USER_PROMPT.toByteArray(),
             SMOKE_MAX_OUTPUT_TOKENS,
+            selectedThreads,
             TokenSink {},
             metrics
         )
@@ -539,10 +547,7 @@ class NativeInferenceTest {
         assertTrue(metrics.firstTokenCallbackUs >= metrics.prefillUs)
         assertTrue(metrics.totalUs >= metrics.firstTokenCallbackUs)
         assertTrue(metrics.modelLoadUs >= 0 && metrics.contextSetupUs >= 0)
-        assertEquals(
-            inferenceThreadCount(Runtime.getRuntime().availableProcessors()).toLong(),
-            metrics.inferenceThreads
-        )
+        assertEquals(selectedThreads.toLong(), metrics.inferenceThreads)
         bridge.reset()
         var tokens = 0
         val cancellationMetrics = GenerationMetrics()

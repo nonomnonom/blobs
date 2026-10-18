@@ -56,6 +56,25 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         run.get('model_sha256') == expected['sha256'] == staging.get('staged', {}).get('sha256')
     )
     inference = run.get('inference_metrics', {})
+    if not isinstance(inference, dict):
+        inference = {}
+    profile_values = profile if isinstance(profile, dict) else {}
+    thread_mode = run.get('thread_mode', 'adaptive')
+    requested_threads = run.get('requested_inference_threads')
+    if thread_mode == 'adaptive':
+        thread_selection_valid = (
+            requested_threads is None and
+            type(inference.get('inference_threads')) is int and
+            inference['inference_threads'] == min(max(profile_values.get('available_processors', 0), 1), 4)
+        )
+    elif thread_mode == 'fixed':
+        thread_selection_valid = (
+            type(requested_threads) is int and 1 <= requested_threads <= 4 and
+            type(inference.get('inference_threads')) is int and
+            inference['inference_threads'] == requested_threads
+        )
+    else:
+        thread_selection_valid = False
     cancellation = run.get('cancellation_metrics', {})
     failure = run.get('failure_metrics', {})
     checks = dict(
@@ -72,8 +91,7 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
                                    inference['prompt_tokens'] > 0 and
                                    type(inference.get('output_tokens')) is int and
                                    inference['output_tokens'] > 0),
-        adaptive_thread_count=(type(inference.get('inference_threads')) is int and
-                               1 <= inference['inference_threads'] <= 4),
+        thread_selection_valid=thread_selection_valid,
         inference_stage_order=(type(inference.get('total_us')) is int and
                                type(inference.get('first_token_callback_us')) is int and
                                type(inference.get('prefill_us')) is int and
@@ -106,6 +124,8 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         model=dict(bytes=expected['bytes'], sha256=expected['sha256']),
         runtime_commit=runtime_commit,
         workload=workload,
+        thread_mode=thread_mode,
+        requested_inference_threads=requested_threads,
         device_fingerprint=run.get('fingerprint'),
         device_profile=dict(profile, serial=staging.get('serial')) if profile_valid else None,
         checks=checks,

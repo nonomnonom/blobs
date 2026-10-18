@@ -30,6 +30,8 @@ def summarize(paths):
                     for report in reports}
     runtimes = {report.get('runtime_commit') for report in reports}
     workloads = {json.dumps(report.get('workload'), sort_keys=True) for report in reports}
+    thread_modes = {report.get('thread_mode', 'adaptive') for report in reports}
+    requested_threads = {report.get('requested_inference_threads') for report in reports}
     if len(fingerprints) != 1 or None in fingerprints:
         raise ValueError('Runs must use the same identified device')
     if len(device_profiles) != 1 or 'null' in device_profiles:
@@ -40,6 +42,8 @@ def summarize(paths):
         raise ValueError('Runs must use the same pinned runtime')
     if len(workloads) != 1 or 'null' in workloads:
         raise ValueError('Runs must use the same fixed workload')
+    if len(thread_modes) != 1 or len(requested_threads) != 1:
+        raise ValueError('Runs in one build must use the same thread-selection mode')
 
     rows = []
     for path, report in zip(paths, reports):
@@ -67,6 +71,7 @@ def summarize(paths):
             prefill_ms=metrics['prefill_us'] / 1000,
             model_load_ms=metrics['model_load_us'] / 1000,
             inference_threads=metrics['inference_threads'],
+            thread_mode=report.get('thread_mode', 'adaptive'),
             decode_tokens_per_second=(metrics['output_tokens'] * 1_000_000 / metrics['generation_loop_us']
                                       if metrics['generation_loop_us'] else None),
         ))
@@ -87,6 +92,8 @@ def summarize(paths):
                 device_profile=json.loads(next(iter(device_profiles))),
                 apk_sha256=next(iter(applications))[0], test_apk_sha256=next(iter(applications))[1],
                 runtime_commit=next(iter(runtimes)), workload=json.loads(next(iter(workloads))),
+                thread_mode=next(iter(thread_modes)),
+                requested_inference_threads=next(iter(requested_threads)),
                 prompt_tokens=next(iter(prompt_counts)), output_tokens=next(iter(output_counts)),
                 runs=rows, median=medians, range=ranges)
 

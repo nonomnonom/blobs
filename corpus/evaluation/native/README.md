@@ -6,6 +6,8 @@ The pinned Qwen3 0.6B fixture and fixed workload are described in [`../locks/qwe
 
 That emulator's medians were 2.835 seconds for the full native call, 684 ms to the first native callback, and 33.85 generated tokens per second. The run range is part of the baseline because scheduling noise affects emulator timing. The auditable input reports and checks are retained under [`../evidence/native-inference-smoke-v1-x86_64-2026-10-19/`](../evidence/native-inference-smoke-v1-x86_64-2026-10-19/).
 
+A same-build thread sweep on that four-core emulator kept the model, runtime, prompt, and 71-token output length fixed across three runs per setting. Adaptive 4-thread inference measured 32.90 tokens/s median; fixed 3 threads measured 31.17, 2 threads 24.33, and 1 thread 13.34. The comparison reports are [`4 vs 3`](../baselines/native-thread-sweep-qwen3-06b-2026-10-19/adaptive-4-vs-fixed-3.json), [`4 vs 2`](../baselines/native-thread-sweep-qwen3-06b-2026-10-19/adaptive-4-vs-fixed-2.json), and [`4 vs 1`](../baselines/native-thread-sweep-qwen3-06b-2026-10-19/adaptive-4-vs-fixed-1.json); per-run inputs and audits are in [`the sweep evidence folder`](../evidence/native-thread-sweep-qwen3-06b-2026-10-19/). This result supports the current four-thread choice on this emulator only; it is not a reason to force that choice on other devices.
+
 ## Run a measurement
 
 The extraction command below runs from `android/`. Run the staging, audit, and summary commands from `corpus/`. Build the debug app and instrumentation APK first. Extract the fixture's `model.gguf` payload from the v0.3.3 `qwen3-integration.blobs` package, preserving the filename required by the lock:
@@ -48,6 +50,8 @@ $report = & $adb -s emulator-5554 exec-out run-as dev.blobs.app.debug cat "files
 $report | Set-Content -Encoding utf8 "reports/native/$runId.json"
 ```
 
+To measure a fixed thread count for a thread-policy sweep, add `-e smokeThreads 1` (or `2`, `3`, or `4`) to the instrumentation command. Omit that argument to measure Blobs' adaptive thread selection. The audit records the mode and selected count; comparisons may vary that implementation setting while holding the prompt, model, runtime, device, and output-token count fixed.
+
 Audit each run against the pinned model/runtime and the built APK hashes. Create the local installed-app record from the APKs used for that run:
 
 ```powershell
@@ -76,4 +80,4 @@ uv run --locked --project . python -m evaluation.native.compare_native_smoke `
   --output reports/native/comparison.json
 ```
 
-Baseline and candidate groups must use the same emulator profile, exact model, runtime revision, and prompt workload. Their app and instrumentation APK hashes may differ, which lets this comparison measure code changes. At least three audited runs per build are required; the output reports medians, ranges, and relative latency/throughput changes, not answer quality. To record a new initial baseline without a candidate group, omit `--candidate-audit` and use three paths with `--baseline-audit`.
+Baseline and candidate groups must use the same emulator profile, exact model, runtime revision, prompt workload, and output-token count. Their app and instrumentation APK hashes may differ, which lets this comparison measure code changes. Thread selection may differ between groups and is recorded in the result. At least three audited runs per build are required; the output reports medians, ranges, and relative latency/throughput changes, not answer quality. To record a new initial baseline without a candidate group, omit `--candidate-audit` and use three paths with `--baseline-audit`.
