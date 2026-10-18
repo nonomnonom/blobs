@@ -40,6 +40,25 @@ class PackageCatalogTest {
     }
 
     @Test
+    fun bundledCatalogOffersThePinnedEmergencyPreparednessLibraryOffline() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val catalog = PackageCatalog(context)
+        val library = catalog.additionalLibraries.single {
+            it.manifest.id == "ready-emergency-preparedness"
+        }
+
+        assertEquals("Emergency preparedness · U.S. households", library.manifest.title)
+        assertEquals("2026-10.1", library.manifest.version)
+        assertEquals(PackageRole.OPTIONAL, library.role)
+        assertEquals(DownloadFormat.BLOBS, library.format)
+        assertEquals(25_054L, library.downloadBytes)
+        assertEquals(
+            "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+            library.manifest.license
+        )
+    }
+
+    @Test
     fun acceptsCatalogSignedByTrustedKey() {
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
         val packages = PackageCatalog.verifyAndParse(

@@ -103,6 +103,29 @@ class PinnedWebPageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Page update date changed"):
             _source_text(changed_date, source)
 
+    def test_source_accepts_ready_gov_numeric_update_date(self):
+        article_text = "An official emergency preparedness instruction. " * 8
+        body = f"== Before a storm ==\n\n{article_text.strip()}"
+        source = dict(
+            id="emergency-kit",
+            host="www.ready.gov",
+            url="https://www.ready.gov/kit",
+            title="Build A Kit",
+            updated="2026-07-01",
+            selector="#article",
+            body_sha256=hashlib.sha256(body.encode("utf-8")).hexdigest(),
+        )
+        html = (
+            "<html><body><h1>Build A Kit</h1><div id='article'>"
+            f"<h2>Before a storm</h2><p>{article_text}</p>"
+            "</div><p>Last Updated: 07/01/2026</p></body></html>"
+        ).encode("utf-8")
+
+        self.assertEqual(_source_text(html, source), ("Build A Kit", body))
+
+        with self.assertRaisesRegex(ValueError, "Page update date changed"):
+            _source_text(html.replace(b"07/01/2026", b"07/02/2026"), source)
+
 
 if __name__ == "__main__":
     unittest.main()

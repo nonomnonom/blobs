@@ -68,24 +68,37 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v1-host.json
 ```
 
+The U.S. household emergency-preparedness package uses its own versioned case set and the same retrieval-only check:
+
+```powershell
+uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
+  --library-package work/packages/ready-emergency-preparedness-2026-10-v1.blobs `
+  --cases evaluation/cases/ready-emergency-preparedness-retrieval-v1.json `
+  --work-directory work/reports/ready-emergency-preparedness-retrieval-v1 `
+  --output reports/runs/ready-emergency-preparedness-retrieval-v1.json
+```
+
+The initial fixed set has eight questions and ten expected source-title matches. The recorded host run found all ten expected sources, with seven at rank 1 (reciprocal rank 0.817). This small set is a source-routing smoke test, not a broad relevance study or answer evaluation.
+
 For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
 
 ## Measure retrieval on an Android emulator
 
-`LibraryRetrievalBenchmarkTest` imports the exact pinned Travel package on-device, verifies its library payload SHA-256, then runs six fixed queries five times through the production `LibraryStore`. It reports source-title rank and elapsed time for each query, together with emulator, app APK, test APK, and package identities. It never runs a model or records answer text. From the repository root with an Android 16 x86_64 emulator connected:
+`LibraryRetrievalBenchmarkTest` imports the exact pinned package and versioned case set on-device, verifies their identities, then runs every query five times through the production `LibraryStore`. It reports source-title ranks and elapsed time for each query, together with case-set hash, emulator, app APK, test APK, and package identities. It never runs a model or records answer text. From the repository root with an Android emulator connected, stage whichever package and case set you want to measure:
 
 ```powershell
 $adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
 & $adb shell mkdir -p /sdcard/Android/data/dev.blobs.app.debug/files
-& $adb push corpus/work/packages/wikivoyage-en-2026-09-v2.blobs `
+& $adb push corpus/work/packages/ready-emergency-preparedness-2026-10-v1.blobs `
   /sdcard/Android/data/dev.blobs.app.debug/files/retrieval-benchmark-package.blobs
+& $adb push corpus/evaluation/cases/ready-emergency-preparedness-retrieval-v1.json `
+  /sdcard/Android/data/dev.blobs.app.debug/files/retrieval-benchmark-cases.json
 Push-Location android
 .\gradlew.bat `
   '-Pandroid.testInstrumentationRunnerArguments.class=dev.blobs.app.LibraryRetrievalBenchmarkTest' `
-  '-Pandroid.testInstrumentationRunnerArguments.retrievalPackage=/sdcard/Android/data/dev.blobs.app.debug/files/retrieval-benchmark-package.blobs' `
   :app:connectedDebugAndroidTest --offline --console=plain
 Pop-Location
 & $adb logcat -d -s BlobsRetrievalBench:I
 ```
 
-The structured report is emitted under the `BlobsRetrievalBench` log tag. Performance numbers describe only the recorded emulator; use the same package and case set for before-and-after comparisons. The v1/v2 host smoke results remain useful for repeatable host retrieval diagnostics and are not device-performance proxies.
+The structured report is emitted under the `BlobsRetrievalBench` log tag. The recorded Ready.gov package run is in [`evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json`](evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json): eight queries, five repetitions, ten of ten expected sources found, median per-case median 3 ms, and p95 6 ms on that emulator. These timings describe only that emulator; use the same package and case set for before-and-after comparisons. Host smoke timings are not device-performance proxies.

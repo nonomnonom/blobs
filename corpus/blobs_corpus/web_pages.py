@@ -143,10 +143,16 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
     if title != source["title"]:
         raise ValueError(f"Unexpected source title for {source['id']}: {title!r}")
     page_text = tree.body.text(separator=" ", strip=True) if tree.body else ""
-    update_dates = re.findall(r"Last updated:\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})", page_text)
+    update_dates = re.findall(
+        r"Last updated:\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})"
+        r"|Last Updated:\s*(\d{2}/\d{2}/\d{4})",
+        page_text,
+    )
     if len(update_dates) != 1:
         raise ValueError(f"Expected one page update date: {source['id']}")
-    updated = datetime.strptime(update_dates[0], "%B %d, %Y").date().isoformat()
+    date_text = next(value for value in update_dates[0] if value)
+    date_format = "%m/%d/%Y" if "/" in date_text else "%B %d, %Y"
+    updated = datetime.strptime(date_text, date_format).date().isoformat()
     if updated != source["updated"]:
         raise ValueError(f"Page update date changed: {source['id']} ({updated})")
     root = tree.css_first(source["selector"])

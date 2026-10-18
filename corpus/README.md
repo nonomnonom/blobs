@@ -113,6 +113,33 @@ uv run --locked python -m blobs_corpus.package library `
 
 The [NPS reuse notice](https://www.nps.gov/aboutus/disclaimer.htm) says government-created NPS material is generally public domain unless otherwise marked and warns that some page material can have third-party restrictions. This edition contains text-only extracts from the four locked NPS pages, no images, and no NPS marks. The user-facing package description must state that local conditions and rules vary, advise following current ranger and emergency-service instructions, and clarify that Blobs is not an NPS product or endorsement. Review source rights and content again before making a new edition.
 
+### Build the U.S. emergency-preparedness library
+
+This household-focused edition uses four dated Ready.gov pages covering family planning, emergency kits, evacuation, and power outages. It is a U.S. federal preparedness reference, not live emergency information; users should follow current local instructions. Source text is extracted without images, agency marks, or linked third-party materials. FEMA says most FEMA.gov material may be reused, while page-specific third-party restrictions can apply; review those notices before preparing every edition.
+
+```powershell
+uv run --locked python -m blobs_corpus.web_pages acquire `
+  sources/ready-emergency-preparedness-2026-10.json work/sources/ready-emergency-preparedness-2026-10
+
+uv run --locked python -m blobs_corpus.web_pages extract `
+  sources/ready-emergency-preparedness-2026-10.json `
+  work/sources/ready-emergency-preparedness-2026-10 `
+  artifacts/records/ready-emergency-preparedness-2026-10/documents.jsonl.gz
+
+uv run --locked python -m blobs_corpus.package library `
+  artifacts/records/ready-emergency-preparedness-2026-10/documents.jsonl.gz `
+  work/packages/ready-emergency-preparedness-2026-10-v1.blobs `
+  --schema 3 `
+  --id ready-emergency-preparedness `
+  --version 2026-10.1 `
+  --title "Emergency preparedness · U.S. households" `
+  --license "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions" `
+  --origin "https://www.fema.gov/about/website-information" `
+  --work-directory work/build/ready-emergency-preparedness-2026-10
+```
+
+FEMA's [website information and reuse policy](https://www.fema.gov/about/website-information) says most FEMA.gov material may be copied and distributed, but warns that some material is licensed or restricted. FEMA lists Ready.gov among the .gov domains it owns and manages. The source lock pins each Ready.gov page's title, update date, canonical URL, and normalized text digest; the text-only extraction omits visual assets. The user-facing listing must identify the U.S. scope, show that the snapshot can become outdated, and advise users to follow current emergency officials. Blobs is independent and not endorsed by FEMA.
+
 Extraction checkpoints are safe to resume after a normal interrupt. If the process is forcibly terminated, it can leave `work/extract/EDITION/.extract.lock`; confirm no extractor is still running before removing that stale file and resuming. Never remove the lock while an extraction process is active.
 
 Example package build from normalized records:
@@ -133,7 +160,7 @@ Inspect the module help for the current schema and required metadata. Generated 
 
 ### Add topic libraries
 
-Keep the starter, travel, outdoor-safety, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, curation snapshot, package receipt, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
+Keep the starter, travel, outdoor-safety, emergency-preparedness, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, curation snapshot, package receipt, retrieval cases, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
 
 ## Data integrity
 

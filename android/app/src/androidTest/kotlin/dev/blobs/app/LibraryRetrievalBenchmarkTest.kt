@@ -14,55 +14,67 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class LibraryRetrievalBenchmarkTest {
     @Test
-    fun packagedTravelRetrievalOnDevice() {
+    fun packagedLibraryRetrievalOnDevice() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
-        val packageFile = File(
-            context.getExternalFilesDir(null),
-            "retrieval-benchmark-package.blobs"
-        )
-        assumeTrue(
-            "Push the pinned travel package to app-specific external files",
-            packageFile.isFile
+        val externalFiles = context.getExternalFilesDir(null)
+        if (externalFiles == null) {
+            Log.i(TAG, "SKIP: app-specific external files are unavailable")
+            return
+        }
+        val packageFile = File(externalFiles, "retrieval-benchmark-package.blobs")
+        val casesFile = File(externalFiles, "retrieval-benchmark-cases.json")
+        if (!packageFile.isFile || !casesFile.isFile) {
+            Log.i(TAG, "SKIP: push a pinned library package and retrieval case set to app storage")
+            return
+        }
+
+        val caseSet = JSONObject(casesFile.readText())
+        assertEquals(1, caseSet.getInt("format"))
+        val caseSetId = caseSet.getString("id")
+        val expectedLibrary = caseSet.getJSONObject("library")
+        val casesJson = caseSet.getJSONArray("cases")
+        assertTrue("The case set must contain queries", casesJson.length() > 0)
+        val cases = (0 until casesJson.length()).map { index ->
+            val row = casesJson.getJSONObject(index)
+            val expectedTitles = row.getJSONArray("expected_document_titles")
+            Triple(
+                row.getString("id"),
+                row.getString("question"),
+                (0 until expectedTitles.length()).map(expectedTitles::getString)
+            )
+        }
+        assertTrue(
+            "Every query must have at least one expected source",
+            cases.all { it.third.isNotEmpty() }
         )
 
         val database = File(context.cacheDir, "retrieval-benchmark-library.sqlite")
-        val packageIdentity = extractVerifiedPackage(packageFile, database)
+        val packageIdentity = extractVerifiedPackage(packageFile, database, expectedLibrary)
         val library = PackageEntity(
-            key = "wikivoyage-en",
-            packageId = "wikivoyage-en",
-            version = "2026-09.2",
+            key = packageIdentity.getString("id"),
+            packageId = packageIdentity.getString("id"),
+            version = packageIdentity.getString("version"),
             kind = "library",
-            title = "Travel guides · English",
+            title = packageIdentity.getString("title"),
             path = database.absolutePath,
             bytes = database.length(),
             sha256 = packageIdentity.getString("payload_sha256"),
-            license = "CC BY-SA 4.0",
-            origin = "https://en.wikivoyage.org/",
+            license = packageIdentity.getString("license"),
+            origin = packageIdentity.getString("origin"),
             installedAt = 0L
-        )
-        val cases = listOf(
-            "jakarta-city" to ("What should I know before visiting Jakarta?" to "Jakarta"),
-            "japan-rail" to ("How can I travel around Japan by rail?" to "Rail travel in Japan"),
-            "beach-packing" to
-                ("What should I pack for a beach trip?" to "Packing for beach travel"),
-            "china-visas" to
-                ("How do visa requirements for China work?" to "Visa requirements for China"),
-            "travel-basics" to ("What are the basics of travel?" to "Travel basics"),
-            "bangkok-airport" to ("How do I get from the airport to Bangkok city?" to "Bangkok")
         )
         val store = LibraryStore()
         val resultRows = JSONArray()
         val expectedRanks = mutableListOf<Int>()
         val caseMedians = mutableListOf<Long>()
+        val expectedTitleCount = cases.sumOf { it.third.size }
 
-        for ((caseId, pair) in cases) {
-            val (question, expectedTitle) = pair
+        for ((caseId, question, expectedTitles) in cases) {
             store.retrieve(listOf(library), question, null)
             val samples = mutableListOf<Long>()
             var titles = emptyList<String>()
@@ -71,17 +83,19 @@ class LibraryRetrievalBenchmarkTest {
                 val evidence = store.retrieve(listOf(library), question, null)
                 samples += (SystemClock.elapsedRealtimeNanos() - start) / 1_000_000
                 titles = evidence.map { it.title }.distinct()
-                assertTrue("$caseId must retrieve $expectedTitle", expectedTitle in titles)
+                for (expectedTitle in expectedTitles) {
+                    assertTrue("$caseId must retrieve $expectedTitle", expectedTitle in titles)
+                }
             }
             val sorted = samples.sorted()
-            val rank = titles.indexOf(expectedTitle).let { if (it < 0) JSONObject.NULL else it + 1 }
-            expectedRanks += titles.indexOf(expectedTitle) + 1
+            val ranks = expectedTitles.map { titles.indexOf(it) + 1 }
+            expectedRanks += ranks
             caseMedians += sorted[sorted.size / 2]
             resultRows.put(
                 JSONObject()
                     .put("case_id", caseId)
-                    .put("expected_title", expectedTitle)
-                    .put("expected_title_rank", rank)
+                    .put("expected_document_titles", JSONArray(expectedTitles))
+                    .put("expected_title_ranks", JSONArray(ranks))
                     .put("selected_titles", JSONArray(titles))
                     .put("elapsed_ms_samples", JSONArray(samples))
                     .put("median_elapsed_ms", sorted[sorted.size / 2])
@@ -92,6 +106,12 @@ class LibraryRetrievalBenchmarkTest {
             .put("format", 1)
             .put("scope", "Android retrieval only; no generated answers are evaluated")
             .put("created_at_epoch_ms", System.currentTimeMillis())
+            .put(
+                "case_set",
+                JSONObject()
+                    .put("id", caseSetId)
+                    .put("sha256", sha256(casesFile))
+            )
             .put(
                 "device",
                 JSONObject()
@@ -120,8 +140,12 @@ class LibraryRetrievalBenchmarkTest {
                 "summary",
                 JSONObject()
                     .put("case_count", cases.size)
-                    .put("expected_titles_found", expectedRanks.size)
-                    .put("expected_title_recall", expectedRanks.size.toDouble() / cases.size)
+                    .put("expected_titles", expectedTitleCount)
+                    .put("expected_titles_found", expectedRanks.count { it > 0 })
+                    .put(
+                        "expected_title_recall",
+                        expectedRanks.count { it > 0 }.toDouble() / expectedTitleCount
+                    )
                     .put("expected_titles_at_rank_1", expectedRanks.count { it == 1 })
                     .put(
                         "expected_title_mean_reciprocal_rank",
@@ -140,48 +164,54 @@ class LibraryRetrievalBenchmarkTest {
         database.delete()
     }
 
-    private fun extractVerifiedPackage(packageFile: File, database: File): JSONObject =
-        ZipFile(packageFile).use { archive ->
-            val entries = archive.entries().toList().map { it.name }
-            assertEquals(listOf("manifest.json", "library.sqlite"), entries)
-            val manifest = JSONObject(
-                archive.getInputStream(archive.getEntry("manifest.json"))
-                    .bufferedReader().use { it.readText() }
-            )
-            assertEquals("wikivoyage-en", manifest.getString("id"))
-            assertEquals("2026-09.2", manifest.getString("version"))
-            assertEquals("library", manifest.getString("kind"))
-            assertEquals(EXPECTED_PAYLOAD_SHA256, manifest.getString("sha256"))
-            assertTrue(manifest.getLong("bytes") in 1..MAX_DATABASE_BYTES)
+    private fun extractVerifiedPackage(
+        packageFile: File,
+        database: File,
+        expectedLibrary: JSONObject
+    ): JSONObject = ZipFile(packageFile).use { archive ->
+        val entries = archive.entries().toList().map { it.name }
+        assertEquals(listOf("manifest.json", "library.sqlite"), entries)
+        val manifest = JSONObject(
+            archive.getInputStream(archive.getEntry("manifest.json"))
+                .bufferedReader().use { it.readText() }
+        )
+        assertEquals(expectedLibrary.getString("id"), manifest.getString("id"))
+        assertEquals(expectedLibrary.getString("version"), manifest.getString("version"))
+        assertEquals("library", manifest.getString("kind"))
+        assertEquals(expectedLibrary.getString("payload_sha256"), manifest.getString("sha256"))
+        assertTrue(manifest.getLong("bytes") in 1..MAX_DATABASE_BYTES)
 
-            val digest = MessageDigest.getInstance("SHA-256")
-            var count = 0L
-            archive.getInputStream(archive.getEntry("library.sqlite")).use { input ->
-                database.outputStream().buffered().use { output ->
-                    val buffer = ByteArray(COPY_BUFFER_BYTES)
-                    while (true) {
-                        val read = input.read(buffer)
-                        if (read < 0) break
-                        count += read
-                        assertTrue(
-                            "The package payload exceeded its manifest",
-                            count <= manifest.getLong("bytes")
-                        )
-                        digest.update(buffer, 0, read)
-                        output.write(buffer, 0, read)
-                    }
+        val digest = MessageDigest.getInstance("SHA-256")
+        var count = 0L
+        archive.getInputStream(archive.getEntry("library.sqlite")).use { input ->
+            database.outputStream().buffered().use { output ->
+                val buffer = ByteArray(COPY_BUFFER_BYTES)
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) break
+                    count += read
+                    assertTrue(
+                        "The package payload exceeded its manifest",
+                        count <= manifest.getLong("bytes")
+                    )
+                    digest.update(buffer, 0, read)
+                    output.write(buffer, 0, read)
                 }
             }
-            assertEquals(manifest.getLong("bytes"), count)
-            val payloadDigest = digest.digest().joinToString("") { "%02x".format(it) }
-            assertEquals(EXPECTED_PAYLOAD_SHA256, payloadDigest)
-            JSONObject()
-                .put("id", manifest.getString("id"))
-                .put("version", manifest.getString("version"))
-                .put("payload_sha256", payloadDigest)
-                .put("package_sha256", sha256(packageFile))
-                .put("payload_bytes", count)
         }
+        assertEquals(manifest.getLong("bytes"), count)
+        val payloadDigest = digest.digest().joinToString("") { "%02x".format(it) }
+        assertEquals(expectedLibrary.getString("payload_sha256"), payloadDigest)
+        JSONObject()
+            .put("id", manifest.getString("id"))
+            .put("version", manifest.getString("version"))
+            .put("title", manifest.getString("title"))
+            .put("license", manifest.getString("license"))
+            .put("origin", manifest.getString("origin"))
+            .put("payload_sha256", payloadDigest)
+            .put("package_sha256", sha256(packageFile))
+            .put("payload_bytes", count)
+    }
 
     private fun sha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -211,7 +241,5 @@ class LibraryRetrievalBenchmarkTest {
         private const val REPEATS = 5
         private const val COPY_BUFFER_BYTES = 1024 * 1024
         private const val MAX_DATABASE_BYTES = 1_000_000_000L
-        private const val EXPECTED_PAYLOAD_SHA256 =
-            "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056"
     }
 }

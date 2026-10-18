@@ -4,7 +4,7 @@
   "packages": [
     {
       "file_name": "qwen3-integration.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/qwen3-integration.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/974db6e038b5208618a1023c130826498e1f2697/packages/qwen3-integration.blobs",
       "download_format": "blobs",
       "download_bytes": 639447235,
       "download_sha256": "0089dba9c9af05ebecb3a0110866f0716f439da2cb6d7d90a66a911062305e43",
@@ -91,7 +91,7 @@
     },
     {
       "file_name": "wikipedia-starter-schema3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/wikipedia-starter-schema3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/974db6e038b5208618a1023c130826498e1f2697/packages/wikipedia-starter-schema3.blobs",
       "download_format": "blobs",
       "download_bytes": 3828868,
       "download_sha256": "d893c8b5c21596d11db3260b77b8be88cf3cab813e34065f4c0a1bfeacfe0ff9",
@@ -119,7 +119,7 @@
     },
     {
       "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/wikipedia-en-top1m-mini-2026-04.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/974db6e038b5208618a1023c130826498e1f2697/packages/wikipedia-en-top1m-mini-2026-04.blobs",
       "download_format": "blobs",
       "download_bytes": 1804630820,
       "download_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
@@ -147,7 +147,7 @@
     },
     {
       "file_name": "wikivoyage-en-2026-09-v2.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/wikivoyage-en-2026-09-v2.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/974db6e038b5208618a1023c130826498e1f2697/packages/wikivoyage-en-2026-09-v2.blobs",
       "download_format": "blobs",
       "download_bytes": 295139283,
       "download_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
@@ -175,7 +175,7 @@
     },
     {
       "file_name": "nps-outdoor-safety-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/nps-outdoor-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/974db6e038b5208618a1023c130826498e1f2697/packages/nps-outdoor-safety-2026-10-v1.blobs",
       "download_format": "blobs",
       "download_bytes": 36588,
       "download_sha256": "25fef55cab7a4fdbcca31db9d5ee8c5cd85194313ec7f3a77386aa4f1ae1043d",
@@ -194,6 +194,34 @@
       "description": "U.S. national-park hiking and emergency guides. Conditions differ by place; follow current park and emergency guidance. Blobs is not affiliated with or endorsed by NPS. No claim to original U.S. Government works.",
       "language": "English",
       "publisher": "National Park Service",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "ready-emergency-preparedness-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/974db6e038b5208618a1023c130826498e1f2697/packages/ready-emergency-preparedness-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 25054,
+      "download_sha256": "5e39ee9eb713ae790b426d9e7088ffdd5ab55edc29705cb62503159f207e9d0d",
+      "manifest": {
+        "format": 1,
+        "id": "ready-emergency-preparedness",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Emergency preparedness · U.S. households",
+        "bytes": 106496,
+        "sha256": "aaa6315c84831b62c25458541513c3e9e0b3c9f25e0558d525596a27d6b5304c",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Offline U.S. household guides for emergency plans, supply kits, evacuation, and power outages. This snapshot can become outdated; follow current local instructions in an emergency. Blobs is independent and is not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,

@@ -14,7 +14,7 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
-Run `connectedDebugAndroidTest` on an emulator for platform checks. The manual HF integration test `LaunchTest#starterLibraryFromHubAppearsInYourLibrary` verifies the live signed list, starter download, installation, and Library screen.
+Run `connectedDebugAndroidTest` on an emulator for platform checks. The manual HF integration checks `LaunchTest#starterLibraryFromHubAppearsInYourLibrary` and `LaunchTest#emergencyPreparednessLibraryFromHubAppearsInYourLibrary` verify the live signed list, package downloads, installation, and Library screen.
 
 ## Sign and assemble
 

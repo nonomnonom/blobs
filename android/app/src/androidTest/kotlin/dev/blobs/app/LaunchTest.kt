@@ -126,7 +126,7 @@ class LaunchTest {
         assertEquals("model", catalog.models.first().manifest.kind)
         assertEquals("library", catalog.starterLibrary.manifest.kind)
         assertEquals("wikipedia-starter", catalog.starterLibrary.manifest.id)
-        assertEquals(3, catalog.additionalLibraries.size)
+        assertEquals(4, catalog.additionalLibraries.size)
         assertTrue(catalog.additionalLibraries.all { it.role == PackageRole.OPTIONAL })
         val outdoorSafety = catalog.additionalLibraries.single {
             it.manifest.id == "nps-outdoor-safety"
@@ -134,6 +134,20 @@ class LaunchTest {
         assertEquals("Outdoor safety · U.S. national parks", outdoorSafety.manifest.title)
         assertTrue(outdoorSafety.description.contains("not affiliated with or endorsed by NPS"))
         assertEquals(DownloadFormat.BLOBS, outdoorSafety.format)
+        val emergencyPreparedness = catalog.additionalLibraries.single {
+            it.manifest.id == "ready-emergency-preparedness"
+        }
+        assertEquals(
+            "Emergency preparedness · U.S. households",
+            emergencyPreparedness.manifest.title
+        )
+        assertEquals(DownloadFormat.BLOBS, emergencyPreparedness.format)
+        assertTrue(
+            emergencyPreparedness.description.contains("follow current local instructions")
+        )
+        assertTrue(
+            emergencyPreparedness.description.contains("not endorsed by FEMA")
+        )
         assertEquals(
             catalog.models.first(),
             catalog.recommendedModel(3L * 1024 * 1024 * 1024, 2L * 1024 * 1024 * 1024)
@@ -256,5 +270,45 @@ class LaunchTest {
                 .fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText(starter.manifest.title).performScrollTo().assertIsDisplayed()
+    }
+
+    @ManualCheck
+    @Test
+    fun emergencyPreparednessLibraryFromHubAppearsInYourLibrary() {
+        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val catalog = model.catalog
+        runBlocking {
+            (compose.activity.application as BlobsApplication).container.preferences.welcome()
+        }
+        compose.waitUntil(10_000) {
+            model.state.value.loaded && model.state.value.options.welcomed
+        }
+        assertTrue(
+            runBlocking { catalog.refreshNow() } in
+                setOf(CatalogRefreshOutcome.UPDATED, CatalogRefreshOutcome.UNCHANGED)
+        )
+        assertEquals(CatalogSource.REMOTE, catalog.state.value.source)
+
+        val library = catalog.additionalLibraries.single {
+            it.manifest.id == "ready-emergency-preparedness"
+        }
+        if (model.packages.value.none {
+                it.packageId == library.manifest.id && it.version == library.manifest.version
+            }
+        ) {
+            model.downloadPackage(library)
+        }
+        compose.waitUntil(120_000) {
+            model.packages.value.any {
+                it.packageId == library.manifest.id && it.version == library.manifest.version
+            }
+        }
+        compose.runOnUiThread { model.navigate(Page.LIBRARY) }
+        compose.waitUntil(10_000) { model.state.value.page == Page.LIBRARY }
+        compose.waitUntil(10_000) {
+            compose.onAllNodesWithText(library.manifest.title)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText(library.manifest.title).performScrollTo().assertIsDisplayed()
     }
 }
