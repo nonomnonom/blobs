@@ -84,7 +84,7 @@ uv run --locked python -m blobs_corpus.package library `
   --origin "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides"
 ```
 
-The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change. Future topics such as survival should use their own pinned source editions and review before they are added to the download list.
+The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change.
 
 ### Build the U.S. outdoor-safety library
 
@@ -111,7 +111,7 @@ uv run --locked python -m blobs_corpus.package library `
   --work-directory work/build/nps-outdoor-safety-2026-10
 ```
 
-The [NPS reuse notice](https://www.nps.gov/aboutus/disclaimer.htm) says government-created NPS material is generally public domain unless otherwise marked and warns that some page material can have third-party restrictions. This edition contains text-only extracts from the four locked NPS pages, no images, and no NPS marks. The user-facing package description must state that local conditions and rules vary, advise following current ranger and emergency-service instructions, and clarify that Blobs is not an NPS product or endorsement. Review source rights and content again before making a new edition.
+The [NPS reuse notice](https://www.nps.gov/aboutus/disclaimer.htm) says government-created NPS material is generally public domain unless otherwise marked and warns that some page material can have third-party restrictions. This edition contains text-only extracts from the four locked NPS pages, no images, and no NPS marks. It is a small set of U.S. national-park safety guides, not a comprehensive survival manual. The user-facing package description must state that local conditions and rules vary, advise following current ranger and emergency-service instructions, and clarify that Blobs is not an NPS product or endorsement. Review source rights and content again before making a new edition.
 
 ### Build the U.S. emergency-preparedness library
 
