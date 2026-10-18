@@ -115,13 +115,24 @@ class LaunchTest {
         compose.waitUntil(10_000) { model.state.value.loaded }
         compose.runOnUiThread { model.navigate(Page.WELCOME) }
         compose.onAllNodesWithText("I already have the files").assertCountEquals(0)
+        compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))
+            .assertCountEquals(0)
+        compose.onNodeWithText(compose.activity.getString(R.string.setup_welcome_step))
+            .assertIsDisplayed()
         compose.onNodeWithText(compose.activity.getString(R.string.prepare)).performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
-        if (model.packages.value.none { it.kind == "model" } ||
-            model.packages.value.none { it.kind == "library" }
-        ) {
+        if (model.packages.value.none { it.kind == "model" }) {
+            compose.onNodeWithText(compose.activity.getString(R.string.setup_model_step))
+                .assertIsDisplayed()
+            compose.onNodeWithText(compose.activity.getString(R.string.setup_model_title))
+                .assertIsDisplayed()
             compose.onNodeWithText(compose.activity.getString(R.string.download_model))
                 .performScrollTo().assertIsDisplayed()
+            compose.onAllNodesWithText(compose.activity.getString(R.string.download_library))
+                .assertCountEquals(0)
+            compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))
+                .assertCountEquals(0)
+        } else if (model.packages.value.none { it.kind == "library" }) {
             compose.onNodeWithText(compose.activity.getString(R.string.download_library))
                 .performScrollTo().assertIsDisplayed()
             compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))

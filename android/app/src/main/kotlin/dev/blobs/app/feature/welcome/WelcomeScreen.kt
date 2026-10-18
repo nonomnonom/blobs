@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.ui.PrimaryAction
+import dev.blobs.app.ui.SetupProgressBlock
 import dev.blobs.app.ui.theme.BlobsTheme
 
 @Composable
@@ -66,6 +67,7 @@ fun WelcomeScreen(preferencesUnavailable: Boolean = false, prepare: () -> Unit =
             Modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            SetupProgressBlock(0f, R.string.setup_welcome_step)
             Text(
                 text = stringResource(R.string.welcome_title),
                 style = MaterialTheme.typography.headlineLarge,

@@ -24,7 +24,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,7 +53,7 @@ import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.Scene
 import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.SearchField
-import dev.blobs.app.ui.SetupProgress
+import dev.blobs.app.ui.SetupProgressBlock
 import dev.blobs.app.ui.fileSize
 
 @Composable
@@ -62,54 +61,53 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
     val work by model.work.collectAsStateWithLifecycle()
     val readyKinds = packages.map { it.kind }.toSet()
     val ready = setOf("model", "library").all { it in readyKinds }
+    val needsModel = "model" !in readyKinds
+    val progressLabel = when {
+        ready -> R.string.setup_all_ready
+        needsModel -> R.string.setup_model_step
+        else -> R.string.setup_library_step
+    }
     ScrollPage {
+        SetupProgressBlock(work.setupProgress(readyKinds), progressLabel)
         Scene(
-            if (ready) R.drawable.ready_world else R.drawable.library_world,
-            if (ready) 240 else 140
+            when {
+                ready -> R.drawable.ready_world
+                needsModel -> R.drawable.welcome_world
+                else -> R.drawable.library_world
+            },
+            if (ready) 240 else 200
         )
         if (ready) {
             Body(R.string.ready_body)
-            SetupProgress(work.setupProgress(readyKinds))
             PrimaryAction(R.string.start_chat) { model.finishSetup() }
             return@ScrollPage
         }
-        Body(R.string.setup_body)
-        SetupProgress(work.setupProgress(readyKinds))
         if (work.pendingImport != null || (work.busy && work.total > 0)) {
+            Heading(if (needsModel) R.string.setup_model_title else R.string.setup_library_title)
+            Body(if (needsModel) R.string.setup_model_body else R.string.setup_library_body)
             PrimaryAction(R.string.view_import) { model.navigate(Page.IMPORT) }
         } else {
-            val missingModel = packages.none { it.kind == "model" }
-            val missingLibrary = packages.none { it.kind == "library" }
-            if (missingModel) {
+            if (needsModel) {
+                Heading(R.string.setup_model_title)
+                Body(R.string.setup_model_body)
                 PrimaryAction(R.string.download_model, !work.busy) {
                     model.downloadPackage(model.catalog.recommendedModel)
                 }
-            }
-            if (missingLibrary) {
+            } else {
+                Heading(R.string.setup_library_title)
+                Body(R.string.setup_library_body)
                 val downloadLibrary = {
                     model.downloadPackage(model.catalog.starterLibrary)
                 }
-                if (missingModel) {
-                    OutlinedButton(
-                        onClick = downloadLibrary,
-                        enabled = !work.busy,
-                        modifier = Modifier.fillMaxWidth().height(54.dp)
-                    ) {
-                        Text(stringResource(R.string.download_library))
-                    }
+                PrimaryAction(R.string.download_library, !work.busy, downloadLibrary)
+            }
+            val downloadNote =
+                if (needsModel) {
+                    R.string.setup_download_note
                 } else {
-                    PrimaryAction(R.string.download_library, !work.busy, downloadLibrary)
+                    R.string.setup_remaining_download_note
                 }
-            }
-            if (missingModel || missingLibrary) {
-                Body(
-                    if (missingModel && missingLibrary) {
-                        R.string.setup_download_note
-                    } else {
-                        R.string.setup_remaining_download_note
-                    }
-                )
-            }
+            Body(downloadNote)
         }
     }
 }

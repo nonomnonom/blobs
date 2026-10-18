@@ -48,6 +48,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
+import kotlin.math.roundToInt
 
 @Composable
 fun GlyphButton(
@@ -89,6 +90,26 @@ fun SetupProgress(progress: Float) {
                 .background(MaterialTheme.colorScheme.primary)
         )
     }
+}
+
+@Composable
+fun SetupProgressBlock(progress: Float, @StringRes label: Int) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(
+            stringResource(label),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            stringResource(
+                R.string.progress_percent,
+                (progress.coerceIn(0f, 1f) * 100).roundToInt()
+            ),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    SetupProgress(progress)
 }
 
 @Composable

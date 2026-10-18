@@ -74,8 +74,7 @@ class OnboardingJourneyTest {
             compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
             compose.onNodeWithText(text(R.string.download_model))
                 .performScrollTo().assertIsDisplayed()
-            compose.onNodeWithText(text(R.string.download_library))
-                .performScrollTo().assertIsDisplayed()
+            compose.onAllNodesWithText(text(R.string.download_library)).assertCountEquals(0)
             compose.onAllNodesWithText(text(R.string.have_local_packages)).assertCountEquals(0)
             capture("03-setup")
             for ((name, key) in listOf("model" to "modelPackage", "library" to "libraryPackage")) {
@@ -108,6 +107,10 @@ class OnboardingJourneyTest {
                         text(R.string.return_setup)
                     ).performScrollTo().performClick()
                     assertEquals(Page.SETUP, model.state.value.page)
+                    if (name == "model") {
+                        compose.onNodeWithText(text(R.string.download_library))
+                            .performScrollTo().assertIsDisplayed()
+                    }
                 }
             }
             capture("07-ready")

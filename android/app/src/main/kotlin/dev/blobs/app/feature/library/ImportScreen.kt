@@ -25,6 +25,7 @@ import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.Scene
 import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.SetupProgress
+import dev.blobs.app.ui.SetupProgressBlock
 import dev.blobs.app.ui.fileSize
 
 @Composable
@@ -77,9 +78,18 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                     else -> R.string.import_body
                 }
             )
-            SetupProgress(
-                if (work.inAppDownload) work.setupProgress(readyKinds) else work.phaseProgress
-            )
+            if (work.inAppDownload) {
+                SetupProgressBlock(
+                    work.setupProgress(readyKinds),
+                    if (work.packageKind == "model") {
+                        R.string.setup_model_step
+                    } else {
+                        R.string.setup_library_step
+                    }
+                )
+            } else {
+                SetupProgress(work.phaseProgress)
+            }
             Text(
                 stringResource(
                     if (work.downloading) R.string.download_progress else R.string.import_progress,

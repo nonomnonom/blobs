@@ -2,8 +2,8 @@
 <resources>
     <string name="prepare">Get started</string>
     <string name="have_local_packages">I already have packages on this phone</string>
-    <string name="download_model">Download the AI model · 1.8 GB</string>
-    <string name="download_library">Download the knowledge library · 1.8 GB</string>
+    <string name="download_model">Download the model · 1.8 GB</string>
+    <string name="download_library">Download the library · 1.8 GB</string>
     <string name="ready_body">Your model and library are ready.\nChat and sources are ready offline.</string>
     <string name="import_title">Adding it to Blobs</string>
     <string name="import_boundary">Local import · no connection needed</string>
@@ -19,9 +19,17 @@
     <string name="view_import">View import</string>
     <string name="older_editions_kept">Other editions of this package are already installed. They will be kept.</string>
     <string name="setup_progress_title">Getting Blobs ready</string>
-    <string name="setup_body">Blobs needs an AI model to answer and a knowledge library for sources. Download both here; they stay on this phone and work offline.</string>
+    <string name="setup_welcome_step">Your setup</string>
+    <string name="setup_model_step">1 of 2 · Your model</string>
+    <string name="setup_library_step">2 of 2 · Your library</string>
+    <string name="setup_all_ready">All ready</string>
+    <string name="progress_percent">%1$d%%</string>
+    <string name="setup_model_title">A little brain for Blobs</string>
+    <string name="setup_model_body">This model writes answers right on your phone. Download it once, then use it offline.</string>
+    <string name="setup_library_title">A world of sources</string>
+    <string name="setup_library_body">Your pocket library gives Blobs passages to explore and cite. Download it once to read offline.</string>
     <string name="setup_download_note">Together, the downloads are about 3.6 GB. Keep around 8.7 GB free while Blobs installs them.</string>
-    <string name="setup_remaining_download_note">One more download—about 1.8 GB. Leave extra space while Blobs gets it ready.</string>
+    <string name="setup_remaining_download_note">The download is about 1.8 GB. The library expands to about 5 GB on your phone.</string>
     <string name="add_package">Add from this phone</string>
     <string name="start_chat">Ask your first question</string>
     <string name="home_title">Hello,\ncurious.</string>
