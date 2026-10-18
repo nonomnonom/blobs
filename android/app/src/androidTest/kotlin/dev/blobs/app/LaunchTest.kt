@@ -142,7 +142,8 @@ class LaunchTest {
             .assertCountEquals(0)
         compose.onNodeWithText(compose.activity.getString(R.string.diagnosis_title))
             .assertIsDisplayed()
-        compose.onNodeWithText(compose.activity.getString(R.string.choose_model)).performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.choose_model))
+            .performScrollTo().assertIsDisplayed().performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
         if (model.packages.value.none { it.kind == "model" }) {
             compose.onNodeWithText(compose.activity.getString(R.string.setup_model_step))
