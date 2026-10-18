@@ -71,7 +71,7 @@ def build_report(package_path: Path, cases_path: Path, work_directory: Path):
                 database, case['question'], titles, broad_only=True
             )
             evidence, _ = retrieve(
-                database, manifest, query, priority_ids=route_ids,
+                database, manifest, query, question=case['question'], priority_ids=route_ids,
                 broad_priority_ids=priority_ids,
             )
             report['results'].append(dict(

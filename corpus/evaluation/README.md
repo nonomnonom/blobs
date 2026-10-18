@@ -52,11 +52,11 @@ This checks whether a fixed set of travel questions retrieves their expected sou
 uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/wikivoyage-en-2026-09-v2.blobs `
   --cases evaluation/cases/travel-retrieval-smoke-v1.json `
-  --work-directory work/reports/travel-retrieval-smoke-v1 `
-  --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v1-host.json
+  --work-directory work/reports/travel-retrieval-smoke-v3 `
+  --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v3-host.json
 ```
 
-The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Reports include expected-source recall, first expected-source rank, mean reciprocal rank, and host elapsed time; these measure source retrieval and do not score generated answers. In the October 19 policy update, the same six travel cases retained 6/6 expected-source recall, moved top-1 coverage from 3/6 to 4/6, and raised mean reciprocal rank from 0.700 to 0.783. Host median retrieval time moved from 170.2 ms to 72.8 ms; p95 moved from 400.8 ms to 226.5 ms on the recorded Windows host. These are single-run host diagnostics, not phone-latency claims; the separate emulator run records five repetitions per query. Additional topic libraries should use their own package identity and topic-specific retrieval cases; they can share the same schema and retrieval implementation while keeping source licensing and update cadence independent.
+The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Reports include expected-source recall, first expected-source rank, mean reciprocal rank, and host elapsed time; these measure source retrieval and do not score generated answers. In the October 19 policy update, the same six travel cases retained 6/6 expected-source recall, moved top-1 coverage from 3/6 to 4/6, and raised mean reciprocal rank from 0.700 to 0.783. Host median retrieval time moved from 170.2 ms to 72.8 ms; p95 moved from 400.8 ms to 226.5 ms on the recorded Windows host. The follow-up title-overlap result is [`v3`](baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v3-host.json): 6/6 expected sources at rank 1, MRR 1.0, host median 99.8 ms and p95 251.8 ms. A matched Android 16 x86_64 emulator comparison is recorded in [`the title-ranking evidence`](evidence/android-retrieval-travel-title-ranking-x86_64-android16-2026-10-19.json): all three candidate runs reached 6/6 at rank 1 versus 4/6 baseline; the median of run medians rose from 70 ms to 77 ms and median run p95 from 247 ms to 262 ms. This modest absolute latency cost buys a clear source-ordering improvement on the measured cases. These timings describe only their named host/emulator; additional topic libraries should use their own package identity and retrieval cases while sharing the same schema and retrieval implementation.
 
 The U.S. outdoor-safety package uses the same retrieval-only check:
 
@@ -65,7 +65,7 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/nps-outdoor-safety-2026-10-v1.blobs `
   --cases evaluation/cases/nps-outdoor-safety-retrieval-v1.json `
   --work-directory work/reports/nps-outdoor-safety-retrieval-v1 `
-  --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v1-host.json
+  --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v3-host.json
 ```
 
 The U.S. household emergency-preparedness package uses its own versioned case set and the same retrieval-only check:
@@ -75,7 +75,7 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/ready-emergency-preparedness-2026-10-v1.blobs `
   --cases evaluation/cases/ready-emergency-preparedness-retrieval-v1.json `
   --work-directory work/reports/ready-emergency-preparedness-retrieval-v1 `
-  --output reports/runs/ready-emergency-preparedness-retrieval-v1.json
+  --output evaluation/baselines/ready-emergency-preparedness-2026-10.1-retrieval-v2-host.json
 ```
 
 The initial fixed set has eight questions and ten expected source-title matches. The recorded host run found all ten expected sources, with seven at rank 1 (reciprocal rank 0.817). This small set is a source-routing smoke test, not a broad relevance study or answer evaluation.
@@ -102,3 +102,5 @@ Pop-Location
 ```
 
 The structured report is emitted under the `BlobsRetrievalBench` log tag. The recorded Ready.gov package run is in [`evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json`](evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json): eight queries, five repetitions, ten of ten expected sources found, median per-case median 3 ms, and p95 6 ms on that emulator. These timings describe only that emulator; use the same package and case set for before-and-after comparisons. Host smoke timings are not device-performance proxies.
+
+The pinned travel package was also compared before and after stable title-overlap ranking on the same Android 16 x86_64 emulator, using three runs per build and the same six-query case set. [`The comparison evidence`](evidence/android-retrieval-travel-title-ranking-x86_64-android16-2026-10-19.json) records 6/6 expected sources at rank 1 in all candidate runs, up from 4/6 at baseline; mean reciprocal rank rose from 0.783 to 1.0. The median of run medians increased from 70 ms to 78 ms, and the median run p95 from 247 ms to 261 ms. That is a small absolute latency cost on this emulator in exchange for better source ordering; it is not a device-wide performance claim.

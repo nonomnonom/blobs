@@ -16,8 +16,8 @@ from blobs_corpus.names import name_key
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = '942e7dcf62f68dd0b8708f69c7ef4b52f09e21959a9a20b9480e406e767da55f'
-QUERY_SHA256 = '05d0f567b5e3fd166c421b1c3a92110edfbc9a8bace6d09ba3ae053da6dedfc0'
+LIBRARY_STORE_SHA256 = '3d951f9f85d13f282431018206dc5a12a8a26367273a99f879c29a44e0e100f8'
+QUERY_SHA256 = '900078fd97096f3f7b2950d5c84286c605b8b4158a86fb5fcf298f68e3d452f2'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
     'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',
@@ -29,6 +29,7 @@ STOP_WORDS = {
 TITLE_INTENT_STOP_WORDS = STOP_WORDS | {
     'i', 'should', 'know', 'before', 'visiting', 'visit', 'around'
 }
+TITLE_NOISE_WORDS = {'city', 'town'}
 
 
 def sha(path):
@@ -78,7 +79,23 @@ def verify_report_library(case, manifest):
         raise ValueError('Native retrieval evidence uses a different library package')
 
 
-def retrieve(database, manifest, query, *, priority_ids=(), broad_priority_ids=None):
+def title_terms(question):
+    return {
+        word for word in name_key(question).split()
+        if len(word) >= 2 and word not in STOP_WORDS and word not in TITLE_NOISE_WORDS
+    }
+
+
+def title_overlap(question_terms, title):
+    title_words = name_key(title).split()
+    return sum(
+        1 for term in question_terms
+        if any(word == term or (len(term) >= 3 and word.startswith(term) and len(word) - len(term) <= 3)
+               for word in title_words)
+    )
+
+
+def retrieve(database, manifest, query, *, question='', priority_ids=(), broad_priority_ids=None):
     route_ids = list(dict.fromkeys(priority_ids))
     title_priority = set(
         route_ids if broad_priority_ids is None else broad_priority_ids
@@ -134,6 +151,18 @@ def retrieve(database, manifest, query, *, priority_ids=(), broad_priority_ids=N
             if row['passage_id'] not in seen_passages:
                 candidates.append(row)
                 seen_passages.add(row['passage_id'])
+        question_terms = title_terms(question)
+        title_scores = {}
+
+        def order_key(item):
+            index, row = item
+            score = title_scores.get(row['title'])
+            if score is None:
+                score = title_overlap(question_terms, row['title'])
+                title_scores[row['title']] = score
+            return -score, -(row['id'] in route_ids), index
+
+        candidates = [row for _, row in sorted(enumerate(candidates), key=order_key)]
     return select_evidence(candidates, manifest), candidates
 
 
@@ -307,7 +336,8 @@ def main():
                     work / 'starter.sqlite', case['resolved_query'], titles, broad_only=True
                 )
                 evidence, _ = retrieve(
-                    work / 'starter.sqlite', baseline, query, priority_ids=route_ids,
+                    work / 'starter.sqlite', baseline, query,
+                    question=case['resolved_query'], priority_ids=route_ids,
                     broad_priority_ids=priority_ids,
                 )
                 same = evidence == case['evidence']
@@ -329,7 +359,8 @@ def main():
                 work / 'expanded.sqlite', case['resolved_query'], titles, broad_only=True
             )
             evidence, candidates = retrieve(
-                work / 'expanded.sqlite', candidate, query, priority_ids=route_ids,
+                work / 'expanded.sqlite', candidate, query,
+                question=case['resolved_query'], priority_ids=route_ids,
                 broad_priority_ids=priority_ids,
             )
             same = evidence == case['evidence']

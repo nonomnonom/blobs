@@ -12,8 +12,8 @@ from blobs_corpus.names import name_key
 from .host_replay import direct_title_ids, retrieve, sha, unpack
 
 
-LIBRARY_STORE_SHA256 = '38706635cdff3037029f1f49487f37f0f46d7fe8223e716ff9858bf97f444be5'
-QUERY_SHA256 = 'cbad4adfb4926deabef6171d7e157a8469e4db37d90ac590a6d1e659679c3357'
+LIBRARY_STORE_SHA256 = '3d951f9f85d13f282431018206dc5a12a8a26367273a99f879c29a44e0e100f8'
+QUERY_SHA256 = '900078fd97096f3f7b2950d5c84286c605b8b4158a86fb5fcf298f68e3d452f2'
 
 
 def expanded_query(database, question, base_query, stop_words):
@@ -92,7 +92,7 @@ def main():
                 baseline_db, case['resolved_query'], titles, broad_only=True
             )
             evidence, _ = retrieve(
-                baseline_db, baseline, query, priority_ids=route_ids,
+                baseline_db, baseline, query, question=case['resolved_query'], priority_ids=route_ids,
                 broad_priority_ids=priority_ids,
             )
             same = evidence == case['evidence']
@@ -108,7 +108,9 @@ def main():
         report['cases'] = native['cases']
         for case in cases:
             base_start = time.monotonic()
-            base_evidence, _ = retrieve(database, candidate, case['base_fts_query'])
+            base_evidence, _ = retrieve(
+                database, candidate, case['base_fts_query'], question=case['resolved_query']
+            )
             base_elapsed = (time.monotonic() - base_start) * 1000
             start = time.monotonic()
             query, titles = expanded_query(database, case['resolved_query'], case['base_fts_query'], stop_words)
@@ -117,7 +119,7 @@ def main():
                 database, case['resolved_query'], titles, broad_only=True
             )
             evidence, candidates = retrieve(
-                database, candidate, query, priority_ids=route_ids,
+                database, candidate, query, question=case['resolved_query'], priority_ids=route_ids,
                 broad_priority_ids=priority_ids,
             )
             report['results'].append(dict(case_id=case['case_id'], resolved_query=case['resolved_query'],

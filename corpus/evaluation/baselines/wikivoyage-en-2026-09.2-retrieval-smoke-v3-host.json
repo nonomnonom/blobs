@@ -1,0 +1,187 @@
+{
+  "format": 1,
+  "complete": true,
+  "scope": "Fixed document-retrieval smoke cases on the exact packaged library and host runtime. Measures host retrieval only; it does not score generated answers or predict Android latency.",
+  "case_set": {
+    "id": "travel-retrieval-smoke-v1",
+    "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+  },
+  "package": {
+    "file": "wikivoyage-en-2026-09-v2.blobs",
+    "sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+    "manifest": {
+      "bytes": 628436992,
+      "format": 1,
+      "id": "wikivoyage-en",
+      "kind": "library",
+      "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+      "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+      "sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+      "title": "Travel guides · English",
+      "version": "2026-09.2"
+    }
+  },
+  "runtime": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
+    "python": "3.13.12",
+    "sqlite": "3.50.4"
+  },
+  "retrieval_sources": {
+    "library_store": "c3afca72c81adf9f6b476e1fb677bfb29ac2ecd322d35c60251b79f290831544",
+    "query": "bfe83c859d28166ddd8ce22f0fc8399782679ee9f40c34f0e9dcffb2ec649a4d"
+  },
+  "host_runtime": {
+    "retrieval_smoke_sha256": "3b288ed9d45df9b5654a8f50635511d95f1c8f2effe1c277e05356c1394aa7de",
+    "host_replay_sha256": "bc3cf55136ba3df3b316f7624b33ec8b29e47a631accbeea67b67afeebe83479"
+  },
+  "summary": {
+    "case_count": 6,
+    "expected_titles": 6,
+    "expected_titles_found": 6,
+    "expected_title_recall": 1.0,
+    "expected_titles_at_rank_1": 6,
+    "expected_title_mean_reciprocal_rank": 1.0,
+    "host_elapsed_ms_median": 99.80335,
+    "host_elapsed_ms_p95": 251.7845
+  },
+  "results": [
+    {
+      "case_id": "jakarta-city",
+      "elapsed_host_ms": 99.5868,
+      "exact_title_priority_count": 1,
+      "selected_document_titles": [
+        "Jakarta",
+        "Jakarta/South",
+        "Jakarta/East",
+        "Jakarta/Central",
+        "Greater Jakarta",
+        "Jakarta/West"
+      ],
+      "expected_document_titles": [
+        "Jakarta"
+      ],
+      "expected_titles_found": [
+        "Jakarta"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "japan-rail",
+      "elapsed_host_ms": 144.1929,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Rail travel in Japan",
+        "Rail travel in Belgium",
+        "Rail travel in South Korea",
+        "Rail travel in New Zealand",
+        "Rail travel in Turkey",
+        "Rail travel in Russia"
+      ],
+      "expected_document_titles": [
+        "Rail travel in Japan"
+      ],
+      "expected_titles_found": [
+        "Rail travel in Japan"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "beach-packing",
+      "elapsed_host_ms": 100.0199,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Packing for beach travel",
+        "Beach",
+        "Taking children to the beach",
+        "Miami Beach/Mid Beach",
+        "Miami Beach/North Beach",
+        "Miami Beach/South Beach"
+      ],
+      "expected_document_titles": [
+        "Packing for beach travel"
+      ],
+      "expected_titles_found": [
+        "Packing for beach travel"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "china-visas",
+      "elapsed_host_ms": 50.38,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Visa requirements for China",
+        "China",
+        "Working in the United States",
+        "Czech Republic",
+        "Equatorial Guinea",
+        "Wenzhou"
+      ],
+      "expected_document_titles": [
+        "Visa requirements for China"
+      ],
+      "expected_titles_found": [
+        "Visa requirements for China"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "travel-basics",
+      "elapsed_host_ms": 39.4878,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Travel basics",
+        "Previous Featured travel topics",
+        "Travel topics",
+        "Travel topics index",
+        "Travel topics/sandbox"
+      ],
+      "expected_document_titles": [
+        "Travel basics"
+      ],
+      "expected_titles_found": [
+        "Travel basics"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "bangkok-airport",
+      "elapsed_host_ms": 251.7845,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Bangkok",
+        "Bangkok to Ho Chi Minh City overland",
+        "Bangkok/Ramkhamhaeng",
+        "Bangkok/Siam Square",
+        "Bangkok Metropolitan Area",
+        "One day in Bangkok"
+      ],
+      "expected_document_titles": [
+        "Bangkok"
+      ],
+      "expected_titles_found": [
+        "Bangkok"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    }
+  ]
+}

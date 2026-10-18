@@ -69,4 +69,18 @@ class RetrievalQueryTest {
             )
         )
     }
+
+    @Test
+    fun titleOverlapRecognizesReorderedTopicWordsAndKeepsSpecificTitlesDistinct() {
+        val travelTerms = RetrievalQuery.titleTerms("What are the basics of travel?")
+        assertEquals(2, RetrievalQuery.titleOverlap(travelTerms, "Travel basics"))
+        val bangkokTerms = RetrievalQuery.titleTerms(
+            "How do I get from the airport to Bangkok city?"
+        )
+        assertEquals(1, RetrievalQuery.titleOverlap(bangkokTerms, "Bangkok"))
+        assertEquals(0, RetrievalQuery.titleOverlap(bangkokTerms, "Chao Phraya Basin"))
+        val packingTerms = RetrievalQuery.titleTerms("What should I pack for a beach trip?")
+        assertEquals(2, RetrievalQuery.titleOverlap(packingTerms, "Packing for beach travel"))
+        assertEquals(1, RetrievalQuery.titleOverlap(packingTerms, "Beach"))
+    }
 }

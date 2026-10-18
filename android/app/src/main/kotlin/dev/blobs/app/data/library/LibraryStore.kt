@@ -23,7 +23,9 @@ class LibraryStore {
     private data class RetrievalCandidate(
         val evidence: Evidence,
         val passageId: Long,
-        val titlePriority: Boolean
+        val titlePriority: Boolean,
+        val titleOverlap: Int,
+        val directTitleMatch: Boolean
     )
 
     fun validate(file: File, catalogDigestPinned: Boolean = false) {
@@ -153,6 +155,7 @@ class LibraryStore {
         if (scope?.isEmpty() == true) return emptyList()
         val terms = searchTerms(question)
         if (terms.isEmpty()) return emptyList()
+        val titleTerms = RetrievalQuery.titleTerms(question)
         return packages.filter { it.kind == "library" && it.enabled }.flatMap { pack ->
             val ids = scope?.filter {
                 it.startsWith(pack.key + "/")
@@ -209,7 +212,9 @@ class LibraryStore {
                                     evidence = read(statement, pack),
                                     passageId = statement.getLong(10),
                                     titlePriority = statement.getLong(9) != 0L &&
-                                        statement.getText(0) in titlePriorityIds
+                                        statement.getText(0) in titlePriorityIds,
+                                    titleOverlap = 0,
+                                    directTitleMatch = statement.getText(0) in directTitleIds
                                 )
                             )
                         }
@@ -235,7 +240,9 @@ class LibraryStore {
                                     RetrievalCandidate(
                                         evidence = read(statement, pack),
                                         passageId = statement.getLong(9),
-                                        titlePriority = id in titlePriorityIds
+                                        titlePriority = id in titlePriorityIds,
+                                        titleOverlap = 0,
+                                        directTitleMatch = id in directTitleIds
                                     )
                                 )
                             }
@@ -244,12 +251,31 @@ class LibraryStore {
                 } else {
                     emptyList()
                 }
+                val overlapByTitle = mutableMapOf<String, Int>()
                 val ordered = buildList {
                     addAll(routed.filter { it.titlePriority })
                     ranked.firstOrNull()?.let(::add)
                     addAll(routed.filterNot { it.titlePriority })
                     addAll(ranked.drop(1))
                 }.distinctBy { it.passageId }
+                    .map { candidate ->
+                        candidate.copy(
+                            titleOverlap = overlapByTitle.getOrPut(candidate.evidence.title) {
+                                RetrievalQuery.titleOverlap(titleTerms, candidate.evidence.title)
+                            }
+                        )
+                    }
+                    .withIndex()
+                    .sortedWith(
+                        compareByDescending<IndexedValue<RetrievalCandidate>> {
+                            it.value.titleOverlap
+                        }.thenByDescending {
+                            it.value.directTitleMatch
+                        }.thenBy {
+                            it.index
+                        }
+                    )
+                    .map { it.value }
                 ordered.map { it.evidence }.withIndex().toList()
             }
         }.sortedBy { it.index }.map { it.value }.let { candidates ->

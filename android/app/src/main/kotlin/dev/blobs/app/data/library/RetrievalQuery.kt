@@ -21,6 +21,7 @@ object RetrievalQuery {
         "visit",
         "around"
     )
+    private val titleNoiseWords = setOf("city", "town")
     private val followUp = Regex(
         "^(and\\b|what about\\b|how about\\b|tell me more\\b|go on\\b|" +
             "why[?.!]*$|why (is|was) that\\b|" +
@@ -51,6 +52,22 @@ object RetrievalQuery {
         }
         return questionTerms.isNotEmpty() && questionTerms.all { it in titleWords }
     }
+
+    fun titleTerms(question: String): Set<String> = nameKey(question).split(' ')
+        .filter { it.length >= 2 && it !in stopWords && it !in titleNoiseWords }
+        .toSet()
+
+    fun titleOverlap(questionTerms: Set<String>, title: String): Int {
+        val titleWords = nameKey(title).split(' ').toSet()
+        return questionTerms.count { term ->
+            titleWords.any { word ->
+                word == term || isShortTitleExpansion(term, word)
+            }
+        }
+    }
+
+    private fun isShortTitleExpansion(term: String, word: String): Boolean =
+        term.length >= 3 && word.startsWith(term) && word.length - term.length <= 3
 
     data class NameCandidate(val key: String, val words: IntRange)
 
