@@ -77,7 +77,91 @@ def storage_values(packages, apk_bytes, import_headroom):
             for item in packages])
 
 
-def calculate(apk_report_path: Path, package_paths, installer_source: Path):
+def catalog_storage_values(source: bytes, apk_bytes: int):
+    """Bound storage for every model and library offered by the installed catalog."""
+    try:
+        catalog = json.loads(source.decode('utf-8'))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError('Invalid package catalog for storage accounting') from error
+    if not isinstance(catalog, dict) or catalog.get('format') != 1:
+        raise ValueError('Unsupported package catalog for storage accounting')
+    assets = catalog.get('packages')
+    if not isinstance(assets, list) or not assets:
+        raise ValueError('Package catalog has no assets')
+    rows = []
+    names = set()
+    model_count = library_count = 0
+    for item in assets:
+        if not isinstance(item, dict):
+            raise ValueError('Invalid package catalog entry')
+        name = item.get('file_name')
+        manifest = item.get('manifest')
+        download_format = item.get('download_format')
+        download_bytes = item.get('download_bytes')
+        download_sha256 = item.get('download_sha256')
+        manifest_hash = manifest.get('sha256') if isinstance(manifest, dict) else None
+        if (not isinstance(name, str) or not name or name.casefold() in names or
+                download_format not in {'blobs', 'gguf'} or
+                type(download_bytes) is not int or download_bytes <= 0 or
+                not isinstance(download_sha256, str) or
+                not re.fullmatch(r'[a-f0-9]{64}', download_sha256) or
+                not isinstance(manifest, dict) or type(manifest.get('bytes')) is not int or
+                manifest['bytes'] <= 0 or not isinstance(manifest_hash, str) or
+                not re.fullmatch(r'[a-f0-9]{64}', manifest_hash)):
+            raise ValueError(f'Invalid package catalog metadata: {name!r}')
+        if download_format == 'gguf' and download_bytes != manifest['bytes']:
+            raise ValueError(f'Raw GGUF download and installed payload sizes differ: {name}')
+        if manifest.get('kind') == 'model':
+            model_count += 1
+        elif manifest.get('kind') == 'library':
+            library_count += 1
+        else:
+            raise ValueError(f'Unsupported package kind in catalog: {name}')
+        names.add(name.casefold())
+        rows.append(dict(file=name, kind=manifest['kind'], role=item.get('role'),
+                         download_format=download_format, download_bytes=download_bytes,
+                         download_sha256=download_sha256, payload_bytes=manifest['bytes'],
+                         payload_sha256=manifest_hash))
+    if model_count == 0 or library_count == 0:
+        raise ValueError('Package catalog must offer models and libraries')
+
+    download_bytes = sum(row['download_bytes'] for row in rows)
+    payload_bytes = sum(row['payload_bytes'] for row in rows)
+    cumulative_payload = 0
+    sequential_steps = []
+    for row in rows:
+        sequential_steps.append(dict(
+            file=row['file'],
+            bytes=apk_bytes + cumulative_payload + row['download_bytes'] + row['payload_bytes'],
+            composition=('APK archive + previously installed catalog payloads + current download '
+                         '+ current staging payload'),
+        ))
+        cumulative_payload += row['payload_bytes']
+    known_steady = apk_bytes + payload_bytes
+    retained_sources_peak = apk_bytes + download_bytes + payload_bytes
+    return dict(
+        source_sha256=hashlib.sha256(source).hexdigest(),
+        asset_count=len(rows),
+        assets=rows,
+        all_catalog_options=dict(
+            downloadable_bytes=download_bytes,
+            installed_payload_bytes=payload_bytes,
+            known_steady_bytes=known_steady,
+            peak_sequential_import_bytes=max(step['bytes'] for step in sequential_steps),
+            sequential_import_steps=sequential_steps,
+            peak_if_every_download_is_retained_bytes=retained_sources_peak,
+            bounty_limit_bytes=BOUNTY_LIMIT_BYTES,
+            bounty_limit_margin_bytes=BOUNTY_LIMIT_BYTES - known_steady,
+            bounty_limit_passes=known_steady <= BOUNTY_LIMIT_BYTES,
+            importer_payload_cap_bytes=48_000_000_000,
+            importer_payload_margin_bytes=48_000_000_000 - payload_bytes,
+            importer_payload_cap_passes=payload_bytes < 48_000_000_000,
+        ),
+    )
+
+
+def calculate(apk_report_path: Path, package_paths, installer_source: Path,
+              catalog_path: Path | None = None):
     apk = read_apk_report(apk_report_path)
     if len(package_paths) != 2 or len(set(path.resolve() for path in package_paths)) != 2:
         raise ValueError('A release footprint requires one distinct model and one library package')
@@ -95,7 +179,7 @@ def calculate(apk_report_path: Path, package_paths, installer_source: Path):
     installed = storage['installed_payload_bytes']
     strict_cap_passes = installed < policy['installed_payload_cap_bytes']
     bounty_passes = storage['known_steady_bytes'] <= BOUNTY_LIMIT_BYTES
-    return dict(format=1, complete=True,
+    result = dict(format=2 if catalog_path is not None else 1, complete=True,
         scope=('Verified package bytes and deterministic storage accounting. APK bytes come from the '
                'specified verification report; Android installed APK expansion, conversations, exports, '
                'filesystem overhead and update coexistence are not measured. This is not device RAM or performance evidence.'),
@@ -118,11 +202,20 @@ def calculate(apk_report_path: Path, package_paths, installer_source: Path):
             update='Not included. Updating while an old edition remains installed needs old payload + incoming package + new staging payload.',
             importer=('Before each fresh import, the app requires device allocatable bytes to be '
                       'strictly greater than the listed threshold.')))
+    if catalog_path is not None:
+        result['catalog_storage'] = catalog_storage_values(catalog_path.read_bytes(), apk['bytes'])
+    return result
 
 
 def release_report(apk_report_path: Path, package_paths, installer_source: Path):
     """Create a path-independent footprint manifest suitable for a release kit."""
-    result = calculate(apk_report_path, package_paths, installer_source)
+    catalog_path = next((parent / 'app/src/main/assets/package-catalog.json'
+                         for parent in installer_source.resolve().parents
+                         if (parent / 'app/src/main/assets/package-catalog.json').is_file()), None)
+    if catalog_path is None:
+        raise ValueError('Could not locate the catalog paired with the installer source')
+    result = calculate(apk_report_path, package_paths, installer_source, catalog_path)
+    result['catalog_storage']['source_file'] = 'blobs/android/app/src/main/assets/package-catalog.json'
     result['apk_report']['file'] = 'APK-VERIFICATION.json'
     result['installer_policy']['file'] = (
         'android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt'

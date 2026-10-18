@@ -24,6 +24,19 @@ Write local run output under `reports/`; that directory is ignored by Git. Do no
 
 Mechanical checks can validate source-ID syntax, supplied-source bounds, retrieval ordering, and configured thresholds. They do not establish factual support by themselves. Review claim-to-source support, contradiction, insufficiency handling, and misleading citation placement before promoting a model or prompt.
 
+Model selection is family-neutral. Publisher benchmark tables can shortlist candidates, but Blobs should select a default only after running the same answer cases, corpus, prompt, and runtime on each candidate and reviewing source support, abstention, peak memory, and Android latency. A larger or publisher-described “frontier” model is not automatically the best phone experience.
+
+Export a completed host answer run into a reviewable, version-controlled result with its model/runtime/prompt fingerprints and mechanical metrics:
+
+```powershell
+uv run --locked python -m evaluation.answers.export_host_run `
+  --run reports/runs/host-answer-run.json `
+  --cases evaluation/cases/answer-validation-v2-40.json `
+  --output evaluation/results/host-answer-run.json
+```
+
+The exporter refuses to overwrite results and preserves raw answers, source passages, and failures. Its title-match and citation checks are diagnostics, not semantic quality scores, and host timings are not Android measurements.
+
 For an Android native model smoke comparison, stage each locked GGUF with `native/stage_android_model.py`, run `NativeInferenceTest#realModelStreamsAndCancellationStopsNativeLoop` at least three times per model, and validate every raw run with `native/audit_native_smoke.py`. Then compare the audited reports:
 
 ```powershell

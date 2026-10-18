@@ -20,7 +20,7 @@ from blobs_corpus.library import build_library, passage_spans
 from blobs_corpus.names import name_key
 from blobs_corpus.normalize import article, ArticleRedirect
 from blobs_corpus.package import package, verify_package
-from blobs_corpus.footprint import calculate
+from blobs_corpus.footprint import calculate, catalog_storage_values
 from blobs_corpus.records import documents
 from blobs_corpus.report import report as quality_report
 from blobs_corpus.curate import curate
@@ -387,6 +387,41 @@ class BuildTests(unittest.TestCase):
 
 
 class FootprintTests(unittest.TestCase):
+    def test_catalog_storage_covers_raw_models_alternatives_and_optional_libraries(self):
+        entries = [
+            dict(file_name='small.blobs', download_format='blobs', download_bytes=110,
+                 download_sha256='1' * 64, role='model',
+                 manifest=dict(kind='model', bytes=100, sha256='2' * 64)),
+            dict(file_name='frontier.gguf', download_format='gguf', download_bytes=300,
+                 download_sha256='3' * 64, role='model',
+                 manifest=dict(kind='model', bytes=300, sha256='4' * 64)),
+            dict(file_name='starter.blobs', download_format='blobs', download_bytes=40,
+                 download_sha256='5' * 64, role='starter',
+                 manifest=dict(kind='library', bytes=70, sha256='6' * 64)),
+            dict(file_name='extra.blobs', download_format='blobs', download_bytes=50,
+                 download_sha256='7' * 64, role='optional',
+                 manifest=dict(kind='library', bytes=150, sha256='8' * 64)),
+        ]
+        source = json.dumps(dict(format=1, packages=entries)).encode('utf-8')
+        result = catalog_storage_values(source, 50)
+        options = result['all_catalog_options']
+        self.assertEqual(result['asset_count'], 4)
+        self.assertEqual(options['downloadable_bytes'], 500)
+        self.assertEqual(options['installed_payload_bytes'], 620)
+        self.assertEqual(options['known_steady_bytes'], 670)
+        self.assertEqual(options['peak_if_every_download_is_retained_bytes'], 1170)
+        self.assertEqual(options['peak_sequential_import_bytes'], 750)
+        self.assertTrue(options['bounty_limit_passes'])
+        self.assertTrue(options['importer_payload_cap_passes'])
+
+    def test_catalog_storage_rejects_malformed_gguf_size_and_duplicate_names(self):
+        raw = dict(file_name='frontier.gguf', download_format='gguf', download_bytes=299,
+                   download_sha256='3' * 64, role='model',
+                   manifest=dict(kind='model', bytes=300, sha256='4' * 64))
+        source = json.dumps(dict(format=1, packages=[raw])).encode('utf-8')
+        with self.assertRaisesRegex(ValueError, 'Raw GGUF'):
+            catalog_storage_values(source, 50)
+
     def test_verified_release_artifacts_produce_import_and_steady_storage_bounds(self):
         with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
             root = Path(folder)

@@ -8,7 +8,12 @@ import re
 import zipfile
 
 from build_package import verify_package
-from blobs_corpus.footprint import BOUNTY_LIMIT_BYTES, installer_policy_text, storage_values
+from blobs_corpus.footprint import (
+    BOUNTY_LIMIT_BYTES,
+    catalog_storage_values,
+    installer_policy_text,
+    storage_values,
+)
 
 
 CHECKSUMS = "SHA256SUMS.txt"
@@ -267,9 +272,11 @@ def verify_kit(directory: Path) -> dict:
     policy_path = "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
     with zipfile.ZipFile(files[source_name]) as archive:
         policy_source = archive.read(f"blobs/{policy_path}")
+        catalog_source = archive.read("blobs/android/app/src/main/assets/package-catalog.json")
     policy = installer_policy_text(policy_source.decode("utf-8"), hashlib.sha256(policy_source).hexdigest())
     expected_policy = dict(file=policy_path, **policy)
-    if footprint.get("format") != 1 or footprint.get("complete") is not True:
+    footprint_format = footprint.get("format")
+    if footprint_format not in {1, 2} or footprint.get("complete") is not True:
         raise ValueError("FOOTPRINT.json is incomplete or unsupported")
     if footprint.get("apk_report") != dict(file="APK-VERIFICATION.json", sha256=digest(files["APK-VERIFICATION.json"]), value=apk_report):
         raise ValueError("FOOTPRINT.json does not identify this APK report")
@@ -289,6 +296,14 @@ def verify_kit(directory: Path) -> dict:
                                       policy["import_headroom_bytes"])
     if footprint.get("storage") != expected_storage:
         raise ValueError("FOOTPRINT.json storage values differ from delivered APK and packages")
+    expected_catalog_storage = None
+    if footprint_format == 2:
+        expected_catalog_storage = catalog_storage_values(catalog_source, apk_path.stat().st_size)
+        expected_catalog_storage["source_file"] = (
+            "blobs/android/app/src/main/assets/package-catalog.json"
+        )
+        if footprint.get("catalog_storage") != expected_catalog_storage:
+            raise ValueError("FOOTPRINT.json does not account for all in-app catalog assets")
     checks = footprint.get("checks", {})
     steady = apk_path.stat().st_size + expected_storage["installed_payload_bytes"]
     if (checks.get("bounty_storage_limit", {}).get("limit_bytes") != BOUNTY_LIMIT_BYTES or
@@ -306,7 +321,7 @@ def verify_kit(directory: Path) -> dict:
         if f"`{name}`" not in install:
             raise ValueError(f"INSTALL.md does not name delivered file: {name}")
 
-    return {
+    result = {
         "format": 1,
         "complete": True,
         "version": version,
@@ -343,6 +358,18 @@ def verify_kit(directory: Path) -> dict:
         "kit_bytes": sum(path.stat().st_size for path in files.values()),
         "scope": "Transport integrity, package payloads, recorded APK gates and source-kit composition; rerun verify_apk.py and apksigner for an independent APK inspection.",
     }
+    if expected_catalog_storage is not None:
+        result["footprint"].update(
+            all_catalog_installed_payload_bytes=expected_catalog_storage[
+                "all_catalog_options"]["installed_payload_bytes"],
+            all_catalog_known_steady_bytes=expected_catalog_storage[
+                "all_catalog_options"]["known_steady_bytes"],
+            all_catalog_bounty_limit_passes=expected_catalog_storage[
+                "all_catalog_options"]["bounty_limit_passes"],
+            all_catalog_peak_retained_download_bytes=expected_catalog_storage[
+                "all_catalog_options"]["peak_if_every_download_is_retained_bytes"],
+        )
+    return result
 
 
 def main():
