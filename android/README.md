@@ -1,6 +1,6 @@
 # Blobs Android
 
-Native offline research chat built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. The app imports local model and library packages, retrieves source passages, streams answers, and opens citations without leaving the app.
+Offline Android research chat compatible with GrapheneOS, built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. The app imports local model and library packages, retrieves source passages, streams answers, and opens citations without leaving the app.
 
 The APK has no Google Play Services dependency. First-run setup offers one-time, user-started downloads for pinned model weights and knowledge libraries. It verifies every downloaded byte against the catalog's pinned size and SHA-256. `.blobs` packages also validate their manifest; direct GGUF model downloads pass the GGUF validator before atomic installation. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available later in Settings for air-gapped setup and alternate packages.
 
@@ -26,7 +26,7 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Use `./gradlew` on Linux or macOS. `verify` runs formatting checks, lint, JVM tests, debug/release assembly, and instrumentation-test compilation. Run `connectedDebugAndroidTest` on a disposable emulator when platform behavior changes.
+Use `./gradlew` on Linux or macOS. `verify` runs formatting checks, lint, JVM tests, debug/release assembly, and instrumentation-test compilation. Run `connectedDebugAndroidTest` for Android platform integration checks.
 
 ## Prepare local packages
 

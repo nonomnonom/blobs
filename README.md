@@ -1,6 +1,6 @@
 # Blobs
 
-Blobs is an offline Android research assistant. It searches a local knowledge library, runs a local language model, and keeps conversations, source passages, and settings on the device. First-run setup can download the pinned model and library packages after the user taps Download; chat, search, inference, citations, and storage do not make network requests. Blobs has no account, cloud API, or Google Play Services dependency.
+Blobs is an offline Android research app compatible with GrapheneOS. It searches a local knowledge library, runs a local language model, and keeps conversations, source passages, and settings on the device. First-run setup can download the pinned model and library packages after the user taps Download; chat, search, inference, citations, and storage do not make network requests. Blobs has no account, cloud API, or Google Play Services dependency.
 
 The active implementation is in [`android/`](android/README.md). Reproducible corpus preparation and evaluation tools are in [`corpus/`](corpus/README.md).
 
