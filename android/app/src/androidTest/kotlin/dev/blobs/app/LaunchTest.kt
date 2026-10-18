@@ -3,6 +3,7 @@ package dev.blobs.app
 import android.content.pm.PackageManager
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.ViewModelProvider
+import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.PackageCatalog
 import dev.blobs.app.data.preferences.ThemeMode
@@ -146,18 +148,49 @@ class LaunchTest {
             .performScrollTo().assertIsDisplayed().performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
         if (model.packages.value.none { it.kind == "model" }) {
+            val profile = DeviceProfile.inspect(compose.activity, catalog)
+            val recommended = profile.recommendedModel
             compose.onAllNodesWithText(compose.activity.getString(R.string.progress_percent, 0))
                 .assertCountEquals(0)
             compose.onAllNodesWithText(compose.activity.getString(R.string.setup_model_step))
                 .assertCountEquals(0)
             compose.onNodeWithText(compose.activity.getString(R.string.setup_model_title))
                 .assertIsDisplayed()
+            compose.onNodeWithText(recommended.manifest.title).assertIsDisplayed()
+            compose.onNodeWithText(
+                compose.activity.getString(
+                    if (profile.recommendedModelFitsStorage) {
+                        R.string.recommended
+                    } else {
+                        R.string.model_smallest_option
+                    }
+                )
+            ).assertIsDisplayed()
+            compose.onNodeWithText(compose.activity.getString(R.string.download_selected_model))
+                .assertIsDisplayed()
+            if (!profile.recommendedModelFitsStorage) {
+                compose.onNodeWithText(
+                    compose.activity.getString(
+                        R.string.model_space_to_free,
+                        android.text.format.Formatter.formatFileSize(
+                            compose.activity,
+                            (
+                                catalog.requiredStorageBytes(recommended) -
+                                    profile.freeStorageBytes
+                                ).coerceAtLeast(0)
+                        )
+                    )
+                ).assertIsDisplayed()
+                compose.onNodeWithText(
+                    compose.activity.getString(R.string.download_selected_model)
+                ).assertIsNotEnabled()
+            }
             compose.onNodeWithText(catalog.models[1].manifest.title)
                 .performScrollTo().assertIsDisplayed()
             compose.onNodeWithText(catalog.models[2].manifest.title)
                 .performScrollTo().assertIsDisplayed()
             compose.onNodeWithText(compose.activity.getString(R.string.download_selected_model))
-                .performScrollTo().assertIsDisplayed()
+                .assertIsDisplayed()
             compose.onAllNodesWithText(compose.activity.getString(R.string.download_library))
                 .assertCountEquals(0)
             compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))

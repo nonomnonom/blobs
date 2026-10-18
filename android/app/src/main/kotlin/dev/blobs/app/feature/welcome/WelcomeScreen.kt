@@ -17,6 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -27,6 +30,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import dev.blobs.app.R
 import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.data.packages.PackageCatalog
@@ -41,8 +46,11 @@ fun WelcomeScreen(
     prepare: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val profile = androidx.compose.runtime.remember(context, catalog) {
-        DeviceProfile.inspect(context, catalog)
+    var profile by androidx.compose.runtime.remember(context, catalog) {
+        mutableStateOf(DeviceProfile.inspect(context, catalog))
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        profile = DeviceProfile.inspect(context, catalog)
     }
     Column(
         modifier =
@@ -109,7 +117,13 @@ fun WelcomeScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        stringResource(R.string.model_recommendation),
+                        stringResource(
+                            if (profile.recommendedModelFitsStorage) {
+                                R.string.model_recommendation
+                            } else {
+                                R.string.model_smallest_option
+                            }
+                        ),
                         style = MaterialTheme.typography.labelLarge
                     )
                     Text(
@@ -117,10 +131,18 @@ fun WelcomeScreen(
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        stringResource(
-                            R.string.model_recommendation_reason,
-                            fileSize(profile.recommendedModel.downloadBytes)
-                        ),
+                        if (profile.recommendedModelFitsStorage) {
+                            stringResource(
+                                R.string.model_recommendation_reason,
+                                fileSize(profile.recommendedModel.downloadBytes)
+                            )
+                        } else {
+                            stringResource(
+                                R.string.model_space_requirement,
+                                fileSize(catalog.requiredStorageBytes(profile.recommendedModel)),
+                                fileSize(profile.freeStorageBytes)
+                            )
+                        },
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

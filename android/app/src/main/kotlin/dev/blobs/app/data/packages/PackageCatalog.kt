@@ -79,7 +79,10 @@ class PackageCatalog internal constructor(
     }
 
     fun packageFitsStorage(asset: DownloadablePackage, freeStorageBytes: Long): Boolean =
-        freeStorageBytes >= asset.downloadBytes + asset.manifest.bytes + 64L * 1024 * 1024
+        freeStorageBytes >= requiredStorageBytes(asset)
+
+    fun requiredStorageBytes(asset: DownloadablePackage): Long =
+        asset.downloadBytes + asset.manifest.bytes + 64L * 1024 * 1024
 
     suspend fun refreshIfDue(): CatalogRefreshOutcome = refresh(force = false)
 
