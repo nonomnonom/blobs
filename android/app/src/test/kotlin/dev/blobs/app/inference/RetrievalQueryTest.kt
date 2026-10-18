@@ -47,4 +47,26 @@ class RetrievalQueryTest {
             RetrievalQuery.match("Describe zqxvblobsunobtainium.")
         )
     }
+
+    @Test
+    fun broadPlaceQuestionsCanPrioritizeThePlaceGuideWithoutOverridingSubtopics() {
+        assertTrue(
+            RetrievalQuery.isBroadTitleQuestion(
+                "What should I know before visiting Jakarta?",
+                "Jakarta"
+            )
+        )
+        assertTrue(
+            !RetrievalQuery.isBroadTitleQuestion(
+                "How can I travel around Japan by rail?",
+                "Japan"
+            )
+        )
+        assertTrue(
+            !RetrievalQuery.isBroadTitleQuestion(
+                "What should I pack for a beach trip?",
+                "Beach"
+            )
+        )
+    }
 }

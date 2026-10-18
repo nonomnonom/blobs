@@ -12,6 +12,15 @@ object RetrievalQuery {
         "more", "than", "when", "where", "who", "was", "were", "has", "had", "is", "of",
         "to", "by", "on", "in", "an", "as", "at", "if", "we", "us", "our", "describe"
     )
+    private val broadTitleIntentWords = stopWords + setOf(
+        "i",
+        "should",
+        "know",
+        "before",
+        "visiting",
+        "visit",
+        "around"
+    )
     private val followUp = Regex(
         "^(and\\b|what about\\b|how about\\b|tell me more\\b|go on\\b|" +
             "why[?.!]*$|why (is|was) that\\b|" +
@@ -34,6 +43,14 @@ object RetrievalQuery {
 
     fun nameKey(text: String): String =
         Regex("[\\p{L}\\p{N}]+").findAll(normalized(text)).joinToString(" ") { it.value }
+
+    fun isBroadTitleQuestion(question: String, title: String): Boolean {
+        val titleWords = nameKey(title).split(' ').toSet()
+        val questionTerms = nameKey(question).split(' ').filter {
+            it.length >= 2 && it !in broadTitleIntentWords
+        }
+        return questionTerms.isNotEmpty() && questionTerms.all { it in titleWords }
+    }
 
     data class NameCandidate(val key: String, val words: IntRange)
 

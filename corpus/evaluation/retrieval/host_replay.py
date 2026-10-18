@@ -16,8 +16,8 @@ from blobs_corpus.names import name_key
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = '38706635cdff3037029f1f49487f37f0f46d7fe8223e716ff9858bf97f444be5'
-QUERY_SHA256 = 'cbad4adfb4926deabef6171d7e157a8469e4db37d90ac590a6d1e659679c3357'
+LIBRARY_STORE_SHA256 = 'b8c903729746dac60d6e1928e74c545d3c67c29e8b7366ed69a9a1c717661ce9'
+QUERY_SHA256 = '05d0f567b5e3fd166c421b1c3a92110edfbc9a8bace6d09ba3ae053da6dedfc0'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
     'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',
@@ -25,6 +25,9 @@ STOP_WORDS = {
     'versus', 'could', 'do', 'did', 'be', 'it', 'into', 'also', 'tell', 'please', 'me',
     'more', 'than', 'when', 'where', 'who', 'was', 'were', 'has', 'had', 'is', 'of',
     'to', 'by', 'on', 'in', 'an', 'as', 'at', 'if', 'we', 'us', 'our', 'describe'
+}
+TITLE_INTENT_STOP_WORDS = STOP_WORDS | {
+    'i', 'should', 'know', 'before', 'visiting', 'visit', 'around'
 }
 
 
@@ -75,7 +78,11 @@ def verify_report_library(case, manifest):
         raise ValueError('Native retrieval evidence uses a different library package')
 
 
-def retrieve(database, manifest, query, *, priority_ids=()):
+def retrieve(database, manifest, query, *, priority_ids=(), broad_priority_ids=None):
+    route_ids = list(dict.fromkeys(priority_ids))
+    title_priority = set(
+        route_ids if broad_priority_ids is None else broad_priority_ids
+    )
     with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as db:
         db.execute('PRAGMA trusted_schema=OFF')
         db.execute('PRAGMA query_only=ON')
@@ -90,7 +97,7 @@ def retrieve(database, manifest, query, *, priority_ids=()):
                 JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?
                 AND (p.title!='' OR lower(trim(p.section)) NOT IN
                   ('references','external links','see also','further reading','bibliography'))
-                ORDER BY rank,p.id LIMIT 48'''
+                ORDER BY rank LIMIT 48'''
         else:
             statement = '''SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,
                 p.section,substr(d.body,s.start+1,s.end-s.start) AS body,p.title AS opening_title,
@@ -100,18 +107,37 @@ def retrieve(database, manifest, query, *, priority_ids=()):
                 JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?
                 AND (p.title!='' OR lower(trim(p.section)) NOT IN
                   ('references','external links','see also','further reading','bibliography'))
-                ORDER BY rank,p.id LIMIT 48'''
-        if priority_ids:
-            placeholders = ','.join('?' for _ in priority_ids)
-            statement = statement.replace(
-                'ORDER BY rank,p.id',
-                f"ORDER BY CASE WHEN p.title!='' AND d.id IN ({placeholders}) THEN 0 ELSE 1 END,rank,p.id",
-            )
-        candidates = [dict(row) for row in db.execute(statement, (query, *priority_ids))] if query else []
+                ORDER BY rank LIMIT 48'''
+        ranked = [dict(row) for row in db.execute(statement, (query,))] if query else []
+        routed = []
+        if route_ids:
+            placeholders = ','.join('?' for _ in route_ids)
+            if schema == 3:
+                route_sql = '''SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,
+                    p.section,substr(d.body,s.start+1,s.end-s.start) AS body,p.title AS opening_title,
+                    p.id AS passage_id,NULL AS score FROM passages p
+                    JOIN passage_spans s ON s.passage_id=p.id JOIN documents d ON d.id=p.doc_id
+                    WHERE d.id IN ('''
+            else:
+                route_sql = '''SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,
+                    p.section,p.body,p.title AS opening_title,p.id AS passage_id,NULL AS score
+                    FROM passages p JOIN documents d ON d.id=p.doc_id WHERE d.id IN ('''
+            routed = [dict(row) for row in db.execute(
+                route_sql + placeholders + ") AND p.title!='' ORDER BY p.id LIMIT 8",
+                route_ids,
+            )]
+        priority_rows = [row for row in routed if row['id'] in title_priority]
+        context_rows = [row for row in routed if row['id'] not in title_priority]
+        candidates = []
+        seen_passages = set()
+        for row in [*priority_rows, *ranked[:1], *context_rows, *ranked[1:]]:
+            if row['passage_id'] not in seen_passages:
+                candidates.append(row)
+                seen_passages.add(row['passage_id'])
     return select_evidence(candidates, manifest), candidates
 
 
-def direct_title_ids(database, question, titles):
+def direct_title_ids(database, question, titles, *, broad_only=False):
     """Return exact canonical-title routes selected by the Android name matcher."""
     if not titles:
         return []
@@ -148,7 +174,15 @@ def direct_title_ids(database, question, titles):
         occupied.update(positions)
         title = match[0]
         if key == name_key(title) and match[1] not in ids:
-            ids.append(match[1])
+            question_terms = [
+                word for word in name_key(question).split()
+                if len(word) >= 2 and word not in TITLE_INTENT_STOP_WORDS
+            ]
+            title_terms = set(name_key(title).split())
+            if not broad_only or (
+                question_terms and all(word in title_terms for word in question_terms)
+            ):
+                ids.append(match[1])
     return ids
 
 
@@ -268,9 +302,14 @@ def main():
             for case in baseline_cases:
                 verify_report_library(case, baseline)
                 query, titles = retrieval_spec(work / 'starter.sqlite', case['resolved_query'])
-                priority_ids = direct_title_ids(work / 'starter.sqlite', case['resolved_query'], titles)
-                evidence, _ = retrieve(work / 'starter.sqlite', baseline, query,
-                                       priority_ids=priority_ids)
+                route_ids = direct_title_ids(work / 'starter.sqlite', case['resolved_query'], titles)
+                priority_ids = direct_title_ids(
+                    work / 'starter.sqlite', case['resolved_query'], titles, broad_only=True
+                )
+                evidence, _ = retrieve(
+                    work / 'starter.sqlite', baseline, query, priority_ids=route_ids,
+                    broad_priority_ids=priority_ids,
+                )
                 same = evidence == case['evidence']
                 report['baseline_parity'].append(dict(case_id=case['case_id'], identical=same))
                 if not same:
@@ -285,9 +324,14 @@ def main():
         for case in cases:
             started = time.monotonic()
             query, titles = retrieval_spec(work / 'expanded.sqlite', case['resolved_query'])
-            priority_ids = direct_title_ids(work / 'expanded.sqlite', case['resolved_query'], titles)
-            evidence, candidates = retrieve(work / 'expanded.sqlite', candidate, query,
-                                            priority_ids=priority_ids)
+            route_ids = direct_title_ids(work / 'expanded.sqlite', case['resolved_query'], titles)
+            priority_ids = direct_title_ids(
+                work / 'expanded.sqlite', case['resolved_query'], titles, broad_only=True
+            )
+            evidence, candidates = retrieve(
+                work / 'expanded.sqlite', candidate, query, priority_ids=route_ids,
+                broad_priority_ids=priority_ids,
+            )
             same = evidence == case['evidence']
             report['results'].append(dict(case_id=case['case_id'], resolved_query=case['resolved_query'],
                                           fts_query=query,

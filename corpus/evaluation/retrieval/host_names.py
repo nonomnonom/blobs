@@ -87,8 +87,14 @@ def main():
             if baseline != case['library']:
                 raise ValueError('Native library identity differs')
             query, titles = expanded_query(baseline_db, case['resolved_query'], case['base_fts_query'], stop_words)
-            priority_ids = direct_title_ids(baseline_db, case['resolved_query'], titles)
-            evidence, _ = retrieve(baseline_db, baseline, query, priority_ids=priority_ids)
+            route_ids = direct_title_ids(baseline_db, case['resolved_query'], titles)
+            priority_ids = direct_title_ids(
+                baseline_db, case['resolved_query'], titles, broad_only=True
+            )
+            evidence, _ = retrieve(
+                baseline_db, baseline, query, priority_ids=route_ids,
+                broad_priority_ids=priority_ids,
+            )
             same = evidence == case['evidence']
             report['baseline_parity'].append(dict(case_id=case['case_id'], identical=same, matched_titles=titles))
             if not same:
@@ -106,8 +112,14 @@ def main():
             base_elapsed = (time.monotonic() - base_start) * 1000
             start = time.monotonic()
             query, titles = expanded_query(database, case['resolved_query'], case['base_fts_query'], stop_words)
-            priority_ids = direct_title_ids(database, case['resolved_query'], titles)
-            evidence, candidates = retrieve(database, candidate, query, priority_ids=priority_ids)
+            route_ids = direct_title_ids(database, case['resolved_query'], titles)
+            priority_ids = direct_title_ids(
+                database, case['resolved_query'], titles, broad_only=True
+            )
+            evidence, candidates = retrieve(
+                database, candidate, query, priority_ids=route_ids,
+                broad_priority_ids=priority_ids,
+            )
             report['results'].append(dict(case_id=case['case_id'], resolved_query=case['resolved_query'],
                                           fts_query=query, matched_titles=titles, evidence=evidence,
                                           base_policy=dict(fts_query=case['base_fts_query'], evidence=base_evidence,

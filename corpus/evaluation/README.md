@@ -56,7 +56,7 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v1-host.json
 ```
 
-The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Additional topic libraries should use their own package identity and topic-specific retrieval cases; they can share the same schema and retrieval implementation while keeping source licensing and update cadence independent.
+The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Reports include expected-source recall, first expected-source rank, mean reciprocal rank, and host elapsed time; these measure source retrieval and do not score generated answers. In the October 19 policy update, the same six travel cases retained 6/6 expected-source recall, moved top-1 coverage from 3/6 to 4/6, and raised mean reciprocal rank from 0.700 to 0.783. Host median retrieval time moved from 170.2 ms to 72.8 ms; p95 moved from 400.8 ms to 226.5 ms on the recorded Windows host. These are single-run host diagnostics, not phone-latency claims; the separate emulator run records five repetitions per query. Additional topic libraries should use their own package identity and topic-specific retrieval cases; they can share the same schema and retrieval implementation while keeping source licensing and update cadence independent.
 
 The U.S. outdoor-safety package uses the same retrieval-only check:
 
@@ -69,3 +69,23 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
 ```
 
 For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
+
+## Measure retrieval on an Android emulator
+
+`LibraryRetrievalBenchmarkTest` imports the exact pinned Travel package on-device, verifies its library payload SHA-256, then runs six fixed queries five times through the production `LibraryStore`. It reports source-title rank and elapsed time for each query, together with emulator, app APK, test APK, and package identities. It never runs a model or records answer text. From the repository root with an Android 16 x86_64 emulator connected:
+
+```powershell
+$adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
+& $adb shell mkdir -p /sdcard/Android/data/dev.blobs.app.debug/files
+& $adb push corpus/work/packages/wikivoyage-en-2026-09-v2.blobs `
+  /sdcard/Android/data/dev.blobs.app.debug/files/retrieval-benchmark-package.blobs
+Push-Location android
+.\gradlew.bat `
+  '-Pandroid.testInstrumentationRunnerArguments.class=dev.blobs.app.LibraryRetrievalBenchmarkTest' `
+  '-Pandroid.testInstrumentationRunnerArguments.retrievalPackage=/sdcard/Android/data/dev.blobs.app.debug/files/retrieval-benchmark-package.blobs' `
+  :app:connectedDebugAndroidTest --offline --console=plain
+Pop-Location
+& $adb logcat -d -s BlobsRetrievalBench:I
+```
+
+The structured report is emitted under the `BlobsRetrievalBench` log tag. Performance numbers describe only the recorded emulator; use the same package and case set for before-and-after comparisons. The v1/v2 host smoke results remain useful for repeatable host retrieval diagnostics and are not device-performance proxies.

@@ -73,11 +73,19 @@ def build_report(package_path: Path, cases_path: Path, work_directory: Path) -> 
         for case in cases:
             started = time.perf_counter_ns()
             query, titles = retrieval_spec(database, case['question'])
-            priority_ids = direct_title_ids(database, case['question'], titles)
-            evidence, _ = retrieve(database, manifest, query, priority_ids=priority_ids)
+            route_ids = direct_title_ids(database, case['question'], titles)
+            priority_ids = direct_title_ids(
+                database, case['question'], titles, broad_only=True
+            )
+            evidence, _ = retrieve(
+                database, manifest, query, priority_ids=route_ids,
+                broad_priority_ids=priority_ids,
+            )
             elapsed_ms = (time.perf_counter_ns() - started) / 1_000_000
             selected = list(dict.fromkeys(row['title'] for row in evidence))
             expected_titles = case['expected_document_titles']
+            ranks = [selected.index(title) + 1 if title in selected else None
+                     for title in expected_titles]
             results.append(dict(
                 case_id=case['id'],
                 elapsed_host_ms=elapsed_ms,
@@ -85,11 +93,14 @@ def build_report(package_path: Path, cases_path: Path, work_directory: Path) -> 
                 selected_document_titles=selected,
                 expected_document_titles=expected_titles,
                 expected_titles_found=[title for title in expected_titles if title in selected],
+                expected_title_ranks=ranks,
+                first_expected_title_rank=min((rank for rank in ranks if rank is not None), default=None),
             ))
 
     elapsed = [row['elapsed_host_ms'] for row in results]
     expected_count = sum(len(row['expected_document_titles']) for row in results)
     found_count = sum(len(row['expected_titles_found']) for row in results)
+    ranks = [rank for row in results for rank in row['expected_title_ranks']]
     return dict(
         format=1,
         complete=True,
@@ -109,6 +120,10 @@ def build_report(package_path: Path, cases_path: Path, work_directory: Path) -> 
             expected_titles=expected_count,
             expected_titles_found=found_count,
             expected_title_recall=found_count / expected_count,
+            expected_titles_at_rank_1=sum(rank == 1 for rank in ranks),
+            expected_title_mean_reciprocal_rank=(
+                sum(1 / rank for rank in ranks if rank is not None) / expected_count
+            ),
             host_elapsed_ms_median=statistics.median(elapsed),
             host_elapsed_ms_p95=sorted(elapsed)[math.ceil(len(elapsed) * 0.95) - 1],
         ),

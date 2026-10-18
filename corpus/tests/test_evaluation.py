@@ -284,6 +284,9 @@ class EvaluationInputTests(unittest.TestCase):
 
         self.assertTrue(report['complete'])
         self.assertEqual(report['summary']['expected_title_recall'], 1.0)
+        self.assertEqual(report['summary']['expected_titles_at_rank_1'], 1)
+        self.assertEqual(report['summary']['expected_title_mean_reciprocal_rank'], 1.0)
+        self.assertEqual(report['results'][0]['expected_title_ranks'], [1])
         serialized = json.dumps(report)
         self.assertNotIn('text', report['results'][0])
         self.assertNotIn('body', serialized)

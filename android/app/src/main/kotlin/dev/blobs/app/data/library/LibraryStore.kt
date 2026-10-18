@@ -8,6 +8,11 @@ import java.io.File
 
 class LibraryStore {
     private data class NameMatch(val key: String, val title: String, val id: String)
+    private data class RetrievalCandidate(
+        val evidence: Evidence,
+        val passageId: Long,
+        val titlePriority: Boolean
+    )
 
     fun validate(file: File, catalogDigestPinned: Boolean = false) {
         open(file.path).use { db ->
@@ -153,22 +158,66 @@ class LibraryStore {
                 val directTitleIds = titleMatches.filter {
                     it.key == RetrievalQuery.nameKey(it.title)
                 }.map { it.id }.distinct()
-                val titlePriority = if (directTitleIds.isEmpty()) {
-                    ""
-                } else {
-                    val placeholders = directTitleIds.joinToString(",") { "?" }
-                    "CASE WHEN p.title!='' AND d.id IN ($placeholders) THEN 0 ELSE 1 END, "
-                }
-                db.prepare(
-                    "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?$filter$contentFilter ORDER BY $titlePriority$ranking,p.id LIMIT 48"
+                val titlePriorityIds = titleMatches.filter {
+                    it.id in directTitleIds &&
+                        RetrievalQuery.isBroadTitleQuestion(question, it.title)
+                }.map { it.id }.toSet()
+                val titleFlag = if (current) "CASE WHEN p.title!='' THEN 1 ELSE 0 END" else "0"
+                val ranked = db.prepare(
+                    "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt,$titleFlag,p.id FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?$filter$contentFilter ORDER BY $ranking LIMIT 48"
                 ).use { statement ->
                     statement.bindText(1, query)
                     var parameter = 2
                     ids?.forEach { id -> statement.bindText(parameter++, id) }
-                    directTitleIds.forEach { id -> statement.bindText(parameter++, id) }
-                    buildList { while (statement.step()) add(read(statement, pack)) }
-                        .withIndex().toList()
+                    buildList {
+                        while (statement.step()) {
+                            add(
+                                RetrievalCandidate(
+                                    evidence = read(statement, pack),
+                                    passageId = statement.getLong(10),
+                                    titlePriority = statement.getLong(9) != 0L &&
+                                        statement.getText(0) in titlePriorityIds
+                                )
+                            )
+                        }
+                    }
                 }
+                val routed = if (current && directTitleIds.isNotEmpty()) {
+                    val routeFilter = directTitleIds.joinToString(",", "d.id IN (", ")") { "?" }
+                    val routeExcerpt = if (schema == 3L) {
+                        "substr(d.body,s.start+1,s.end-s.start)"
+                    } else {
+                        "p.body"
+                    }
+                    db.prepare(
+                        "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$routeExcerpt,p.id FROM passages p$spanJoin JOIN documents d ON d.id=p.doc_id WHERE $routeFilter AND p.title!='' ORDER BY p.id LIMIT 8"
+                    ).use { statement ->
+                        directTitleIds.forEachIndexed { index, id ->
+                            statement.bindText(index + 1, id)
+                        }
+                        buildList {
+                            while (statement.step()) {
+                                val id = statement.getText(0)
+                                add(
+                                    RetrievalCandidate(
+                                        evidence = read(statement, pack),
+                                        passageId = statement.getLong(9),
+                                        titlePriority = id in titlePriorityIds
+                                    )
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    emptyList()
+                }
+                val ordered = buildList {
+                    addAll(routed.filter { it.titlePriority })
+                    ranked.firstOrNull()?.let(::add)
+                    addAll(routed.filterNot { it.titlePriority })
+                    addAll(ranked.drop(1))
+                }.distinctBy { it.passageId }
+                ordered.map { it.evidence }.withIndex().toList()
             }
         }.sortedBy { it.index }.map { it.value }.let { candidates ->
             val perDocument = mutableMapOf<String, Int>()

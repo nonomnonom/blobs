@@ -66,8 +66,14 @@ def build_report(package_path: Path, cases_path: Path, work_directory: Path):
             raise ValueError('Package manifest changed during retrieval replay')
         for case in cases:
             query, titles = retrieval_spec(database, case['question'])
-            priority_ids = direct_title_ids(database, case['question'], titles)
-            evidence, _ = retrieve(database, manifest, query, priority_ids=priority_ids)
+            route_ids = direct_title_ids(database, case['question'], titles)
+            priority_ids = direct_title_ids(
+                database, case['question'], titles, broad_only=True
+            )
+            evidence, _ = retrieve(
+                database, manifest, query, priority_ids=route_ids,
+                broad_priority_ids=priority_ids,
+            )
             report['results'].append(dict(
                 case_id=case['id'], question=case['question'], variant='candidateLibrary',
                 resolved_query=case['question'], fts_query=query, matched_titles=titles,
