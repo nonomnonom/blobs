@@ -70,6 +70,16 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
         )
         val title = work.importTitle.ifBlank { work.pendingImport?.manifest?.title.orEmpty() }
         if (title.isNotEmpty()) Text(title, style = MaterialTheme.typography.titleMedium)
+        if (work.inAppDownload) {
+            SetupProgressBlock(
+                work.setupProgress(readyKinds),
+                if (work.packageKind == "model") {
+                    R.string.setup_model_step
+                } else {
+                    R.string.setup_library_step
+                }
+            )
+        }
         if (running) {
             Body(
                 when {
@@ -78,18 +88,7 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                     else -> R.string.import_body
                 }
             )
-            if (work.inAppDownload) {
-                SetupProgressBlock(
-                    work.setupProgress(readyKinds),
-                    if (work.packageKind == "model") {
-                        R.string.setup_model_step
-                    } else {
-                        R.string.setup_library_step
-                    }
-                )
-            } else {
-                SetupProgress(work.phaseProgress)
-            }
+            if (!work.inAppDownload) SetupProgress(work.phaseProgress)
             Text(
                 stringResource(
                     if (work.downloading) R.string.download_progress else R.string.import_progress,
