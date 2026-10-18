@@ -2,7 +2,7 @@
 
 Offline Android research chat compatible with GrapheneOS, built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. The app imports local model and library packages, retrieves source passages, streams answers, and opens citations without leaving the app.
 
-The APK has no Google Play Services dependency. First-run setup offers one-time, user-started downloads for pinned model weights and knowledge libraries. It verifies every downloaded byte against the catalog's pinned size and SHA-256. `.blobs` packages also validate their manifest; direct GGUF model downloads pass the GGUF validator before atomic installation. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available later in Settings for air-gapped setup and alternate packages.
+The APK has no Google Play Services dependency. First-run setup offers user-started downloads for pinned model weights and a starter knowledge library. It verifies every downloaded byte against the bundled catalog's pinned size and SHA-256. `.blobs` packages also validate their manifest; direct GGUF model downloads pass the GGUF validator before atomic installation. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available later in Settings for air-gapped setup and alternate packages. The target remote-catalog and Hugging Face asset architecture, including what is not implemented yet, is documented in [`../docs/architecture.md`](../docs/architecture.md).
 
 ## Requirements
 

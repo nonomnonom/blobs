@@ -1,8 +1,8 @@
 # Blobs
 
-Blobs is an offline Android research app compatible with GrapheneOS. It searches a local knowledge library, runs a local language model, and keeps conversations, source passages, and settings on the device. First-run setup can download the pinned model and library packages after the user taps Download; chat, search, inference, citations, and storage do not make network requests. Blobs has no account, cloud API, or Google Play Services dependency.
+Blobs is an offline Android research app compatible with GrapheneOS. It searches a local knowledge library, runs a local language model, and keeps conversations, source passages, and settings on the device. First-run setup can download the pinned model and library packages after the user taps Download; chat, search, inference, citations, and storage do not make network requests. Blobs has no account, hosted inference dependency, or Google Play Services dependency.
 
-The active implementation is in [`android/`](android/README.md). Reproducible corpus preparation and evaluation tools are in [`corpus/`](corpus/README.md).
+The active implementation is in [`android/`](android/README.md). Reproducible corpus preparation and evaluation tools are in [`corpus/`](corpus/README.md). The adopted asset distribution design is documented in [`docs/architecture.md`](docs/architecture.md).
 
 ## What is implemented
 
@@ -41,11 +41,12 @@ See the [Android build and import guide](android/README.md) and [corpus preparat
 | `android/` | Kotlin/Compose app, JNI runtime, package tools, tests, and Android notices |
 | `android/corpus/` | Versioned source records for the in-app starter library |
 | `corpus/` | uv-managed corpus extraction, normalization, packaging, evaluation, Git LFS records, and data notices |
+| `docs/` | Product architecture and asset distribution decisions |
 | `.github/` | CI, dependency updates, and pull-request template |
 
-## Distribution model
+## Asset distribution
 
-The APK is kept small. On first run, users can download the pinned model and library `.blobs` packages from the matching public GitHub release. Blobs checks the HTTPS source, exact archive size and SHA-256, then passes each package through the same manifest, payload, compatibility, and storage validation used for local imports. Downloads run only after an explicit tap; after setup, research works offline. Local package import remains available later in Settings for air-gapped setup and other editions. The release must publish the exact filenames and hashes pinned in `PackageCatalog.kt`.
+The adopted architecture keeps source and build automation on GitHub while Hugging Face hosts model and corpus assets and a small, curated asset catalog. Blobs checks that catalog while online, caches it for offline browsing, and offers compatible assets for explicit user-started downloads. Installed models, libraries, chats, and retrieval stay on device. The catalog refresh and Hugging Face corpus migration are not implemented in the current release yet; current behavior and the migration sequence are documented in [`docs/architecture.md`](docs/architecture.md).
 
 ## License
 
