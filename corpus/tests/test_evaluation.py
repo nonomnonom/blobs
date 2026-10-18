@@ -27,6 +27,7 @@ from evaluation.native.compare_native_smoke import compare as compare_native_smo
 from evaluation.retrieval.host_replay import retrieval_query, select_evidence, verify_report_library
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
 from evaluation.retrieval.title_coverage import inspect as inspect_titles
+from evaluation.retrieval.title_coverage import inspect_database as inspect_package_titles
 
 
 class EvaluationInputTests(unittest.TestCase):
@@ -431,6 +432,48 @@ class EvaluationInputTests(unittest.TestCase):
             questions.write_text(json.dumps(dict(cases=cases)), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'unique'):
                 inspect_titles(records, questions)
+
+    def test_package_title_inventory_counts_redirect_aliases_separately_from_missing_titles(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            database, questions = root / 'library.sqlite', root / 'questions.json'
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript('''
+                    PRAGMA user_version=3;
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT NOT NULL);
+                    CREATE TABLE document_names(name TEXT NOT NULL,doc_id TEXT NOT NULL,
+                      PRIMARY KEY(name,doc_id)) WITHOUT ROWID;
+                    INSERT INTO documents VALUES ('one','Existing title'),('two','A redirect destination');
+                    INSERT INTO document_names VALUES
+                      ('existing title','one'),('redirect name','two');
+                ''')
+            cases = [dict(id='coverage', category='reasoning',
+                          expected_titles=['Existing title', 'Redirect Name', 'Absent title'])]
+            questions.write_text(json.dumps(dict(cases=cases)), encoding='utf-8')
+            report = inspect_package_titles(database, questions)
+            self.assertEqual(report['source_kind'], 'sqlite-package-payload')
+            self.assertEqual(report['availability'], 'document title or normalized redirect alias')
+            self.assertEqual(report['results'][0]['present'], ['Existing title', 'Redirect Name'])
+            self.assertEqual(report['results'][0]['absent'], ['Absent title'])
+            self.assertEqual(report['absent_unique_titles'], ['Absent title'])
+
+    def test_package_title_inventory_supports_legacy_libraries_without_alias_table(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            database, questions = root / 'legacy.sqlite', root / 'questions.json'
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript('''
+                    PRAGMA user_version=1;
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT NOT NULL);
+                    INSERT INTO documents VALUES ('one','Existing title');
+                ''')
+            questions.write_text(json.dumps(dict(cases=[dict(
+                id='legacy', category='recall', expected_titles=['Existing title', 'Missing']
+            )])), encoding='utf-8')
+            report = inspect_package_titles(database, questions)
+            self.assertEqual(report['schema'], 1)
+            self.assertEqual(report['results'][0]['present'], ['Existing title'])
+            self.assertEqual(report['results'][0]['absent'], ['Missing'])
 
     def test_citation_metadata_cannot_be_replaced_by_article_footnotes(self):
         value = dict(status='answered', claims=[dict(text='Array x[2] has a value; an article printed [105].', sources=['S1'])])

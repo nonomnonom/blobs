@@ -30,7 +30,16 @@ Model selection is family-neutral. Publisher benchmark tables can shortlist cand
 
 The [matched Qwen3 1.7B and Gemma 4 E2B runs](results/) compare the same 40 cases, retrieved passages, current system prompt, product sampling profile, and llama.cpp revision on one Windows CPU host. Gemma was faster in this host run and abstained without a citation twice; Qwen cited all 40. Neither output set has a blind semantic grade, and these host timings do not predict Android performance. Source-level review found that retrieval can still cause a fluent model to cite a related but unsupported page. Use the raw passages and answers for claim-by-claim review before changing the default model.
 
-The [MiniLM reranking replay](results/top1m-minilm-rerank-2026-10-18.json) scores the same 48 FTS candidates per question from the native-parity Top 1M replay with a pinned quantized cross-encoder. Expected-title coverage rose from 33/40 to 35/40 for at least one target and from 26/40 to 27/40 for all targets; the lexical pool itself contains a target in 35/40 and every target in 30/40. These title counts are routing diagnostics, not answer quality. The “mass balance” question has no *Mass balance* candidate among the 48, and the reranked evidence remains unrelated. Median scoring time was 2.03 seconds per query on this Windows CPU host. This shows a small ranking gain with a material host cost, not a reason to add the reranker to the Android default. Reproduce it with:
+The [package title-availability report](results/top1m-title-availability-2026-10-18.json) checks the unpacked v3 SQLite payload, including redirect aliases; it found 51 of the benchmark's 52 distinct expected titles across 997,761 documents. *Mass balance* is absent both as a document and as a redirect alias. Rebuild the report after unpacking the exact package with:
+
+```powershell
+uv run --locked python -m evaluation.retrieval.title_coverage `
+  --database work/retrieval-diagnostic/expanded.sqlite `
+  --questions evaluation/cases/answer-validation-v2-40.json `
+  --output evaluation/results/top1m-title-availability-next.json
+```
+
+This inventory measures availability only, not passage relevance or answerability. The [MiniLM reranking replay](results/top1m-minilm-rerank-2026-10-18.json) scores the same 48 FTS candidates per question from the native-parity Top 1M replay with a pinned quantized cross-encoder. Expected-title coverage rose from 33/40 to 35/40 for at least one target and from 26/40 to 27/40 for all targets; the lexical pool itself contains a target in 35/40 and every target in 30/40. These title counts are routing diagnostics, not answer quality. Of the five cases with no expected target in the lexical top 48, one is a corpus-coverage gap and four are retrieval misses. The reranker cannot recover a source that the corpus does not contain, and it still chooses unrelated evidence for that case. Median scoring time was 2.03 seconds per query on this Windows CPU host. This shows a small ranking gain with a material host cost, not a reason to add the reranker to the Android default. Reproduce it with:
 
 ```powershell
 uv run --locked --group evaluation python -m evaluation.retrieval.host_rerank `
