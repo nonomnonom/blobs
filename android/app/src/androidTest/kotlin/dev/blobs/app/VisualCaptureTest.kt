@@ -52,11 +52,16 @@ class VisualCaptureTest {
         }
         compose.activityRule.scenario.recreate()
         compose.waitUntil(10_000) {
-            compose.onAllNodesWithText(text(R.string.prepare)).fetchSemanticsNodes().isNotEmpty() ||
+            compose.onAllNodesWithText(
+                text(R.string.choose_model)
+            ).fetchSemanticsNodes().isNotEmpty() ||
                 compose.onAllNodesWithText(text(R.string.question_hint)).fetchSemanticsNodes()
                     .isNotEmpty()
         }
-        if (compose.onAllNodesWithText(text(R.string.prepare)).fetchSemanticsNodes().isNotEmpty()) {
+        if (compose.onAllNodesWithText(
+                text(R.string.choose_model)
+            ).fetchSemanticsNodes().isNotEmpty()
+        ) {
             capture("welcome")
         }
         runBlocking {

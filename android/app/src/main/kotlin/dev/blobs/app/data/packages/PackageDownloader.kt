@@ -37,17 +37,17 @@ class PackageDownloader(
             val previous = File(root, "${asset.fileName}.previous")
             if (!target.exists() && previous.exists()) previous.renameTo(target)
             if (target.exists() &&
-                target.length() == asset.archiveBytes &&
-                sha256(target) == asset.archiveSha256
+                target.length() == asset.downloadBytes &&
+                sha256(target) == asset.downloadSha256
             ) {
                 previous.delete()
-                progress(asset.archiveBytes, asset.archiveBytes)
+                progress(asset.downloadBytes, asset.downloadBytes)
                 return@withContext target
             }
 
             val partial = File(root, "${asset.fileName}.part")
             val resume = File(root, "${asset.fileName}.resume")
-            if (!partial.exists() || partial.length() > asset.archiveBytes || !resume.isFile) {
+            if (!partial.exists() || partial.length() > asset.downloadBytes || !resume.isFile) {
                 partial.delete()
                 resume.delete()
             }
@@ -56,11 +56,11 @@ class PackageDownloader(
             }?.readText(Charsets.UTF_8)?.takeIf(String::isNotBlank)
             var offset = partial.takeIf { it.isFile }?.length() ?: 0L
             if (resumeTag == null) offset = 0L
-            if (offset == asset.archiveBytes) {
-                if (sha256(partial) == asset.archiveSha256) {
+            if (offset == asset.downloadBytes) {
+                if (sha256(partial) == asset.downloadSha256) {
                     activate(partial, target, previous)
                     resume.delete()
-                    progress(asset.archiveBytes, asset.archiveBytes)
+                    progress(asset.downloadBytes, asset.downloadBytes)
                     return@withContext target
                 }
                 partial.delete()
@@ -69,7 +69,7 @@ class PackageDownloader(
             }
 
             val available = availableBytes()
-            val required = asset.archiveBytes - offset + asset.manifest.bytes + 64L * 1024 * 1024
+            val required = asset.downloadBytes - offset + asset.manifest.bytes + 64L * 1024 * 1024
             if (available < required) throw IOException("STORAGE")
 
             var currentUrl = URL(asset.url)
@@ -113,7 +113,7 @@ class PackageDownloader(
                         active.getHeaderField("Content-Range")
                             ?: throw IOException("DOWNLOAD_RANGE")
                     if (!range.startsWith("bytes $offset-") ||
-                        range.substringAfterLast('/').toLongOrNull() != asset.archiveBytes ||
+                        range.substringAfterLast('/').toLongOrNull() != asset.downloadBytes ||
                         resumeTag == null
                     ) {
                         throw IOException("DOWNLOAD_RANGE")
@@ -130,7 +130,7 @@ class PackageDownloader(
                     throw IOException("DOWNLOAD_CHANGED")
                 }
                 if (tag != null) resume.writeText(tag, Charsets.UTF_8) else resume.delete()
-                val remaining = asset.archiveBytes - offset
+                val remaining = asset.downloadBytes - offset
                 val contentLength = active.getHeaderFieldLong("Content-Length", -1L)
                 if (contentLength >= 0 &&
                     contentLength != remaining
@@ -147,23 +147,27 @@ class PackageDownloader(
                             val read = input.read(buffer)
                             if (read < 0) break
                             count += read
-                            if (count > asset.archiveBytes) throw IOException("DOWNLOAD_SIZE")
+                            if (count > asset.downloadBytes) throw IOException("DOWNLOAD_SIZE")
                             output.write(buffer, 0, read)
-                            progress(count, asset.archiveBytes)
+                            progress(count, asset.downloadBytes)
                         }
                         output.flush()
                         output.fd.sync()
                     }
                 }
-                if (partial.length() != asset.archiveBytes) throw IOException("DOWNLOAD_INCOMPLETE")
-                if (sha256(partial) != asset.archiveSha256) {
+                if (partial.length() !=
+                    asset.downloadBytes
+                ) {
+                    throw IOException("DOWNLOAD_INCOMPLETE")
+                }
+                if (sha256(partial) != asset.downloadSha256) {
                     partial.delete()
                     resume.delete()
                     throw IOException("DOWNLOAD_CHECKSUM")
                 }
                 activate(partial, target, previous)
                 resume.delete()
-                progress(asset.archiveBytes, asset.archiveBytes)
+                progress(asset.downloadBytes, asset.downloadBytes)
                 target
             } finally {
                 connection?.disconnect()
@@ -173,7 +177,9 @@ class PackageDownloader(
     fun removeInstalledArchive(uri: Uri) {
         if (uri.scheme != "file") return
         val source = File(requireNotNull(uri.path)).canonicalFile
-        if (source.parentFile == root.canonicalFile && source.extension == "blobs") source.delete()
+        if (source.parentFile == root.canonicalFile && source.extension in setOf("blobs", "gguf")) {
+            source.delete()
+        }
     }
 
     private fun activate(partial: File, target: File, previous: File) {
@@ -206,7 +212,12 @@ class PackageDownloader(
             "github.com",
             "release-assets.githubusercontent.com",
             "objects.githubusercontent.com",
-            "github-releases.githubusercontent.com"
+            "github-releases.githubusercontent.com",
+            "huggingface.co",
+            "cdn-lfs.huggingface.co",
+            "cdn-lfs-us-1.hf.co",
+            "us.aws.cdn.hf.co",
+            "cas-bridge.xethub.hf.co"
         )
     }
 }

@@ -24,6 +24,7 @@ PreparedChatPrompt prepare_chat_prompt(std::string_view architecture, const char
     if (!chat_template) throw std::runtime_error("MODEL_TEMPLATE");
     const std::string_view format(chat_template);
     const bool qwen35 = architecture == "qwen35";
+    const bool gemma4 = architecture == "gemma4";
     if (qwen35 && format != qwen35_text_template && format != qwen35_2b_text_template)
         throw std::runtime_error("MODEL_TEMPLATE");
     SamplingSettings sampling;
@@ -37,6 +38,13 @@ PreparedChatPrompt prepare_chat_prompt(std::string_view architecture, const char
     if (qwen35) {
         trim_edges(system);
         trim_edges(user);
+    }
+    if (gemma4) {
+        trim_edges(system);
+        trim_edges(user);
+        std::string prompt = "<|turn>system\n" + system + "<turn|>\n";
+        prompt += "<|turn>user\n" + user + "<turn|>\n<|turn>model\n";
+        return {std::move(prompt), false, sampling};
     }
     const llama_chat_message messages[] = {{"system", system.c_str()}, {"user", user.c_str()}};
     const int length = llama_chat_apply_template(chat_template, messages, 2, true, nullptr, 0);

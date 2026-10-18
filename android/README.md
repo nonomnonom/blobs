@@ -2,7 +2,7 @@
 
 Native offline research chat built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. The app imports local model and library packages, retrieves source passages, streams answers, and opens citations without leaving the app.
 
-The APK has no Google Play Services dependency. First-run setup offers one-time, user-started downloads for the pinned model and knowledge library. The app verifies the complete package archive and its manifest before using the existing package installer. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available later in Settings for air-gapped setup and alternate packages.
+The APK has no Google Play Services dependency. First-run setup offers one-time, user-started downloads for pinned model weights and knowledge libraries. It verifies every downloaded byte against the catalog's pinned size and SHA-256. `.blobs` packages also validate their manifest; direct GGUF model downloads pass the GGUF validator before atomic installation. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available later in Settings for air-gapped setup and alternate packages.
 
 ## Requirements
 
@@ -30,14 +30,14 @@ Use `./gradlew` on Linux or macOS. `verify` runs formatting checks, lint, JVM te
 
 ## Prepare local packages
 
-The builders never download implicitly. `prepare_model.py` downloads only the selected pinned model and verifies its exact size and SHA-256 before packaging it.
+The builders never download implicitly. `prepare_model.py` downloads only the selected pinned fallback model and verifies its exact size and SHA-256 before packaging it. First-run Gemma 4 model downloads use the exact repository revision, file size, and SHA-256 pinned in `app/src/main/assets/package-catalog.json`.
 
 ```powershell
 uv run --locked --project ../corpus python tools/prepare_model.py small
 uv run --locked --project ../corpus python tools/build_package.py library corpus/starter.documents.jsonl packages/wikipedia-starter.blobs --id wikipedia-starter --version 2026-10-17.3 --title "Science and everyday questions" --license "CC BY-SA 4.0" --origin "https://en.wikipedia.org/"
 ```
 
-Generated packages are ignored by Git. The recommended first-run packages are offered directly in setup. Alternate packages can be imported from **Settings → Models and libraries → Add from this phone**. Every package goes through the same manifest, payload hash, compatibility, storage, and SQLite/GGUF validation before activation.
+Generated packages are ignored by Git. The recommended first-run models and libraries are offered directly in setup. Alternate `.blobs` packages can be imported from **Settings → Models and libraries → Add from this phone**. Every download goes through pinned byte count and hash checks; `.blobs` packages also validate manifests, and all payloads pass storage and SQLite/GGUF validation before activation.
 
 ## Code ownership
 

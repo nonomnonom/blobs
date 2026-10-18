@@ -1,29 +1,92 @@
 {
   "format": 1,
-  "release_tag": "v0.3.0",
+  "release_tag": "v0.3.1",
   "packages": [
     {
-      "file_name": "qwen3-small.blobs",
-      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.0/qwen3-small.blobs",
-      "archive_bytes": 1834426564,
-      "archive_sha256": "d6a0ab88f4016a07a97d2d0eac518c7973db7ce59cadba8e6e826a3c34210ee5",
+      "file_name": "qwen3-integration.blobs",
+      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.1/qwen3-integration.blobs",
+      "download_format": "blobs",
+      "download_bytes": 639447235,
+      "download_sha256": "0089dba9c9af05ebecb3a0110866f0716f439da2cb6d7d90a66a911062305e43",
       "manifest": {
         "format": 1,
-        "id": "qwen3-17b-q8",
-        "version": "90862c4b",
+        "id": "qwen3-06b-q8",
+        "version": "23749fef",
         "kind": "model",
-        "title": "Qwen3 1.7B Q8",
-        "bytes": 1834426016,
-        "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+        "title": "Qwen3 0.6B Q8",
+        "bytes": 639446688,
+        "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031",
         "license": "Apache-2.0",
-        "origin": "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/tree/90862c4b9d2787eaed51d12237eafdfe7c5f6077"
-      }
+        "origin": "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/tree/23749fefcc72300e3a2ad315e1317431b06b590a"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 4096
+    },
+    {
+      "file_name": "gemma-4-E2B_q4_0-it.gguf",
+      "url": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/675cff42a74c774d6cb76f76d8eacb49b48c9b93/gemma-4-E2B_q4_0-it.gguf",
+      "download_format": "gguf",
+      "download_bytes": 3349516256,
+      "download_sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+      "manifest": {
+        "format": 1,
+        "id": "gemma4-e2b-q4",
+        "version": "675cff42",
+        "kind": "model",
+        "title": "Gemma 4 E2B · Frontier",
+        "bytes": 3349516256,
+        "sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/tree/675cff42a74c774d6cb76f76d8eacb49b48c9b93"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 8192
+    },
+    {
+      "file_name": "gemma-4-E4B_q4_0-it.gguf",
+      "url": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/4b4a2c1d584be7264f87aac328a1bc739ce81b6c/gemma-4-E4B_q4_0-it.gguf",
+      "download_format": "gguf",
+      "download_bytes": 5154941280,
+      "download_sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+      "manifest": {
+        "format": 1,
+        "id": "gemma4-e4b-q4",
+        "version": "4b4a2c1d",
+        "kind": "model",
+        "title": "Gemma 4 E4B · Frontier",
+        "bytes": 5154941280,
+        "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/tree/4b4a2c1d584be7264f87aac328a1bc739ce81b6c"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 12288
+    },
+    {
+      "file_name": "wikipedia-starter-schema3.blobs",
+      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.1/wikipedia-starter-schema3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 3828868,
+      "download_sha256": "d893c8b5c21596d11db3260b77b8be88cf3cab813e34065f4c0a1bfeacfe0ff9",
+      "manifest": {
+        "format": 1,
+        "id": "wikipedia-starter",
+        "version": "2026-10-17.5",
+        "kind": "library",
+        "title": "Science and everyday questions",
+        "bytes": 8757248,
+        "sha256": "141b449c10fc5a76428f616c413f7066633b5fe426f84a9d5d2f45612b989a54",
+        "license": "CC BY-SA 4.0; adapted plain text; individual article attribution included",
+        "origin": "https://en.wikipedia.org/wiki/Wikipedia:Copyrights"
+      },
+      "role": "starter"
     },
     {
       "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
-      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.0/wikipedia-en-top1m-mini-2026-04.blobs",
-      "archive_bytes": 1804630820,
-      "archive_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
+      "url": "https://github.com/nonomnonom/blobs/releases/download/v0.3.1/wikipedia-en-top1m-mini-2026-04.blobs",
+      "download_format": "blobs",
+      "download_bytes": 1804630820,
+      "download_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
       "manifest": {
         "format": 1,
         "id": "wikipedia-top1m-mini",
@@ -34,7 +97,8 @@
         "sha256": "4ae8d2b3315ffab81bef6968ff84934a987d28843d15caa3a2d920756228e395",
         "license": "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs",
         "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim"
-      }
+      },
+      "role": "optional"
     }
   ]
 }

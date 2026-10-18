@@ -6,6 +6,7 @@ import android.os.ParcelFileDescriptor
 import android.os.StatFs
 import android.os.SystemClock
 import android.util.AtomicFile
+import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
@@ -200,6 +201,7 @@ class NativeInferenceTest {
     }
 
     private fun recordAnswer(verifiedFile: Boolean) = runBlocking {
+        val foreground = ActivityScenario.launch(MainActivity::class.java)
         val args = InstrumentationRegistry.getArguments()
         val modelPath = requireNotNull(
             args.getString(if (verifiedFile) "modelFile" else "modelPackage")
@@ -393,6 +395,7 @@ class NativeInferenceTest {
             "My next question stays here",
             container.database.conversations().find(id)?.draft
         )
+        foreground.close()
     }
 
     @Test

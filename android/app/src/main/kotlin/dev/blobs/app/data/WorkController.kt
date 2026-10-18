@@ -9,6 +9,7 @@ import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.BlobsDatabase
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.local.TurnEntity
+import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.data.packages.PackageDownloader
 import dev.blobs.app.data.packages.PackageInstaller
@@ -175,6 +176,7 @@ class WorkController(
                     If sources support only part of the answer, give that part and say what they do not establish. A short partial answer is better than filling gaps.
                     Cite only passages that support the nearby claim. Do not invent facts, URLs, references, or measurements.
                     Include at most three concise claims. Use numbers only when needed and copied exactly from one source. Never combine separate measurements.
+                    Write in plain text. Do not use Markdown or LaTeX. Do not include measurements unless the question asks for them; if a source has garbled units, leave the measurement out.
                     You cannot browse or know current events. Be concise, under 120 words. /no_think
                 """.trimIndent()
                 val prompt = buildString {
@@ -350,12 +352,12 @@ class WorkController(
         mutable.value = WorkState(
             ready = true,
             busy = true,
-            total = asset.archiveBytes,
+            total = asset.downloadBytes,
             importTitle = asset.manifest.title,
             downloading = true,
             inAppDownload = true,
             packageKind = asset.manifest.kind,
-            downloadTotal = asset.archiveBytes,
+            downloadTotal = asset.downloadBytes,
             installTotal = asset.manifest.bytes
         )
         job = scope.launch {
@@ -364,7 +366,9 @@ class WorkController(
                     mutable.value = mutable.value.copy(progress = bytes, total = total)
                 }
                 val uri = Uri.fromFile(file)
-                require(installer.inspect(uri) == asset.manifest) { "PACKAGE_MANIFEST" }
+                if (asset.format == DownloadFormat.BLOBS) {
+                    require(installer.inspect(uri) == asset.manifest) { "PACKAGE_MANIFEST" }
+                }
                 mutable.value = mutable.value.copy(
                     progress = 0,
                     total = asset.manifest.bytes,

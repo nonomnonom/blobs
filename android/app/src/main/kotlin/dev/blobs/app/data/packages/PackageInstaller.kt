@@ -31,6 +31,7 @@ class PackageInstaller(
 ) {
     private val mutations = Mutex()
     private val root = File(context.filesDir, "packages").apply { mkdirs() }
+    private val downloadRoot = File(context.filesDir, "package-downloads").canonicalFile
     private val journal = AtomicFile(File(context.filesDir, "pending-import.json"))
 
     fun pending(): PendingImport? {
@@ -76,6 +77,14 @@ class PackageInstaller(
     ): PackageEntity = withContext(Dispatchers.IO) {
         mutations.withLock {
             dao.all().find { it.key == expected.key }?.let { return@withContext it }
+            val rawModel =
+                uri.scheme == "file" && File(requireNotNull(uri.path)).extension == "gguf"
+            if (rawModel) {
+                val source = File(requireNotNull(uri.path)).canonicalFile
+                require(source.parentFile == downloadRoot && expected.kind == "model") {
+                    "MODEL_SOURCE"
+                }
+            }
             val storage = context.getSystemService(StorageManager::class.java)
             val volume = storage.getUuidForPath(root)
             check(dao.all().sumOf { it.bytes } + expected.bytes < 48_000_000_000L) { "FOOTPRINT" }
@@ -92,17 +101,26 @@ class PackageInstaller(
             storage.allocateBytes(volume, required)
             record(uri, expected)
             try {
-                stream(uri).use { archive ->
-                    require(readManifest(archive) == expected) { "MANIFEST_CHANGED" }
-                    val entry = archive.nextEntry ?: error("MISSING_PAYLOAD")
-                    require(entry.name == expected.fileName && !entry.isDirectory)
-                    val digest = MessageDigest.getInstance("SHA-256")
-                    var count = 0L
+                val digest = MessageDigest.getInstance("SHA-256")
+                var count = 0L
+                val archive = if (rawModel) null else stream(uri)
+                val input = if (rawModel) {
+                    File(requireNotNull(uri.path)).inputStream()
+                } else {
+                    require(readManifest(requireNotNull(archive)) == expected) {
+                        "MANIFEST_CHANGED"
+                    }
+                    requireNotNull(archive).also {
+                        val entry = it.nextEntry ?: error("MISSING_PAYLOAD")
+                        require(entry.name == expected.fileName && !entry.isDirectory)
+                    }
+                }
+                input.use { source ->
                     java.io.FileOutputStream(staging, resumeBytes > 0).use { output ->
                         val buffer = ByteArray(256 * 1024)
                         while (true) {
                             currentCoroutineContext().ensureActive()
-                            val length = archive.read(buffer)
+                            val length = source.read(buffer)
                             if (length < 0) break
                             count += length
                             require(count <= expected.bytes) { "SIZE" }
@@ -116,14 +134,14 @@ class PackageInstaller(
                         }
                         output.fd.sync()
                     }
-                    require(
-                        count == expected.bytes &&
-                            digest.digest().joinToString("") {
-                                "%02x".format(it)
-                            } == expected.sha256
-                    ) { "CHECKSUM" }
-                    require(archive.nextEntry == null) { "EXTRA_FILES" }
+                    if (!rawModel) require(archive?.nextEntry == null) { "EXTRA_FILES" }
                 }
+                require(
+                    count == expected.bytes &&
+                        digest.digest().joinToString("") {
+                            "%02x".format(it)
+                        } == expected.sha256
+                ) { "CHECKSUM" }
                 if (resumeBytes > 0) {
                     val hash = MessageDigest.getInstance("SHA-256")
                     staging.inputStream().use { input ->

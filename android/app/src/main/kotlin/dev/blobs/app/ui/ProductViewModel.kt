@@ -124,7 +124,18 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         navigate(Page.SETUP)
     }
 
-    fun finishSetup() = goHome()
+    fun finishSetup() {
+        if (selectedModel() == null || !hasStarterLibrary()) {
+            navigate(Page.SETUP)
+            return
+        }
+        goHome()
+    }
+
+    private fun hasStarterLibrary(): Boolean = packages.value.any {
+        it.packageId == catalog.starterLibrary.manifest.id &&
+            it.version == catalog.starterLibrary.manifest.version
+    }
 
     fun finishImport() {
         container.work.clearNotice()
@@ -175,7 +186,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
 
     fun send(question: String = mutable.value.draft, widen: Boolean = false) = action {
         if (work.value.busy || question.isBlank()) return@action
-        if (packages.value.none { it.kind == "library" }) {
+        if (!hasStarterLibrary()) {
             navigate(Page.SETUP)
             return@action
         }
@@ -312,6 +323,9 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
 
     fun downloadPackage(asset: DownloadablePackage) {
         if (container.work.downloadAndInstall(asset)) {
+            if (asset.manifest.kind == "model") {
+                action { container.preferences.selectModel(asset.manifest.key) }
+            }
             mutable.value = mutable.value.copy(importOrigin = mutable.value.page)
             navigate(Page.IMPORT)
         }

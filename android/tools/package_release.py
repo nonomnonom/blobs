@@ -67,12 +67,13 @@ def verify_catalog_packages(model, library, version):
     catalog = json.loads(catalog_path.read_text(encoding='utf-8'))
     if catalog.get('release_tag') != f'v{version}' or catalog.get('format') != 1:
         raise ValueError('APK version differs from the pinned download catalog')
-    expected = {item['manifest']['kind']: item for item in catalog.get('packages', [])}
+    expected = {item['file_name']: item for item in catalog.get('packages', [])
+                if item.get('download_format') == 'blobs'}
     for path, kind in ((model, 'model'), (library, 'library')):
-        item = expected.get(kind)
-        if item is None or path.name != item['file_name']:
+        item = expected.get(path.name)
+        if item is None or item['manifest']['kind'] != kind:
             raise ValueError(f'Release {kind} filename differs from the in-app download catalog')
-        if path.stat().st_size != item['archive_bytes'] or digest(path) != item['archive_sha256']:
+        if path.stat().st_size != item['download_bytes'] or digest(path) != item['download_sha256']:
             raise ValueError(f'Release {kind} archive differs from the in-app download catalog')
         if check_package(path) != item['manifest']:
             raise ValueError(f'Release {kind} manifest differs from the in-app download catalog')

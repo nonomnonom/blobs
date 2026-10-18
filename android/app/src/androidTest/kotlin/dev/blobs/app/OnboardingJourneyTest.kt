@@ -62,17 +62,17 @@ class OnboardingJourneyTest {
                 compose.runOnUiThread { model.navigate(Page.WELCOME) }
             }
             if (compose.onAllNodesWithText(
-                    text(R.string.prepare)
+                    text(R.string.diagnosis_title)
                 ).fetchSemanticsNodes().isNotEmpty()
             ) {
                 capture("01-welcome")
                 compose.onAllNodesWithText(text(R.string.have_local_packages)).assertCountEquals(0)
-                compose.onNodeWithText(text(R.string.prepare)).performScrollTo().performClick()
+                compose.onNodeWithText(text(R.string.choose_model)).performScrollTo().performClick()
             } else {
                 compose.runOnUiThread { model.welcome() }
             }
             compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
-            compose.onNodeWithText(text(R.string.download_model))
+            compose.onNodeWithText(text(R.string.download_selected_model))
                 .performScrollTo().assertIsDisplayed()
             compose.onAllNodesWithText(text(R.string.download_library)).assertCountEquals(0)
             compose.onAllNodesWithText(text(R.string.have_local_packages)).assertCountEquals(0)
@@ -108,13 +108,14 @@ class OnboardingJourneyTest {
                     ).performScrollTo().performClick()
                     assertEquals(Page.SETUP, model.state.value.page)
                     if (name == "model") {
-                        compose.onNodeWithText(text(R.string.download_library))
+                        compose.onNodeWithText(text(R.string.download_starter))
                             .performScrollTo().assertIsDisplayed()
                     }
                 }
             }
             capture("07-ready")
-            compose.onNodeWithText(text(R.string.start_chat)).performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.continue_without_extras))
+                .performScrollTo().performClick()
             capture("08-home")
             compose.onNodeWithContentDescription(text(R.string.question_hint))
                 .performTextInput(

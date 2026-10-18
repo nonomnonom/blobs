@@ -69,8 +69,9 @@ class PackageTests(unittest.TestCase):
                 catalog['packages'].append({
                     'file_name': item.name,
                     'url': f'https://github.com/nonomnonom/blobs/releases/download/v0.2.0/{item.name}',
-                    'archive_bytes': item.stat().st_size,
-                    'archive_sha256': package_release.digest(item),
+                    'download_format': 'blobs',
+                    'download_bytes': item.stat().st_size,
+                    'download_sha256': package_release.digest(item),
                     'manifest': manifest,
                 })
             catalog_path = root / 'app/src/main/assets/package-catalog.json'
@@ -191,7 +192,7 @@ class PackageTests(unittest.TestCase):
     def test_release_package_names_must_match_the_in_app_catalog(self):
         with self.assertRaisesRegex(ValueError, 'filename differs from the in-app download catalog'):
             package_release.verify_catalog_packages(Path('selected-model.blobs'),
-                                                    Path('selected-library.blobs'), '0.3.0')
+                                                    Path('selected-library.blobs'), '0.3.1')
 
     def test_package_names_cannot_collide_on_a_case_insensitive_filesystem(self):
         with tempfile.TemporaryDirectory() as folder:

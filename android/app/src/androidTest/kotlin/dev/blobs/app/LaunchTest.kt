@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.ViewModelProvider
+import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.PackageCatalog
 import dev.blobs.app.data.preferences.ThemeMode
 import dev.blobs.app.ui.Page
@@ -103,13 +104,34 @@ class LaunchTest {
     fun firstRunCatalogIsPinnedAndSetupOffersInAppDownloads() {
         val catalog = PackageCatalog(compose.activity)
         assertEquals(
-            "v0.3.0",
-            catalog.recommendedModel.url.substringAfter("/download/").substringBefore('/')
+            "v0.3.1",
+            catalog.models.first().url.substringAfter("/download/").substringBefore('/')
         )
-        assertEquals("model", catalog.recommendedModel.manifest.kind)
+        assertEquals(3, catalog.models.size)
+        assertEquals("gemma4-e2b-q4", catalog.models[1].manifest.id)
+        assertEquals(DownloadFormat.GGUF, catalog.models[1].format)
+        assertTrue(
+            catalog.models[1].url.contains("/resolve/675cff42a74c774d6cb76f76d8eacb49b48c9b93/")
+        )
+        assertEquals("gemma4-e4b-q4", catalog.models[2].manifest.id)
+        assertEquals("model", catalog.models.first().manifest.kind)
         assertEquals("library", catalog.starterLibrary.manifest.kind)
-        assertTrue(catalog.recommendedModel.archiveBytes > 1_000_000_000L)
-        assertTrue(catalog.starterLibrary.archiveSha256.matches(Regex("[a-f0-9]{64}")))
+        assertEquals("wikipedia-starter", catalog.starterLibrary.manifest.id)
+        assertEquals(1, catalog.additionalLibraries.size)
+        assertEquals("optional", catalog.additionalLibraries.single().role.name.lowercase())
+        assertEquals(
+            catalog.models.first(),
+            catalog.recommendedModel(3L * 1024 * 1024 * 1024, 2L * 1024 * 1024 * 1024)
+        )
+        assertEquals(
+            catalog.models[1],
+            catalog.recommendedModel(8L * 1024 * 1024 * 1024, 8L * 1024 * 1024 * 1024)
+        )
+        assertEquals(
+            catalog.models[2],
+            catalog.recommendedModel(16L * 1024 * 1024 * 1024, 12L * 1024 * 1024 * 1024)
+        )
+        assertTrue(catalog.starterLibrary.downloadSha256.matches(Regex("[a-f0-9]{64}")))
 
         val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded }
@@ -118,21 +140,31 @@ class LaunchTest {
             .assertCountEquals(0)
         compose.onAllNodesWithText(compose.activity.getString(R.string.progress_percent, 0))
             .assertCountEquals(0)
-        compose.onNodeWithText(compose.activity.getString(R.string.prepare)).performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.diagnosis_title))
+            .assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.choose_model)).performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
         if (model.packages.value.none { it.kind == "model" }) {
             compose.onNodeWithText(compose.activity.getString(R.string.setup_model_step))
                 .assertIsDisplayed()
             compose.onNodeWithText(compose.activity.getString(R.string.setup_model_title))
                 .assertIsDisplayed()
-            compose.onNodeWithText(compose.activity.getString(R.string.download_model))
+            compose.onNodeWithText(catalog.models[1].manifest.title)
+                .performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(catalog.models[2].manifest.title)
+                .performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(compose.activity.getString(R.string.download_selected_model))
                 .performScrollTo().assertIsDisplayed()
             compose.onAllNodesWithText(compose.activity.getString(R.string.download_library))
                 .assertCountEquals(0)
             compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))
                 .assertCountEquals(0)
-        } else if (model.packages.value.none { it.kind == "library" }) {
-            compose.onNodeWithText(compose.activity.getString(R.string.download_library))
+        } else if (model.packages.value.none {
+                it.packageId == catalog.starterLibrary.manifest.id &&
+                    it.version == catalog.starterLibrary.manifest.version
+            }
+        ) {
+            compose.onNodeWithText(compose.activity.getString(R.string.download_starter))
                 .performScrollTo().assertIsDisplayed()
             compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))
                 .assertCountEquals(0)

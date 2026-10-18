@@ -24,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -43,6 +45,8 @@ import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.packages.DeviceProfile
+import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.MenuRow
@@ -59,16 +63,39 @@ import dev.blobs.app.ui.fileSize
 @Composable
 fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
     val work by model.work.collectAsStateWithLifecycle()
-    val readyKinds = packages.map { it.kind }.toSet()
-    val ready = setOf("model", "library").all { it in readyKinds }
-    val needsModel = "model" !in readyKinds
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val profile = remember(context, model.catalog) {
+        DeviceProfile.inspect(context, model.catalog)
+    }
+    val hasModel = packages.any { it.kind == "model" }
+    val hasStarter = packages.any {
+        it.packageId == model.catalog.starterLibrary.manifest.id &&
+            it.version == model.catalog.starterLibrary.manifest.version
+    }
+    val installedIds = packages.map { it.packageId to it.version }.toSet()
+    val remainingLibraries = model.catalog.additionalLibraries.filter {
+        (it.manifest.id to it.manifest.version) !in installedIds
+    }
+    val setupReadyKinds = buildSet {
+        if (hasModel) add("model")
+        if (hasStarter) add("library")
+    }
+    val needsModel = !hasModel
+    val needsStarter = !hasStarter
+    val ready = !needsModel && !needsStarter && remainingLibraries.isEmpty()
+    var selectedModelFile by rememberSaveable {
+        mutableStateOf(profile.recommendedModel.fileName)
+    }
+    val selectedModel = model.catalog.models.firstOrNull { it.fileName == selectedModelFile }
+        ?: profile.recommendedModel
     val progressLabel = when {
         ready -> R.string.setup_all_ready
         needsModel -> R.string.setup_model_step
-        else -> R.string.setup_library_step
+        needsStarter -> R.string.setup_library_step
+        else -> R.string.setup_extras_step
     }
     ScrollPage {
-        SetupProgressBlock(work.setupProgress(readyKinds), progressLabel)
+        SetupProgressBlock(work.setupProgress(setupReadyKinds), progressLabel)
         Scene(
             when {
                 ready -> R.drawable.ready_world
@@ -83,31 +110,131 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
             return@ScrollPage
         }
         if (work.pendingImport != null || (work.busy && work.total > 0)) {
-            Heading(if (needsModel) R.string.setup_model_title else R.string.setup_library_title)
-            Body(if (needsModel) R.string.setup_model_body else R.string.setup_library_body)
-            PrimaryAction(R.string.view_import) { model.navigate(Page.IMPORT) }
+            Heading(R.string.download_in_progress)
+            Body(R.string.download_in_progress_body)
+            PrimaryAction(R.string.download_progress_action) { model.navigate(Page.IMPORT) }
         } else {
             if (needsModel) {
                 Heading(R.string.setup_model_title)
                 Body(R.string.setup_model_body)
-                PrimaryAction(R.string.download_model, !work.busy) {
-                    model.downloadPackage(model.catalog.recommendedModel)
+                model.catalog.models.forEach { option ->
+                    ModelOption(
+                        option,
+                        option == profile.recommendedModel,
+                        option.fileName == selectedModel.fileName,
+                        onClick = { selectedModelFile = option.fileName }
+                    )
                 }
-            } else {
+                PrimaryAction(
+                    R.string.download_selected_model,
+                    !work.busy
+                ) { model.downloadPackage(selectedModel) }
+                Text(
+                    stringResource(
+                        R.string.device_fit_note,
+                        fileSize(profile.totalMemoryBytes),
+                        fileSize(profile.freeStorageBytes)
+                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (needsStarter) {
                 Heading(R.string.setup_library_title)
                 Body(R.string.setup_library_body)
-                val downloadLibrary = {
-                    model.downloadPackage(model.catalog.starterLibrary)
+                PrimaryAction(
+                    R.string.download_starter,
+                    !work.busy
+                ) { model.downloadPackage(model.catalog.starterLibrary) }
+                Text(
+                    stringResource(
+                        R.string.download_size_note,
+                        fileSize(model.catalog.starterLibrary.downloadBytes)
+                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (remainingLibraries.isNotEmpty()) {
+                Heading(R.string.setup_extras_title)
+                Body(R.string.setup_extras_body)
+                remainingLibraries.forEach { library ->
+                    OptionalLibraryOption(library, !work.busy) {
+                        model.downloadPackage(library)
+                    }
                 }
-                PrimaryAction(R.string.download_library, !work.busy, downloadLibrary)
+                PrimaryAction(R.string.continue_without_extras, !work.busy) {
+                    model.finishSetup()
+                }
+            } else {
+                Heading(R.string.setup_ready_title)
+                Body(R.string.ready_body)
+                PrimaryAction(R.string.start_chat) { model.finishSetup() }
             }
-            val downloadNote =
-                if (needsModel) {
-                    R.string.setup_download_note
-                } else {
-                    R.string.setup_remaining_download_note
-                }
-            Body(downloadNote)
+        }
+    }
+}
+
+@Composable
+private fun ModelOption(
+    option: DownloadablePackage,
+    recommended: Boolean,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        }
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            RadioButton(selected = selected, onClick = onClick)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(option.manifest.title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(
+                        if (recommended) {
+                            R.string.recommended_model_size
+                        } else {
+                            R.string.model_download_size
+                        },
+                        fileSize(option.downloadBytes)
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OptionalLibraryOption(
+    library: DownloadablePackage,
+    enabled: Boolean,
+    onDownload: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(library.manifest.title, style = MaterialTheme.typography.titleLarge)
+            Text(
+                stringResource(R.string.optional_library_size, fileSize(library.downloadBytes)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            PrimaryAction(R.string.download_library, enabled, onDownload)
         }
     }
 }
@@ -155,6 +282,12 @@ fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFi
                 index == 0
             )
         }
+        val installedLibraries = libraries.map { it.packageId to it.version }.toSet()
+        model.catalog.additionalLibraries.filter {
+            (it.manifest.id to it.manifest.version) !in installedLibraries
+        }.forEach { library ->
+            OptionalLibraryOption(library, !work.busy) { model.downloadPackage(library) }
+        }
         Column {
             MenuRow(R.string.browse, stringResource(R.string.browse_summary)) {
                 model.navigate(Page.BROWSE)
@@ -191,11 +324,31 @@ fun ModelsScreen(
         if (work.busy) Body(R.string.busy_help)
         val models = packages.filter { it.kind == "model" }
         models.forEach { PackageCard(it, work.busy, model) }
-        if (models.none { it.packageId == model.catalog.recommendedModel.manifest.id }) {
-            PrimaryAction(R.string.download_model, !work.busy) {
-                model.downloadPackage(model.catalog.recommendedModel)
+        val installed = models.map { it.packageId to it.version }.toSet()
+        model.catalog.models.filter { (it.manifest.id to it.manifest.version) !in installed }
+            .forEach { option ->
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(option.manifest.title, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            stringResource(
+                                R.string.model_download_size,
+                                fileSize(option.downloadBytes)
+                            ),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        PrimaryAction(R.string.download_model, !work.busy) {
+                            model.downloadPackage(option)
+                        }
+                    }
+                }
             }
-        }
         TextButton(onClick = pickFile, enabled = !work.busy, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.add_package))
         }

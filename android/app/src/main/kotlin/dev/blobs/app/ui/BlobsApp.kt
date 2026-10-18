@@ -140,7 +140,11 @@ fun BlobsApp(container: AppContainer) {
                             }
                         }
                     } else if (!state.options.welcomed || state.page == Page.WELCOME) {
-                        WelcomeScreen(theme.preferencesUnavailable, prepare = model::welcome)
+                        WelcomeScreen(
+                            model.catalog,
+                            theme.preferencesUnavailable,
+                            prepare = model::welcome
+                        )
                     } else {
                         Column(
                             Modifier.widthIn(
@@ -164,18 +168,21 @@ fun BlobsApp(container: AppContainer) {
                                     stringResource(
                                         if (reviewingImport) {
                                             R.string.review_package
-                                        } else if (state.page == Page.IMPORT &&
-                                            state.importOrigin == Page.SETUP &&
-                                            work.inAppDownload
+                                        } else if (state.page == Page.IMPORT && work.inAppDownload
                                         ) {
-                                            R.string.setup_progress_title
+                                            R.string.download_progress_title
                                         } else if (state.page == Page.CHAT &&
                                             turns.isEmpty()
                                         ) {
                                             R.string.app_wordmark
                                         } else if (state.page == Page.SETUP &&
                                             packages.any { it.kind == "model" } &&
-                                            packages.any { it.kind == "library" }
+                                            packages.any {
+                                                it.packageId ==
+                                                    model.catalog.starterLibrary.manifest.id &&
+                                                    it.version ==
+                                                    model.catalog.starterLibrary.manifest.version
+                                            }
                                         ) {
                                             R.string.all_set
                                         } else {
@@ -231,13 +238,15 @@ fun BlobsApp(container: AppContainer) {
                                         model.navigate(Page.IMPORT)
                                     }, modifier = Modifier.fillMaxWidth()) {
                                         Text(
-                                            stringResource(
-                                                if (work.busy) {
-                                                    R.string.view_import
-                                                } else {
-                                                    R.string.paused_import
-                                                }
-                                            )
+                                            if (work.busy) {
+                                                stringResource(
+                                                    R.string.downloading_package,
+                                                    work.importTitle,
+                                                    (work.phaseProgress * 100).toInt()
+                                                )
+                                            } else {
+                                                stringResource(R.string.paused_import)
+                                            }
                                         )
                                     }
                                 }

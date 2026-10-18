@@ -136,6 +136,59 @@ class PackageDownloaderTest {
     }
 
     @Test
+    fun verifiesRawGgufAfterPinnedHuggingFaceRedirect() = runBlocking {
+        val root = Files.createTempDirectory("blobs-gguf-download-test").toFile()
+        try {
+            val bytes = "GGUF model bytes".toByteArray()
+            val model = DownloadablePackage(
+                fileName = "gemma-test.gguf",
+                url = "https://huggingface.co/google/test/resolve/${"a".repeat(
+                    40
+                )}/gemma-test.gguf",
+                downloadBytes = bytes.size.toLong(),
+                downloadSha256 = sha256(bytes),
+                format = DownloadFormat.GGUF,
+                manifest = PackageManifest(
+                    id = "gemma-test",
+                    version = "a1234567",
+                    kind = "model",
+                    title = "Gemma test",
+                    bytes = bytes.size.toLong(),
+                    sha256 = sha256(bytes),
+                    license = "Test",
+                    origin = "https://huggingface.co/google/test"
+                ),
+                role = PackageRole.MODEL,
+                recommendedUpToMemoryMb = Long.MAX_VALUE
+            )
+            val downloader = PackageDownloader(root, { Long.MAX_VALUE }) { url ->
+                if (url.host == "huggingface.co") {
+                    Response(
+                        url,
+                        HttpURLConnection.HTTP_MOVED_TEMP,
+                        { ByteArrayInputStream(byteArrayOf()) },
+                        mapOf("Location" to "https://us.aws.cdn.hf.co/gemma-test.gguf")
+                    )
+                } else {
+                    Response(
+                        url,
+                        HttpURLConnection.HTTP_OK,
+                        { ByteArrayInputStream(bytes) },
+                        mapOf("Content-Length" to bytes.size.toString())
+                    )
+                }
+            }
+
+            val file = downloader.download(model) { _, _ -> }
+
+            assertEquals("gemma-test.gguf", file.name)
+            assertArrayEquals(bytes, file.readBytes())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun activatesACompleteVerifiedPartialWithoutStartingAnotherRequest() = runBlocking {
         val root = Files.createTempDirectory("blobs-complete-partial-test").toFile()
         try {
@@ -158,8 +211,9 @@ class PackageDownloaderTest {
     private fun asset(bytes: ByteArray) = DownloadablePackage(
         fileName = "test-package.blobs",
         url = "https://github.com/nonomnonom/blobs/releases/download/v0.3.0/test-package.blobs",
-        archiveBytes = bytes.size.toLong(),
-        archiveSha256 = sha256(bytes),
+        downloadBytes = bytes.size.toLong(),
+        downloadSha256 = sha256(bytes),
+        format = DownloadFormat.BLOBS,
         manifest = PackageManifest(
             id = "test-package",
             version = "1",
@@ -169,7 +223,9 @@ class PackageDownloaderTest {
             sha256 = "0".repeat(64),
             license = "Test",
             origin = "https://example.com"
-        )
+        ),
+        role = PackageRole.MODEL,
+        recommendedUpToMemoryMb = Long.MAX_VALUE
     )
 
     private fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256")

@@ -20,19 +20,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
+import dev.blobs.app.data.packages.DeviceProfile
+import dev.blobs.app.data.packages.PackageCatalog
+import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.theme.BlobsTheme
+import dev.blobs.app.ui.fileSize
 
 @Composable
-fun WelcomeScreen(preferencesUnavailable: Boolean = false, prepare: () -> Unit = {}) {
+fun WelcomeScreen(
+    catalog: PackageCatalog,
+    preferencesUnavailable: Boolean = false,
+    prepare: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val profile = androidx.compose.runtime.remember(context, catalog) {
+        DeviceProfile.inspect(context, catalog)
+    }
     Column(
         modifier =
         Modifier
@@ -67,19 +78,55 @@ fun WelcomeScreen(preferencesUnavailable: Boolean = false, prepare: () -> Unit =
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = stringResource(R.string.welcome_title),
+                text = stringResource(R.string.diagnosis_title),
                 style = MaterialTheme.typography.headlineLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.fillMaxWidth().semantics { heading() }
             )
             Text(
-                text = stringResource(R.string.welcome_body),
+                text = stringResource(R.string.diagnosis_body),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            PrimaryAction(R.string.prepare, onClick = prepare)
+            Text(
+                stringResource(
+                    R.string.device_details,
+                    android.os.Build.MODEL,
+                    fileSize(profile.totalMemoryBytes),
+                    fileSize(profile.freeStorageBytes)
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            androidx.compose.material3.Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.tertiaryContainer
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        stringResource(R.string.model_recommendation),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        profile.recommendedModel.manifest.title,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        stringResource(
+                            R.string.model_recommendation_reason,
+                            fileSize(profile.recommendedModel.downloadBytes)
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+            PrimaryAction(R.string.choose_model, onClick = prepare)
+            Body(R.string.device_check_private)
             if (preferencesUnavailable) {
                 Text(
                     text = stringResource(R.string.preferences_unavailable),
@@ -89,10 +136,4 @@ fun WelcomeScreen(preferencesUnavailable: Boolean = false, prepare: () -> Unit =
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun WelcomePreview() {
-    BlobsTheme { WelcomeScreen() }
 }

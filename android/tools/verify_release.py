@@ -247,14 +247,18 @@ def verify_kit(directory: Path) -> dict:
             raise ValueError("Source archive has no valid in-app package catalog") from error
     if catalog.get("format") != 1 or catalog.get("release_tag") != f"v{version}":
         raise ValueError("In-app catalog release tag differs from the verified APK")
-    catalog_packages = {item.get("manifest", {}).get("kind"): item for item in catalog.get("packages", [])}
-    if set(catalog_packages) != {"model", "library"}:
+    catalog_packages = {
+        item.get("file_name"): item for item in catalog.get("packages", [])
+        if item.get("download_format") == "blobs"
+    }
+    if not catalog_packages:
         raise ValueError("In-app catalog must contain one model and one library")
     for package in packages:
-        item = catalog_packages[package["kind"]]
         name = package["file"]
-        if (item.get("file_name") != name or item.get("archive_bytes") != package["package_bytes"] or
-                item.get("archive_sha256") != package["package_sha256"] or
+        item = catalog_packages.get(name)
+        if (item is None or item.get("manifest", {}).get("kind") != package["kind"] or
+                item.get("download_bytes") != package["package_bytes"] or
+                item.get("download_sha256") != package["package_sha256"] or
                 item.get("url") != f"https://github.com/nonomnonom/blobs/releases/download/v{version}/{name}" or
                 item.get("manifest") != recorded_packages[name]):
             raise ValueError(f"In-app catalog differs from the delivered {package['kind']} package")
