@@ -283,6 +283,7 @@ private fun TurnCard(turn: TurnEntity, answer: String, busy: Boolean, model: Pro
                 R.string.status_interrupted
             }
             "LIMITED" -> R.string.status_limited
+            "UNVERIFIED" -> R.string.status_unverified
             "NO_SOURCES" -> R.string.status_no_sources
             else -> R.string.status_error
         }

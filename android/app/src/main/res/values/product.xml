@@ -135,6 +135,7 @@
     <string name="status_interrupted">Interrupted · your partial answer is here</string>
     <string name="status_interrupted_empty">Interrupted before an answer was ready</string>
     <string name="status_limited">Answer reached its length limit</string>
+    <string name="status_unverified">This answer could not be verified from the sources. Try a more specific question or another library.</string>
     <string name="status_error">This answer could not finish</string>
     <string name="status_no_sources">No matching passages in the selected sources. Try different words or search your whole library.</string>
     <string name="search_all">Search all sources</string>

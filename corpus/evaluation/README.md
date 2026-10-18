@@ -24,6 +24,8 @@ Write local run output under `reports/`; that directory is ignored by Git. Do no
 
 Mechanical checks can validate source-ID syntax, supplied-source bounds, retrieval ordering, and configured thresholds. They do not establish factual support by themselves. Review claim-to-source support, contradiction, insufficiency handling, and misleading citation placement before promoting a model or prompt.
 
+The Android answer path now fails closed when a completed answer has no usable source citation or when a cited sentence has too little meaningful word overlap with its cited passages. This catches obviously unrelated citations; it is a lexical heuristic, not semantic entailment, and does not replace claim-level human review.
+
 Model selection is family-neutral. Publisher benchmark tables can shortlist candidates, but Blobs should select a default only after running the same answer cases, corpus, prompt, and runtime on each candidate and reviewing source support, abstention, peak memory, and Android latency. A larger or publisher-described “frontier” model is not automatically the best phone experience.
 
 Export a completed host answer run into a reviewable, version-controlled result with its model/runtime/prompt fingerprints and mechanical metrics:

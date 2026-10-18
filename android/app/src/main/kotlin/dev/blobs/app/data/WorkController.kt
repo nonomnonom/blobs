@@ -15,6 +15,7 @@ import dev.blobs.app.data.packages.PackageDownloader
 import dev.blobs.app.data.packages.PackageInstaller
 import dev.blobs.app.data.packages.PackageManifest
 import dev.blobs.app.data.packages.PendingImport
+import dev.blobs.app.inference.AnswerGrounding
 import dev.blobs.app.inference.AnswerText
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.TokenSink
@@ -225,10 +226,20 @@ class WorkController(
                         }
                     }
                 )
+                val unverified = !interrupted &&
+                    !stopped &&
+                    result == 0 &&
+                    answer.isNotBlank() &&
+                    !AnswerGrounding.hasSupportedCitations(answer, sources)
+                if (unverified) {
+                    answer = ""
+                    mutable.value = mutable.value.copy(text = "")
+                }
                 val status = when {
                     interrupted -> "INTERRUPTED"
                     stopped || result == 1 -> "STOPPED"
                     result == 2 -> "LIMITED"
+                    unverified -> "UNVERIFIED"
                     result == 0 && answer.isNotBlank() -> "COMPLETE"
                     else -> "ERROR"
                 }
