@@ -19,9 +19,8 @@
     <string name="view_import">View import</string>
     <string name="older_editions_kept">Other editions of this package are already installed. They will be kept.</string>
     <string name="setup_progress_title">Getting Blobs ready</string>
-    <string name="setup_welcome_step">Your setup</string>
-    <string name="setup_model_step">1 of 2 · Your model</string>
-    <string name="setup_library_step">2 of 2 · Your library</string>
+    <string name="setup_model_step">Your answer model</string>
+    <string name="setup_library_step">Your source library</string>
     <string name="setup_all_ready">All ready</string>
     <string name="progress_percent">%1$d%%</string>
     <string name="setup_model_title">A little brain for Blobs</string>

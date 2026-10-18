@@ -66,7 +66,7 @@ class OnboardingJourneyTest {
                 ).fetchSemanticsNodes().isNotEmpty()
             ) {
                 capture("01-welcome")
-                compose.onAllNodesWithText("I already have the files").assertCountEquals(0)
+                compose.onAllNodesWithText(text(R.string.have_local_packages)).assertCountEquals(0)
                 compose.onNodeWithText(text(R.string.prepare)).performScrollTo().performClick()
             } else {
                 compose.runOnUiThread { model.welcome() }

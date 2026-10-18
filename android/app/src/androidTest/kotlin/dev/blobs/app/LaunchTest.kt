@@ -114,11 +114,10 @@ class LaunchTest {
         val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded }
         compose.runOnUiThread { model.navigate(Page.WELCOME) }
-        compose.onAllNodesWithText("I already have the files").assertCountEquals(0)
         compose.onAllNodesWithText(compose.activity.getString(R.string.have_local_packages))
             .assertCountEquals(0)
-        compose.onNodeWithText(compose.activity.getString(R.string.setup_welcome_step))
-            .assertIsDisplayed()
+        compose.onAllNodesWithText(compose.activity.getString(R.string.progress_percent, 0))
+            .assertCountEquals(0)
         compose.onNodeWithText(compose.activity.getString(R.string.prepare)).performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
         if (model.packages.value.none { it.kind == "model" }) {
