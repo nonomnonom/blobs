@@ -385,7 +385,7 @@ class WorkController(
                     total = asset.manifest.bytes,
                     downloading = false
                 )
-                installer.install(uri, asset.manifest) { bytes ->
+                installer.install(uri, asset.manifest, catalogDigestPinned = true) { bytes ->
                     mutable.value = mutable.value.copy(progress = bytes)
                 }
                 downloader.removeInstalledArchive(uri)

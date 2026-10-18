@@ -1,0 +1,98 @@
+{
+  "format": 1,
+  "run_id": "android16-gemma4-e2b-real-wikipedia-photosynthesis-2026-10-18",
+  "complete": true,
+  "scope": "One genuine offline RAG answer through Blobs WorkController using the pinned Gemma 4 E2B GGUF and a locally imported, CC BY-SA Wikipedia schema-3 library on one Android 16 x86_64 emulator. This is an end-to-end implementation observation, not a held-out accuracy benchmark or representative phone performance result.",
+  "application": {
+    "package": "dev.blobs.app.debug",
+    "apk_sha256": "2b566edea13f545a9956d926ab460439118f58b9a6e3b9eb9b441c0f26b6ea3f",
+    "test_package": "dev.blobs.app.debug.test",
+    "test_apk_sha256": "94e4f2b6c3063dabdbde2e8a71cb4d62f872eccedbffff56bf8cafa41d4e404f"
+  },
+  "runtime": {
+    "repository": "https://github.com/ggml-org/llama.cpp",
+    "version": "v0.7.0",
+    "commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "archive_sha256": "48b431f8984dcc79efd2589de85fc53e42c6193522c97641e8dbc4376ebb3a5a"
+  },
+  "model": {
+    "file": "gemma-4-E2B_q4_0-it.gguf",
+    "bytes": 3349516256,
+    "sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+    "source": "Pinned Google Gemma 4 E2B QAT Q4_0 catalog artifact; downloaded payload SHA-256 verified"
+  },
+  "library_package": {
+    "file": "corpus/work/wikipedia-native-paragraphs-schema3.blobs",
+    "bytes": 6828610,
+    "package_sha256": "0fcfe00738a761e7f54ea916c4e2a2ed9a7c135a7389251926201b967af0c6a6",
+    "manifest": {
+      "format": 1,
+      "id": "wikipedia-parity",
+      "version": "2026-10-17.2.schema3-eval",
+      "kind": "library",
+      "title": "Native paragraph-boundary fixture (schema 3 evaluation)",
+      "bytes": 15130624,
+      "sha256": "6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a",
+      "license": "CC BY-SA 4.0; Wikipedia contributors; adapted text",
+      "origin": "https://en.wikipedia.org/"
+    }
+  },
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "api": 36,
+    "abi": "x86_64",
+    "memory_bytes": 8326402048,
+    "scope": "AVD emulator; memory is configuration, not a phone measurement"
+  },
+  "test": {
+    "instrumentation": "NativeInferenceTest#verifiedModelFileProducesSavedCitedAnswer",
+    "passed": true,
+    "instrumentation_elapsed_ms": 239346,
+    "answer_wall_elapsed_ms": 189042,
+    "first_visible_state_ms": 135117,
+    "saved_elapsed_ms": 189023,
+    "status": "COMPLETE"
+  },
+  "manual_review": {
+    "result": "PASS",
+    "reason": "The answer states that photosynthesis converts light into chemical energy, releases oxygen during oxygenic photosynthesis, and stores energy in organic compounds. The retrieved Photosynthesis passage directly supports each claim; all claims cite S1."
+  },
+  "run": {
+    "format": 1,
+    "run_id": "gemma-e2b-real-wikipedia-photosynthesis-20261018",
+    "complete": true,
+    "question": "What does photosynthesis do?",
+    "expected_evidence_publisher": "Wikipedia contributors",
+    "application_id": "dev.blobs.app.debug",
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "api": 36,
+    "generation_started": true,
+    "model_preparation": "Verified GGUF file: checksum and native importer validator, without model installation. Library import and WorkController persistence/generation are exercised; normal model-package import is not proved.",
+    "timeout_ms": 600000,
+    "timing_scope": "End-to-end app observation on this device. First nonblank WorkState text is not native token latency. No phone-performance extrapolation.",
+    "model_file_bytes": 3349516256,
+    "library_manifest": {
+      "format": 1,
+      "id": "wikipedia-parity",
+      "version": "2026-10-17.2.schema3-eval",
+      "kind": "library",
+      "title": "Native paragraph-boundary fixture (schema 3 evaluation)",
+      "bytes": 15130624,
+      "sha256": "6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a",
+      "license": "CC BY-SA 4.0; Wikipedia contributors; adapted text",
+      "origin": "https://en.wikipedia.org/"
+    },
+    "model_sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+    "model_key": "fixture-fa401b55b07ee70a",
+    "library_sha256": "6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a",
+    "library_key": "wikipedia-parity-2026-10-17.2.schema3-eval-6722e080e703f215",
+    "finished_within_timeout": true,
+    "wall_elapsed_ms": 189042,
+    "first_visible_state_ms": 135117,
+    "status": "COMPLETE",
+    "answer": "Photosynthesis is a system of biological processes where photopigment-bearing autotrophic organisms, such as most plants, algae, and cyanobacteria, convert light energy, typically sunlight, into the chemical energy needed for their metabolism [S1]. This process usually refers to oxygenic photosynthesis, which releases oxygen as a byproduct of water splitting [S1]. Photosynthetic organisms store this converted chemical energy in intracellular organic compounds, mainly carbohydrates like sugars, starches, phytoglycogen, and cellulose [S1].",
+    "evidence": "[{\"id\":\"wikipedia-parity-2026-10-17.2.schema3-eval-6722e080e703f215\\/wiki-6a61ac687d4058d4ee4c4eb6d4db7a40\",\"title\":\"Photosynthesis\",\"publisher\":\"Wikipedia contributors\",\"url\":\"https:\\/\\/en.wikipedia.org\\/wiki\\/Photosynthesis\",\"license\":\"CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution\\/history: https:\\/\\/en.wikipedia.org\\/wiki\\/Photosynthesis?action=history\",\"updated\":\"Snapshot 2026-09\",\"saved\":\"2026-10-17\",\"section\":\"Photosynthesis\",\"text\":\"Schematic of photosynthesis in plants. The carbohydrates produced are stored in or used by the plant. Composite image showing the global distribution of photosynthesis, including both oceanic phytoplankton and terrestrial vegetation. Dark red and blue-green indicate regions of high photosynthetic activity in the ocean and on land, respectively.\\n\\nPhotosynthesis[note 1] is a system of biological processes by which photopigment-bearing autotrophic organisms, such as most plants, algae and cyanobacteria, convert light energy—typically from sunlight—into the chemical energy necessary to fuel their metabolism. The term photosynthesis usually refers to oxygenic photosynthesis, a process that releases oxygen as a byproduct of water splitting. Photosynthetic organisms store the converted chemical energy within the bonds of intracellular organic compounds (complex compounds containing carbon), typically carbohydrates like sugars (mainly glucose, fructose and sucrose), starches, phytoglycogen and cellulose. When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration. Photosynthesis plays a critical role in producing and maintaining the oxygen content of the Earth's atmosphere, and it supplies most of the biological energy necessary for complex life on Earth.[2]\",\"edition\":\"Native paragraph-boundary fixture (schema 3 evaluation) · 2026-10-17.2.schema3-eval · 6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a\"},{\"id\":\"wikipedia-parity-2026-10-17.2.schema3-eval-6722e080e703f215\\/wiki-6a61ac687d4058d4ee4c4eb6d4db7a40\",\"title\":\"Photosynthesis\",\"publisher\":\"Wikipedia contributors\",\"url\":\"https:\\/\\/en.wikipedia.org\\/wiki\\/Photosynthesis\",\"license\":\"CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution\\/history: https:\\/\\/en.wikipedia.org\\/wiki\\/Photosynthesis?action=history\",\"updated\":\"Snapshot 2026-09\",\"saved\":\"2026-10-17\",\"section\":\"Factors\",\"text\":\"The leaf is the primary site of photosynthesis in plants.\\n\\nThere are four main factors influencing photosynthesis and several corollary factors. The four main are:[113]\\n\\n• Light irradiance and wavelength\\n\\n• Water absorption\\n\\n• Carbon dioxide concentration\\n\\n• Temperature.\\n\\nTotal photosynthesis is limited by a range of environmental factors. These include the amount of light available, the amount of leaf area a plant has to capture light (shading by other plants is a major limitation of photosynthesis), the rate at which carbon dioxide can be supplied to the chloroplasts to support photosynthesis, the availability of water, and the availability of suitable temperatures for carrying out photosynthesis.[114]\",\"edition\":\"Native paragraph-boundary fixture (schema 3 evaluation) · 2026-10-17.2.schema3-eval · 6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a\"},{\"id\":\"wikipedia-parity-2026-10-17.2.schema3-eval-6722e080e703f215\\/wiki-55e3b736440f41acfe9a45a4f802203d\",\"title\":\"Ecosystem\",\"publisher\":\"Wikipedia contributors\",\"url\":\"https:\\/\\/en.wikipedia.org\\/wiki\\/Ecosystem\",\"license\":\"CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution\\/history: https:\\/\\/en.wikipedia.org\\/wiki\\/Ecosystem?action=history\",\"updated\":\"Snapshot 2026-09\",\"saved\":\"2026-10-17\",\"section\":\"Primary production\",\"text\":\"These include the amount of light available, the amount of leaf area a plant has to capture light (shading by other plants is a major limitation of photosynthesis), the rate at which carbon dioxide can be supplied to the chloroplasts to support photosynthesis, the availability of water, and the availability of suitable temperatures for carrying out photosynthesis.[8]: 155\",\"edition\":\"Native paragraph-boundary fixture (schema 3 evaluation) · 2026-10-17.2.schema3-eval · 6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a\"},{\"id\":\"wikipedia-parity-2026-10-17.2.schema3-eval-6722e080e703f215\\/wiki-1617d29913508c0f2c9ec642f2c57516\",\"title\":\"Cell (biology)\",\"publisher\":\"Wikipedia contributors\",\"url\":\"https:\\/\\/en.wikipedia.org\\/wiki\\/Cell_(biology)\",\"license\":\"CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution\\/history: https:\\/\\/en.wikipedia.org\\/wiki\\/Cell_(biology)?action=history\",\"updated\":\"Snapshot 2026-09\",\"saved\":\"2026-10-17\",\"section\":\"Algal cells\",\"text\":\"Algae members are photoautotrophs able to use photosynthesis to produce energy. In eukaryotes, photosynthesis is made possible by the use of plastids, organelles in the cytoplasm known as chloroplasts.\\n\\nPhotosynthesis is found in both prokaryotic cyanobacteria and multiple clades of eukaryotic algae; red algae, brown algae, and green algae, which are closely related to land plants.[111][112]\\n\\nAlginate is a polysaccharide found in the matrix of the cell walls of brown algae, and has many important uses in the food industry, and in pharmacology.[113]\",\"edition\":\"Native paragraph-boundary fixture (schema 3 evaluation) · 2026-10-17.2.schema3-eval · 6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a\"},{\"id\":\"wikipedia-parity-2026-10-17.2.schema3-eval-6722e080e703f215\\/wiki-ccc069033cb4f07cd77900f58abf454f\",\"title\":\"Renewable energy\",\"publisher\":\"Wikipedia contributors\",\"url\":\"https:\\/\\/en.wikipedia.org\\/wiki\\/Renewable_energy\",\"license\":\"CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution\\/history: https:\\/\\/en.wikipedia.org\\/wiki\\/Renewable_energy?action=history\",\"updated\":\"Snapshot 2026-09\",\"saved\":\"2026-10-17\",\"section\":\"Artificial photosynthesis\",\"text\":\"Artificial photosynthesis uses techniques including nanotechnology to store solar electromagnetic energy in chemical bonds by splitting water to produce hydrogen and then using carbon dioxide to make methanol.[181] Researchers in this field strived to design molecular mimics of photosynthesis that use a wider region of the solar spectrum, employ catalytic systems made from abundant, inexpensive materials that are robust, readily repaired, non-toxic, stable in a variety of environmental conditions and perform more efficiently allowing a greater proportion of photon energy to end up in the storage compounds, i.e., carbohydrates (rather than building and sustaining living cells).[182] However, prominent research faces hurdles, Sun Catalytix a MIT spin-off stopped scaling up their prototype fuel-cell in 2012 because it offers few savings over other ways to make hydrogen from sunlight.[183]\",\"edition\":\"Native paragraph-boundary fixture (schema 3 evaluation) · 2026-10-17.2.schema3-eval · 6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a\"},{\"id\":\"wikipedia-parity-2026-10-17.2.schema3-eval-6722e080e703f215\\/wiki-ccc069033cb4f07cd77900f58abf454f\",\"title\":\"Renewable energy\",\"publisher\":\"Wikipedia contributors\",\"url\":\"https:\\/\\/en.wikipedia.org\\/wiki\\/Renewable_energy\",\"license\":\"CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded. Attribution\\/history: https:\\/\\/en.wikipedia.org\\/wiki\\/Renewable_energy?action=history\",\"updated\":\"Snapshot 2026-09\",\"saved\":\"2026-10-17\",\"section\":\"Artificial photosynthesis\",\"text\":\"Recent research emphasizes that while artificial photosynthesis shows promise in splitting water to generate hydrogen, its broader significance lies in the ability to produce dense, carbon-based solar fuels suitable for transport applications, such as aviation and long-haul shipping. These fuels, if derived from carbon dioxide and water using sunlight, could close the carbon loop and reduce reliance on fossil-based hydrocarbons. However, realizing this potential requires overcoming major technical hurdles, including the development of efficient, durable catalysts for water oxidation and CO2 reduction, and careful attention to land use and public perception.[184]\",\"edition\":\"Native paragraph-boundary fixture (schema 3 evaluation) · 2026-10-17.2.schema3-eval · 6722e080e703f21534a116bd3839e29994846f8c298674de530f0beffae9482a\"}]",
+    "saved_elapsed_ms": 189023,
+    "error": ""
+  }
+}

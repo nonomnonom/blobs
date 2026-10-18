@@ -131,6 +131,8 @@ def main():
     parser.add_argument('--retrieval-report', type=Path, required=True)
     parser.add_argument('--cases', nargs='+', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--resume', action='store_true',
+                        help='Continue an incomplete result after verifying its locked metadata')
     parser.add_argument('--system-file', type=Path,
                         help='Explicit experimental system prompt; does not change the Android application')
     parser.add_argument('--retrieval-variant',
@@ -148,8 +150,10 @@ def main():
     parser.add_argument('--non-streaming', action='store_true',
                         help='Chat diagnostic: retain complete raw output/token IDs; no first-content latency measurement')
     args = parser.parse_args()
-    if args.output.exists():
+    if args.output.exists() and not args.resume:
         raise FileExistsError(args.output)
+    if args.resume and not args.output.is_file():
+        parser.error('--resume requires an existing result file')
     if args.work_directory is not None and args.model_package is None:
         parser.error('--work-directory requires --model-package')
     if args.structured_citations and (not args.namespaced_citations or args.system_file is None):
@@ -244,7 +248,39 @@ def evaluate(args):
                   requested_cases=args.cases, sampling=sampling, context=4096, input_limit=input_limit,
                   threads=4, batch=256, ubatch=128, results=[])
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    write_json(args.output, report)
+    if args.resume:
+        previous = json.loads(args.output.read_text(encoding='utf-8'))
+        resumable_metadata = {'script_sha256', 'work_controller_sha256'}
+        locked = {key: value for key, value in report.items()
+                  if key not in {'results', 'complete'} | resumable_metadata}
+        if not isinstance(previous, dict) or any(previous.get(key) != value for key, value in locked.items()):
+            raise ValueError('Existing result metadata differs from this run')
+        if previous.get('complete') is not False:
+            raise ValueError('Only an incomplete result can be resumed')
+        previous_results = previous.get('results')
+        if not isinstance(previous_results, list):
+            raise ValueError('Existing result rows are invalid')
+        completed = [row.get('case_id') for row in previous_results]
+        if len(completed) != len(set(completed)) or any(case not in args.cases for case in completed):
+            raise ValueError('Existing result cases are invalid')
+        changes = previous.setdefault('resume_metadata_changes', [])
+        for key in resumable_metadata:
+            if previous.get(key) != report[key]:
+                change = dict(field=key, previous=previous.get(key), resumed=report[key])
+                if change not in changes:
+                    changes.append(change)
+        report = previous
+        report['complete'] = False
+        report.pop('error', None)
+        terminal_statuses = {'RECORDED', 'NO_SOURCES', 'INPUT_TOO_LONG', 'ERROR'}
+        interrupted = [row for row in report['results']
+                       if row.get('status') not in terminal_statuses]
+        if interrupted:
+            report.setdefault('interrupted_results', []).extend(interrupted)
+            report['results'] = [row for row in report['results']
+                                 if row.get('status') in terminal_statuses]
+    else:
+        write_json(args.output, report)
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
@@ -279,7 +315,11 @@ def evaluate(args):
                 if time.monotonic() > deadline:
                     raise TimeoutError('Model load exceeded 90 seconds')
                 time.sleep(0.2)
+            completed_cases = {row['case_id'] for row in report['results']
+                               if row.get('status') in {'RECORDED', 'NO_SOURCES', 'INPUT_TOO_LONG', 'ERROR'}}
             for case in args.cases:
+                if case in completed_cases:
+                    continue
                 item = definitions[case]
                 sources = evidence[case]
                 row = dict(case_id=case, question=item['question'], evidence=sources)
@@ -365,6 +405,8 @@ def evaluate(args):
                     row.update(status='ERROR', error=repr(error))
                 write_json(args.output, report)
                 print(case + ': ' + row['status'], flush=True)
+            order = {case: index for index, case in enumerate(args.cases)}
+            report['results'].sort(key=lambda row: order[row['case_id']])
             report['complete'] = True
         except Exception as error:
             report['error'] = repr(error)

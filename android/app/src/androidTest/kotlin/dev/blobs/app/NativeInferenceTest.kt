@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.util.AtomicFile
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.GgufValidator
@@ -33,6 +34,65 @@ import org.junit.Test
 
 @ManualCheck
 class NativeInferenceTest {
+    @Test
+    fun validatesSuppliedLibraryFile() {
+        val args = InstrumentationRegistry.getArguments()
+        val path = args.getString("libraryFile")
+        assumeTrue(
+            "Provide a verified SQLite file with -e libraryFile <app-private path>",
+            path != null
+        )
+        val runId = requireNotNull(args.getString("runId"))
+        require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
+        val expectedBytes = requireNotNull(args.getString("expectedBytes")).toLong()
+        val expectedSha256 = requireNotNull(args.getString("expectedSha256"))
+        require(expectedBytes in 1..40_000_000_000L)
+        require(expectedSha256.matches(Regex("[a-f0-9]{64}")))
+        val file = File(requireNotNull(path))
+        check(file.isFile && file.length() == expectedBytes)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val output = File(context.filesDir, "library-validation-$runId.json")
+        check(!output.exists())
+        val report = JSONObject().apply {
+            put("format", 1)
+            put("run_id", runId)
+            put("complete", false)
+            put("fingerprint", Build.FINGERPRINT)
+            put("api", Build.VERSION.SDK_INT)
+            put("library_bytes", expectedBytes)
+            put("library_sha256_expected", expectedSha256)
+            put("phase", "hashing")
+        }
+        fun save() = saveReport(output, report)
+        save()
+        try {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val hashStart = SystemClock.elapsedRealtime()
+            file.inputStream().use { input ->
+                val buffer = ByteArray(256 * 1024)
+                while (true) {
+                    val length = input.read(buffer)
+                    if (length < 0) break
+                    digest.update(buffer, 0, length)
+                }
+            }
+            report.put("hash_elapsed_ms", SystemClock.elapsedRealtime() - hashStart)
+            check(digest.digest().joinToString("") { "%02x".format(it) } == expectedSha256)
+            report.put("phase", "database_validation")
+            save()
+            val validationStart = SystemClock.elapsedRealtime()
+            LibraryStore().validate(file, catalogDigestPinned = true)
+            report.put("validation_elapsed_ms", SystemClock.elapsedRealtime() - validationStart)
+            report.put("complete", true)
+        } catch (error: Exception) {
+            report.put("error", error.toString())
+            throw error
+        } finally {
+            save()
+        }
+        println("Library validation evidence: ${output.absolutePath}")
+    }
+
     @Test
     fun prepareEvaluationDrop() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -239,7 +299,7 @@ class NativeInferenceTest {
             put(
                 "model_preparation",
                 if (verifiedFile) {
-                    "Verified GGUF fixture: checksum and native importer validator, without model installation. Library import and WorkController persistence/generation are exercised. This is not model-package import proof."
+                    "Verified GGUF file: checksum and native importer validator, without model installation. Library import and WorkController persistence/generation are exercised; normal model-package import is not proved."
                 } else {
                     "Normal model-package import"
                 }
@@ -385,11 +445,11 @@ class NativeInferenceTest {
         )
         val turn = container.database.conversations().turns(id).last()
         assertTrue("${turn.status}: ${turn.error}", turn.status in setOf("COMPLETE", "LIMITED"))
-        assertTrue(turn.answer.contains(Regex("\\[S\\d+]")))
+        val evidence = dev.blobs.app.data.library.Evidence.decode(turn.evidence)
+        assertTrue(AnswerText.citations(turn.answer, evidence.size).isNotEmpty())
         assertTrue(
             "Expected evidence from $expectedPublisher, got ${turn.evidence}",
-            dev.blobs.app.data.library.Evidence.decode(turn.evidence)
-                .any { it.publisher == expectedPublisher }
+            evidence.any { it.publisher == expectedPublisher }
         )
         assertEquals(
             "My next question stays here",

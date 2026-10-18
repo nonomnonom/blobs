@@ -65,6 +65,24 @@ class AnswerGroundingTest {
         )
     }
 
+    @Test
+    fun acceptsGroupedCitationsAndUsesEveryReferencedSource() {
+        val tcp =
+            evidence("Transmission Control Protocol", "TCP provides reliable, ordered delivery.")
+        val udp =
+            evidence(
+                "User Datagram Protocol",
+                "UDP sends datagrams and does not guarantee delivery."
+            )
+
+        assertTrue(
+            AnswerGrounding.hasSupportedCitations(
+                "UDP sends datagrams without guaranteed delivery [S1, S2].",
+                listOf(tcp, udp)
+            )
+        )
+    }
+
     private fun evidence(title: String, text: String) = Evidence(
         id = "library/document",
         title = title,

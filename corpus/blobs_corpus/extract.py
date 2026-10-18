@@ -22,7 +22,18 @@ def write_json(path: Path, value):
         stream.write('\n')
         stream.flush()
         os.fsync(stream.fileno())
-    os.replace(temporary, path)
+    try:
+        for attempt in range(6):
+            try:
+                os.replace(temporary, path)
+                break
+            except PermissionError:
+                if attempt == 5:
+                    raise
+                time.sleep(0.05 * 2 ** attempt)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
 
 
 def write_lines(path: Path, rows):

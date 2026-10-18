@@ -73,6 +73,7 @@ class PackageInstaller(
     suspend fun install(
         uri: Uri,
         expected: PackageManifest,
+        catalogDigestPinned: Boolean = false,
         progress: (Long) -> Unit
     ): PackageEntity = withContext(Dispatchers.IO) {
         mutations.withLock {
@@ -156,7 +157,7 @@ class PackageInstaller(
                     require(hash.digest().joinToString("") { "%02x".format(it) } == expected.sha256)
                 }
                 if (expected.kind == "library") {
-                    library.validate(staging)
+                    library.validate(staging, catalogDigestPinned)
                 } else {
                     GgufValidator.validate(staging)
                 }

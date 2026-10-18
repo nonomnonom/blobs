@@ -7,6 +7,8 @@ import java.util.Locale
 /** A conservative lexical citation check, not a semantic entailment test. */
 object AnswerGrounding {
     private val citation = Regex("\\[S(\\d{1,6})]")
+    private val groupedCitation = Regex("\\[(S\\d{1,6}(?:\\s*,\\s*S\\d{1,6})+)\\]")
+    private val groupedSourceId = Regex("S(\\d{1,6})")
     private val words = Regex("[\\p{L}\\p{N}]+")
     private val sentenceBreak = Regex("(?<=[.!?])\\s+(?=[A-Z])|\\n{2,}")
     private val stopWords = setOf(
@@ -33,14 +35,22 @@ object AnswerGrounding {
         val sentences = text.trim().split(sentenceBreak).filter(String::isNotBlank)
         var citedSentenceCount = 0
         for (sentence in sentences) {
-            val references = citation.findAll(sentence).mapNotNull { match ->
-                match.groupValues[1].toIntOrNull()?.minus(1)
-            }.distinct().toList()
+            val references = buildList {
+                groupedCitation.findAll(sentence).forEach { group ->
+                    groupedSourceId.findAll(group.groupValues[1]).forEach { match ->
+                        match.groupValues[1].toIntOrNull()?.minus(1)?.let(::add)
+                    }
+                }
+                citation.findAll(sentence).forEach { match ->
+                    match.groupValues[1].toIntOrNull()?.minus(1)?.let(::add)
+                }
+            }.distinct()
             if (references.isEmpty()) continue
             citedSentenceCount++
             if (references.any { it !in evidence.indices }) return false
 
-            val claimTerms = terms(citation.replace(sentence, ""))
+            val claim = groupedCitation.replace(sentence, "")
+            val claimTerms = terms(citation.replace(claim, ""))
             if (claimTerms.isEmpty()) return false
             val sourceTerms = references.flatMapTo(mutableSetOf()) { index ->
                 terms("${evidence[index].title} ${evidence[index].section} ${evidence[index].text}")

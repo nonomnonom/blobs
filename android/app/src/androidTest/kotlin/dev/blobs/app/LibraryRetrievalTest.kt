@@ -24,6 +24,11 @@ class LibraryRetrievalTest {
                 db.prepare("UPDATE passage_spans SET end=end+1").use { it.step() }
             }
             assertTrue(runCatching { store.validate(File(pack.path)) }.isFailure)
+            BundledSQLiteDriver().open(pack.path).use { db ->
+                db.prepare("UPDATE passage_spans SET end=end-1").use { it.step() }
+                db.prepare("UPDATE documents SET body=body || char(0)").use { it.step() }
+            }
+            assertTrue(runCatching { store.validate(File(pack.path)) }.isFailure)
         } finally {
             folder.deleteRecursively()
         }

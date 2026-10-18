@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "complete": false,
+  "status": "stopped_after_20m21s_without_validation_result",
+  "scope": "Isolated SQLite LibraryStore.validate on the database file with materialized document-length checks; package inflation and inference excluded.",
+  "device": {
+    "api": 36,
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys"
+  },
+  "library": {
+    "bytes": 5011431424,
+    "sha256_expected": "4ae8d2b3315ffab81bef6968ff84934a987d28843d15caa3a2d920756228e395"
+  },
+  "observation": {
+    "elapsed_ms_at_stop": 1221000,
+    "process_rchar_bytes": 13902925074,
+    "process_read_bytes": 9523302400,
+    "result": "No validation result was returned. The run was stopped for optimization after the process remained active beyond 20 minutes."
+  },
+  "limitations": [
+    "The APK digest for this diagnostic build was not retained.",
+    "No complete validation duration can be inferred from this run."
+  ]
+}

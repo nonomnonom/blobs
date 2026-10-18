@@ -5,6 +5,7 @@ import hashlib
 import html as html_module
 import io
 import json
+import os
 from pathlib import Path
 import sqlite3
 import struct
@@ -27,6 +28,27 @@ from blobs_corpus.curate import curate
 from blobs_corpus.export import export_records
 
 LOCK = read_lock(Path(__file__).resolve().parents[1] / 'sources/wikipedia-en-top-2026-09.json')
+
+
+class AtomicJSONTests(unittest.TestCase):
+    def test_write_json_retries_temporary_windows_access_denial(self):
+        replace_file = os.replace
+        attempts = 0
+
+        def replace_after_transient_denial(source, target):
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise PermissionError('temporary destination lock')
+            replace_file(source, target)
+
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / 'result.json'
+            with patch('blobs_corpus.extract.os.replace', side_effect=replace_after_transient_denial):
+                write_json(output, {'ready': True})
+            self.assertEqual(attempts, 2)
+            self.assertEqual(json.loads(output.read_text(encoding='utf-8')), {'ready': True})
+            self.assertFalse(output.with_suffix('.json.tmp').exists())
 
 
 class NormalizationTests(unittest.TestCase):
