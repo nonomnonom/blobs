@@ -23,7 +23,10 @@ from evaluation.native.audit_native_prefill import audit as audit_native_prefill
 from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
 from evaluation.native.build_answer_contract_fixture import build as build_answer_contract_fixture
-from evaluation.native.compare_native_smoke import compare as compare_native_smoke
+from evaluation.native.compare_native_smoke import (
+    compare as compare_native_smoke,
+    record as record_native_smoke,
+)
 from evaluation.retrieval.host_replay import (
     direct_title_ids,
     retrieve,
@@ -54,13 +57,22 @@ class EvaluationInputTests(unittest.TestCase):
             )
 
     def test_native_smoke_comparison_requires_repeated_paired_device_evidence(self):
-        def report(model_sha, model_bytes, total_us, run_sha):
+        workload = dict(id='native-inference-smoke-v1', system_sha256='f' * 64,
+                        user_sha256='e' * 64, max_output_tokens=96)
+
+        def report(total_us, run_sha, app_sha, test_sha):
             return dict(
                 format=1, complete=True,
-                checks={'exact_model_identity': True, 'installed_app_identity': True},
-                model={'bytes': model_bytes, 'sha256': model_sha},
-                application={'apk_sha256': 'a' * 64, 'test_apk_sha256': 'b' * 64},
+                checks={'exact_model_identity': True, 'installed_build_identity': True},
+                model={'bytes': 100, 'sha256': 'c' * 64},
+                application={'apk_sha256': app_sha, 'test_apk_sha256': test_sha},
                 device_fingerprint='emulator-fingerprint',
+                device_profile=dict(fingerprint='emulator-fingerprint', model='Pixel_8_API_36',
+                                    device='emu64xa', api=36, abi='x86_64',
+                                    available_processors=4, max_heap_bytes=536870912,
+                                    serial='emulator-5554'),
+                runtime_commit='a' * 40,
+                workload=workload,
                 inputs={'run': {'file': 'run.json', 'sha256': run_sha}},
                 observations={'inference_metrics': {
                     'total_us': total_us, 'first_token_callback_us': 600_000,
@@ -75,19 +87,27 @@ class EvaluationInputTests(unittest.TestCase):
             baseline, candidate = [], []
             for index, total in enumerate((900_000, 1_000_000, 1_100_000)):
                 path = root / f'baseline-{index}.json'
-                path.write_text(json.dumps(report('c' * 64, 100, total, str(index) * 64)), encoding='utf-8')
+                path.write_text(json.dumps(report(total, str(index) * 64, 'a' * 64, 'b' * 64)),
+                                encoding='utf-8')
                 baseline.append(path)
             for index, total in enumerate((1_000_000, 1_100_000, 1_200_000)):
                 path = root / f'candidate-{index}.json'
-                path.write_text(json.dumps(report('d' * 64, 90, total, chr(97 + index) * 64)), encoding='utf-8')
+                path.write_text(json.dumps(report(total, chr(97 + index) * 64,
+                                                  'd' * 64, 'e' * 64)), encoding='utf-8')
                 candidate.append(path)
             runtime = root / 'runtime.json'
-            runtime.write_text(json.dumps({'commit': 'pinned'}), encoding='utf-8')
+            runtime.write_text(json.dumps({'commit': 'a' * 40}), encoding='utf-8')
+
+            baseline_summary = record_native_smoke(baseline, runtime)
+            self.assertEqual(baseline_summary['median']['total_ms'], 1000)
+            self.assertEqual(baseline_summary['runtime']['commit'], 'a' * 40)
+            self.assertEqual(baseline_summary['output_tokens'], 12)
 
             result = compare_native_smoke(baseline, candidate, runtime)
             self.assertEqual(result['baseline']['median']['total_ms'], 1000)
             self.assertEqual(result['candidate']['median']['total_ms'], 1100)
             self.assertEqual(result['baseline']['median']['inference_threads'], 2)
+            self.assertNotEqual(result['application']['baseline'], result['application']['candidate'])
             self.assertNotIn('raw_answer', json.dumps(result))
             self.assertAlmostEqual(result['candidate_vs_baseline_percent']['total_latency'], 10)
 
@@ -95,6 +115,22 @@ class EvaluationInputTests(unittest.TestCase):
             mutated['device_fingerprint'] = 'different-emulator'
             candidate[-1].write_text(json.dumps(mutated), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'same identified device'):
+                compare_native_smoke(baseline, candidate, runtime)
+
+            mutated['device_fingerprint'] = 'emulator-fingerprint'
+            for path in candidate:
+                item = json.loads(path.read_text(encoding='utf-8'))
+                item['device_fingerprint'] = 'emulator-fingerprint'
+                item['observations']['inference_metrics']['output_tokens'] = 13
+                path.write_text(json.dumps(item), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'same output token count'):
+                compare_native_smoke(baseline, candidate, runtime)
+
+            for path in candidate:
+                item = json.loads(path.read_text(encoding='utf-8'))
+                item['model']['sha256'] = 'd' * 64
+                path.write_text(json.dumps(item), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'same exact model'):
                 compare_native_smoke(baseline, candidate, runtime)
 
     def test_native_smoke_comparison_requires_three_runs_per_model(self):
@@ -361,15 +397,28 @@ class EvaluationInputTests(unittest.TestCase):
             values = {
                 'run.json': dict(complete=True, model_bytes=100, model_sha256=model_hash,
                     fingerprint='fixture', inference_result=0,
+                    device_profile=dict(fingerprint='fixture', model='fixture', device='fixture',
+                                        api=36, abi='x86_64', available_processors=4,
+                                        max_heap_bytes=536870912),
+                    workload=dict(id='native-inference-smoke-v1', system_sha256='d' * 64,
+                                  user_sha256='e' * 64, max_output_tokens=96),
                     inference_metrics=dict(prompt_tokens=10, output_tokens=3, non_thinking_prefix=True,
                                            inference_threads=2, total_us=100,
                                            first_token_callback_us=80, prefill_us=70),
                     cancellation_result=1,
                     cancellation_metrics=dict(output_tokens=3, non_thinking_prefix=True),
                     failure_metrics=dict(total_us=1, first_token_callback_us=-1, output_tokens=0)),
-                'staging.json': dict(complete=True, staged=dict(bytes=100, sha256=model_hash)),
-                'lock.json': dict(model=dict(bytes=100, sha256=model_hash)),
-                'installed.json': dict(complete=True, package='dev.blobs.fixture', apk_sha256='b' * 64),
+                'staging.json': dict(complete=True, serial='emulator-5554',
+                                     device=dict(fingerprint='fixture', abi='x86_64'),
+                                     staged=dict(bytes=100, sha256=model_hash)),
+                'lock.json': dict(model=dict(bytes=100, sha256=model_hash),
+                                  runtime=dict(revision='f' * 40),
+                                  workload=dict(id='native-inference-smoke-v1',
+                                                system_sha256='d' * 64,
+                                                user_sha256='e' * 64,
+                                                max_output_tokens=96)),
+                'installed.json': dict(complete=True, package='dev.blobs.fixture',
+                                       apk_sha256='b' * 64, test_apk_sha256='c' * 64),
             }
             paths = {}
             for name, value in values.items():
@@ -381,6 +430,19 @@ class EvaluationInputTests(unittest.TestCase):
             self.assertTrue(result['complete'])
             self.assertTrue(all(result['checks'].values()))
             self.assertNotIn('raw_answer', json.dumps(result))
+            values['installed.json']['test_apk_sha256'] = 'd' * 64
+            paths['installed.json'].write_text(
+                json.dumps(values['installed.json']), encoding='utf-8'
+            )
+            with self.assertRaisesRegex(ValueError, 'installed_build_identity'):
+                audit_native_smoke(
+                    paths['run.json'], paths['staging.json'], paths['lock.json'],
+                    paths['installed.json'], 'b' * 64, 'c' * 64
+                )
+            values['installed.json']['test_apk_sha256'] = 'c' * 64
+            paths['installed.json'].write_text(
+                json.dumps(values['installed.json']), encoding='utf-8'
+            )
             values['run.json']['cancellation_metrics']['output_tokens'] = 4
             paths['run.json'].write_text(json.dumps(values['run.json']), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'exact_three_token_cancellation'):

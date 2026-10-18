@@ -34,6 +34,12 @@ import org.junit.Test
 
 @ManualCheck
 class NativeInferenceTest {
+    private companion object {
+        const val SMOKE_SYSTEM_PROMPT = "Continue in English. /no_think"
+        const val SMOKE_USER_PROMPT = "Performance smoke test:"
+        const val SMOKE_MAX_OUTPUT_TOKENS = 96
+    }
+
     @Test
     fun validatesSuppliedLibraryFile() {
         val args = InstrumentationRegistry.getArguments()
@@ -485,8 +491,29 @@ class NativeInferenceTest {
             put("run_id", runId)
             put("complete", false)
             put("fingerprint", Build.FINGERPRINT)
+            put(
+                "device_profile",
+                JSONObject().apply {
+                    put("fingerprint", Build.FINGERPRINT)
+                    put("model", Build.MODEL)
+                    put("device", Build.DEVICE)
+                    put("api", Build.VERSION.SDK_INT)
+                    put("abi", Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown")
+                    put("available_processors", Runtime.getRuntime().availableProcessors())
+                    put("max_heap_bytes", Runtime.getRuntime().maxMemory())
+                }
+            )
             put("model_bytes", File(model).length())
             put("model_sha256", hash.digest().joinToString("") { "%02x".format(it) })
+            put(
+                "workload",
+                JSONObject().apply {
+                    put("id", "native-inference-smoke-v1")
+                    put("system_sha256", SMOKE_SYSTEM_PROMPT.sha256())
+                    put("user_sha256", SMOKE_USER_PROMPT.sha256())
+                    put("max_output_tokens", SMOKE_MAX_OUTPUT_TOKENS)
+                }
+            )
             put(
                 "timing_scope",
                 "Native stages in microseconds; -1 means not reached. First callback includes queue, loading and prefill; callback bytes may not yet form visible UTF-8 text. Generation loop includes token callbacks. File hash reads precede loading; this is not a filesystem-cold or phone-performance benchmark."
@@ -499,9 +526,9 @@ class NativeInferenceTest {
         val metrics = GenerationMetrics()
         val result = bridge.generate(
             model.toByteArray(),
-            "Continue in English. /no_think".toByteArray(),
-            "Performance smoke test:".toByteArray(),
-            96,
+            SMOKE_SYSTEM_PROMPT.toByteArray(),
+            SMOKE_USER_PROMPT.toByteArray(),
+            SMOKE_MAX_OUTPUT_TOKENS,
             TokenSink {},
             metrics
         )
@@ -572,6 +599,10 @@ class NativeInferenceTest {
         put("non_thinking_prefix", nonThinkingPrefix)
         put("inference_threads", inferenceThreads)
     }
+
+    private fun String.sha256(): String = MessageDigest.getInstance("SHA-256")
+        .digest(toByteArray())
+        .joinToString("") { "%02x".format(it) }
 
     private fun saveReport(output: File, report: JSONObject) {
         val file = AtomicFile(output)

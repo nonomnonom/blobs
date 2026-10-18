@@ -22,6 +22,33 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         if not re.fullmatch(r'[a-f0-9]{64}', value):
             raise ValueError('APK hashes must be lowercase SHA-256 values')
     expected = lock.get('model', {})
+    runtime = lock.get('runtime', {})
+    runtime_commit = runtime.get('revision') or runtime.get('commit')
+    workload = run.get('workload')
+    locked_workload = lock.get('workload')
+    profile = run.get('device_profile')
+    staged_device = staging.get('device', {})
+    profile_valid = (
+        isinstance(profile, dict) and
+        profile.get('fingerprint') == run.get('fingerprint') and
+        profile.get('fingerprint') == staged_device.get('fingerprint') and
+        all(isinstance(profile.get(field), str) and profile[field]
+            for field in ('model', 'device', 'abi')) and
+        profile.get('abi') == staged_device.get('abi') and
+        isinstance(staging.get('serial'), str) and bool(staging['serial']) and
+        type(profile.get('api')) is int and profile['api'] >= 28 and
+        type(profile.get('available_processors')) is int and profile['available_processors'] > 0 and
+        type(profile.get('max_heap_bytes')) is int and profile['max_heap_bytes'] > 0
+    )
+    workload_valid = (
+        isinstance(workload, dict) and
+        workload.get('id') == 'native-inference-smoke-v1' and
+        workload == locked_workload and
+        all(re.fullmatch(r'[a-f0-9]{64}', workload.get(field, ''))
+            for field in ('system_sha256', 'user_sha256')) and
+        type(workload.get('max_output_tokens')) is int and
+        1 <= workload['max_output_tokens'] <= 768
+    )
     identity = (
         type(expected.get('bytes')) is int and expected['bytes'] > 0 and
         re.fullmatch(r'[a-f0-9]{64}', expected.get('sha256', '')) and
@@ -35,7 +62,11 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         inputs_complete=run.get('complete') is True and staging.get('complete') is True and
                         installed.get('complete') is True,
         exact_model_identity=bool(identity),
-        installed_app_identity=installed.get('apk_sha256') == app_apk_sha256,
+        device_profile_complete=bool(profile_valid),
+        pinned_runtime=bool(re.fullmatch(r'[a-f0-9]{40}', runtime_commit or '')),
+        fixed_workload=bool(workload_valid),
+        installed_build_identity=(installed.get('apk_sha256') == app_apk_sha256 and
+                                  installed.get('test_apk_sha256') == test_apk_sha256),
         inference_completed=run.get('inference_result') in {0, 2},
         inference_metrics_present=(type(inference.get('prompt_tokens')) is int and
                                    inference['prompt_tokens'] > 0 and
@@ -73,7 +104,10 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         application=dict(package=installed.get('package'), apk_sha256=app_apk_sha256,
                          test_apk_sha256=test_apk_sha256),
         model=dict(bytes=expected['bytes'], sha256=expected['sha256']),
+        runtime_commit=runtime_commit,
+        workload=workload,
         device_fingerprint=run.get('fingerprint'),
+        device_profile=dict(profile, serial=staging.get('serial')) if profile_valid else None,
         checks=checks,
         observations=dict(
             inference_metrics=inference,

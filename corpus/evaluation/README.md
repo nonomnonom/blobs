@@ -56,7 +56,7 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v1-host.json
 ```
 
-The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Future topic libraries, such as survival, should use their own package identity and topic-specific retrieval cases; they can share the same schema and retrieval implementation while keeping source licensing and update cadence independent.
+The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Additional topic libraries should use their own package identity and topic-specific retrieval cases; they can share the same schema and retrieval implementation while keeping source licensing and update cadence independent.
 
 The U.S. outdoor-safety package uses the same retrieval-only check:
 
@@ -67,3 +67,5 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --work-directory work/reports/nps-outdoor-safety-retrieval-v1 `
   --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v1-host.json
 ```
+
+For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
