@@ -4,6 +4,8 @@ object AnswerText {
     data class Citation(val range: IntRange, val sourceIndex: Int)
 
     private val namespacedCitation = Regex("\\[S(\\d{1,6})]")
+    private val groupedNamespacedCitation = Regex("\\[(S\\d{1,6}(?:\\s*,\\s*S\\d{1,6})+)\\]")
+    private val groupedSourceId = Regex("S(\\d{1,6})")
     private val legacyCitation = Regex("\\[(\\d{1,6})]")
 
     fun visible(raw: String): String {
@@ -19,22 +21,44 @@ object AnswerText {
         }
     }
 
-    fun validSourceCitations(text: String, count: Int): String =
-        Regex("\\[(S?)(\\d{1,6})]").replace(text) {
+    fun validSourceCitations(text: String, count: Int): String {
+        val grouped = groupedNamespacedCitation.replace(text) { match ->
+            val sources = groupedSourceId.findAll(match.groupValues[1])
+                .mapNotNull { it.groupValues[1].toIntOrNull() }
+                .filter { it in 1..count }
+                .distinct()
+                .toList()
+            sources.takeIf { it.isNotEmpty() }?.joinToString(", ", "[", "]") { "S$it" } ?: ""
+        }
+        return Regex("\\[(S?)(\\d{1,6})]").replace(grouped) {
             val source = it.groupValues[2].toIntOrNull() ?: 0
             if (it.groupValues[1] == "S" && source in 1..count) it.value else ""
         }
+    }
 
     fun citations(text: String, count: Int): List<Citation> {
-        val namespaced = namespacedCitation.findAll(text).toList()
-        val selected = if (namespaced.isNotEmpty()) {
-            namespaced
-        } else {
-            legacyCitation.findAll(text).toList()
-        }
-        return selected.mapNotNull { match ->
+        val namespaced = buildList {
+            groupedNamespacedCitation.findAll(text).forEach { group ->
+                groupedSourceId.findAll(group.groupValues[1]).forEach source@{ sourceMatch ->
+                    val source = sourceMatch.groupValues[1].toIntOrNull() ?: return@source
+                    if (source in 1..count) {
+                        val start = group.range.first + 1 + sourceMatch.range.first
+                        val end = group.range.first + 1 + sourceMatch.range.last
+                        add(Citation(start..end, source - 1))
+                    }
+                }
+            }
+            namespacedCitation.findAll(text).forEach citation@{ match ->
+                val source = match.groupValues[1].toIntOrNull() ?: return@citation
+                if (source in 1..count) add(Citation(match.range, source - 1))
+            }
+        }.sortedBy { it.range.first }
+        val hasNamespacedCitations = groupedNamespacedCitation.containsMatchIn(text) ||
+            namespacedCitation.containsMatchIn(text)
+        if (hasNamespacedCitations) return namespaced
+        return legacyCitation.findAll(text).mapNotNull { match ->
             val source = match.groupValues[1].toIntOrNull() ?: return@mapNotNull null
             if (source in 1..count) Citation(match.range, source - 1) else null
-        }
+        }.toList()
     }
 }

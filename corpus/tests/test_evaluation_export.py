@@ -15,6 +15,8 @@ class ExportHostRunTests(unittest.TestCase):
                      expected_titles=['Checksum'], review='Define it.'),
                 dict(id='two', category='explanation', question='Why can salt melt ice?',
                      expected_titles=['Freezing-point depression'], review='Explain the cause.'),
+                dict(id='three', category='explanation', question='Why did it happen?',
+                     expected_titles=[], review='State when the source is insufficient.'),
             ],
         }
         run = {
@@ -28,12 +30,17 @@ class ExportHostRunTests(unittest.TestCase):
             'retrieval_report_sha256': '1' * 64,
             'results': [
                 dict(case_id='one', question='What is a checksum?', status='RECORDED',
-                     response={'content': 'It detects transfer errors. [S1]'},
-                     evidence=[dict(id='one', title='Checksum', text='A checksum detects errors.')],
+                     response={'content': 'It detects transfer errors [S1, S2].'},
+                     evidence=[dict(id='one', title='Checksum', text='A checksum detects errors.'),
+                               dict(id='two', title='Integrity', text='Integrity is assessed.')],
                      host_elapsed_ms=1000, first_content_arrival_ms=400, prompt_tokens=200),
                 dict(case_id='two', question='Why can salt melt ice?', status='ERROR',
                      response=None, error='timeout', evidence=[], host_elapsed_ms=None,
                      first_content_arrival_ms=None, prompt_tokens=300),
+                dict(case_id='three', question='Why did it happen?', status='RECORDED',
+                     response={'content': 'The saved sources do not establish why.'},
+                     evidence=[dict(id='three', title='Event', text='An event occurred.')],
+                     host_elapsed_ms=900, first_content_arrival_ms=300, prompt_tokens=100),
             ],
         }
         with tempfile.TemporaryDirectory() as folder:
@@ -44,12 +51,16 @@ class ExportHostRunTests(unittest.TestCase):
             cases_path.write_text(json.dumps(cases), encoding='utf-8')
             result = export_run(run, cases, run_path, cases_path)
 
-        self.assertEqual(result['summary']['case_count'], 2)
-        self.assertEqual(result['summary']['generation_status_counts'], {'ERROR': 1, 'RECORDED': 1})
+        self.assertEqual(result['summary']['case_count'], 3)
+        self.assertEqual(result['summary']['generation_status_counts'], {'ERROR': 1, 'RECORDED': 2})
         self.assertEqual(result['summary']['recorded_answers_with_valid_citations'], 1)
+        self.assertEqual(result['summary']['recorded_answers_without_citations'], 1)
+        self.assertEqual(result['summary']['recorded_answers_with_out_of_range_citations'], 0)
         self.assertEqual(result['summary']['cases_with_any_exact_expected_title'], 1)
         self.assertEqual(result['results'][1]['error'], 'timeout')
         self.assertEqual(result['results'][0]['evidence'][0]['title'], 'Checksum')
+        self.assertEqual(result['results'][0]['citation_ids'], [1, 2])
+        self.assertTrue(result['results'][0]['citation_ids_in_range'])
         self.assertIn('semantic score', result['scope'])
 
     def test_export_rejects_duplicate_or_changed_questions(self):

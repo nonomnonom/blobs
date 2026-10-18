@@ -65,7 +65,8 @@ def export_run(run: dict, cases: dict, run_path: Path, cases_path: Path):
         if not isinstance(answer, str):
             raise ValueError(f'Answer content is not text for {case_id}')
         evidence = _evidence(row)
-        source_ids = [int(value) for value in re.findall(r'\[S(\d+)]', answer)]
+        source_ids = [int(value) for group in re.findall(r'\[(S\d+(?:\s*,\s*S\d+)*)\]', answer)
+                      for value in re.findall(r'S(\d+)', group)]
         evidence_titles = {item.get('title', '').casefold() for item in evidence}
         expected_titles = case.get('expected_titles', [])
         results.append(dict(
@@ -81,6 +82,7 @@ def export_run(run: dict, cases: dict, run_path: Path, cases_path: Path):
             prompt_tokens=row.get('prompt_tokens'),
             source_count=len(evidence),
             citation_ids=source_ids,
+            citations_present=bool(source_ids),
             citation_ids_in_range=bool(source_ids) and all(1 <= source_id <= len(evidence)
                                                            for source_id in source_ids),
             expected_titles=expected_titles,
@@ -101,6 +103,10 @@ def export_run(run: dict, cases: dict, run_path: Path, cases_path: Path):
         generation_status_counts=dict(sorted(statuses.items())),
         recorded_answers_with_valid_citations=sum(item['citation_ids_in_range'] for item in completed),
         recorded_answers_without_valid_citations=sum(not item['citation_ids_in_range'] for item in completed),
+        recorded_answers_without_citations=sum(not item['citations_present'] for item in completed),
+        recorded_answers_with_out_of_range_citations=sum(
+            item['citations_present'] and not item['citation_ids_in_range'] for item in completed
+        ),
         cases_with_any_exact_expected_title=sum(bool(item['expected_titles_present']) for item in results),
         cases_with_all_exact_expected_titles=sum(
             bool(item['expected_titles']) and item['expected_titles_present'] == item['expected_titles']

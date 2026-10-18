@@ -25,6 +25,17 @@ class AnswerTextTest {
     }
 
     @Test
+    fun groupedNamespacedCitationsKeepOnlyAvailableSources() {
+        assertEquals(
+            "Supported [S1, S2]. Unsupported .",
+            AnswerText.validSourceCitations(
+                "Supported [S1, S2, S9]. Unsupported [S9, S8].",
+                2
+            )
+        )
+    }
+
+    @Test
     fun citationParsingPrefersNamespacedIdsAndKeepsLegacyAnswersReadable() {
         assertEquals(
             listOf(AnswerText.Citation(4..7, 1)),
@@ -35,6 +46,18 @@ class AnswerTextTest {
             AnswerText.citations("Legacy [2] and unavailable [9]", 2)
         )
         assertTrue(AnswerText.citations("Invalid [S9] and numeric [1]", 2).isEmpty())
+    }
+
+    @Test
+    fun groupedNamespacedCitationsExposeEverySourceAsAClickableToken() {
+        assertEquals(
+            listOf(
+                AnswerText.Citation(6..7, 0),
+                AnswerText.Citation(10..11, 1),
+                AnswerText.Citation(19..22, 1)
+            ),
+            AnswerText.citations("Both [S1, S2] then [S2]", 2)
+        )
     }
 
     @Test

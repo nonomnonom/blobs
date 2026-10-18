@@ -28,6 +28,8 @@ The Android answer path now fails closed when a completed answer has no usable s
 
 Model selection is family-neutral. Publisher benchmark tables can shortlist candidates, but Blobs should select a default only after running the same answer cases, corpus, prompt, and runtime on each candidate and reviewing source support, abstention, peak memory, and Android latency. A larger or publisher-described “frontier” model is not automatically the best phone experience.
 
+The [matched Qwen3 1.7B and Gemma 4 E2B runs](results/) compare the same 40 cases, retrieved passages, current system prompt, product sampling profile, and llama.cpp revision on one Windows CPU host. Gemma was faster in this host run and abstained without a citation twice; Qwen cited all 40. Neither output set has a blind semantic grade, and these host timings do not predict Android performance. Source-level review found that retrieval can still cause a fluent model to cite a related but unsupported page. Use the raw passages and answers for claim-by-claim review before changing the default model.
+
 Export a completed host answer run into a reviewable, version-controlled result with its model/runtime/prompt fingerprints and mechanical metrics:
 
 ```powershell
