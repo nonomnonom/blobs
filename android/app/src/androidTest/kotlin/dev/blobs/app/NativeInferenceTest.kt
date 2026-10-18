@@ -2,6 +2,8 @@ package dev.blobs.app
 
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
+import android.os.StatFs
 import android.os.SystemClock
 import android.util.AtomicFile
 import androidx.test.platform.app.InstrumentationRegistry
@@ -30,6 +32,75 @@ import org.junit.Test
 
 @ManualCheck
 class NativeInferenceTest {
+    @Test
+    fun prepareEvaluationDrop() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val folder = requireNotNull(context.getExternalFilesDir("eval"))
+        check(folder.mkdirs() || folder.isDirectory)
+        println("Evaluation drop: ${folder.absolutePath}")
+    }
+
+    @Test
+    fun stageEvaluationFileFromAppExternalStorage() {
+        val args = InstrumentationRegistry.getArguments()
+        val runId = requireNotNull(args.getString("runId"))
+        require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
+        val sourceName = requireNotNull(args.getString("sourceName"))
+        require(sourceName.matches(Regex("[a-zA-Z0-9._-]{1,120}")))
+        val expectedBytes = requireNotNull(args.getString("expectedBytes")).toLong()
+        require(expectedBytes in 1..20L * 1024 * 1024 * 1024)
+        val expectedSha256 = requireNotNull(args.getString("expectedSha256"))
+        require(expectedSha256.matches(Regex("[a-f0-9]{64}")))
+        val deleteSourceAfterCopy = args.getString("deleteSourceAfterCopy") == "true"
+
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val sourceRoot = requireNotNull(context.getExternalFilesDir("eval")).canonicalFile
+        check(sourceRoot.mkdirs() || sourceRoot.isDirectory)
+        val source = File(sourceRoot, sourceName).canonicalFile
+        check(source.parentFile == sourceRoot && source.isFile)
+        check(source.length() == expectedBytes)
+
+        val destinationRoot = File(context.filesDir, "evaluation/$runId")
+        check(destinationRoot.mkdirs() || destinationRoot.isDirectory)
+        val destination = File(destinationRoot, sourceName)
+        check(!destination.exists())
+        val availableBytes = StatFs(destinationRoot.path).availableBytes
+        check(availableBytes > expectedBytes + 64L * 1024 * 1024) {
+            "Need the file plus 64 MiB of free app storage"
+        }
+
+        val atomic = AtomicFile(destination)
+        val output = atomic.startWrite()
+        try {
+            val command = "cat ${source.absolutePath}"
+            ParcelFileDescriptor.AutoCloseInputStream(
+                InstrumentationRegistry.getInstrumentation().uiAutomation
+                    .executeShellCommand(command)
+            ).use { input ->
+                val digest = MessageDigest.getInstance("SHA-256")
+                val buffer = ByteArray(256 * 1024)
+                var copied = 0L
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    copied += count
+                    check(copied <= expectedBytes) { "Staged file exceeds its locked size" }
+                    digest.update(buffer, 0, count)
+                    output.write(buffer, 0, count)
+                }
+                check(copied == expectedBytes) { "Staged file is incomplete" }
+                val actualSha256 = digest.digest().joinToString("") { "%02x".format(it) }
+                check(actualSha256 == expectedSha256) { "Staged file differs from its lock" }
+            }
+            atomic.finishWrite(output)
+        } catch (error: Exception) {
+            atomic.failWrite(output)
+            throw error
+        }
+        if (deleteSourceAfterCopy) check(source.delete())
+        println("Staged evaluation file: ${destination.absolutePath}")
+    }
+
     @Test
     fun prepareLibraryForAnswerEvaluation() = runBlocking<Unit> {
         val args = InstrumentationRegistry.getArguments()
@@ -65,6 +136,69 @@ class NativeInferenceTest {
     @Test
     fun verifiedModelFileProducesSavedCitedAnswer() = recordAnswer(true)
 
+    @Test
+    fun emptyLibraryReturnsNoSourcesWithoutLoadingModel() = runBlocking {
+        val args = InstrumentationRegistry.getArguments()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val container = (context.applicationContext as BlobsApplication).container
+        withTimeout(15_000) { container.work.state.first { it.ready } }
+        val runId = args.getString("runId") ?: UUID.randomUUID().toString()
+        require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
+        val id = "no-sources-$runId"
+        val question = "What does the fictional Teren instrument measure?"
+        val reportFile = File(context.filesDir, "no-sources-$runId.json")
+        check(!reportFile.exists())
+        container.database.conversations().save(
+            ConversationEntity(
+                id,
+                "",
+                question,
+                System.currentTimeMillis(),
+                System.currentTimeMillis()
+            )
+        )
+        val unusedModel = PackageEntity(
+            "unused-model", "unused-model", "1", "model", "missing.gguf", "/not-used.gguf",
+            0, "0".repeat(64), "Test only", "local:test", 0
+        )
+        val startedAt = SystemClock.elapsedRealtime()
+        assertTrue(
+            container.work.answer(
+                id,
+                question,
+                unusedModel,
+                emptyList(),
+                null
+            )
+        )
+        withTimeout(15_000) { container.work.state.first { it.threadId == id && !it.busy } }
+        val turn = container.database.conversations().turns(id).single()
+        val elapsedMs = SystemClock.elapsedRealtime() - startedAt
+        assertEquals("NO_SOURCES", turn.status)
+        assertEquals("", turn.answer)
+        assertEquals("[]", turn.evidence)
+        saveReport(
+            reportFile,
+            JSONObject().apply {
+                put("format", 1)
+                put("run_id", runId)
+                put("complete", true)
+                put(
+                    "scope",
+                    "Empty-library product-path control; no model file was opened or generated."
+                )
+                put("application_id", context.packageName)
+                put("fingerprint", Build.FINGERPRINT)
+                put("api", Build.VERSION.SDK_INT)
+                put("question", question)
+                put("status", turn.status)
+                put("answer", turn.answer)
+                put("evidence", turn.evidence)
+                put("elapsed_ms", elapsedMs)
+            }
+        )
+    }
+
     private fun recordAnswer(verifiedFile: Boolean) = runBlocking {
         val args = InstrumentationRegistry.getArguments()
         val modelPath = requireNotNull(
@@ -80,6 +214,8 @@ class NativeInferenceTest {
         val question = args.getString("question")
             ?: "How do trees reduce urban heat? Explain with sources."
         require(question.length in 1..2000)
+        val expectedPublisher = args.getString("expectedPublisher") ?: "Wikipedia contributors"
+        require(expectedPublisher.length in 1..300)
         val timeoutMs = (args.getString("timeoutSeconds") ?: "240").toLong() * 1000
         require(timeoutMs in 60_000..600_000)
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -93,6 +229,7 @@ class NativeInferenceTest {
             put("run_id", runId)
             put("complete", false)
             put("question", question)
+            put("expected_evidence_publisher", expectedPublisher)
             put("application_id", context.packageName)
             put("fingerprint", Build.FINGERPRINT)
             put("api", Build.VERSION.SDK_INT)
@@ -247,7 +384,11 @@ class NativeInferenceTest {
         val turn = container.database.conversations().turns(id).last()
         assertTrue("${turn.status}: ${turn.error}", turn.status in setOf("COMPLETE", "LIMITED"))
         assertTrue(turn.answer.contains(Regex("\\[S\\d+]")))
-        assertTrue(turn.evidence.contains("Wikipedia contributors"))
+        assertTrue(
+            "Expected evidence from $expectedPublisher, got ${turn.evidence}",
+            dev.blobs.app.data.library.Evidence.decode(turn.evidence)
+                .any { it.publisher == expectedPublisher }
+        )
         assertEquals(
             "My next question stays here",
             container.database.conversations().find(id)?.draft

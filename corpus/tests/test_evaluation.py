@@ -22,6 +22,7 @@ from evaluation.answers.compare_runs import compare as compare_answer_runs
 from evaluation.native.audit_native_prefill import audit as audit_native_prefill
 from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
+from evaluation.native.build_answer_contract_fixture import build as build_answer_contract_fixture
 from evaluation.native.compare_native_smoke import compare as compare_native_smoke
 from evaluation.retrieval.host_replay import retrieval_query, select_evidence, verify_report_library
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
@@ -29,6 +30,18 @@ from evaluation.retrieval.title_coverage import inspect as inspect_titles
 
 
 class EvaluationInputTests(unittest.TestCase):
+    def test_answer_contract_fixture_build_is_verified_and_reproducible(self):
+        with tempfile.TemporaryDirectory() as folder:
+            archive = build_answer_contract_fixture(Path(folder) / 'fixture')
+            manifest = verify_package(archive)
+            self.assertEqual(manifest['id'], 'answer-contract-fixture')
+            self.assertEqual(manifest['version'], '2')
+            self.assertEqual(manifest['bytes'], 69_632)
+            self.assertEqual(
+                hashlib.sha256(archive.read_bytes()).hexdigest(),
+                '573ae4f95563a72f4b5297842fe00022ab59239860bcd4e0c5f1bb1ac138d13b',
+            )
+
     def test_native_smoke_comparison_requires_repeated_paired_device_evidence(self):
         def report(model_sha, model_bytes, total_us, run_sha):
             return dict(
