@@ -28,6 +28,7 @@ from blobs_corpus.curate import curate
 from blobs_corpus.export import export_records
 
 LOCK = read_lock(Path(__file__).resolve().parents[1] / 'sources/wikipedia-en-top-2026-09.json')
+WIKIVOYAGE_LOCK = read_lock(Path(__file__).resolve().parents[1] / 'sources/wikivoyage-en-all-nopic-2026-09.json')
 
 
 class AtomicJSONTests(unittest.TestCase):
@@ -121,6 +122,22 @@ class NormalizationTests(unittest.TestCase):
         self.assertEqual(next(s['path'] for s in spans if s['section'] == 'Relation'), ['Measurements', 'Relation'])
         self.assertTrue(all(item['body'][s['start']:s['end']] == s['body'] for s in spans))
 
+    def test_wikivoyage_records_keep_their_own_canonical_and_revision_hosts(self):
+        html = b'''<script>RLCONF = {"wgCurRevisionId":456,"wgCategories":["Travel"]};</script>
+        <link rel="canonical" href="https://en.wikivoyage.org/wiki/Jakarta">
+        <div class="mw-parser-output"><p>Jakarta is a large city in Indonesia with extensive public transit,
+        historic neighborhoods, local food, and several ways for visitors to reach the city center.</p></div>'''
+        item = article(html, 'Jakarta', 'A/Jakarta', WIKIVOYAGE_LOCK)
+
+        self.assertEqual(item['url'], 'https://en.wikivoyage.org/wiki/Jakarta')
+        self.assertEqual(item['publisher'], 'Wikivoyage contributors')
+        self.assertIn('en.wikivoyage.org/wiki/Jakarta?action=history', item['license'])
+        self.assertEqual(
+            item['provenance']['revision_url'],
+            'https://en.wikivoyage.org/w/index.php?oldid=456',
+        )
+        self.assertEqual(item['collection'], 'Wikivoyage · English travel guides')
+
     def test_redirect_is_not_misrepresented_as_an_article(self):
         with self.assertRaises(ArticleRedirect) as caught:
             article(b'<meta http-equiv="refresh" content="0;URL=\'./Energy#History\'">', 'Alias', 'Alias', LOCK)
@@ -200,6 +217,7 @@ class BuildTests(unittest.TestCase):
         aliases = [dict(path=path, title=title, target=target) for path, title, target in [
             ('CO2', 'CO₂', 'Carbon_dioxide#Properties'),
             ('Chain', 'Gas name', './CO2'),
+            ('Conflict', 'Carbon dioxide', 'Other_subject'),
             ('Ambiguous1', 'Shared', 'Carbon_dioxide'),
             ('Ambiguous2', 'Shared', 'Other_subject'),
             ('Missing', 'Missing', 'Excluded_article'),
@@ -212,16 +230,17 @@ class BuildTests(unittest.TestCase):
                 write_lines(path, rows)
                 files[kind] = dict(name=path.name, bytes=path.stat().st_size,
                                    sha256=hashlib.sha256(path.read_bytes()).hexdigest())
-            write_json(root / 'manifest.json', dict(format=1, complete=True, next_entry=9,
-                       shards=[dict(start=0, end=9, files=files)]))
+            write_json(root / 'manifest.json', dict(format=1, complete=True, next_entry=10,
+                       shards=[dict(start=0, end=10, files=files)]))
             report = build_library(root / 'manifest.json', root / 'library.sqlite')
-            self.assertEqual(report['document_names']['resolved_redirects'], 4)
+            self.assertEqual(report['document_names']['resolved_redirects'], 5)
             self.assertEqual(report['document_names']['unresolved_redirects'], 3)
             self.assertEqual(report['document_names']['ambiguous_names'], 1)
             with closing(sqlite3.connect(root / 'library.sqlite')) as db:
                 rows = dict(db.execute("SELECT name,doc_id FROM document_names WHERE name!='shared'"))
                 self.assertEqual(rows['co2'], items[0]['id'])
                 self.assertEqual(rows['gas name'], items[0]['id'])
+                self.assertEqual(rows['carbon dioxide'], items[0]['id'])
                 self.assertEqual(rows['other subject'], items[1]['id'])
                 self.assertNotIn('missing', rows)
                 self.assertNotIn('cycle one', rows)
@@ -274,6 +293,31 @@ class BuildTests(unittest.TestCase):
             reviewed = curate(root / 'manifest.json', root / 'reviewed')
             self.assertEqual(reviewed['curation']['source_id'], 'wikipedia-en-top1m-mini')
             self.assertEqual([doc['title'] for doc in documents(root / 'reviewed/manifest.json')], ['Article'])
+
+    def test_review_accepts_pinned_wikivoyage_source(self):
+        item = article(
+            b'<p>This travel guide explains enough useful local context to satisfy the extraction quality threshold.</p>',
+            'Jakarta', 'A/Jakarta', WIKIVOYAGE_LOCK)
+        with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
+            root = Path(folder)
+            shard = root / 'documents.jsonl.gz'
+            write_lines(shard, [item])
+            info = dict(name=shard.name, bytes=shard.stat().st_size,
+                        sha256=hashlib.sha256(shard.read_bytes()).hexdigest())
+            write_json(root / 'manifest.json', dict(
+                format=1, source=WIKIVOYAGE_LOCK, complete=True, next_entry=1,
+                totals={'documents': 1},
+                shards=[dict(start=0, end=1, counts={'documents': 1, 'attributed': 1,
+                                                     'text_characters': len(item['body']),
+                                                     'text_utf8_bytes': len(item['body'].encode())},
+                             files={'documents': info})]))
+            reviewed = curate(root / 'manifest.json', root / 'reviewed')
+
+            self.assertEqual(reviewed['curation']['source_id'], 'wikivoyage-en-all-nopic')
+            self.assertEqual(
+                [doc['url'] for doc in documents(root / 'reviewed/manifest.json')],
+                ['https://en.wikivoyage.org/wiki/Jakarta'],
+            )
 
     def test_title_and_section_search_is_explicitly_versioned(self):
         item = article(b'<p>This original explanatory text contains no article name. It is deliberately long enough to be a valid fixture.</p><h2>Observations</h2><p>A second paragraph contains the evidence.</p>', 'Thermodynamics', 'Thermodynamics', LOCK)

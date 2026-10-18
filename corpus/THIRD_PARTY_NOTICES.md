@@ -6,4 +6,6 @@
 
 Wikipedia text remains attributed to Wikipedia contributors under the applicable [CC BY-SA 4.0 text](licenses/CC-BY-SA-4.0.txt). Blobs extracts/reformats text, removes page navigation and images, and converts tables to text rows. Each normalized article contains its canonical URL, contributor/history URL, archive identity and available revision identity. The source archive's publisher is openZIM/Kiwix; that does not replace Wikipedia contributor attribution. Do not reuse images or treat arbitrary linked third-party content as uniformly licensed Wikipedia text.
 
+The optional English travel library contains text from Wikivoyage contributors under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). It uses the September 2026 Kiwix snapshot; article-history links are retained for contributor attribution, and images are excluded. See the [Wikivoyage reuse guide](https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides) before reusing the data.
+
 The original Android contract-test article is explicitly CC0-1.0 and contains imaginary measurements. It is not included in the knowledge pack. See [Android notices](../android/THIRD_PARTY_NOTICES.md) for runtime, model and application ownership.

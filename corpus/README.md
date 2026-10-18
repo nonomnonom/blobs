@@ -52,6 +52,40 @@ uv run --locked python -m blobs_corpus.package library `
 
 The source lock captures snapshot, scope, license, origin, byte count, and digest. Review the generated curation report and package receipt before distributing an edition. Do not commit the raw archive, database, or `.blobs` package to Git; the repository's large reviewed record-shard policy uses Git LFS, while reproducible release packages are distributed separately.
 
+### Build the travel library
+
+The English travel library uses the pinned September 2026 Wikivoyage snapshot. Run from `corpus/`:
+
+```powershell
+uv run --locked python -m blobs_corpus.acquire `
+  sources/wikivoyage-en-all-nopic-2026-09.json work/sources
+
+uv run --locked python -m blobs_corpus.extract `
+  sources/wikivoyage-en-all-nopic-2026-09.json `
+  work/sources/wikivoyage_en_all_nopic_2026-09.zim `
+  work/extract/wikivoyage-en-all-nopic-2026-09
+
+uv run --locked python -m blobs_corpus.curate `
+  work/extract/wikivoyage-en-all-nopic-2026-09/manifest.json `
+  work/reviewed/wikivoyage-en-all-nopic-2026-09
+
+uv run --locked python -m blobs_corpus.export `
+  work/reviewed/wikivoyage-en-all-nopic-2026-09/manifest.json `
+  artifacts/records/wikivoyage-en-all-nopic-2026-09
+
+uv run --locked python -m blobs_corpus.package library `
+  artifacts/records/wikivoyage-en-all-nopic-2026-09/manifest.json `
+  work/packages/wikivoyage-en-2026-09-v2.blobs `
+  --schema 3 `
+  --id wikivoyage-en `
+  --version 2026-09.2 `
+  --title "Travel guides · English" `
+  --license "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution" `
+  --origin "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides"
+```
+
+The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change. Future topics such as survival should use their own pinned source editions and review before they are added to the download list.
+
 Extraction checkpoints are safe to resume after a normal interrupt. If the process is forcibly terminated, it can leave `work/extract/EDITION/.extract.lock`; confirm no extractor is still running before removing that stale file and resuming. Never remove the lock while an extraction process is active.
 
 Example package build from normalized records:

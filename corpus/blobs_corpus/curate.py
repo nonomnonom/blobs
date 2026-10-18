@@ -10,15 +10,19 @@ from .acquire import digest
 from .extract import verified_shards, write_json, write_lines
 from .records import documents
 
-SUPPORTED_SOURCES = {'wikipedia-en-top', 'wikipedia-en-top1m-mini'}
+SUPPORTED_SOURCES = {
+    'wikipedia-en-top',
+    'wikipedia-en-top1m-mini',
+    'wikivoyage-en-all-nopic',
+}
 
 
 def exclusion(document):
     path = document.get('provenance', {}).get('entry_path', '')
     if path.startswith('_assets_/'):
-        return 'Bundled support asset, not a Wikipedia article'
+        return 'Bundled support asset, not a source article'
     if path == 'index':
-        return 'Archive navigation page, not a Wikipedia article'
+        return 'Archive navigation page, not a source article'
     return None
 
 
@@ -27,7 +31,7 @@ def curate(source: Path, output: Path):
     if not original['complete']:
         raise ValueError('Finish extraction before review')
     if original['source']['id'] not in SUPPORTED_SOURCES or original.get('curation'):
-        raise ValueError('This review policy applies once to a supported raw Kiwix English top extraction')
+        raise ValueError('This review policy applies once to a supported raw Kiwix article extraction')
     if output.exists():
         raise FileExistsError(output)
     output.parent.mkdir(parents=True, exist_ok=True)

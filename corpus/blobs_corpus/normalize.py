@@ -7,7 +7,7 @@ from urllib.parse import quote, urlsplit, unquote
 
 from .records import validate_document
 
-EXTRACTOR_VERSION = '3'
+EXTRACTOR_VERSION = '4'
 FURNITURE = ('script,style,nav,footer,form,.navbox,.vertical-navbox,.mw-editsection,'
              '.mw-jump-link,.toc,.catlinks,.printfooter,.mw-cite-backlink,.noprint,'
              '#siteSub,#jump-to-nav,.hatnote,[role~="navigation"]')
@@ -210,9 +210,10 @@ def article(html: bytes, title: str, path: str, lock: dict) -> dict:
     # A stable URL identifies the article; the lock + ZIM path identify its
     # actual snapshot. Do not invent a per-article revision or modified date.
     article_path = path[2:] if path.startswith('A/') else path
-    url = 'https://en.wikipedia.org/wiki/' + quote(article_path, safe='/()_,:-')
+    wiki_host = lock.get('wiki_host', 'en.wikipedia.org')
+    url = f'https://{wiki_host}/wiki/' + quote(article_path, safe='/()_,:-')
     parsed = urlsplit(canonical_url)
-    if parsed.scheme == 'https' and parsed.netloc == 'en.wikipedia.org' and parsed.path.startswith('/wiki/'):
+    if parsed.scheme == 'https' and parsed.netloc == wiki_host and parsed.path.startswith('/wiki/'):
         url = canonical_url
     revision = config.get('wgCurRevisionId')
     revision = revision if isinstance(revision, int) and revision > 0 else None
@@ -228,7 +229,7 @@ def article(html: bytes, title: str, path: str, lock: dict) -> dict:
                                 normalization=dict(aria_navigation_nodes_removed=navigation_count,
                                                    leading_infoboxes_moved=moved_infoboxes),
                                 revision_id=revision,
-                                revision_url=f'https://en.wikipedia.org/w/index.php?oldid={revision}' if revision else None,
+                                revision_url=f'https://{wiki_host}/w/index.php?oldid={revision}' if revision else None,
                                 categories=config.get('wgCategories', []),
                                 history_url=url + '?action=history',
                                 date_precision='archive edition; per-article modification date unavailable'))

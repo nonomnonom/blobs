@@ -18,6 +18,8 @@ def build_names(db, source: Path):
     db.executescript('''
         CREATE TABLE document_names(name TEXT NOT NULL,doc_id TEXT NOT NULL,
           PRIMARY KEY(name,doc_id)) WITHOUT ROWID;
+        CREATE TEMP TABLE canonical_names(name TEXT NOT NULL,doc_id TEXT NOT NULL,
+          PRIMARY KEY(name,doc_id)) WITHOUT ROWID;
         CREATE TEMP TABLE name_paths(path TEXT PRIMARY KEY,doc_id TEXT NOT NULL) WITHOUT ROWID;
         CREATE TEMP TABLE name_redirects(path TEXT PRIMARY KEY,target TEXT NOT NULL,name TEXT NOT NULL) WITHOUT ROWID;
     ''')
@@ -27,6 +29,7 @@ def build_names(db, source: Path):
         key = name_key(title)
         if key and len(key) <= 300:
             db.execute('INSERT OR IGNORE INTO document_names VALUES (?,?)', (key, doc_id))
+            db.execute('INSERT OR IGNORE INTO canonical_names VALUES (?,?)', (key, doc_id))
         path = json.loads(details).get('entry_path')
         if path:
             db.execute('INSERT INTO name_paths VALUES (?,?)', (path, doc_id))
@@ -68,11 +71,14 @@ def build_names(db, source: Path):
         counts['unresolved_redirects'] = counts['redirects'] - counts['resolved_redirects']
         db.execute('''INSERT OR IGNORE INTO document_names
             SELECT a.name,p.doc_id FROM name_redirects a JOIN name_paths p ON p.path=a.path
-            WHERE a.name!='' ''')
+            WHERE a.name!='' AND NOT EXISTS (
+                SELECT 1 FROM canonical_names c WHERE c.name=a.name AND c.doc_id!=p.doc_id
+            ) ''')
     counts['name_document_pairs'] = db.execute('SELECT count(*) FROM document_names').fetchone()[0]
     counts['ambiguous_names'] = db.execute('''SELECT count(*) FROM
         (SELECT name FROM document_names GROUP BY name HAVING count(*)>1)''').fetchone()[0]
     db.execute('DROP TABLE name_redirects')
     db.execute('DROP TABLE name_paths')
+    db.execute('DROP TABLE canonical_names')
     return dict(format=1, normalization='NFKC, lowercase, Unicode letters/numbers separated by spaces',
                 maximum_resolution_passes=32, **counts)
