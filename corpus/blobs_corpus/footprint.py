@@ -9,7 +9,7 @@ from .extract import write_json
 from .package import verify_package
 
 
-BOUNTY_LIMIT_BYTES = 50_000_000_000
+STORAGE_LIMIT_BYTES = 50_000_000_000
 
 
 def sha(path: Path):
@@ -150,9 +150,9 @@ def catalog_storage_values(source: bytes, apk_bytes: int):
             peak_sequential_import_bytes=max(step['bytes'] for step in sequential_steps),
             sequential_import_steps=sequential_steps,
             peak_if_every_download_is_retained_bytes=retained_sources_peak,
-            bounty_limit_bytes=BOUNTY_LIMIT_BYTES,
-            bounty_limit_margin_bytes=BOUNTY_LIMIT_BYTES - known_steady,
-            bounty_limit_passes=known_steady <= BOUNTY_LIMIT_BYTES,
+            storage_limit_bytes=STORAGE_LIMIT_BYTES,
+            storage_limit_margin_bytes=STORAGE_LIMIT_BYTES - known_steady,
+            storage_limit_passes=known_steady <= STORAGE_LIMIT_BYTES,
             importer_payload_cap_bytes=48_000_000_000,
             importer_payload_margin_bytes=48_000_000_000 - payload_bytes,
             importer_payload_cap_passes=payload_bytes < 48_000_000_000,
@@ -178,7 +178,7 @@ def calculate(apk_report_path: Path, package_paths, installer_source: Path,
     storage = storage_values(packages, apk['bytes'], policy['import_headroom_bytes'])
     installed = storage['installed_payload_bytes']
     strict_cap_passes = installed < policy['installed_payload_cap_bytes']
-    bounty_passes = storage['known_steady_bytes'] <= BOUNTY_LIMIT_BYTES
+    storage_passes = storage['known_steady_bytes'] <= STORAGE_LIMIT_BYTES
     result = dict(format=2 if catalog_path is not None else 1, complete=True,
         scope=('Verified package bytes and deterministic storage accounting. APK bytes come from the '
                'specified verification report; Android installed APK expansion, conversations, exports, '
@@ -190,10 +190,10 @@ def calculate(apk_report_path: Path, package_paths, installer_source: Path,
             android_installed_payload_cap=dict(limit_bytes=policy['installed_payload_cap_bytes'],
                 selected_bytes=installed, margin_bytes=policy['installed_payload_cap_bytes'] - installed,
                 passes=strict_cap_passes, comparison='selected installed payload bytes < limit'),
-            bounty_storage_limit=dict(limit_bytes=BOUNTY_LIMIT_BYTES,
+            storage_limit=dict(limit_bytes=STORAGE_LIMIT_BYTES,
                 known_steady_bytes=storage['known_steady_bytes'],
-                margin_before_unmeasured_app_data=BOUNTY_LIMIT_BYTES - storage['known_steady_bytes'],
-                passes=bounty_passes,
+                margin_before_unmeasured_app_data=STORAGE_LIMIT_BYTES - storage['known_steady_bytes'],
+                passes=storage_passes,
                 comparison='APK archive bytes + selected installed payload bytes <= limit')),
         interpretation=dict(
             steady='Known lower bound after imported source packages are removed from phone storage.',

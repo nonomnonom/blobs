@@ -433,7 +433,7 @@ class FootprintTests(unittest.TestCase):
         self.assertEqual(options['known_steady_bytes'], 670)
         self.assertEqual(options['peak_if_every_download_is_retained_bytes'], 1170)
         self.assertEqual(options['peak_sequential_import_bytes'], 750)
-        self.assertTrue(options['bounty_limit_passes'])
+        self.assertTrue(options['storage_limit_passes'])
         self.assertTrue(options['importer_payload_cap_passes'])
 
     def test_catalog_storage_rejects_malformed_gguf_size_and_duplicate_names(self):
@@ -481,7 +481,7 @@ class FootprintTests(unittest.TestCase):
             self.assertEqual(storage['importer_allocatable_thresholds'][0]['comparison'],
                              'device allocatable bytes > threshold')
             self.assertTrue(result['checks']['android_installed_payload_cap']['passes'])
-            self.assertTrue(result['checks']['bounty_storage_limit']['passes'])
+            self.assertTrue(result['checks']['storage_limit']['passes'])
 
     def test_footprint_rejects_bad_apk_policy_and_package_selection(self):
         with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):

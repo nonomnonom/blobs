@@ -83,7 +83,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(list((root / 'release').iterdir()), [kit])
             self.assertIn('selected-model.blobs', (kit / 'INSTALL.md').read_text())
             self.assertIn('selected-library.blobs', (kit / 'INSTALL.md').read_text())
-            self.assertTrue(json.loads((kit / 'FOOTPRINT.json').read_text())['checks']['bounty_storage_limit']['passes'])
+            self.assertTrue(json.loads((kit / 'FOOTPRINT.json').read_text())['checks']['storage_limit']['passes'])
             self.assertEqual(json.loads((kit / 'APK-VERIFICATION.json').read_text())['apk'], 'blobs-0.2.0.apk')
             self.assertFalse((kit / 'evidence').exists(), 'Old runtime evidence must not enter a new release')
             for line in (kit / 'SHA256SUMS.txt').read_text().splitlines():
@@ -215,11 +215,8 @@ class PackageTests(unittest.TestCase):
                 'android/tools/verify_release.py',
                 'corpus/uv.lock',
                 'corpus/blobs_corpus/curate.py',
-                'android/docs/ARCHITECTURE.md',
-                'android/docs/RELEASE.md',
                 'corpus/README.md',
                 'README.md',
-                'CONTRIBUTING.md',
                 '.gitignore',
                 '.gitattributes',
             ]
@@ -250,8 +247,6 @@ class PackageTests(unittest.TestCase):
                 self.assertIn('blobs/android/tools/verify_release.py', names)
                 self.assertIn('blobs/corpus/uv.lock', names)
                 self.assertIn('blobs/corpus/blobs_corpus/curate.py', names)
-                self.assertIn('blobs/android/docs/ARCHITECTURE.md', names)
-                self.assertIn('blobs/android/docs/RELEASE.md', names)
                 self.assertIn('blobs/corpus/README.md', names)
                 self.assertNotIn('blobs/docs/BOUNTY_COMPLIANCE.md', names)
                 self.assertFalse(any(name.startswith('blobs/design/') for name in names))

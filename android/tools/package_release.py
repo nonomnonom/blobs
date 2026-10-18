@@ -58,7 +58,7 @@ def write_source_archive(output):
                     if name == 'local.properties' or path.suffix in ('.jks', '.keystore', '.pyc', '.log'):
                         continue
                     archive.write(path, 'blobs/' + path.relative_to(ROOT.parent).as_posix())
-        for name in ['README.md', 'CONTRIBUTING.md', '.gitignore', '.gitattributes']:
+        for name in ['README.md', '.gitignore', '.gitattributes']:
             archive.write(ROOT.parent / name, 'blobs/' + name)
 
 

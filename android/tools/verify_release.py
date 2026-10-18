@@ -9,7 +9,7 @@ import zipfile
 
 from build_package import verify_package
 from blobs_corpus.footprint import (
-    BOUNTY_LIMIT_BYTES,
+    STORAGE_LIMIT_BYTES,
     catalog_storage_values,
     installer_policy_text,
     storage_values,
@@ -22,9 +22,6 @@ VERSION = re.compile(r"[0-9A-Za-z][0-9A-Za-z.+-]{0,63}")
 SOURCE_REQUIRED = {
     "blobs/.gitattributes",
     "blobs/README.md",
-    "blobs/CONTRIBUTING.md",
-    "blobs/android/docs/ARCHITECTURE.md",
-    "blobs/android/docs/RELEASE.md",
     "blobs/android/app/src/main/assets/package-catalog.json",
     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageCatalog.kt",
     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageDownloader.kt",
@@ -306,9 +303,9 @@ def verify_kit(directory: Path) -> dict:
             raise ValueError("FOOTPRINT.json does not account for all in-app catalog assets")
     checks = footprint.get("checks", {})
     steady = apk_path.stat().st_size + expected_storage["installed_payload_bytes"]
-    if (checks.get("bounty_storage_limit", {}).get("limit_bytes") != BOUNTY_LIMIT_BYTES or
-            checks.get("bounty_storage_limit", {}).get("known_steady_bytes") != steady or
-            checks.get("bounty_storage_limit", {}).get("passes") is not (steady <= BOUNTY_LIMIT_BYTES) or
+    if (checks.get("storage_limit", {}).get("limit_bytes") != STORAGE_LIMIT_BYTES or
+            checks.get("storage_limit", {}).get("known_steady_bytes") != steady or
+            checks.get("storage_limit", {}).get("passes") is not (steady <= STORAGE_LIMIT_BYTES) or
             checks.get("android_installed_payload_cap", {}).get("selected_bytes") != expected_storage["installed_payload_bytes"] or
             checks.get("android_installed_payload_cap", {}).get("limit_bytes") != policy["installed_payload_cap_bytes"] or
             checks.get("android_installed_payload_cap", {}).get("passes") is not (
@@ -345,8 +342,8 @@ def verify_kit(directory: Path) -> dict:
             "distribution_bytes": expected_storage["distribution_bytes"],
             "installed_payload_bytes": expected_storage["installed_payload_bytes"],
             "known_steady_bytes": steady,
-            "bounty_limit_bytes": BOUNTY_LIMIT_BYTES,
-            "bounty_limit_passes": checks["bounty_storage_limit"]["passes"],
+            "storage_limit_bytes": STORAGE_LIMIT_BYTES,
+            "storage_limit_passes": checks["storage_limit"]["passes"],
             "peak_retained_import_bytes": expected_storage["retained_sources"]["peak_bytes"],
         },
         "checksums": {
@@ -364,8 +361,8 @@ def verify_kit(directory: Path) -> dict:
                 "all_catalog_options"]["installed_payload_bytes"],
             all_catalog_known_steady_bytes=expected_catalog_storage[
                 "all_catalog_options"]["known_steady_bytes"],
-            all_catalog_bounty_limit_passes=expected_catalog_storage[
-                "all_catalog_options"]["bounty_limit_passes"],
+            all_catalog_storage_limit_passes=expected_catalog_storage[
+                "all_catalog_options"]["storage_limit_passes"],
             all_catalog_peak_retained_download_bytes=expected_catalog_storage[
                 "all_catalog_options"]["peak_if_every_download_is_retained_bytes"],
         )

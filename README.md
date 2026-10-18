@@ -32,7 +32,7 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 
 The first preparation/build needs network access on the development computer. During first-run setup, users choose when to download the model and library in the app; once both are installed, chat and research work offline. Local package installation in Settings supports air-gapped setup.
 
-See the [Android build and import guide](android/README.md), [architecture](android/docs/ARCHITECTURE.md), [testing](android/docs/TESTING.md), and [release guide](android/docs/RELEASE.md).
+See the [Android build and import guide](android/README.md) and [corpus preparation guide](corpus/README.md).
 
 ## Repository layout
 

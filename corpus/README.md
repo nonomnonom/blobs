@@ -81,8 +81,4 @@ Inspect the module help for the current schema and required metadata. Generated 
 
 Large reviewed record shards under `artifacts/records/` use Git LFS. Model weights, raw downloads, extracted databases, generated packages, caches, and reports stay outside Git.
 
-## Evaluation
-
-[`evaluation/`](evaluation/README.md) contains reusable answer, retrieval, fixture, and native-evaluation tooling. Cases and model locks are versioned; run outputs are local and ignored. Evaluation results describe only the exact artifact, prompt, sampler, runtime, and hardware recorded for that run.
-
 See [data notices](THIRD_PARTY_NOTICES.md) for Wikipedia attribution and host-side dependency licenses.

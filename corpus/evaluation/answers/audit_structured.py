@@ -52,7 +52,7 @@ def main():
             structurally_valid_recorded_outputs=sum(row.get('structure_valid') is True for row in rows),
             results=rows))
     audit = dict(format=1, complete=True,
-        scope='Structural observations only. No citation entailment, answer accuracy, usefulness, safety or bounty score. Raw failures are preserved; text footnotes are recorded but never converted into source references.',
+        scope='Structural observations only. No citation entailment, answer accuracy, usefulness, or safety score. Raw failures are preserved; text footnotes are recorded but never converted into source references.',
         script_sha256=sha(Path(__file__)), validator_sha256=sha(Path(__file__).with_name('citation_output.py')),
         results=results)
     args.output.parent.mkdir(parents=True, exist_ok=True)

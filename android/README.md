@@ -39,17 +39,4 @@ uv run --locked --project ../corpus python tools/build_package.py library corpus
 
 Generated packages are ignored by Git. The recommended first-run models and libraries are offered directly in setup. Alternate `.blobs` packages can be imported from **Settings → Models and libraries → Add from this phone**. Every download goes through pinned byte count and hash checks; `.blobs` packages also validate manifests, and all payloads pass storage and SQLite/GGUF validation before activation.
 
-## Code ownership
-
-| Path | Responsibility |
-| --- | --- |
-| `app/src/main/kotlin/dev/blobs/app/feature/` | Chat, history, library, settings, and welcome screens |
-| `app/src/main/kotlin/dev/blobs/app/ui/` | Shared components, theme, navigation, and product state |
-| `app/src/main/kotlin/dev/blobs/app/data/local/` | Room conversations, turns, package records, and migrations |
-| `app/src/main/kotlin/dev/blobs/app/data/library/` | Read-only FTS5 retrieval and immutable evidence |
-| `app/src/main/kotlin/dev/blobs/app/data/packages/` | Streaming validation, staging, activation, pause, and resume |
-| `app/src/main/kotlin/dev/blobs/app/data/WorkController.kt` | Single owner for generation and package/data mutations |
-| `app/src/main/cpp/` and `inference/` | JNI boundary and pinned local inference runtime |
-| `tools/` | Runtime preparation, package/APK verification, signing, and release assembly |
-
-Read the [architecture](docs/ARCHITECTURE.md), [engineering rules](docs/ENGINEERING.md), [testing guide](docs/TESTING.md), [release guide](docs/RELEASE.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
+Third-party component and dataset licenses are listed in [third-party notices](THIRD_PARTY_NOTICES.md).
