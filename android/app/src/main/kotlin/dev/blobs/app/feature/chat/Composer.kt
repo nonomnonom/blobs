@@ -54,7 +54,8 @@ internal fun Composer(
     state: ProductState,
     work: WorkState,
     followUp: Boolean,
-    model: ProductViewModel
+    model: ProductViewModel,
+    onCompose: () -> Unit
 ) {
     var choosingModel by remember { mutableStateOf(false) }
     val packages by model.packages.collectAsStateWithLifecycle()
@@ -78,7 +79,10 @@ internal fun Composer(
                 stringResource(if (followUp) R.string.follow_up_hint else R.string.question_hint)
             TextField(
                 value = state.draft,
-                onValueChange = model::draft,
+                onValueChange = {
+                    onCompose()
+                    model.draft(it)
+                },
                 placeholder = { Text(inputLabel, style = MaterialTheme.typography.bodyLarge) },
                 modifier = Modifier.fillMaxWidth().heightIn(max = 140.dp).semantics {
                     contentDescription =

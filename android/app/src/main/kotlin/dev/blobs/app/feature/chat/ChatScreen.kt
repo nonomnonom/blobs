@@ -90,7 +90,8 @@ fun ChatScreen(
         }
     }
     val large = LocalDensity.current.fontScale >= 1.5f
-    var composing by rememberSaveable { mutableStateOf(true) }
+    // Keep this view mode per conversation; the draft itself remains persisted in ProductViewModel.
+    var composing by remember(currentThread) { mutableStateOf<Boolean?>(null) }
     var slow by rememberSaveable(work.turnId) { mutableStateOf(false) }
     LaunchedEffect(work.turnId, work.busy) {
         slow = false
@@ -99,12 +100,16 @@ fun ChatScreen(
             slow = true
         }
     }
-    LaunchedEffect(turns.size, large) {
+    LaunchedEffect(turns.size, large, work.turnId) {
         if (turns.isNotEmpty()) {
             list.scrollToItem(turns.lastIndex)
             focus.clearFocus()
         }
-        if (large && turns.isNotEmpty()) composing = false
+        val answerJustStarted =
+            work.busy && work.threadId == currentThread && turns.any { it.id == work.turnId }
+        if (large && turns.isNotEmpty() && (composing == null || answerJustStarted)) {
+            composing = false
+        }
     }
     Column(Modifier.fillMaxSize()) {
         if (work.busy &&
@@ -171,7 +176,7 @@ fun ChatScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            if (!composing && turns.isNotEmpty()) {
+            if (composing == false && turns.isNotEmpty()) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     if (work.busy && work.turnId.isNotEmpty()) {
                         PrimaryAction(R.string.stop_answer) { model.stop() }
@@ -187,7 +192,13 @@ fun ChatScreen(
                         composing = false
                     }) { Text(stringResource(R.string.reading)) }
                 }
-                Composer(state, work, turns.isNotEmpty(), model)
+                Composer(
+                    state,
+                    work,
+                    turns.isNotEmpty(),
+                    model,
+                    onCompose = { composing = true }
+                )
             }
         }
     }
