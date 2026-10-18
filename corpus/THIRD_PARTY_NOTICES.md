@@ -8,4 +8,6 @@ Wikipedia text remains attributed to Wikipedia contributors under the applicable
 
 The optional English travel library contains text from Wikivoyage contributors under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). It uses the September 2026 Kiwix snapshot; article-history links are retained for contributor attribution, and images are excluded. See the [Wikivoyage reuse guide](https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides) before reusing the data.
 
+The optional U.S. outdoor-safety library contains text from four National Park Service pages. NPS says material it created is generally in the U.S. public domain unless otherwise marked, but page materials can include third-party rights. This edition excludes images and NPS marks; its lock records the source pages and normalized text hashes. The package and catalog attribute the National Park Service and state that Blobs is independent and not endorsed by NPS. See the [NPS disclaimer and reuse notice](https://www.nps.gov/aboutus/disclaimer.htm).
+
 The original Android contract-test article is explicitly CC0-1.0 and contains imaginary measurements. It is not included in the knowledge pack. See [Android notices](../android/THIRD_PARTY_NOTICES.md) for runtime, model and application ownership.

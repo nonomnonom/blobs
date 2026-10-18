@@ -21,6 +21,25 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class PackageCatalogTest {
     @Test
+    fun bundledCatalogOffersThePinnedOutdoorSafetyLibraryOffline() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val catalog = PackageCatalog(context)
+        val library = catalog.additionalLibraries.single {
+            it.manifest.id == "nps-outdoor-safety"
+        }
+
+        assertEquals("Outdoor safety · U.S. national parks", library.manifest.title)
+        assertEquals("2026-10.1", library.manifest.version)
+        assertEquals(PackageRole.OPTIONAL, library.role)
+        assertEquals(DownloadFormat.BLOBS, library.format)
+        assertEquals(36_588L, library.downloadBytes)
+        assertEquals(
+            "U.S. Government work · National Park Service (public domain unless marked)",
+            library.manifest.license
+        )
+    }
+
+    @Test
     fun acceptsCatalogSignedByTrustedKey() {
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
         val packages = PackageCatalog.verifyAndParse(

@@ -86,6 +86,33 @@ uv run --locked python -m blobs_corpus.package library `
 
 The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change. Future topics such as survival should use their own pinned source editions and review before they are added to the download list.
 
+### Build the U.S. outdoor-safety library
+
+This small survival-oriented edition contains four National Park Service pages on hiking preparation, outdoor emergencies, water treatment, and winter hiking. It is explicitly U.S. national-park guidance; it does not replace current park rules, weather alerts, or emergency services. The source lock pins each page's title, update date, canonical URL, and normalized article-text SHA-256. Ingest rejects a title or article-text change for review, while ignoring unrelated changes to page chrome. Source images and navigation are excluded.
+
+```powershell
+uv run --locked python -m blobs_corpus.web_pages acquire `
+  sources/nps-outdoor-safety-2026-10.json work/sources/nps-outdoor-safety-2026-10
+
+uv run --locked python -m blobs_corpus.web_pages extract `
+  sources/nps-outdoor-safety-2026-10.json `
+  work/sources/nps-outdoor-safety-2026-10 `
+  artifacts/records/nps-outdoor-safety-2026-10/documents.jsonl.gz
+
+uv run --locked python -m blobs_corpus.package library `
+  artifacts/records/nps-outdoor-safety-2026-10/documents.jsonl.gz `
+  work/packages/nps-outdoor-safety-2026-10-v1.blobs `
+  --schema 3 `
+  --id nps-outdoor-safety `
+  --version 2026-10.1 `
+  --title "Outdoor safety · U.S. national parks" `
+  --license "U.S. Government work · National Park Service (public domain unless marked)" `
+  --origin "https://www.nps.gov/aboutus/disclaimer.htm" `
+  --work-directory work/build/nps-outdoor-safety-2026-10
+```
+
+The [NPS reuse notice](https://www.nps.gov/aboutus/disclaimer.htm) says government-created NPS material is generally public domain unless otherwise marked and warns that some page material can have third-party restrictions. This edition contains text-only extracts from the four locked NPS pages, no images, and no NPS marks. The user-facing package description must state that local conditions and rules vary, advise following current ranger and emergency-service instructions, and clarify that Blobs is not an NPS product or endorsement. Review source rights and content again before making a new edition.
+
 Extraction checkpoints are safe to resume after a normal interrupt. If the process is forcibly terminated, it can leave `work/extract/EDITION/.extract.lock`; confirm no extractor is still running before removing that stale file and resuming. Never remove the lock while an extraction process is active.
 
 Example package build from normalized records:
@@ -106,7 +133,7 @@ Inspect the module help for the current schema and required metadata. Generated 
 
 ### Add topic libraries
 
-Keep the starter, travel, survival, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, curation snapshot, package receipt, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
+Keep the starter, travel, outdoor-safety, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, curation snapshot, package receipt, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
 
 ## Data integrity
 

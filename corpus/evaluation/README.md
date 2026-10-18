@@ -57,3 +57,13 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
 ```
 
 The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Future topic libraries, such as survival, should use their own package identity and topic-specific retrieval cases; they can share the same schema and retrieval implementation while keeping source licensing and update cadence independent.
+
+The U.S. outdoor-safety package uses the same retrieval-only check:
+
+```powershell
+uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
+  --library-package work/packages/nps-outdoor-safety-2026-10-v1.blobs `
+  --cases evaluation/cases/nps-outdoor-safety-retrieval-v1.json `
+  --work-directory work/reports/nps-outdoor-safety-retrieval-v1 `
+  --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v1-host.json
+```

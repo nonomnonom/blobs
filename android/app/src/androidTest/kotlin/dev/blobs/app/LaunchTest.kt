@@ -18,6 +18,7 @@ import dev.blobs.app.data.packages.CatalogSource
 import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.PackageCatalog
+import dev.blobs.app.data.packages.PackageRole
 import dev.blobs.app.data.preferences.ThemeMode
 import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.ProductViewModel
@@ -125,8 +126,14 @@ class LaunchTest {
         assertEquals("model", catalog.models.first().manifest.kind)
         assertEquals("library", catalog.starterLibrary.manifest.kind)
         assertEquals("wikipedia-starter", catalog.starterLibrary.manifest.id)
-        assertEquals(1, catalog.additionalLibraries.size)
-        assertEquals("optional", catalog.additionalLibraries.single().role.name.lowercase())
+        assertEquals(3, catalog.additionalLibraries.size)
+        assertTrue(catalog.additionalLibraries.all { it.role == PackageRole.OPTIONAL })
+        val outdoorSafety = catalog.additionalLibraries.single {
+            it.manifest.id == "nps-outdoor-safety"
+        }
+        assertEquals("Outdoor safety · U.S. national parks", outdoorSafety.manifest.title)
+        assertTrue(outdoorSafety.description.contains("not affiliated with or endorsed by NPS"))
+        assertEquals(DownloadFormat.BLOBS, outdoorSafety.format)
         assertEquals(
             catalog.models.first(),
             catalog.recommendedModel(3L * 1024 * 1024 * 1024, 2L * 1024 * 1024 * 1024)

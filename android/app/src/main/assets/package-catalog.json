@@ -4,7 +4,7 @@
   "packages": [
     {
       "file_name": "qwen3-integration.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/7210ceb1586fab6e4903c0a0cef89f0f6111d6c8/packages/qwen3-integration.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/qwen3-integration.blobs",
       "download_format": "blobs",
       "download_bytes": 639447235,
       "download_sha256": "0089dba9c9af05ebecb3a0110866f0716f439da2cb6d7d90a66a911062305e43",
@@ -91,7 +91,7 @@
     },
     {
       "file_name": "wikipedia-starter-schema3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/7210ceb1586fab6e4903c0a0cef89f0f6111d6c8/packages/wikipedia-starter-schema3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/wikipedia-starter-schema3.blobs",
       "download_format": "blobs",
       "download_bytes": 3828868,
       "download_sha256": "d893c8b5c21596d11db3260b77b8be88cf3cab813e34065f4c0a1bfeacfe0ff9",
@@ -119,7 +119,7 @@
     },
     {
       "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/7210ceb1586fab6e4903c0a0cef89f0f6111d6c8/packages/wikipedia-en-top1m-mini-2026-04.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/wikipedia-en-top1m-mini-2026-04.blobs",
       "download_format": "blobs",
       "download_bytes": 1804630820,
       "download_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
@@ -147,7 +147,7 @@
     },
     {
       "file_name": "wikivoyage-en-2026-09-v2.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/7210ceb1586fab6e4903c0a0cef89f0f6111d6c8/packages/wikivoyage-en-2026-09-v2.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/wikivoyage-en-2026-09-v2.blobs",
       "download_format": "blobs",
       "download_bytes": 295139283,
       "download_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
@@ -166,6 +166,34 @@
       "description": "Offline destination guides and travel basics. This snapshot is from September 2026. Opening hours, fares, visas and local safety advice can change; check current details before you travel.",
       "language": "English",
       "publisher": "Wikivoyage contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "nps-outdoor-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9b646d2054f4e368652ee00e8a8cc3db69fdae1a/packages/nps-outdoor-safety-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 36588,
+      "download_sha256": "25fef55cab7a4fdbcca31db9d5ee8c5cd85194313ec7f3a77386aa4f1ae1043d",
+      "manifest": {
+        "format": 1,
+        "id": "nps-outdoor-safety",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Outdoor safety · U.S. national parks",
+        "bytes": 131072,
+        "sha256": "be7583a3c330317e63cc81e0c3290db4b42f834bb5290d426f05e6758cf34cfa",
+        "license": "U.S. Government work · National Park Service (public domain unless marked)",
+        "origin": "https://www.nps.gov/aboutus/disclaimer.htm"
+      },
+      "role": "optional",
+      "description": "U.S. national-park hiking and emergency guides. Conditions differ by place; follow current park and emergency guidance. Blobs is not affiliated with or endorsed by NPS. No claim to original U.S. Government works.",
+      "language": "English",
+      "publisher": "National Park Service",
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
