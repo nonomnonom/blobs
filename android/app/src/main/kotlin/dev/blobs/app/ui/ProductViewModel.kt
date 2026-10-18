@@ -118,10 +118,13 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         return true
     }
 
-    fun welcome() = action {
-        mutable.value = mutable.value.copy(page = Page.WELCOME)
-        container.preferences.welcome()
+    fun welcome(): Job {
+        mutable.value = mutable.value.copy(
+            page = Page.WELCOME,
+            options = mutable.value.options.copy(welcomed = true)
+        )
         navigate(Page.SETUP)
+        return action { container.preferences.welcome() }
     }
 
     fun finishSetup() {
