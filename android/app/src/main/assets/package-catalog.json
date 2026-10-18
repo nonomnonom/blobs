@@ -20,7 +20,16 @@
         "origin": "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/tree/23749fefcc72300e3a2ad315e1317431b06b590a"
       },
       "role": "model",
-      "recommended_up_to_memory_mb": 4096
+      "recommended_up_to_memory_mb": 4096,
+      "description": "A compact instruction model for everyday offline questions.",
+      "language": "English",
+      "publisher": "Qwen",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 2048,
+        "minimum_app_version": "0.3.1"
+      }
     },
     {
       "file_name": "gemma-4-E2B_q4_0-it.gguf",
@@ -40,7 +49,16 @@
         "origin": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/tree/675cff42a74c774d6cb76f76d8eacb49b48c9b93"
       },
       "role": "model",
-      "recommended_up_to_memory_mb": 8192
+      "recommended_up_to_memory_mb": 8192,
+      "description": "A balanced on-device model for research questions and follow-ups.",
+      "language": "English",
+      "publisher": "Google",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 4096,
+        "minimum_app_version": "0.3.1"
+      }
     },
     {
       "file_name": "gemma-4-E4B_q4_0-it.gguf",
@@ -60,7 +78,16 @@
         "origin": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/tree/4b4a2c1d584be7264f87aac328a1bc739ce81b6c"
       },
       "role": "model",
-      "recommended_up_to_memory_mb": 12288
+      "recommended_up_to_memory_mb": 12288,
+      "description": "A larger on-device model for phones with more available memory.",
+      "language": "English",
+      "publisher": "Google",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 6144,
+        "minimum_app_version": "0.3.1"
+      }
     },
     {
       "file_name": "wikipedia-starter-schema3.blobs",
@@ -79,7 +106,16 @@
         "license": "CC BY-SA 4.0; adapted plain text; individual article attribution included",
         "origin": "https://en.wikipedia.org/wiki/Wikipedia:Copyrights"
       },
-      "role": "starter"
+      "role": "starter",
+      "description": "A small set of science and everyday reference articles to get started offline.",
+      "language": "English",
+      "publisher": "Blobs · Wikipedia contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
     },
     {
       "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
@@ -98,7 +134,16 @@
         "license": "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs",
         "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim"
       },
-      "role": "optional"
+      "role": "optional",
+      "description": "A broader offline collection of Wikipedia introductions for optional installation.",
+      "language": "English",
+      "publisher": "Blobs · Wikipedia contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
     }
   ]
 }

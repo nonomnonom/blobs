@@ -93,7 +93,7 @@ fun WelcomeScreen(
             Text(
                 stringResource(
                     R.string.device_details,
-                    android.os.Build.MODEL,
+                    deviceLabel(),
                     fileSize(profile.totalMemoryBytes),
                     fileSize(profile.freeStorageBytes)
                 ),
@@ -135,5 +135,18 @@ fun WelcomeScreen(
                 )
             }
         }
+    }
+}
+
+private fun deviceLabel(): String {
+    val model = android.os.Build.MODEL
+    return if (
+        model.contains("sdk_gphone", ignoreCase = true) ||
+        android.os.Build.FINGERPRINT.contains("generic", ignoreCase = true)
+    ) {
+        "This phone"
+    } else {
+        "${android.os.Build.MANUFACTURER.replaceFirstChar(Char::uppercase)} $model"
+            .replace('_', ' ')
     }
 }

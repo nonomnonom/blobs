@@ -146,8 +146,10 @@ class LaunchTest {
             .performScrollTo().assertIsDisplayed().performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
         if (model.packages.value.none { it.kind == "model" }) {
-            compose.onNodeWithText(compose.activity.getString(R.string.setup_model_step))
-                .assertIsDisplayed()
+            compose.onAllNodesWithText(compose.activity.getString(R.string.progress_percent, 0))
+                .assertCountEquals(0)
+            compose.onAllNodesWithText(compose.activity.getString(R.string.setup_model_step))
+                .assertCountEquals(0)
             compose.onNodeWithText(compose.activity.getString(R.string.setup_model_title))
                 .assertIsDisplayed()
             compose.onNodeWithText(catalog.models[1].manifest.title)

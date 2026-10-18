@@ -46,7 +46,7 @@ See the [Android build and import guide](android/README.md) and [corpus preparat
 
 ## Asset distribution
 
-The adopted architecture keeps source and build automation on GitHub while Hugging Face hosts model and corpus assets and a small, curated asset catalog. Blobs checks that catalog while online, caches it for offline browsing, and offers compatible assets for explicit user-started downloads. Installed models, libraries, chats, and retrieval stay on device. The catalog refresh and Hugging Face corpus migration are not implemented in the current release yet; current behavior and the migration sequence are documented in [`docs/architecture.md`](docs/architecture.md).
+The adopted architecture keeps source and build automation on GitHub while Hugging Face hosts model and corpus assets and a small, curated asset catalog. The app now supports signed online catalog refresh, offline cache fallback, and explicit user-started downloads. The new Hugging Face namespace and corpus migration are still pending, so the released package list continues to use its bundled catalog. Installed models, libraries, chats, and retrieval stay on device. See [`docs/architecture.md`](docs/architecture.md) for implementation status and migration steps.
 
 ## License
 

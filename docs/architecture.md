@@ -32,7 +32,7 @@ Each catalog entry must provide:
 
 Corpus repositories include a Hugging Face dataset card describing their contents and provenance. [Dataset cards](https://huggingface.co/docs/hub/main/datasets-cards)
 
-The app fetches only the small catalog metadata when it checks for updates. It uses conditional HTTP requests where supported, caches the last valid catalog, and falls back to that cache when offline. A new catalog makes assets available in the UI; it never silently downloads a model or corpus. Catalog updates must be signed by the Blobs release key, with the verification public key embedded in the app. The app rejects invalid signatures, unsupported schemas, malformed IDs, untrusted hosts, and invalid or incomplete asset metadata.
+The app fetches only the small catalog metadata when it checks for updates. It uses conditional HTTP requests where supported, caches the last valid catalog, and falls back to that cache when offline. A new catalog makes assets available in the UI; it never silently downloads a model or corpus. Catalog updates are signed with ECDSA P-256 and SHA-256 by the Blobs catalog release key, with the verification public key embedded in the app. The app rejects invalid signatures, unsupported schemas, malformed IDs, untrusted hosts, and invalid or incomplete asset metadata. `android/tools/sign_catalog.py` creates signed catalog envelopes; the private key is provided by the `BLOBS_CATALOG_SIGNING_KEY` environment variable or command-line option and must stay outside Git.
 
 Downloads use pinned revisions, resume where supported, enforce declared size limits, verify SHA-256, and install into versioned app-private storage. The active version changes only after complete validation. A failed update leaves the previous working version active. The app must check free space before download and installation, including temporary and unpacked sizes.
 
@@ -52,14 +52,14 @@ Asset versions are immutable. A correction or replacement publishes a new revisi
 
 ## Current implementation and migration
 
-The current app has a bundled `package-catalog.json`, explicit user-started downloads, pinned hashes, resumable download handling, validation, and atomic package activation. Current model entries point directly to pinned Hugging Face revisions, while the current starter/additional corpus archives are still linked from GitHub Releases. The app does not yet fetch or verify a remote signed catalog.
+The app now supports an embedded fallback catalog, signed remote catalog refresh, conditional requests, offline cache recovery, pinned hashes, resumable downloads, validation, and atomic package activation. It checks at most once per day at app start and when the user opens the model or library screens; the user can also check manually. The catalog client is configured for the future `blobs-app/blobs-catalog` dataset repository. That Hugging Face namespace and repository do not exist yet, so the remote endpoint currently falls back to the bundled/cache catalog. Current model entries point directly to pinned Hugging Face revisions, while current starter/additional corpus archives are still linked from GitHub Releases.
 
 The migration path is:
 
 1. Define and validate the catalog schema, signing format, and compatibility fields alongside the current package manifest.
-2. Publish the catalog repository and Blobs-owned model/corpus repositories on Hugging Face; verify each artifact against the package builder output.
-3. Add remote catalog refresh with cache fallback and signature verification, keeping the bundled catalog as a recovery catalog for the first transition.
-4. Move first-run and Library downloads to pinned Hugging Face assets, preserving explicit confirmation, resumability, integrity checks, atomic activation, and rollback.
+2. Create the `blobs-app` Hugging Face namespace and publish the catalog repository and Blobs-owned corpus repositories; verify each artifact against the package builder output.
+3. Publish the signed catalog with the private key stored outside Git, then verify app refresh and offline recovery against the live Hugging Face endpoint.
+4. Move first-run and Library corpus downloads to pinned Hugging Face assets, preserving explicit confirmation, resumability, integrity checks, atomic activation, and rollback.
 5. Remove old release-hosted asset references only after the new catalog and downloads have passed app and package verification.
 
-Until those steps are implemented, the current bundled-catalog behavior described in the Android guide remains authoritative for the released app.
+Until the namespace is created and assets are published, the bundled-catalog fallback remains authoritative for users; the remote catalog path is implemented but has no live catalog to fetch yet.

@@ -45,8 +45,10 @@ import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.packages.CatalogSnapshot
 import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.data.packages.DownloadablePackage
+import dev.blobs.app.data.packages.PackageRole
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.MenuRow
@@ -59,12 +61,15 @@ import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.SearchField
 import dev.blobs.app.ui.SetupProgressBlock
 import dev.blobs.app.ui.fileSize
+import java.text.DateFormat
+import java.util.Date
 
 @Composable
 fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
     val work by model.work.collectAsStateWithLifecycle()
+    val catalog by model.catalogState.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
-    val profile = remember(context, model.catalog) {
+    val profile = remember(context, model.catalog, catalog.packages) {
         DeviceProfile.inspect(context, model.catalog)
     }
     val hasModel = packages.any { it.kind == "model" }
@@ -73,7 +78,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
             it.version == model.catalog.starterLibrary.manifest.version
     }
     val installedIds = packages.map { it.packageId to it.version }.toSet()
-    val remainingLibraries = model.catalog.additionalLibraries.filter {
+    val remainingLibraries = catalog.packages.filter { it.role == PackageRole.OPTIONAL }.filter {
         (it.manifest.id to it.manifest.version) !in installedIds
     }
     val setupReadyKinds = buildSet {
@@ -86,7 +91,9 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
     var selectedModelFile by rememberSaveable {
         mutableStateOf(profile.recommendedModel.fileName)
     }
-    val selectedModel = model.catalog.models.firstOrNull { it.fileName == selectedModelFile }
+    val availableModels = catalog.packages.filter { it.manifest.kind == "model" }
+    val starterLibrary = catalog.packages.single { it.role == PackageRole.STARTER }
+    val selectedModel = availableModels.firstOrNull { it.fileName == selectedModelFile }
         ?: profile.recommendedModel
     val progressLabel = when {
         ready -> R.string.setup_all_ready
@@ -95,7 +102,9 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
         else -> R.string.setup_extras_step
     }
     ScrollPage {
-        SetupProgressBlock(work.setupProgress(setupReadyKinds), progressLabel)
+        if (work.inAppDownload) {
+            SetupProgressBlock(work.setupProgress(setupReadyKinds), progressLabel)
+        }
         Scene(
             when {
                 ready -> R.drawable.ready_world
@@ -117,7 +126,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
             if (needsModel) {
                 Heading(R.string.setup_model_title)
                 Body(R.string.setup_model_body)
-                model.catalog.models.forEach { option ->
+                availableModels.forEach { option ->
                     ModelOption(
                         option,
                         option == profile.recommendedModel,
@@ -144,11 +153,11 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
                 PrimaryAction(
                     R.string.download_starter,
                     !work.busy
-                ) { model.downloadPackage(model.catalog.starterLibrary) }
+                ) { model.downloadPackage(starterLibrary) }
                 Text(
                     stringResource(
                         R.string.download_size_note,
-                        fileSize(model.catalog.starterLibrary.downloadBytes)
+                        fileSize(starterLibrary.downloadBytes)
                     ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -197,6 +206,9 @@ private fun ModelOption(
             RadioButton(selected = selected, onClick = onClick)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(option.manifest.title, style = MaterialTheme.typography.titleMedium)
+                if (option.description.isNotBlank()) {
+                    Text(option.description, style = MaterialTheme.typography.bodyMedium)
+                }
                 Text(
                     stringResource(
                         if (recommended) {
@@ -207,6 +219,22 @@ private fun ModelOption(
                         fileSize(option.downloadBytes)
                     ),
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (option.language.isNotBlank() || option.publisher.isNotBlank()) {
+                    Text(
+                        stringResource(
+                            R.string.library_asset_details,
+                            option.language.ifBlank { "Reference" },
+                            option.publisher.ifBlank { "Blobs" }
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    stringResource(R.string.library_asset_license, option.manifest.license),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -229,9 +257,28 @@ private fun OptionalLibraryOption(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(library.manifest.title, style = MaterialTheme.typography.titleLarge)
+            if (library.description.isNotBlank()) {
+                Text(library.description, style = MaterialTheme.typography.bodyLarge)
+            }
             Text(
                 stringResource(R.string.optional_library_size, fileSize(library.downloadBytes)),
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (library.language.isNotBlank() || library.publisher.isNotBlank()) {
+                Text(
+                    stringResource(
+                        R.string.library_asset_details,
+                        library.language.ifBlank { "Reference" },
+                        library.publisher.ifBlank { "Blobs" }
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                stringResource(R.string.library_asset_license, library.manifest.license),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             PrimaryAction(R.string.download_library, enabled, onDownload)
@@ -242,6 +289,7 @@ private fun OptionalLibraryOption(
 @Composable
 fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFile: () -> Unit) {
     val work by model.work.collectAsStateWithLifecycle()
+    val catalog by model.catalogState.collectAsStateWithLifecycle()
     val large = LocalDensity.current.fontScale >= 1.5f
     ScrollPage {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -253,6 +301,7 @@ fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFi
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            CatalogStatus(catalog, work.busy, model::refreshCatalog)
         }
         val libraries = packages.filter { it.kind == "library" }
         if (libraries.isEmpty()) {
@@ -263,7 +312,7 @@ fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFi
             )
             Body(R.string.library_empty_body)
             PrimaryAction(R.string.download_library, !work.busy) {
-                model.downloadPackage(model.catalog.starterLibrary)
+                model.downloadPackage(catalog.packages.single { it.role == PackageRole.STARTER })
             }
             TextButton(
                 onClick = pickFile,
@@ -282,8 +331,13 @@ fun LibraryScreen(packages: List<PackageEntity>, model: ProductViewModel, pickFi
                 index == 0
             )
         }
+        Heading(R.string.explore_title)
+        Body(R.string.explore_body)
+        MenuRow(R.string.explore_models, model.selectedModel()?.title.orEmpty()) {
+            model.navigate(Page.MODELS)
+        }
         val installedLibraries = libraries.map { it.packageId to it.version }.toSet()
-        model.catalog.additionalLibraries.filter {
+        catalog.packages.filter { it.role == PackageRole.OPTIONAL }.filter {
             (it.manifest.id to it.manifest.version) !in installedLibraries
         }.forEach { library ->
             OptionalLibraryOption(library, !work.busy) { model.downloadPackage(library) }
@@ -318,14 +372,17 @@ fun ModelsScreen(
     model: ProductViewModel,
     pickFile: () -> Unit
 ) {
+    val catalog by model.catalogState.collectAsStateWithLifecycle()
     ScrollPage {
         Heading(R.string.models)
         Body(R.string.models_help)
+        CatalogStatus(catalog, work.busy, model::refreshCatalog)
         if (work.busy) Body(R.string.busy_help)
         val models = packages.filter { it.kind == "model" }
         models.forEach { PackageCard(it, work.busy, model) }
         val installed = models.map { it.packageId to it.version }.toSet()
-        model.catalog.models.filter { (it.manifest.id to it.manifest.version) !in installed }
+        catalog.packages.filter { it.manifest.kind == "model" }
+            .filter { (it.manifest.id to it.manifest.version) !in installed }
             .forEach { option ->
                 Surface(
                     shape = RoundedCornerShape(20.dp),
@@ -351,6 +408,33 @@ fun ModelsScreen(
             }
         TextButton(onClick = pickFile, enabled = !work.busy, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.add_package))
+        }
+    }
+}
+
+@Composable
+private fun CatalogStatus(snapshot: CatalogSnapshot, busy: Boolean, refresh: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val message = when {
+            snapshot.refreshing -> stringResource(R.string.library_update_checking)
+            snapshot.lastCheckedAt != null -> stringResource(
+                R.string.library_update_checked,
+                DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
+                    .format(Date(snapshot.lastCheckedAt))
+            )
+            else -> stringResource(R.string.library_update_offline_hint)
+        }
+        Text(
+            message,
+            modifier = Modifier.weight(1f).padding(top = 12.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        TextButton(onClick = refresh, enabled = !snapshot.refreshing && !busy) {
+            Text(stringResource(R.string.library_update_action))
         }
     }
 }
