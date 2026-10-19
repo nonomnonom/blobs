@@ -13,6 +13,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
@@ -165,6 +167,10 @@ class UiParityTest {
             compose.onNodeWithContentDescription(text(R.string.search_history))
                 .performTextInput("UI reading")
             compose.onNode(hasText("UI reading test") and hasClickAction()).performClick()
+            compose.waitUntil(10_000) {
+                ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
+                    ?.isVisible(WindowInsetsCompat.Type.ime()) == false
+            }
             compose.onNodeWithText(text(R.string.follow_up)).performClick()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             compose.activityRule.scenario.recreate()
