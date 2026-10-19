@@ -475,7 +475,7 @@ class LibraryStore {
         }
 
     companion object {
-        private const val MULTI_LIBRARY_CANDIDATE_LIMIT = 12
+        private const val MULTI_LIBRARY_CANDIDATE_LIMIT = 8
         private const val SINGLE_LIBRARY_CANDIDATE_LIMIT = 48
 
         fun searchTerms(question: String): String = RetrievalQuery.match(question)
