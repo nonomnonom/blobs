@@ -106,5 +106,14 @@
       "streamed archive payload and manifest match signed entry"
     ],
     "scope": "Public distribution verification; no new Android runtime measurement."
+  },
+  "records_publication": {
+    "repository": "nonomnonom/blobs-catalog",
+    "revision": "698ab323d165b46128b000ecbe06367380906c10",
+    "path": "records/wikivoyage-en-all-nopic-2026-09.3",
+    "manifest_sha256": "cb1a846d0f19dc9797bb53b1440f65bf2a22abea2be88b640dcd3773b554bc2b",
+    "verified_documents": 34597,
+    "verification": "Downloaded immutable revision; verified every shard size and SHA-256 through documents(), then validated every document against the current record contract.",
+    "verified_at_utc": "2026-10-19T06:32:09.303794+00:00"
   }
 }

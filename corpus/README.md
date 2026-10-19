@@ -22,6 +22,25 @@ git lfs pull --include="corpus/artifacts/records/nps-outdoor-safety-2026-10.2/**
 
 Replace the edition path for another collection. Package builders need the hydrated record files, not LFS pointers. Alternatively, rebuild the edition from its pinned source using the pipeline below. Installable `.blobs` packages and model weights are delivered separately through Hugging Face.
 
+### Download reviewed travel records from Hugging Face
+
+The current travel edition is available on Hugging Face without fetching Git LFS objects or the original ZIM archive. From `corpus/`, download its immutable revision, then validate and export it into a new local directory:
+
+```powershell
+hf download nonomnonom/blobs-catalog --type dataset `
+  --revision 698ab323d165b46128b000ecbe06367380906c10 `
+  --include "records/wikivoyage-en-all-nopic-2026-09.3/*" `
+  --local-dir work/hf-records
+
+uv run --locked python -m blobs_corpus.export `
+  work/hf-records/records/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
+  work/verified-records/wikivoyage-en-all-nopic-2026-09.3
+```
+
+The export checks each shard's byte count and SHA-256 and validates every document. It refuses to overwrite an existing output directory. The 42 compressed shards total 139,743,071 bytes and contain 34,597 reviewed documents plus redirects and rejection records. The manifest SHA-256 is `cb1a846d0f19dc9797bb53b1440f65bf2a22abea2be88b640dcd3773b554bc2b`. Use the exported `manifest.json` as the input to the library package builder below. See the [publication receipt](evaluation/evidence/corpus-rebuild-wikivoyage-2026-09.3-20261019.json) for the verification of the public copy.
+
+Existing editions already in Git LFS remain available there; this new travel edition is hosted on HF. Article URLs, license notices, contributor-history links, and source processing identities remain with the data. Reproducing the published archive requires the builder from commit `64fa8e0`; newer builders can produce a different database layout and checksum from the same records.
+
 ## Pipeline
 
 The pipeline acquires a pinned source archive, extracts bounded records, normalizes article text and attribution, validates quality constraints, exports immutable record shards, builds a SQLite FTS5 payload, and packages that payload with an exact manifest.
