@@ -5,6 +5,7 @@ import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.blobs.app.data.local.PackageEntity
 import java.io.File
+import java.util.PriorityQueue
 
 data class LibraryDocument(
     val id: String,
@@ -96,23 +97,34 @@ class LibraryStore {
         }
     }
 
-    fun browse(packages: List<PackageEntity>, query: String, offset: Int = 0): List<Evidence> =
-        packages.filter { it.kind == "library" && it.enabled }.flatMap { pack ->
+    fun browse(packages: List<PackageEntity>, query: String, offset: Int = 0): List<Evidence> {
+        require(offset in 0..Int.MAX_VALUE - 51)
+        val limit = offset + 51
+        val order = compareBy<Evidence>({ it.title }, { it.id })
+        val candidates = PriorityQueue(51, order.reversed())
+        val search = "%${query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")}%"
+        packages.filter { it.kind == "library" && it.enabled }.forEach { pack ->
             open(pack.path).use { db ->
                 db.prepare(
                     "SELECT id,title,publisher,url,license,updated,saved,collection,substr(body,1,300) FROM documents WHERE title LIKE ? ESCAPE '\\' OR publisher LIKE ? ESCAPE '\\' ORDER BY title,id LIMIT ?"
                 ).use { statement ->
-                    val search = "%${query.replace(
-                        "\\",
-                        "\\\\"
-                    ).replace("%", "\\%").replace("_", "\\_")}%"
                     statement.bindText(1, search)
                     statement.bindText(2, search)
-                    statement.bindLong(3, (offset + 51).toLong())
-                    buildList { while (statement.step()) add(read(statement, pack)) }
+                    statement.bindLong(3, limit.toLong())
+                    while (statement.step()) {
+                        val item = read(statement, pack)
+                        if (candidates.size < limit) {
+                            candidates.add(item)
+                        } else if (order.compare(item, candidates.peek()) < 0) {
+                            candidates.poll()
+                            candidates.add(item)
+                        }
+                    }
                 }
             }
-        }.sortedWith(compareBy({ it.title }, { it.id })).drop(offset).take(51)
+        }
+        return candidates.sortedWith(order).drop(offset)
+    }
 
     fun readDocument(packages: List<PackageEntity>, id: String): Evidence? {
         val pack = packages.find { id.startsWith(it.key + "/") } ?: return null
