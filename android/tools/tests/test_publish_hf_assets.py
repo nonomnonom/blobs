@@ -1,14 +1,29 @@
 import hashlib
+import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from publish_hf_assets import pin_uploaded_assets
+from sign_catalog import validate_catalog
 
 
 class PublishHfAssetsTest(unittest.TestCase):
+    def test_catalog_signer_rejects_replacement_characters_in_display_text(self):
+        root = Path(__file__).resolve().parents[2]
+        catalog = json.loads(
+            (root / "app/src/main/assets/package-catalog.json").read_text(encoding="utf-8")
+        )
+        valid = deepcopy(catalog)
+        validate_catalog(valid)
+
+        valid["packages"][0]["description"] += " \ufffd"
+        with self.assertRaisesRegex(SystemExit, "replacement character"):
+            validate_catalog(valid)
+
     def test_pins_only_verified_local_packages_to_the_uploaded_revision(self):
         payload = b"verified package"
         revision = "a" * 40

@@ -19,6 +19,8 @@ LIBRARY_FORMATS = {"blobs"}
 def validate_catalog(parsed: object) -> None:
     if not isinstance(parsed, dict) or parsed.get("format") != 1:
         raise SystemExit("Catalog schema is not supported.")
+    if contains_replacement_character(parsed):
+        raise SystemExit("Catalog contains a Unicode replacement character.")
     release_tag = parsed.get("release_tag")
     if not isinstance(release_tag, str) or not re.fullmatch(r"v\d+\.\d+\.\d+", release_tag):
         raise SystemExit("Catalog release_tag must be a semantic version tag.")
@@ -109,6 +111,19 @@ def validate_catalog(parsed: object) -> None:
         roles.append(role)
     if not has_model or roles.count("starter") != 1:
         raise SystemExit("Catalog requires at least one model and exactly one starter library.")
+
+
+def contains_replacement_character(value: object) -> bool:
+    if isinstance(value, str):
+        return "\ufffd" in value
+    if isinstance(value, dict):
+        return any(
+            contains_replacement_character(key) or contains_replacement_character(item)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return any(contains_replacement_character(item) for item in value)
+    return False
 
 
 def sign_catalog(catalog_path: Path, output_path: Path, private_key_path: Path) -> None:
