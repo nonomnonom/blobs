@@ -4,14 +4,15 @@ import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithContentDescription
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -33,6 +34,12 @@ import org.junit.Test
 class UiParityTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private fun text(id: Int) = compose.activity.getString(id)
+
+    private fun revealFollowUp() {
+        compose.onNode(hasScrollToIndexAction())
+            .performScrollToNode(hasContentDescription(text(R.string.follow_up_hint)))
+        compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
+    }
 
     @Test
     fun importReviewReturnsToOriginAndRejectsDuplicatesWithoutLosingDraft() {
@@ -136,10 +143,10 @@ class UiParityTest {
             }
             compose.activityRule.scenario.recreate()
             compose.waitUntil(10_000) {
-                compose.onAllNodesWithText(text(R.string.follow_up))
-                    .fetchSemanticsNodes().isNotEmpty()
+                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                    .turns.value.any { it.id == "$id-turn" }
             }
-            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
+            revealFollowUp()
             compose.onNodeWithContentDescription(text(R.string.follow_up_hint))
                 .performTextInput("Keep this follow-up")
             compose.activityRule.scenario.onActivity { activity ->
@@ -149,7 +156,7 @@ class UiParityTest {
                 )
                     .hide(WindowInsetsCompat.Type.ime())
             }
-            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
+            revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             val selectedTitle = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
                 .selectedModel()?.title ?: text(R.string.model_missing)
@@ -167,7 +174,9 @@ class UiParityTest {
                     .hide(WindowInsetsCompat.Type.ime())
             }
             val label = compose.activity.getString(R.string.read_source, 1, source.title)
-            compose.onAllNodesWithContentDescription(label)[0].performScrollTo().performClick()
+            val sourceRow = hasContentDescription(label) and hasText(source.title)
+            compose.onNode(hasScrollToIndexAction()).performScrollToNode(sourceRow)
+            compose.onNode(sourceRow).performScrollTo().performClick()
             compose.onNodeWithText(source.text).assertIsDisplayed()
             compose.onNodeWithContentDescription(text(R.string.back)).performClick()
             compose.onNodeWithContentDescription(text(R.string.open_navigation)).performClick()
@@ -184,14 +193,14 @@ class UiParityTest {
                 ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
                     ?.isVisible(WindowInsetsCompat.Type.ime()) == false
             }
-            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
+            revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             compose.activityRule.scenario.recreate()
             compose.waitUntil(10_000) {
-                compose.onAllNodesWithText(text(R.string.follow_up))
-                    .fetchSemanticsNodes().isNotEmpty()
+                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                    .turns.value.any { it.id == "$id-turn" }
             }
-            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
+            revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             runBlocking {
                 assertEquals(
