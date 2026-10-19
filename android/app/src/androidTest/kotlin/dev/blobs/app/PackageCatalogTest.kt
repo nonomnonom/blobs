@@ -29,10 +29,10 @@ class PackageCatalogTest {
         }
 
         assertEquals("Outdoor safety · U.S. national parks", library.manifest.title)
-        assertEquals("2026-10.1", library.manifest.version)
+        assertEquals("2026-10.2", library.manifest.version)
         assertEquals(PackageRole.OPTIONAL, library.role)
         assertEquals(DownloadFormat.BLOBS, library.format)
-        assertEquals(36_588L, library.downloadBytes)
+        assertEquals(39_256L, library.downloadBytes)
         assertEquals(
             "U.S. Government work · National Park Service (public domain unless marked)",
             library.manifest.license

@@ -90,7 +90,6 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
-        action { container.catalog.refreshIfDue() }
         action {
             container.preferences.options.collect { options ->
                 if (!mutable.value.loaded) {
@@ -112,9 +111,6 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         backStack.addLast(mutable.value.page)
         mutable.value = mutable.value.copy(page = page)
         if (page in setOf(Page.BROWSE, Page.SOURCES)) search("")
-        if (page in setOf(Page.LIBRARY, Page.MODELS)) {
-            action { container.catalog.refreshIfDue() }
-        }
     }
 
     fun back(): Boolean {

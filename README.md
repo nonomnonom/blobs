@@ -46,7 +46,7 @@ See the [Android build and import guide](android/README.md) and [corpus preparat
 
 ## Asset distribution
 
-GitHub hosts the source and Android releases. Hugging Face hosts the signed download list and Blobs packages; Gemma weights remain in their upstream model repositories. Blobs checks for catalog updates and only downloads assets after the user chooses them. Installed models, libraries, chats, and retrieval stay on device. See [`docs/architecture.md`](docs/architecture.md) for the current distribution design.
+GitHub hosts the source and Android releases. Hugging Face hosts the signed download list and Blobs packages; Gemma weights remain in their upstream model repositories. Users can check for catalog updates and download selected assets in the app. Installed models, libraries, chats, and retrieval stay on device. See [`docs/architecture.md`](docs/architecture.md) for the current distribution design.
 
 ## License
 

@@ -33,7 +33,7 @@ data class CatalogSnapshot(
 
 enum class CatalogSource { BUNDLED, CACHE, REMOTE }
 
-enum class CatalogRefreshOutcome { UPDATED, UNCHANGED, THROTTLED, UNAVAILABLE }
+enum class CatalogRefreshOutcome { UPDATED, UNCHANGED, UNAVAILABLE }
 
 class PackageCatalog internal constructor(
     fallbackCatalog: String,
@@ -93,20 +93,12 @@ class PackageCatalog internal constructor(
     fun requiredStorageBytes(asset: DownloadablePackage): Long =
         asset.downloadBytes + asset.manifest.bytes + 64L * 1024 * 1024
 
-    suspend fun refreshIfDue(): CatalogRefreshOutcome = refresh(force = false)
+    suspend fun refreshNow(): CatalogRefreshOutcome = refresh()
 
-    suspend fun refreshNow(): CatalogRefreshOutcome = refresh(force = true)
-
-    private suspend fun refresh(force: Boolean): CatalogRefreshOutcome =
+    private suspend fun refresh(): CatalogRefreshOutcome =
         withContext(Dispatchers.IO) {
             updates.withLock {
                 val now = System.currentTimeMillis()
-                val previousCheck = checkedFile.takeIf(File::isFile)
-                    ?.readText(Charsets.UTF_8)?.toLongOrNull()
-                if (!force && previousCheck != null && now - previousCheck < CHECK_INTERVAL_MS) {
-                    return@withLock CatalogRefreshOutcome.THROTTLED
-                }
-
                 mutableSnapshot.value = mutableSnapshot.value.copy(refreshing = true)
                 if (!hasInternet()) {
                     mutableSnapshot.value = mutableSnapshot.value.copy(refreshing = false)
@@ -237,7 +229,6 @@ class PackageCatalog internal constructor(
         private const val READ_TIMEOUT_MS = 20_000
         private const val MAX_REDIRECTS = 5
         private const val MAX_CATALOG_BYTES = 1_048_576L
-        internal const val CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
         private const val RELEASE_ROOT = "https://github.com/nonomnonom/blobs/releases/download"
         private val ALLOWED_HOSTS = setOf(
             "huggingface.co",

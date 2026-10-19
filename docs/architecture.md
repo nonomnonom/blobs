@@ -17,11 +17,11 @@ The list is curated by Blobs maintainers. It is not an unrestricted index of Hug
 2. Setup downloads the selected model and required starter library only after the user taps the download action. The size and available-space guidance appear before each download.
 3. The app verifies the signed package metadata, pinned byte count, SHA-256, and package format before validating and installing files atomically.
 4. Optional libraries can be downloaded from the in-app Library screen. Users can remove installed assets to reclaim space.
-5. Blobs checks the signed download list on app start at a bounded interval and when the Library or model screens open. Users can also check manually. It caches the last verified list and falls back to that or the bundled list offline.
+5. Blobs never checks for updates in the background or just because a screen opens. The user can tap “Check for updates” in Library or Models; that fetches the signed download list and caches the verified result. Blobs uses the cached or bundled list offline.
 
 Users can also add their own TXT, Markdown, CSV, JSON, and text-based PDF files from the phone. Blobs extracts text locally, builds a searchable SQLite FTS5 library, and installs it through the same integrity-checked package path as downloaded libraries. Import is bounded to 50 files, 25 MB total input, 10 MB per ordinary file, 200 PDF pages, and 5 million Unicode code points per collection. Scanned-image PDFs, OCR, password-protected PDFs, and certificate-encrypted PDFs are not supported. Each saved collection can be switched off for retrieval, exported as a portable JSON pack, or removed. These collections stay in app-private storage unless the user explicitly exports them.
 
-No model or library is downloaded in the background. A failed or interrupted install leaves the previous working asset intact. Once setup is complete, network access is unnecessary for chat and research.
+No catalog request or model/library download starts in the background. A failed or interrupted install leaves the previous working asset intact. Once setup is complete, network access is unnecessary for chat and research; online catalog checks and downloads start only after the user asks for them.
 
 ## Trust and publishing
 
