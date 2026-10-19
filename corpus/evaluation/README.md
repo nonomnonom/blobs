@@ -92,6 +92,18 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
 
 The recorded host smoke found all eight expected source titles, with seven at rank 1 (MRR 0.938); median host retrieval time was 1.332 ms. This measures source routing for this package and case set only, not generated answers or phone latency.
 
+The backcountry-planning package has a six-question set for its single NPS Ten Essentials source:
+
+```powershell
+uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
+  --library-package work/packages/backcountry-basics-2026-10-v2.blobs `
+  --cases evaluation/cases/backcountry-basics-retrieval-v2.json `
+  --work-directory work/reports/backcountry-basics-retrieval-v2 `
+  --output evaluation/baselines/backcountry-basics-2026-10.2-retrieval-v2-host.json
+```
+
+The Android 16 x86_64 emulator report is [`backcountry-basics retrieval evidence`](evidence/android-retrieval-backcountry-basics-v2-x86_64-android16-2026-10-19.json). It exercises the production SQLite retrieval path five times per case, records source ranks and elapsed time, and does not evaluate generated answers.
+
 For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
 
 ## Measure retrieval on an Android emulator

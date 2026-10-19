@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "id": "backcountry-basics",
+  "edition": "2026-10.1",
+  "title": "Backcountry basics · U.S. national parks",
+  "publisher": "National Park Service · U.S. Department of the Interior",
+  "license": "National Park Service text; no claim to original U.S. Government works. NPS content is generally public domain unless otherwise marked. The source credits The Mountaineers for the Ten Essentials system. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+  "saved": "2026-10-19",
+  "collection": "U.S. national park backcountry preparation",
+  "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+  "sources": [
+    {
+      "id": "ten-essentials",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/10essentials.htm",
+      "title": "Ten Essentials",
+      "updated": "2026-05-28",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "dbc91d59c408e9e8b4014d9c2db67505c62bb17a64638c2ec113a7f82b15af49"
+    }
+  ]
+}
