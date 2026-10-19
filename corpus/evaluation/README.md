@@ -14,10 +14,10 @@ uv run --locked --project . python -m evaluation.android.app_startup `
   --serial emulator-5554 `
   --package dev.blobs.app `
   --runs 7 `
-  --output evaluation/baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json
+  --output reports/android-startup-local.json
 ```
 
-The v0.3.7 release APK measured on Android 16 x86_64 had 684 ms median activity launch time (739 ms nearest-rank p95) and 31,955 KiB median process PSS (33,107 KiB p95) across seven process-cold launches. Individual launch times ranged from 488 to 739 ms, so this is a small emulator diagnostic rather than a device-wide claim. The installed base APK digest and every sample are in [`the launch report`](baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json).
+The v0.3.8 release APK measured on Android 16 x86_64 had 682 ms median activity launch time (753 ms nearest-rank p95) and 31,680 KiB median process PSS (33,753 KiB p95) across seven process-cold launches. The v0.3.7 run on the same emulator measured 684 ms median (739 ms p95) and 31,955 KiB median PSS (33,107 KiB p95). These small repeated emulator samples show similar startup and memory use across the two releases; they are not device-wide estimates. The installed APK digests and raw samples are in [`the v0.3.8 report`](baselines/android-startup-v0.3.8-x86_64-android16-2026-10-19.json) and [`the v0.3.7 report`](baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json).
 
 ## Measure in-app model and library downloads
 
