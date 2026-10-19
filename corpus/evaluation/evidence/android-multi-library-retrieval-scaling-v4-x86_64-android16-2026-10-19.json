@@ -1,0 +1,3188 @@
+{
+  "format": 1,
+  "scope": "Production Android retrieval across enabled local libraries; no model or generated answers",
+  "created_at_epoch_ms": 1792380021118,
+  "case_set": {
+    "id": "multi-library-retrieval-scaling-v4",
+    "sha256": "f993f91b27c0d446fbe9b80b03967aa5fba1516801d21a966d80f470a65c9cca"
+  },
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "model": "sdk_gphone64_x86_64",
+    "abi": "x86_64",
+    "sdk": 36
+  },
+  "application": {
+    "package": "dev.blobs.app.debug",
+    "version": "0.3.8",
+    "apk_sha256": "ff836b40b5d8f66dc482fd007acba77e554dba00fc925f137df23d21d89bb863",
+    "test_apk_sha256": "7312de2f59c3bfdef6a08cff09998354a94670f9c9827309e2f545729fa2ca43"
+  },
+  "repeat_count": 5,
+  "multi_library_candidate_limit": 8,
+  "libraries": [
+    {
+      "bytes": 8757248,
+      "format": 1,
+      "id": "wikipedia-starter",
+      "kind": "library",
+      "license": "CC BY-SA 4.0; adapted plain text; individual article attribution included",
+      "origin": "https://en.wikipedia.org/wiki/Wikipedia:Copyrights",
+      "sha256": "141b449c10fc5a76428f616c413f7066633b5fe426f84a9d5d2f45612b989a54",
+      "title": "Science and everyday questions",
+      "version": "2026-10-17.5"
+    },
+    {
+      "bytes": 151552,
+      "format": 1,
+      "id": "nps-outdoor-safety",
+      "kind": "library",
+      "license": "U.S. Government work · National Park Service (public domain unless marked)",
+      "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+      "sha256": "c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f",
+      "title": "Outdoor safety · U.S. national parks",
+      "version": "2026-10.2"
+    },
+    {
+      "bytes": 106496,
+      "format": 1,
+      "id": "ready-emergency-preparedness",
+      "kind": "library",
+      "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+      "origin": "https://www.fema.gov/about/website-information",
+      "sha256": "aaa6315c84831b62c25458541513c3e9e0b3c9f25e0558d525596a27d6b5304c",
+      "title": "Emergency preparedness · U.S. households",
+      "version": "2026-10.1"
+    },
+    {
+      "bytes": 110592,
+      "format": 1,
+      "id": "camping-safety",
+      "kind": "library",
+      "license": "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+      "origin": "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039",
+      "sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743",
+      "title": "Camping safely · U.S. national parks",
+      "version": "2026-10.1"
+    },
+    {
+      "bytes": 118784,
+      "format": 1,
+      "id": "backcountry-basics",
+      "kind": "library",
+      "license": "National Park Service text; public-domain status may vary by page; source credits The Mountaineers for the Ten Essentials system",
+      "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+      "sha256": "c2d3f6bc7ce50bcaca70a0d4ca54666aebb4d6d3243c805dfc9b3a25da66021f",
+      "title": "Backcountry trip planning · U.S. national parks",
+      "version": "2026-10.3"
+    },
+    {
+      "bytes": 628436992,
+      "format": 1,
+      "id": "wikivoyage-en",
+      "kind": "library",
+      "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+      "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+      "sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+      "title": "Travel guides · English",
+      "version": "2026-09.2"
+    }
+  ],
+  "scenarios": [
+    {
+      "enabled_library_count": 1,
+      "enabled_library_ids": [
+        "wikipedia-starter"
+      ],
+      "query_median_elapsed_ms_median": 5.334664,
+      "query_median_elapsed_ms_p95": 6.005074,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Ecosystem",
+            "Renewable energy",
+            "Cell (biology)",
+            "Circadian rhythm",
+            "Solar energy"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "24544",
+              "title": "Photosynthesis",
+              "section": "Photosynthesis",
+              "title_overlap": 1,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Primary production",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Artificial photosynthesis",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "4230",
+              "title": "Cell (biology)",
+              "section": "Algal cells",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "56565",
+              "title": "Circadian rhythm",
+              "section": "In plants",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "27743",
+              "title": "Solar energy",
+              "section": "Water treatment",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            4.857173,
+            4.483171,
+            5.510702,
+            4.789821,
+            4.691495
+          ],
+          "median_elapsed_ms": 4.789821
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": false,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Exercise",
+            "Cryptography",
+            "Ecosystem",
+            "Heat pump",
+            "Antimicrobial resistance",
+            "Evolution"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Respiratory system",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "18934432",
+              "title": "Cryptography",
+              "section": "Modern cryptography",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Ecosystem",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "68316",
+              "title": "Heat pump",
+              "section": "Heat pump",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "Natural occurrence",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9236",
+              "title": "Evolution",
+              "section": "Natural selection",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            5.621125,
+            5.454876,
+            5.052487,
+            7.459315,
+            5.342322
+          ],
+          "median_elapsed_ms": 5.454876
+        },
+        {
+          "case_id": "natural-water-hazards",
+          "expected_source_enabled": false,
+          "expected_document_title": "Water Hazards",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Ocean acidification",
+            "Volcano",
+            "Irrigation",
+            "Renewable energy",
+            "Antimicrobial resistance",
+            "Heat pump"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "2801560",
+              "title": "Ocean acidification",
+              "section": "UN Ocean Decade",
+              "title_overlap": 1,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "32571",
+              "title": "Volcano",
+              "section": "Subglacial volcanoes",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "42261",
+              "title": "Irrigation",
+              "section": "Ancient history",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Marine energy",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "India",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "68316",
+              "title": "Heat pump",
+              "section": "District heating",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            5.278348,
+            6.207686,
+            5.3881,
+            5.184486,
+            6.533793
+          ],
+          "median_elapsed_ms": 5.3881
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": false,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Supply and demand",
+            "Renewable energy",
+            "Human rights",
+            "Antibiotic",
+            "Public health",
+            "Computer security"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "29664",
+              "title": "Supply and demand",
+              "section": "Supply schedule",
+              "title_overlap": 1,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Energy supply security",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "13831",
+              "title": "Human rights",
+              "section": "Human rights in emergency situations",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1805",
+              "title": "Antibiotic",
+              "section": "Routes of administration",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "463734",
+              "title": "Public health",
+              "section": "Canada",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "7398",
+              "title": "Computer security",
+              "section": "National actions",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            5.917669,
+            4.736437,
+            4.576536,
+            6.073063,
+            4.590928
+          ],
+          "median_elapsed_ms": 4.736437
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": false,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 0,
+          "max_expected_title_rank": 4,
+          "selected_titles": [
+            "Urban forestry",
+            "Climate change",
+            "Sustainable agriculture",
+            "Biodiversity",
+            "Computer security",
+            "Agriculture"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "610845",
+              "title": "Urban forestry",
+              "section": "Wildlife habitat management",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "5042951",
+              "title": "Climate change",
+              "section": "Nature and wildlife",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "216143",
+              "title": "Sustainable agriculture",
+              "section": "Principles",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "45086",
+              "title": "Biodiversity",
+              "section": "National parks and wildlife sanctuaries",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "7398",
+              "title": "Computer security",
+              "section": "Security by design",
+              "title_overlap": 0,
+              "evidence_overlap": 0
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "627",
+              "title": "Agriculture",
+              "section": "Agriculture",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            5.983047,
+            6.655732,
+            6.005074,
+            5.38636,
+            6.061123
+          ],
+          "median_elapsed_ms": 6.005074
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Cryptography",
+            "Urban forestry",
+            "Human rights",
+            "Lithium-ion battery",
+            "Antibiotic",
+            "Public health"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "18934432",
+              "title": "Cryptography",
+              "section": "Lightweight cryptography",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "610845",
+              "title": "Urban forestry",
+              "section": "Wildlife habitat management",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "13831",
+              "title": "Human rights",
+              "section": "Human rights in emergency situations",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "201485",
+              "title": "Lithium-ion battery",
+              "section": "Battery designs and formats",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1805",
+              "title": "Antibiotic",
+              "section": "Routes of administration",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "463734",
+              "title": "Public health",
+              "section": "Canada",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            5.802,
+            5.099624,
+            6.393144,
+            5.334664,
+            5.122703
+          ],
+          "median_elapsed_ms": 5.334664
+        },
+        {
+          "case_id": "bangkok-airport",
+          "expected_source_enabled": false,
+          "expected_document_title": "Bangkok",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Desalination",
+            "Exercise",
+            "Computer security",
+            "Scientific method",
+            "Game theory",
+            "Externality"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "156787",
+              "title": "Desalination",
+              "section": "Applications",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Public health measures",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "7398",
+              "title": "Computer security",
+              "section": "Aviation",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "26833",
+              "title": "Scientific method",
+              "section": "Rationality",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "11924",
+              "title": "Game theory",
+              "section": "Prisoner's dilemma",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "61193",
+              "title": "Externality",
+              "section": "Definitions",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            4.673353,
+            4.01893,
+            6.318342,
+            5.480414,
+            4.676121
+          ],
+          "median_elapsed_ms": 4.676121
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 2,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety"
+      ],
+      "query_median_elapsed_ms_median": 54.904846,
+      "query_median_elapsed_ms_p95": 71.39462,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Ecosystem",
+            "Renewable energy",
+            "Two Ways to Purify Water"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "24544",
+              "title": "Photosynthesis",
+              "section": "C3 : C4 photosynthesis research",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Primary production",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Artificial photosynthesis",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-purification",
+              "title": "Two Ways to Purify Water",
+              "section": "Two Ways to Purify Water",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "24544",
+              "title": "Photosynthesis",
+              "section": "Photosynthesis",
+              "title_overlap": 1,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            33.481964,
+            42.029365,
+            28.391098,
+            27.946293,
+            29.796063
+          ],
+          "median_elapsed_ms": 29.796063
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution",
+            "Cryptography"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Outdoor Emergency Plan",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Ecosystem",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Social and cultural variation",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "Natural occurrence",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9236",
+              "title": "Evolution",
+              "section": "Natural selection",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "18934432",
+              "title": "Cryptography",
+              "section": "Modern cryptography",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            59.125172,
+            56.703993,
+            51.016648,
+            53.695575,
+            54.122529
+          ],
+          "median_elapsed_ms": 54.122529
+        },
+        {
+          "case_id": "natural-water-hazards",
+          "expected_source_enabled": true,
+          "expected_document_title": "Water Hazards",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Water Hazards",
+            "Volcano",
+            "Irrigation",
+            "Renewable energy",
+            "Heat pump",
+            "Antimicrobial resistance"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-hazards",
+              "title": "Water Hazards",
+              "section": "Water Hazards",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "32571",
+              "title": "Volcano",
+              "section": "Subglacial volcanoes",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "42261",
+              "title": "Irrigation",
+              "section": "Ancient history",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Marine energy",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "68316",
+              "title": "Heat pump",
+              "section": "District heating",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "India",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            69.667048,
+            71.138005,
+            84.710746,
+            80.870939,
+            71.39462
+          ],
+          "median_elapsed_ms": 71.39462
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": false,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Renewable energy",
+            "Inflation",
+            "Nuclear power",
+            "Wind power",
+            "Outdoor Emergency Plan",
+            "Winter Hiking Tips"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Energy supply security",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "38286",
+              "title": "Inflation",
+              "section": "Inflation targeting",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "22153",
+              "title": "Nuclear power",
+              "section": "Fukushima accident",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "277289",
+              "title": "Wind power",
+              "section": "History",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Major injuries like chest pain, difficulty breathing, major bleeding, etc.",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Winter Hiking Essentials",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            57.425945,
+            69.279011,
+            51.931723,
+            64.257865,
+            61.056163
+          ],
+          "median_elapsed_ms": 61.056163
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": false,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 0,
+          "max_expected_title_rank": 4,
+          "selected_titles": [
+            "Hike Smart",
+            "Urban forestry",
+            "Climate change",
+            "Sustainable agriculture",
+            "Winter Hiking Tips",
+            "Two Ways to Purify Water"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Hike Smart",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "610845",
+              "title": "Urban forestry",
+              "section": "Wildlife habitat management",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "5042951",
+              "title": "Climate change",
+              "section": "Nature and wildlife",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "216143",
+              "title": "Sustainable agriculture",
+              "section": "Principles",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Hiking Tips",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-purification",
+              "title": "Two Ways to Purify Water",
+              "section": "Two Ways to Purify Water",
+              "title_overlap": 0,
+              "evidence_overlap": 0
+            }
+          ],
+          "elapsed_ms_samples": [
+            75.636085,
+            61.191273,
+            58.470018,
+            59.898175,
+            60.519367
+          ],
+          "median_elapsed_ms": 60.519367
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Outdoor Emergency Plan",
+            "Winter Hiking Tips",
+            "Cryptography",
+            "Urban forestry",
+            "Human rights"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Plan Your Hike",
+              "title_overlap": 1,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Pack the 10 Essentials",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Winter Hiking Tips",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "18934432",
+              "title": "Cryptography",
+              "section": "Lightweight cryptography",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "610845",
+              "title": "Urban forestry",
+              "section": "Wildlife habitat management",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "13831",
+              "title": "Human rights",
+              "section": "Human rights in emergency situations",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            42.187318,
+            44.863667,
+            51.329075,
+            42.272132,
+            61.058952
+          ],
+          "median_elapsed_ms": 44.863667
+        },
+        {
+          "case_id": "bangkok-airport",
+          "expected_source_enabled": false,
+          "expected_document_title": "Bangkok",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Desalination",
+            "Exercise",
+            "Computer security",
+            "Scientific method",
+            "Game theory",
+            "Externality"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "156787",
+              "title": "Desalination",
+              "section": "Applications",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Public health measures",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "7398",
+              "title": "Computer security",
+              "section": "Aviation",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "26833",
+              "title": "Scientific method",
+              "section": "Rationality",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "11924",
+              "title": "Game theory",
+              "section": "Prisoner's dilemma",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "61193",
+              "title": "Externality",
+              "section": "Definitions",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            54.904846,
+            57.792169,
+            54.349938,
+            53.815872,
+            55.988156
+          ],
+          "median_elapsed_ms": 54.904846
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 3,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety",
+        "ready-emergency-preparedness"
+      ],
+      "query_median_elapsed_ms_median": 89.068861,
+      "query_median_elapsed_ms_p95": 98.199995,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Ecosystem",
+            "Renewable energy",
+            "Two Ways to Purify Water",
+            "Build A Kit",
+            "Power Outages"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "24544",
+              "title": "Photosynthesis",
+              "section": "C3 : C4 photosynthesis research",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Primary production",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Artificial photosynthesis",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-purification",
+              "title": "Two Ways to Purify Water",
+              "section": "Two Ways to Purify Water",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Kit Storage Locations",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-power-outages",
+              "title": "Power Outages",
+              "section": "Preparing for a Power Outage",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            35.183287,
+            30.565558,
+            34.399941,
+            35.398798,
+            33.675354
+          ],
+          "median_elapsed_ms": 34.399941
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution",
+            "Cryptography"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Outdoor Emergency Plan",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Ecosystem",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Social and cultural variation",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "Natural occurrence",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9236",
+              "title": "Evolution",
+              "section": "Natural selection",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "18934432",
+              "title": "Cryptography",
+              "section": "Modern cryptography",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            94.642293,
+            83.044604,
+            89.068861,
+            85.48334,
+            98.713393
+          ],
+          "median_elapsed_ms": 89.068861
+        },
+        {
+          "case_id": "natural-water-hazards",
+          "expected_source_enabled": true,
+          "expected_document_title": "Water Hazards",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Water Hazards",
+            "Volcano",
+            "Irrigation",
+            "Renewable energy",
+            "Heat pump",
+            "Antimicrobial resistance"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-hazards",
+              "title": "Water Hazards",
+              "section": "Water Hazards",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "32571",
+              "title": "Volcano",
+              "section": "Subglacial volcanoes",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "42261",
+              "title": "Irrigation",
+              "section": "Ancient history",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Marine energy",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "68316",
+              "title": "Heat pump",
+              "section": "District heating",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "India",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            98.152823,
+            93.090491,
+            90.198511,
+            105.13943,
+            93.386018
+          ],
+          "median_elapsed_ms": 93.386018
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": true,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Build A Kit",
+            "Evacuation",
+            "Renewable energy",
+            "Inflation",
+            "Nuclear power",
+            "Winter Hiking Tips"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Basic Disaster Supplies Kit",
+              "title_overlap": 1,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-evacuation",
+              "title": "Evacuation",
+              "section": "During an Evacuation",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Energy supply security",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "38286",
+              "title": "Inflation",
+              "section": "Inflation targeting",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "22153",
+              "title": "Nuclear power",
+              "section": "Fukushima accident",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Winter Hiking Essentials",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            104.74994,
+            97.481994,
+            110.098135,
+            98.199995,
+            96.667697
+          ],
+          "median_elapsed_ms": 98.199995
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": false,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 0,
+          "max_expected_title_rank": 4,
+          "selected_titles": [
+            "Hike Smart",
+            "Urban forestry",
+            "Climate change",
+            "Build A Kit",
+            "Sustainable agriculture",
+            "Winter Hiking Tips"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Hike Smart",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "610845",
+              "title": "Urban forestry",
+              "section": "Wildlife habitat management",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "5042951",
+              "title": "Climate change",
+              "section": "Nature and wildlife",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Maintaining Your Kit",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "216143",
+              "title": "Sustainable agriculture",
+              "section": "Principles",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Hiking Tips",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            105.462981,
+            97.27683,
+            96.011089,
+            93.877175,
+            97.467018
+          ],
+          "median_elapsed_ms": 97.27683
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Outdoor Emergency Plan",
+            "Winter Hiking Tips",
+            "Build A Kit",
+            "Make A Plan",
+            "Evacuation"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Plan Your Hike",
+              "title_overlap": 1,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Pack the 10 Essentials",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Winter Hiking Tips",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Kit Storage Locations",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-family-plan",
+              "title": "Make A Plan",
+              "section": "Step 1: Meet with Your Family",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-evacuation",
+              "title": "Evacuation",
+              "section": "Know When and Where to Go",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            69.620984,
+            79.423918,
+            75.071333,
+            76.433638,
+            78.082991
+          ],
+          "median_elapsed_ms": 76.433638
+        },
+        {
+          "case_id": "bangkok-airport",
+          "expected_source_enabled": false,
+          "expected_document_title": "Bangkok",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Desalination",
+            "Exercise",
+            "Computer security",
+            "Scientific method",
+            "Game theory",
+            "Externality"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "156787",
+              "title": "Desalination",
+              "section": "Applications",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Public health measures",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "7398",
+              "title": "Computer security",
+              "section": "Aviation",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "26833",
+              "title": "Scientific method",
+              "section": "Rationality",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "11924",
+              "title": "Game theory",
+              "section": "Prisoner's dilemma",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "61193",
+              "title": "Externality",
+              "section": "Definitions",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            74.75715,
+            70.404031,
+            67.864824,
+            75.449018,
+            74.028437
+          ],
+          "median_elapsed_ms": 74.028437
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 4,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety",
+        "ready-emergency-preparedness",
+        "camping-safety"
+      ],
+      "query_median_elapsed_ms_median": 123.250797,
+      "query_median_elapsed_ms_p95": 156.121319,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Ecosystem",
+            "Renewable energy",
+            "Two Ways to Purify Water",
+            "Build A Kit",
+            "Power Outages"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "24544",
+              "title": "Photosynthesis",
+              "section": "C3 : C4 photosynthesis research",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Primary production",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Artificial photosynthesis",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-purification",
+              "title": "Two Ways to Purify Water",
+              "section": "Two Ways to Purify Water",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Kit Storage Locations",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-power-outages",
+              "title": "Power Outages",
+              "section": "Preparing for a Power Outage",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            31.66984,
+            33.263826,
+            33.753314,
+            33.581846,
+            39.365637
+          ],
+          "median_elapsed_ms": 33.581846
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution",
+            "Cryptography"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Outdoor Emergency Plan",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Ecosystem",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Social and cultural variation",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "Natural occurrence",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9236",
+              "title": "Evolution",
+              "section": "Natural selection",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "18934432",
+              "title": "Cryptography",
+              "section": "Modern cryptography",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            120.272931,
+            121.425413,
+            125.145543,
+            123.250797,
+            145.428131
+          ],
+          "median_elapsed_ms": 123.250797
+        },
+        {
+          "case_id": "natural-water-hazards",
+          "expected_source_enabled": true,
+          "expected_document_title": "Water Hazards",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Water Hazards",
+            "Volcano",
+            "Irrigation",
+            "Renewable energy",
+            "Heat pump",
+            "Camping Safely Step 1 - Before the Trip"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-hazards",
+              "title": "Water Hazards",
+              "section": "Water Hazards",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "32571",
+              "title": "Volcano",
+              "section": "Subglacial volcanoes",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "42261",
+              "title": "Irrigation",
+              "section": "Ancient history",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Marine energy",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "68316",
+              "title": "Heat pump",
+              "section": "District heating",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Know Your Limits",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            116.931658,
+            113.000874,
+            110.565655,
+            126.173416,
+            109.871549
+          ],
+          "median_elapsed_ms": 113.000874
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": true,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Build A Kit",
+            "Evacuation",
+            "Camping Safely Step 1 - Before the Trip",
+            "Renewable energy",
+            "Inflation",
+            "Winter Hiking Tips"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Basic Disaster Supplies Kit",
+              "title_overlap": 1,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-evacuation",
+              "title": "Evacuation",
+              "section": "During an Evacuation",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "In Case of Emergency",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Energy supply security",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "38286",
+              "title": "Inflation",
+              "section": "Inflation targeting",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Winter Hiking Essentials",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            156.121319,
+            157.93842,
+            146.76751,
+            147.61467,
+            158.728032
+          ],
+          "median_elapsed_ms": 156.121319
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": true,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 3,
+          "max_expected_title_rank": 4,
+          "selected_titles": [
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Camping Safely Step 3 - During Your Stay",
+            "Camping Safely Step 2 - Upon Arrival",
+            "Urban forestry",
+            "Climate change"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Hike Smart",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Park Requirements and Regulations",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-during-stay",
+              "title": "Camping Safely Step 3 - During Your Stay",
+              "section": "Respect Wildlife",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-upon-arrival",
+              "title": "Camping Safely Step 2 - Upon Arrival",
+              "section": "Ask a Park Ranger",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "610845",
+              "title": "Urban forestry",
+              "section": "Wildlife habitat management",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "5042951",
+              "title": "Climate change",
+              "section": "Nature and wildlife",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            145.103048,
+            140.065203,
+            142.680749,
+            145.459677,
+            149.531743
+          ],
+          "median_elapsed_ms": 145.103048
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Outdoor Emergency Plan",
+            "Winter Hiking Tips",
+            "Build A Kit",
+            "Make A Plan"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Plan Your Hike",
+              "title_overlap": 1,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Prepare - Gear Up!",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Pack the 10 Essentials",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Winter Hiking Tips",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Kit Storage Locations",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-family-plan",
+              "title": "Make A Plan",
+              "section": "Step 1: Meet with Your Family",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            151.134334,
+            140.427208,
+            163.753594,
+            153.665314,
+            158.748962
+          ],
+          "median_elapsed_ms": 153.665314
+        },
+        {
+          "case_id": "bangkok-airport",
+          "expected_source_enabled": false,
+          "expected_document_title": "Bangkok",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Desalination",
+            "Exercise",
+            "Computer security",
+            "Scientific method",
+            "Game theory",
+            "Externality"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "156787",
+              "title": "Desalination",
+              "section": "Applications",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Public health measures",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "7398",
+              "title": "Computer security",
+              "section": "Aviation",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "26833",
+              "title": "Scientific method",
+              "section": "Rationality",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "11924",
+              "title": "Game theory",
+              "section": "Prisoner's dilemma",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "61193",
+              "title": "Externality",
+              "section": "Definitions",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            74.335355,
+            86.748797,
+            74.994984,
+            79.867371,
+            79.314026
+          ],
+          "median_elapsed_ms": 79.314026
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 5,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety",
+        "ready-emergency-preparedness",
+        "camping-safety",
+        "backcountry-basics"
+      ],
+      "query_median_elapsed_ms_median": 169.821452,
+      "query_median_elapsed_ms_p95": 219.94339,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Ecosystem",
+            "Renewable energy",
+            "Two Ways to Purify Water",
+            "Build A Kit",
+            "Power Outages"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "24544",
+              "title": "Photosynthesis",
+              "section": "C3 : C4 photosynthesis research",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Primary production",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Artificial photosynthesis",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-purification",
+              "title": "Two Ways to Purify Water",
+              "section": "Two Ways to Purify Water",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Kit Storage Locations",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-power-outages",
+              "title": "Power Outages",
+              "section": "Preparing for a Power Outage",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            34.866086,
+            33.870103,
+            33.722469,
+            33.228399,
+            32.308008
+          ],
+          "median_elapsed_ms": 33.722469
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Trip Planning Guide",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Outdoor Emergency Plan",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-trip-planning-guide",
+              "title": "Trip Planning Guide",
+              "section": "Make an Outdoor Emergency Plan",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Ecosystem",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Social and cultural variation",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "Natural occurrence",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9236",
+              "title": "Evolution",
+              "section": "Natural selection",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            189.909017,
+            169.821452,
+            165.731971,
+            171.270231,
+            164.876992
+          ],
+          "median_elapsed_ms": 169.821452
+        },
+        {
+          "case_id": "natural-water-hazards",
+          "expected_source_enabled": true,
+          "expected_document_title": "Water Hazards",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Water Hazards",
+            "Volcano",
+            "Irrigation",
+            "Renewable energy",
+            "Heat pump",
+            "Camping Safely Step 1 - Before the Trip"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-hazards",
+              "title": "Water Hazards",
+              "section": "Water Hazards",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "32571",
+              "title": "Volcano",
+              "section": "Subglacial volcanoes",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "42261",
+              "title": "Irrigation",
+              "section": "Ancient history",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Marine energy",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "68316",
+              "title": "Heat pump",
+              "section": "District heating",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Know Your Limits",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            161.258425,
+            173.120057,
+            141.150034,
+            152.955628,
+            159.214286
+          ],
+          "median_elapsed_ms": 159.214286
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": true,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Build A Kit",
+            "Ten Essentials",
+            "Evacuation",
+            "Camping Safely Step 1 - Before the Trip",
+            "Renewable energy",
+            "Inflation"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Basic Disaster Supplies Kit",
+              "title_overlap": 1,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-ten-essentials",
+              "title": "Ten Essentials",
+              "section": "Ten Essentials",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-evacuation",
+              "title": "Evacuation",
+              "section": "During an Evacuation",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "In Case of Emergency",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Energy supply security",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "38286",
+              "title": "Inflation",
+              "section": "Inflation targeting",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            232.494805,
+            221.782258,
+            210.878346,
+            219.94339,
+            208.731732
+          ],
+          "median_elapsed_ms": 219.94339
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": true,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 3,
+          "max_expected_title_rank": 4,
+          "selected_titles": [
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Camping Safely Step 3 - During Your Stay",
+            "Camping Safely Step 2 - Upon Arrival",
+            "Wilderness & Backcountry Camping",
+            "Urban forestry"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Hike Smart",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Park Requirements and Regulations",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-during-stay",
+              "title": "Camping Safely Step 3 - During Your Stay",
+              "section": "Respect Wildlife",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-upon-arrival",
+              "title": "Camping Safely Step 2 - Upon Arrival",
+              "section": "Ask a Park Ranger",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-backcountry-camping",
+              "title": "Wilderness & Backcountry Camping",
+              "section": "What to Expect",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "610845",
+              "title": "Urban forestry",
+              "section": "Wildlife habitat management",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            190.423034,
+            187.041063,
+            186.649711,
+            202.08596,
+            207.70137
+          ],
+          "median_elapsed_ms": 190.423034
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": true,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Ten Essentials",
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Outdoor Emergency Plan",
+            "Winter Hiking Tips",
+            "Build A Kit"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-ten-essentials",
+              "title": "Ten Essentials",
+              "section": "Ten Essentials",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Plan Your Hike",
+              "title_overlap": 1,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Prepare - Gear Up!",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Pack the 10 Essentials",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-winter-hiking",
+              "title": "Winter Hiking Tips",
+              "section": "Winter Hiking Tips",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Kit Storage Locations",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            197.927189,
+            201.165273,
+            217.737404,
+            228.6876,
+            218.561254
+          ],
+          "median_elapsed_ms": 217.737404
+        },
+        {
+          "case_id": "bangkok-airport",
+          "expected_source_enabled": false,
+          "expected_document_title": "Bangkok",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Desalination",
+            "Exercise",
+            "Computer security",
+            "Scientific method",
+            "Game theory",
+            "Externality"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "156787",
+              "title": "Desalination",
+              "section": "Applications",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Public health measures",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "7398",
+              "title": "Computer security",
+              "section": "Aviation",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "26833",
+              "title": "Scientific method",
+              "section": "Rationality",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "11924",
+              "title": "Game theory",
+              "section": "Prisoner's dilemma",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "61193",
+              "title": "Externality",
+              "section": "Definitions",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            116.173546,
+            96.624351,
+            108.22733,
+            100.920541,
+            95.18924
+          ],
+          "median_elapsed_ms": 100.920541
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 6,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety",
+        "ready-emergency-preparedness",
+        "camping-safety",
+        "backcountry-basics",
+        "wikivoyage-en"
+      ],
+      "query_median_elapsed_ms_median": 308.551058,
+      "query_median_elapsed_ms_p95": 425.345884,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Ecosystem",
+            "Renewable energy",
+            "Two Ways to Purify Water",
+            "Build A Kit",
+            "Power Outages"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "24544",
+              "title": "Photosynthesis",
+              "section": "C3 : C4 photosynthesis research",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Primary production",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Artificial photosynthesis",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-purification",
+              "title": "Two Ways to Purify Water",
+              "section": "Two Ways to Purify Water",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Kit Storage Locations",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-power-outages",
+              "title": "Power Outages",
+              "section": "Preparing for a Power Outage",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            76.352944,
+            89.027891,
+            92.046287,
+            85.471392,
+            89.192204
+          ],
+          "median_elapsed_ms": 89.027891
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Trip Planning Guide",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Outdoor Emergency Plan",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-trip-planning-guide",
+              "title": "Trip Planning Guide",
+              "section": "Make an Outdoor Emergency Plan",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9632",
+              "title": "Ecosystem",
+              "section": "Ecosystem",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Social and cultural variation",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "1914",
+              "title": "Antimicrobial resistance",
+              "section": "Natural occurrence",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "9236",
+              "title": "Evolution",
+              "section": "Natural selection",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            230.666097,
+            216.318592,
+            222.132679,
+            246.187606,
+            217.159929
+          ],
+          "median_elapsed_ms": 222.132679
+        },
+        {
+          "case_id": "natural-water-hazards",
+          "expected_source_enabled": true,
+          "expected_document_title": "Water Hazards",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Water Hazards",
+            "Volcano",
+            "Irrigation",
+            "Renewable energy",
+            "Heat pump",
+            "Camping Safely Step 1 - Before the Trip"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-water-hazards",
+              "title": "Water Hazards",
+              "section": "Water Hazards",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "32571",
+              "title": "Volcano",
+              "section": "Subglacial volcanoes",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "42261",
+              "title": "Irrigation",
+              "section": "Ancient history",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Marine energy",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "68316",
+              "title": "Heat pump",
+              "section": "District heating",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Know Your Limits",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            297.827029,
+            301.963891,
+            324.012684,
+            308.551058,
+            313.692567
+          ],
+          "median_elapsed_ms": 308.551058
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": true,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Build A Kit",
+            "Ten Essentials",
+            "Canoeing the San Marcos River",
+            "Evacuation",
+            "Renewable energy",
+            "Inflation"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-emergency-kit",
+              "title": "Build A Kit",
+              "section": "Basic Disaster Supplies Kit",
+              "title_overlap": 1,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-ten-essentials",
+              "title": "Ten Essentials",
+              "section": "Ten Essentials",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-c800e92350c425718079048f94d4f7c7",
+              "title": "Canoeing the San Marcos River",
+              "section": "Prepare",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "ready-emergency-preparedness",
+              "document_id": "ready-emergency-preparedness-evacuation",
+              "title": "Evacuation",
+              "section": "During an Evacuation",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "25784",
+              "title": "Renewable energy",
+              "section": "Energy supply security",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "38286",
+              "title": "Inflation",
+              "section": "Inflation targeting",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            294.914118,
+            267.530548,
+            267.067484,
+            286.499501,
+            275.374449
+          ],
+          "median_elapsed_ms": 275.374449
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": true,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 4,
+          "max_expected_title_rank": 4,
+          "selected_titles": [
+            "Pian Upe Wildlife Reserve",
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Camping Safely Step 3 - During Your Stay",
+            "Camping Safely Step 2 - Upon Arrival",
+            "Wilderness & Backcountry Camping"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-edcd76d45d3c501916edf3610e69ae55",
+              "title": "Pian Upe Wildlife Reserve",
+              "section": "Camping",
+              "title_overlap": 1,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Hike Smart",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Park Requirements and Regulations",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-during-stay",
+              "title": "Camping Safely Step 3 - During Your Stay",
+              "section": "Respect Wildlife",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-upon-arrival",
+              "title": "Camping Safely Step 2 - Upon Arrival",
+              "section": "Ask a Park Ranger",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-backcountry-camping",
+              "title": "Wilderness & Backcountry Camping",
+              "section": "What to Expect",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            }
+          ],
+          "elapsed_ms_samples": [
+            433.244744,
+            422.144542,
+            425.345884,
+            422.487234,
+            428.017455
+          ],
+          "median_elapsed_ms": 425.345884
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": true,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Ten Essentials",
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Grande Randonnée",
+            "Routeburn Track",
+            "Outdoor Emergency Plan"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "backcountry-basics",
+              "document_id": "backcountry-basics-ten-essentials",
+              "title": "Ten Essentials",
+              "section": "Ten Essentials",
+              "title_overlap": 0,
+              "evidence_overlap": 4
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-hiking-safety",
+              "title": "Hike Smart",
+              "section": "Plan Your Hike",
+              "title_overlap": 1,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "camping-safety",
+              "document_id": "camping-safety-before-trip",
+              "title": "Camping Safely Step 1 - Before the Trip",
+              "section": "Prepare - Gear Up!",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-b4458e16a67bed33ed058ef1e54469b6",
+              "title": "Grande Randonnée",
+              "section": "Gear",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-7b50fdba71bcd54f7b23a5b1946ca587",
+              "title": "Routeburn Track",
+              "section": "Stay safe",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "nps-outdoor-safety",
+              "document_id": "nps-outdoor-safety-outdoor-emergency-plan",
+              "title": "Outdoor Emergency Plan",
+              "section": "Pack the 10 Essentials",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            }
+          ],
+          "elapsed_ms_samples": [
+            311.185869,
+            315.251334,
+            325.807764,
+            315.649108,
+            293.105369
+          ],
+          "median_elapsed_ms": 315.251334
+        },
+        {
+          "case_id": "bangkok-airport",
+          "expected_source_enabled": true,
+          "expected_document_title": "Bangkok",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Bangkok",
+            "Bangkok/Ramkhamhaeng",
+            "Chao Phraya Basin",
+            "Desalination",
+            "Bangkok/Phahonyothin",
+            "Exercise"
+          ],
+          "selected_sources": [
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-2762e6724004afeebc34996e226877ef",
+              "title": "Bangkok",
+              "section": "Bangkok",
+              "title_overlap": 1,
+              "evidence_overlap": 1
+            },
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-3a621c0ff8ba72b605fc37900cad4928",
+              "title": "Bangkok/Ramkhamhaeng",
+              "section": "Bangkok/Ramkhamhaeng",
+              "title_overlap": 1,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-879af1e22f4fdafaaae8fbecf9c9fb61",
+              "title": "Chao Phraya Basin",
+              "section": "Get in",
+              "title_overlap": 0,
+              "evidence_overlap": 3
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "156787",
+              "title": "Desalination",
+              "section": "Applications",
+              "title_overlap": 0,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikivoyage-en",
+              "document_id": "wiki-06ad96a9fd4d97329612adabccc9c3e0",
+              "title": "Bangkok/Phahonyothin",
+              "section": "Bangkok/Phahonyothin",
+              "title_overlap": 1,
+              "evidence_overlap": 2
+            },
+            {
+              "library_id": "wikipedia-starter",
+              "document_id": "189037",
+              "title": "Exercise",
+              "section": "Public health measures",
+              "title_overlap": 0,
+              "evidence_overlap": 1
+            }
+          ],
+          "elapsed_ms_samples": [
+            360.991121,
+            377.163944,
+            361.941858,
+            357.138938,
+            375.756194
+          ],
+          "median_elapsed_ms": 361.941858
+        }
+      ]
+    }
+  ]
+}
