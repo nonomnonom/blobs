@@ -1,5 +1,6 @@
 package dev.blobs.app.feature.library
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,7 +19,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,6 +39,8 @@ import dev.blobs.app.ui.SearchField
 @Composable
 fun BrowseScreen(state: ProductState, model: ProductViewModel) {
     val selecting = state.page == Page.SOURCES
+    val selected = model.selectedScope()
+    val all = selected == null
     val packages by model.packages.collectAsStateWithLifecycle()
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 24.dp),
@@ -49,18 +57,75 @@ fun BrowseScreen(state: ProductState, model: ProductViewModel) {
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (selecting) {
                 item {
-                    Body(
-                        if (state.options.scope == "*") {
-                            R.string.narrow_help
-                        } else {
-                            R.string.source_picker_help
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Body(R.string.source_picker_help)
+                        Surface(
+                            selected = all,
+                            onClick = { model.selectScope(null) },
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                if (all) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant
+                                }
+                            ),
+                            color = if (all) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.background
+                            }
+                        ) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(painterResource(R.drawable.ic_auto_stories), null)
+                                Text(
+                                    stringResource(R.string.all_sources),
+                                    Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                if (all) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_check),
+                                        null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
-                    )
-                    TextButton(onClick = { model.selectScope(null) }) {
-                        Text(stringResource(R.string.all_sources))
-                    }
-                    TextButton(onClick = { model.selectScope(emptySet()) }) {
-                        Text(stringResource(R.string.clear_selection))
+                        val summary = if (all) {
+                            stringResource(R.string.individual_sources)
+                        } else {
+                            pluralStringResource(
+                                R.plurals.sources_selected,
+                                selected.size,
+                                selected.size
+                            )
+                        }
+                        if (LocalDensity.current.fontScale >= 1.5f) {
+                            Text(summary, style = MaterialTheme.typography.bodySmall)
+                            TextButton(onClick = { model.selectScope(emptySet()) }) {
+                                Text(stringResource(R.string.clear_selection))
+                            }
+                        } else {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    summary,
+                                    Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                TextButton(onClick = { model.selectScope(emptySet()) }) {
+                                    Text(stringResource(R.string.clear_selection))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -81,7 +146,23 @@ fun BrowseScreen(state: ProductState, model: ProductViewModel) {
                     shape = RoundedCornerShape(
                         20.dp
                     ),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow
+                    border = BorderStroke(
+                        1.dp,
+                        if (selecting &&
+                            selected?.contains(source.id) == true
+                        ) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.outlineVariant
+                        }
+                    ),
+                    color = if (selecting &&
+                        selected?.contains(source.id) == true
+                    ) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.background
+                    }
                 ) {
                     Row(
                         Modifier.fillMaxWidth().padding(16.dp),
@@ -90,13 +171,20 @@ fun BrowseScreen(state: ProductState, model: ProductViewModel) {
                         if (selecting) {
                             Checkbox(
                                 checked =
-                                    model.selectedScope()?.contains(source.id) == true,
+                                    selected?.contains(source.id) == true,
                                 onCheckedChange = null
                             )
                         }
                         Column(Modifier.weight(1f)) {
                             Text(source.title, style = MaterialTheme.typography.labelLarge)
                             Text(source.publisher, style = MaterialTheme.typography.bodyMedium)
+                            if (source.section.isNotBlank()) {
+                                Text(
+                                    source.section,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -121,7 +209,17 @@ fun BrowseScreen(state: ProductState, model: ProductViewModel) {
         }
         if (selecting) {
             Column(Modifier.padding(bottom = 12.dp)) {
-                PrimaryAction(R.string.done) { model.back() }
+                PrimaryAction(
+                    if (all) {
+                        stringResource(R.string.done)
+                    } else {
+                        pluralStringResource(
+                            R.plurals.done_sources,
+                            selected.size,
+                            selected.size
+                        )
+                    }
+                ) { model.back() }
             }
         }
     }

@@ -82,7 +82,6 @@
     <string name="all_sources">All sources</string>
     <plurals name="selected_sources"><item quantity="one">%1$d source selected</item><item quantity="other">%1$d sources selected</item></plurals>
     <string name="source_picker_help">Choose sources for your next answer. Your previous answers keep their original sources.</string>
-    <string name="narrow_help">Tap a source to begin a selection, or keep using all sources.</string>
     <string name="clear_selection">Clear selection</string>
     <string name="browse">Browse sources</string>
     <string name="search_sources">Search titles or publishers</string>
@@ -138,7 +137,6 @@
     <string name="less_motion_body">Keep page changes still and simple.</string>
     <string name="storage">Storage &amp; setup</string>
     <string name="storage_body">Your models and sources stay on this phone.</string>
-    <string name="import_progress">Saving %1$s of %2$s</string>
     <string name="checking_file">Checking your file…</string>
     <string name="download_title">Saving for offline use</string>
     <string name="download_install_title">Adding it to Blobs</string>

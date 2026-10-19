@@ -64,13 +64,18 @@ fun GlyphButton(
 
 @Composable
 fun PrimaryAction(@StringRes label: Int, enabled: Boolean = true, onClick: () -> Unit) {
+    PrimaryAction(stringResource(label), enabled, onClick)
+}
+
+@Composable
+fun PrimaryAction(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         enabled = enabled,
         modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
         shape = RoundedCornerShape(28.dp)
     ) {
-        Text(stringResource(label), modifier = Modifier.padding(vertical = 6.dp))
+        Text(label, modifier = Modifier.padding(vertical = 6.dp))
     }
 }
 
@@ -162,6 +167,7 @@ fun MenuRow(
     @StringRes title: Int,
     detail: String = "",
     enabled: Boolean = true,
+    @DrawableRes icon: Int? = null,
     onClick: () -> Unit
 ) {
     Surface(
@@ -174,6 +180,7 @@ fun MenuRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            icon?.let { Icon(painterResource(it), null, Modifier.size(24.dp)) }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(title), style = MaterialTheme.typography.labelLarge)
                 if (detail.isNotBlank()) {

@@ -5,7 +5,9 @@ import android.net.Uri
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -46,27 +48,50 @@ class DesignCaptureTest {
         fun capture(name: String, waitForMarker: Boolean = true) {
             val marker = when (name) {
                 "welcome" -> text(R.string.welcome_headline)
+
                 "setup-model" -> text(R.string.setup_model_title)
+
                 "setup-library" -> text(R.string.setup_library_title)
+
                 "setup-ready" -> text(R.string.setup_ready_title)
+
                 "home" -> text(R.string.home_title)
+
                 "navigation" -> text(R.string.search_conversations)
+
                 "library" -> text(R.string.your_collections)
+
                 "discover" -> text(R.string.discover_heading)
-                "browse", "sources" -> text(R.string.search_sources)
+
+                "browse", "sources", "sources-selected", "sources-all" ->
+                    text(R.string.search_sources)
+
                 "reader" -> model.state.value.reader?.title.orEmpty()
+
                 "import-review" -> text(R.string.review_package)
+
                 "import-complete" -> text(R.string.import_ready_title)
+
                 "conversation-fixture" -> "How do sources stay with an answer?"
+
                 "working-fixture" -> text(R.string.working)
+
                 "history" -> text(R.string.search_history)
+
                 "settings" -> text(R.string.appearance)
+
                 "appearance" -> text(R.string.theme_dark)
+
                 "storage" -> text(R.string.storage_body)
+
                 "data" -> text(R.string.data_heading)
+
                 "privacy" -> text(R.string.privacy_heading)
+
                 "help" -> text(R.string.help_heading)
+
                 "about" -> text(R.string.about_description)
+
                 else -> text(R.string.models)
             }
             if (waitForMarker) {
@@ -183,8 +208,22 @@ class DesignCaptureTest {
                 Page.SOURCES, Page.HISTORY, Page.MODELS, Page.SETTINGS, Page.APPEARANCE,
                 Page.STORAGE, Page.DATA, Page.PRIVACY, Page.HELP, Page.ABOUT
             )) {
+                if (destination == Page.SOURCES) {
+                    runBlocking { container.preferences.selectScope("*") }
+                    compose.waitUntil(10_000) { model.selectedScope() == null }
+                }
                 page(destination)
                 capture(destination.name.lowercase())
+                if (destination == Page.SOURCES) {
+                    compose.onNode(hasText(source.title) and hasClickAction())
+                        .performScrollTo().performClick()
+                    compose.waitUntil(10_000) { model.selectedScope()?.contains(source.id) == true }
+                    capture("sources-selected")
+                    compose.onNodeWithText(text(R.string.all_sources))
+                        .performScrollTo().performClick()
+                    compose.waitUntil(10_000) { model.selectedScope() == null }
+                    capture("sources-all")
+                }
             }
             page(Page.LIBRARY)
             val fixture = File(compose.activity.cacheDir, "layout-review.blobs")

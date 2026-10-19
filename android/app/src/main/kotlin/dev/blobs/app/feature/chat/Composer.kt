@@ -78,7 +78,7 @@ internal fun Composer(
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         shape = RoundedCornerShape(26.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        shadowElevation = 1.dp
+        shadowElevation = 0.dp
     ) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val inputLabel =
@@ -88,7 +88,7 @@ internal fun Composer(
                 onValueChange = model::draft,
                 placeholder = { Text(inputLabel, style = MaterialTheme.typography.bodyLarge) },
                 modifier = Modifier.fillMaxWidth().heightIn(
-                    min = 76.dp,
+                    min = 94.dp,
                     max = if (large) 240.dp else 140.dp
                 )
                     .onFocusChanged { onFocusChange(it.hasFocus) }
@@ -137,6 +137,9 @@ internal fun Composer(
                 TextButton(
                     onClick = { model.navigate(Page.SOURCES) },
                     enabled = !work.busy,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
                     modifier = (if (large) Modifier.weight(1f) else Modifier).heightIn(min = 48.dp)
                         .semantics { contentDescription = scopeLabel }
                 ) {
@@ -245,7 +248,8 @@ private fun ModelPickerButton(
         enabled = enabled,
         modifier = modifier.heightIn(min = 48.dp).semantics { contentDescription = label },
         colors = ButtonDefaults.textButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
         ModelLogo(title, 24.dp)

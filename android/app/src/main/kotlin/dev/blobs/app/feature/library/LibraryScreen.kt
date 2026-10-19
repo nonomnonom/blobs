@@ -97,13 +97,15 @@ fun LibraryScreen(
                         R.string.add_files_title,
                         stringResource(R.string.add_files_description),
                         !work.busy,
-                        pickDocuments
+                        icon = R.drawable.ic_add_file,
+                        onClick = pickDocuments
                     )
                     MenuRow(
                         R.string.import_library_title,
                         stringResource(R.string.import_library_description),
                         !work.busy,
-                        pickFile
+                        icon = R.drawable.ic_folder_open,
+                        onClick = pickFile
                     )
                 }
             } else {
@@ -136,20 +138,34 @@ private fun CollectionCard(
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Column {
-            Image(
-                painterResource(
-                    if (index ==
-                        0
-                    ) {
-                        R.drawable.library_world
-                    } else {
-                        R.drawable.discovery_world
-                    }
-                ),
-                null,
-                Modifier.fillMaxWidth().height(if (large) 80.dp else 112.dp),
-                contentScale = ContentScale.Crop
-            )
+            Box {
+                Image(
+                    painterResource(
+                        if (index ==
+                            0
+                        ) {
+                            R.drawable.library_world
+                        } else {
+                            R.drawable.discovery_world
+                        }
+                    ),
+                    null,
+                    Modifier.fillMaxWidth().height(if (large) 80.dp else 112.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Surface(
+                    modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = androidx.compose.ui.graphics.Color(0xFFFFFEFA),
+                    contentColor = androidx.compose.ui.graphics.Color(0xFF292A32)
+                ) {
+                    Text(
+                        stringResource(R.string.saved_offline),
+                        Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(

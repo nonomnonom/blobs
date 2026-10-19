@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -14,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,8 +38,8 @@ import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.fileSize
@@ -79,6 +81,7 @@ fun StorageScreen(
     val target = packages.find { it.key == removing }
     val lastModel = target?.kind == "model" && packages.count { it.kind == "model" } <= 1
     ScrollPage {
+        Heading(R.string.storage_heading)
         Body(R.string.storage_body)
         Surface(
             shape = RoundedCornerShape(24.dp),
@@ -156,7 +159,13 @@ fun StorageScreen(
             }
             HorizontalDivider()
         }
-        PrimaryAction(R.string.import_library_title, !work.busy, pickFile)
+        OutlinedButton(
+            onClick = pickFile,
+            enabled = !work.busy,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+        ) {
+            Text(stringResource(R.string.import_library_title), Modifier.padding(vertical = 6.dp))
+        }
         Body(R.string.storage_keeps_answers)
     }
     if (target != null) {

@@ -247,17 +247,22 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
 
                 SetupStep.LIBRARY -> {
                     WorldScene(
-                        Modifier.fillMaxWidth().height(185.dp).clip(RoundedCornerShape(28.dp)),
+                        Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(28.dp)),
                         size = 180.dp
                     )
                     Heading(R.string.setup_library_title)
                     Body(R.string.setup_library_intro)
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Icon(
+                            androidx.compose.ui.res.painterResource(R.drawable.ic_auto_stories),
+                            null
+                        )
                         Column(
-                            Modifier.fillMaxWidth().padding(20.dp),
+                            Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
@@ -442,7 +447,8 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
             ) {
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.background.copy(alpha = .94f)
+                    color = Color(0xEBFFFEFA),
+                    contentColor = Color(0xFF292A32)
                 ) {
                     Column(
                         Modifier.fillMaxWidth().padding(16.dp),
@@ -459,7 +465,7 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
                                 Icon(
                                     androidx.compose.ui.res.painterResource(R.drawable.ic_check),
                                     null,
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = Color(0xFF145DE5)
                                 )
                                 Text(label, style = MaterialTheme.typography.bodyMedium)
                             }

@@ -46,6 +46,9 @@
     <string name="collection_options">Options for %1$s</string>
     <string name="conversation_data">Conversation data</string>
     <string name="data_heading">Your words, with you.</string>
+    <string name="clear_conversations">Clear your conversations</string>
+    <string name="data_keeps_files">Your models, library, and appearance will stay.</string>
+    <string name="storage_heading">Space for curiosity.</string>
     <string name="add_model_file">Add a model file</string>
     <string name="privacy_heading">Your curiosity stays yours.</string>
     <string name="privacy_local">On this phone</string>
@@ -56,6 +59,12 @@
     <string name="expanded">Expanded</string>
     <string name="collapsed">Collapsed</string>
     <string name="about_description">Answers run on your phone, with sources from the libraries you choose.</string>
+    <string name="about_tagline">Room for your curiosity.</string>
+    <string name="made_possible_by">Made possible by</string>
+    <string name="credit_interface">Jetpack Compose · Material 3</string>
+    <string name="credit_inference">llama.cpp · On-device inference</string>
+    <string name="credit_storage">Room · SQLite FTS5</string>
+    <string name="credit_type">DM Sans &amp; Nunito · Typography</string>
     <string name="about_version">Android · %1$s</string>
     <string name="notice_unavailable">This notice could not be opened. Your files are unchanged.</string>
     <string name="source_unavailable">The full library is no longer installed. This saved source passage is still available.</string>
@@ -65,13 +74,27 @@
     <string name="storage_keeps_answers">Removing a library keeps saved answers and their source passages.</string>
     <string name="storage_frees">This frees %1$s.</string>
     <string name="remove_package_name">Remove %1$s</string>
-    <plurals name="conversation_count">
-        <item quantity="one">%1$d saved conversation</item>
-        <item quantity="other">%1$d saved conversations</item>
+    <plurals name="saved_conversations_label">
+        <item quantity="one">saved conversation</item>
+        <item quantity="other">saved conversations</item>
     </plurals>
     <string name="setup_all_set">ALL SET</string>
     <string name="continue_later">Continue later</string>
     <string name="choose_sources">Choose sources</string>
+    <string name="download_saved_body">Your file is saved and ready offline.</string>
+    <string name="verified_saved">Verified and saved</string>
+    <string name="download_error_keeps_files">Your existing models, files, and conversations are unchanged.</string>
+    <string name="download_interrupted">Download interrupted</string>
+    <string name="transfer_paused_label">Paused</string>
+    <string name="individual_sources">Or select individual sources</string>
+    <plurals name="sources_selected">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <plurals name="done_sources">
+        <item quantity="one">Done · %1$d selected</item>
+        <item quantity="other">Done · %1$d selected</item>
+    </plurals>
     <string name="source_address">Source address</string>
     <string name="source_license">License</string>
     <string name="use_collection_for_answers">Use %1$s for answers</string>

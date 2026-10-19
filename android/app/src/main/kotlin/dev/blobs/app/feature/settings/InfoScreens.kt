@@ -5,12 +5,14 @@ import android.os.Build
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +32,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
-import dev.blobs.app.ui.Scene
 import dev.blobs.app.ui.ScrollPage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -138,14 +141,43 @@ fun AboutScreen() {
     }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     ScrollPage {
-        Scene(R.drawable.welcome_world, 160)
-        Text(stringResource(R.string.app_wordmark), style = MaterialTheme.typography.displayLarge)
+        Column(
+            Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Image(
+                painterResource(R.drawable.welcome_world),
+                null,
+                Modifier.size(160.dp, 130.dp).clip(RoundedCornerShape(30.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Text(
+                stringResource(R.string.app_wordmark),
+                style = MaterialTheme.typography.displayLarge
+            )
+            Text(stringResource(R.string.about_tagline), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.about_version, version),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         Body(R.string.about_description)
-        Text(
-            stringResource(R.string.about_version, version),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Text(stringResource(R.string.made_possible_by), style = MaterialTheme.typography.titleLarge)
+        listOf(
+            R.string.credit_interface,
+            R.string.credit_inference,
+            R.string.credit_storage,
+            R.string.credit_type
+        ).forEach { credit ->
+            Text(
+                stringResource(credit),
+                Modifier.padding(vertical = 10.dp),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            HorizontalDivider()
+        }
         Heading(R.string.licenses)
         files.forEach { file ->
             TextButton(onClick = { selected = file }, modifier = Modifier.fillMaxWidth()) {
