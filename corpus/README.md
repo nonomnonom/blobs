@@ -167,32 +167,32 @@ uv run --locked python -m blobs_corpus.package library `
 
 The source is the NPS [Four Major Steps to Camping Safely](https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039) series. Follow its links for park-specific instructions and current conditions. The package is independent and not endorsed by NPS.
 
-### Build backcountry basics
+### Build backcountry trip planning
 
-This small planning edition packages the NPS Ten Essentials article. It covers supplies to prepare for ordinary injuries, changing weather, and unexpected problems during a park visit. It is not a comprehensive survival manual, field medical guide, or live source for park rules and alerts. The page credits The Mountaineers for the Ten Essentials system; that attribution is retained in the extracted text. The package contains text only, follows the NPS reuse notice, and does not include images or agency marks.
+This planning edition combines the NPS Ten Essentials, Trip Planning Guide, and Wilderness & Backcountry Camping pages. It covers trip preparation, park day or overnight plans, packing, and general backcountry considerations. The Trip Planning Guide explicitly does not cover multi-day backcountry trips. This is not a comprehensive survival manual, field medical guide, or live source for weather, park rules, permits, closures, or alerts. Park-specific directions and current conditions take precedence. The Ten Essentials article credits The Mountaineers; that attribution remains in the extracted text. This package contains text only, follows the NPS reuse notice, and does not include images or agency marks.
 
 ```powershell
 uv run --locked python -m blobs_corpus.web_pages acquire `
-  sources/backcountry-basics-2026-10.json work/sources/backcountry-basics-2026-10
+  sources/backcountry-basics-2026-10-v2.json work/sources/backcountry-basics-2026-10-v2
 
 uv run --locked python -m blobs_corpus.web_pages extract `
-  sources/backcountry-basics-2026-10.json `
-  work/sources/backcountry-basics-2026-10 `
-  artifacts/records/backcountry-basics-2026-10/documents.jsonl.gz
+  sources/backcountry-basics-2026-10-v2.json `
+  work/sources/backcountry-basics-2026-10-v2 `
+  artifacts/records/backcountry-basics-2026-10-v2/documents.jsonl.gz
 
 uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/backcountry-basics-2026-10/documents.jsonl.gz `
-  work/packages/backcountry-basics-2026-10-v2.blobs `
+  artifacts/records/backcountry-basics-2026-10-v2/documents.jsonl.gz `
+  work/packages/backcountry-basics-2026-10-v3.blobs `
   --schema 3 `
   --id backcountry-basics `
-  --version 2026-10.2 `
-  --title "Backcountry planning essentials" `
+  --version 2026-10.3 `
+  --title "Backcountry trip planning · U.S. national parks" `
   --license "National Park Service text; public-domain status may vary by page; source credits The Mountaineers for the Ten Essentials system" `
   --origin "https://www.nps.gov/aboutus/disclaimer.htm" `
   --work-directory work/build/backcountry-basics-2026-10
 ```
 
-Its six retrieval-only cases and host report measure whether packing questions find the source. They do not evaluate generated answers or substitute for current park instructions. For the pinned host and Android emulator checks, see [`evaluation/README.md`](evaluation/README.md).
+Its eight retrieval-only cases check that packing, trip-plan, and backcountry questions find the expected source. The host report measures retrieval only; it does not evaluate generated answers or substitute for current park instructions. For the pinned host and Android emulator checks, see [`evaluation/README.md`](evaluation/README.md).
 
 Extraction checkpoints are safe to resume after a normal interrupt. If the process is forcibly terminated, it can leave `work/extract/EDITION/.extract.lock`; confirm no extractor is still running before removing that stale file and resuming. Never remove the lock while an extraction process is active.
 

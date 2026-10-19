@@ -92,14 +92,14 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
 
 The recorded host smoke found all eight expected source titles, with seven at rank 1 (MRR 0.938); median host retrieval time was 1.332 ms. This measures source routing for this package and case set only, not generated answers or phone latency.
 
-The backcountry-planning package has a six-question set for its single NPS Ten Essentials source:
+The backcountry-planning package has an eight-question set across its Ten Essentials, Trip Planning Guide, and Wilderness & Backcountry Camping sources:
 
 ```powershell
 uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
-  --library-package work/packages/backcountry-basics-2026-10-v2.blobs `
-  --cases evaluation/cases/backcountry-basics-retrieval-v2.json `
-  --work-directory work/reports/backcountry-basics-retrieval-v2 `
-  --output evaluation/baselines/backcountry-basics-2026-10.2-retrieval-v2-host.json
+  --library-package work/packages/backcountry-basics-2026-10-v3.blobs `
+  --cases evaluation/cases/backcountry-basics-retrieval-v3.json `
+  --work-directory work/reports/backcountry-basics-retrieval-v3 `
+  --output evaluation/baselines/backcountry-basics-2026-10.3-retrieval-v1-host.json
 ```
 
 The Android 16 x86_64 emulator report is [`backcountry-basics retrieval evidence`](evidence/android-retrieval-backcountry-basics-v2-x86_64-android16-2026-10-19.json). It exercises the production SQLite retrieval path five times per case, records source ranks and elapsed time, and does not evaluate generated answers.

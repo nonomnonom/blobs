@@ -1,0 +1,51 @@
+{
+  "format": 1,
+  "id": "backcountry-basics-retrieval-v3",
+  "library": {
+    "id": "backcountry-basics",
+    "version": "2026-10.3",
+    "payload_sha256": "c2d3f6bc7ce50bcaca70a0d4ca54666aebb4d6d3243c805dfc9b3a25da66021f"
+  },
+  "cases": [
+    {
+      "id": "ten-essentials-overview",
+      "question": "What are the ten essentials to bring on a national park trip?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "trip-first-aid",
+      "question": "What first-aid and personal medicine should I pack for a hike?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "emergency-shelter",
+      "question": "What lightweight emergency shelter options does the guide list?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "navigation-tools",
+      "question": "What navigation tools should I take even if I have a phone?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "park-trip-plan",
+      "question": "How do I plan a park trip, leave a trip plan, and prepare a backup activity?",
+      "expected_document_titles": ["Trip Planning Guide"]
+    },
+    {
+      "id": "multi-day-trip-scope",
+      "question": "Does the NPS day-trip planning guide cover a multi-day backcountry trip?",
+      "expected_document_titles": ["Trip Planning Guide"]
+    },
+    {
+      "id": "backcountry-trip-preparation",
+      "question": "What should a group consider before going backcountry camping?",
+      "expected_document_titles": ["Wilderness & Backcountry Camping"]
+    },
+    {
+      "id": "backcountry-hazards",
+      "question": "What changing weather and natural hazards should I plan for in the backcountry?",
+      "expected_document_titles": ["Wilderness & Backcountry Camping"]
+    }
+  ]
+}
