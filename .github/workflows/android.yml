@@ -119,19 +119,7 @@ jobs:
           working-directory: android
           emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
-          script: |
-            bash ./gradlew -Pandroid.testInstrumentationRunnerArguments.notClass=dev.blobs.app.MultiLibraryRetrievalScalingTest connectedDebugAndroidTest --console=plain
-            bash ./gradlew :app:installDebug :app:installDebugAndroidTest --console=plain
-            stage=/sdcard/Android/data/dev.blobs.app.debug/files
-            adb shell mkdir -p "$stage"
-            adb push ../corpus/evaluation/cases/multi-library-retrieval-scaling-v5.json "$stage/retrieval-benchmark-multi-library.json"
-            adb push .local/ci-multi-library/*.blobs "$stage/"
-            mkdir -p app/build/reports/androidTests/connected/debug
-            output="$(adb shell am instrument -w -e class dev.blobs.app.MultiLibraryRetrievalScalingTest dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner 2>&1)"
-            printf '%s\n' "$output" | tee app/build/reports/androidTests/connected/debug/multi-library-retrieval-scaling.log
-            if ! grep -q 'OK (1 test)' <<< "$output"; then
-              exit 1
-            fi
+          script: bash tools/ci_device_tests.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
