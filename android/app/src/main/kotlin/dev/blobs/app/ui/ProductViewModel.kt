@@ -384,10 +384,11 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
             return@action
         }
         val wasSelected = mutable.value.options.model == pack.key
-        if (!container.work.mutate {
-                if (wasSelected) container.work.releaseInferenceModel()
-                container.installer.remove(pack)
-            }) return@action
+        val removed = container.work.mutate {
+            if (wasSelected) container.work.releaseInferenceModel()
+            container.installer.remove(pack)
+        }
+        if (!removed) return@action
         if (wasSelected) {
             container.preferences.selectModel(
                 packages.value.firstOrNull {
