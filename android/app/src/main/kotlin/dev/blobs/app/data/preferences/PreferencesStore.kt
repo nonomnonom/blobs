@@ -5,7 +5,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +17,6 @@ class PreferencesStore(private val store: DataStore<Preferences>) {
         val model: String = "",
         val scope: String = "*",
         val welcomed: Boolean = false,
-        val textScale: Float = 1f,
         val reducedMotion: Boolean = false,
         val conversation: String = ""
     )
@@ -28,7 +26,6 @@ class PreferencesStore(private val store: DataStore<Preferences>) {
             it[MODEL].orEmpty(),
             it[SCOPE] ?: "*",
             it[WELCOMED] ?: false,
-            (it[TEXT_SCALE] ?: 1f).coerceIn(1f, 2f),
             it[REDUCED_MOTION] ?: false,
             it[CONVERSATION].orEmpty()
         )
@@ -42,9 +39,6 @@ class PreferencesStore(private val store: DataStore<Preferences>) {
     }
     suspend fun welcome() {
         store.edit { it[WELCOMED] = true }
-    }
-    suspend fun setTextScale(value: Float) {
-        store.edit { it[TEXT_SCALE] = value.coerceIn(1f, 2f) }
     }
     suspend fun setReducedMotion(value: Boolean) {
         store.edit { it[REDUCED_MOTION] = value }
@@ -66,7 +60,6 @@ class PreferencesStore(private val store: DataStore<Preferences>) {
         private val MODEL = stringPreferencesKey("model")
         private val SCOPE = stringPreferencesKey("scope")
         private val WELCOMED = booleanPreferencesKey("welcomed")
-        private val TEXT_SCALE = floatPreferencesKey("text_scale")
         private val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
         private val CONVERSATION = stringPreferencesKey("conversation")
 

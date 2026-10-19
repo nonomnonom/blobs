@@ -442,7 +442,6 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun theme(mode: ThemeMode) = action { container.preferences.setThemeMode(mode) }
-    fun textScale(scale: Float) = action { container.preferences.setTextScale(scale) }
     fun reducedMotion(value: Boolean) = action { container.preferences.setReducedMotion(value) }
     fun stop() = container.work.stop()
     fun resumeImport() = container.work.resumeImport()

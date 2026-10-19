@@ -19,14 +19,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,7 +41,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,7 +60,6 @@ import dev.blobs.app.ui.fileSize
 
 @Composable
 fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
-    val state by model.state.collectAsStateWithLifecycle()
     val packages by model.packages.collectAsStateWithLifecycle()
     val conversations by model.conversations.collectAsStateWithLifecycle()
     val count = conversations.count { it.title.isNotBlank() || it.draft.isNotBlank() }
@@ -79,14 +75,7 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
             SectionLabel(R.string.settings_experience)
             MenuRow(
                 R.string.appearance,
-                stringResource(
-                    R.string.appearance_summary,
-                    theme,
-                    (
-                        state.options.textScale *
-                            100
-                        ).toInt()
-                )
+                theme
             ) { model.navigate(Page.APPEARANCE) }
             SectionLabel(R.string.settings_phone)
             MenuRow(
@@ -147,27 +136,6 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
                 }
             }
         }
-        SectionLabel(R.string.text_size)
-        Text(stringResource(R.string.text_size_value, (state.options.textScale * 100).toInt()))
-        var scale by remember(state.options.textScale) {
-            mutableFloatStateOf(state.options.textScale)
-        }
-        val sizeLabel = stringResource(R.string.text_size)
-        val sizeValue = stringResource(R.string.text_size_value, (scale * 100).toInt())
-        Slider(
-            modifier = Modifier.semantics {
-                contentDescription = sizeLabel
-                stateDescription = sizeValue
-            },
-            value = scale,
-            onValueChange = {
-                scale = it
-            },
-            onValueChangeFinished = { model.textScale(scale) },
-            valueRange =
-                1f..2f,
-            steps = 9
-        )
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surfaceContainerLow
@@ -183,14 +151,7 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
                 )
                 Text(
                     stringResource(R.string.reading_preview),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize =
-                            MaterialTheme.typography.bodyLarge.fontSize *
-                                (scale / state.options.textScale),
-                        lineHeight =
-                            MaterialTheme.typography.bodyLarge.lineHeight *
-                                (scale / state.options.textScale)
-                    )
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
         }

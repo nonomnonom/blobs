@@ -33,13 +33,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -141,7 +139,6 @@ fun BlobsApp(container: AppContainer) {
         val fileName = pack.title.replace(Regex("[^\\p{L}\\p{N}._ -]"), "_").take(80)
         collectionExporter.launch("$fileName.blobs.json")
     }
-    val density = LocalDensity.current
     val reviewingImport = state.importUri != null
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -159,9 +156,7 @@ fun BlobsApp(container: AppContainer) {
     val readyScroll = rememberScrollState()
     BlobsTheme(mode = theme.themeMode) {
         CompositionLocalProvider(
-            LocalLessMotion provides lessMotion,
-            LocalDensity provides
-                Density(density.density, density.fontScale * state.options.textScale)
+            LocalLessMotion provides lessMotion
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                 ExperienceCanvas(

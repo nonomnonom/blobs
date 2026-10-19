@@ -31,7 +31,11 @@ import org.junit.Test
 
 /** Optional native layout capture using verified local packages, without running inference. */
 class DesignCaptureTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 0)
+    val fontScale = SystemFontScaleRule()
+
+    @get:Rule(order = 1)
+    val compose = createAndroidComposeRule<MainActivity>()
 
     @ManualCheck
     @Test
@@ -126,10 +130,10 @@ class DesignCaptureTest {
             compose.waitForIdle()
         }
         compose.waitUntil(10_000) { model.state.value.loaded && model.work.value.ready }
+        fontScale.set(args.getString("reviewScale")?.toFloat() ?: 1f)
         runBlocking {
             container.preferences.welcome()
             container.preferences.setReducedMotion(true)
-            container.preferences.setTextScale(args.getString("reviewScale")?.toFloat() ?: 1f)
             container.preferences.setThemeMode(
                 if (args.getString("reviewTheme") == "dark") ThemeMode.DARK else ThemeMode.LIGHT
             )
@@ -253,7 +257,6 @@ class DesignCaptureTest {
         } finally {
             runBlocking {
                 container.database.conversations().delete(thread)
-                container.preferences.setTextScale(1f)
                 container.preferences.setThemeMode(ThemeMode.SYSTEM)
                 container.preferences.setReducedMotion(false)
             }

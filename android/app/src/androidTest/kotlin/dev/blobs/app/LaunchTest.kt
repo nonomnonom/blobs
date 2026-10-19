@@ -85,7 +85,6 @@ class LaunchTest {
         fun text(id: Int) = compose.activity.getString(id)
         runBlocking {
             val app = compose.activity.application as BlobsApplication
-            app.container.preferences.setTextScale(1f)
             app.container.preferences.setThemeMode(ThemeMode.SYSTEM)
             app.container.preferences.welcome()
         }

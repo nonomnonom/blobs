@@ -32,7 +32,11 @@ import org.junit.Rule
 import org.junit.Test
 
 class UiParityTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 0)
+    val fontScale = SystemFontScaleRule()
+
+    @get:Rule(order = 1)
+    val compose = createAndroidComposeRule<MainActivity>()
     private fun text(id: Int) = compose.activity.getString(id)
 
     private fun revealFollowUp() {
@@ -64,15 +68,14 @@ class UiParityTest {
             assertEquals(null, model.state.value.manifest)
             compose.runOnUiThread { model.inspect(uri) }
             compose.waitUntil(10_000) { model.state.value.manifest != null }
-            runBlocking { container.preferences.setTextScale(2f) }
-            compose.waitUntil(10_000) { model.state.value.options.textScale == 2f }
+            fontScale.set(2f)
             compose.onNodeWithText(text(R.string.add)).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.cancel)).assertIsDisplayed()
             compose.onNodeWithContentDescription(text(R.string.back)).performClick()
             assertEquals(null, model.state.value.importUri)
             assertEquals(Page.LIBRARY, model.state.value.page)
             assertEquals("Preserve this import draft", model.state.value.draft)
-            runBlocking { container.preferences.setTextScale(1f) }
+            fontScale.set(1f)
             compose.runOnUiThread { model.inspect(uri) }
             compose.waitUntil(10_000) { model.state.value.manifest != null }
             compose.onNodeWithText(text(R.string.add)).performClick()
@@ -81,14 +84,13 @@ class UiParityTest {
             assertEquals(Page.LIBRARY, model.state.value.page)
             compose.runOnUiThread { model.inspect(uri) }
             compose.waitUntil(10_000) { model.state.value.manifest != null }
-            runBlocking { container.preferences.setTextScale(2f) }
-            compose.waitUntil(10_000) { model.state.value.options.textScale == 2f }
+            fontScale.set(2f)
             compose.onNodeWithText(
                 text(R.string.already_added)
             ).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.add)).assertIsNotEnabled()
             compose.onNodeWithText(text(R.string.cancel)).performClick()
-            runBlocking { container.preferences.setTextScale(1f) }
+            fontScale.set(1f)
             compose.onNodeWithContentDescription(text(R.string.back)).performClick()
             compose.onNodeWithText("Preserve this import draft").assertIsDisplayed()
             val export = File(compose.activity.cacheDir, "ui-conversations.md")
@@ -98,7 +100,6 @@ class UiParityTest {
             export.delete()
         } finally {
             runBlocking {
-                container.preferences.setTextScale(1f)
                 container.database.packages().all().find { it.key == manifest.key }?.let {
                     container.installer.remove(it)
                 }
@@ -118,7 +119,6 @@ class UiParityTest {
         runBlocking {
             container.preferences.welcome()
             container.preferences.setThemeMode(ThemeMode.LIGHT)
-            container.preferences.setTextScale(2f)
             container.database.conversations().save(
                 ConversationEntity(id, "UI reading test", "", 1, 1)
             )
@@ -131,6 +131,7 @@ class UiParityTest {
             container.preferences.selectConversation(id)
         }
         try {
+            fontScale.set(2f)
             val conversation =
                 runBlocking { requireNotNull(container.database.conversations().find(id)) }
             compose.runOnUiThread {
@@ -214,7 +215,6 @@ class UiParityTest {
             }
         } finally {
             runBlocking {
-                container.preferences.setTextScale(1f)
                 container.preferences.setThemeMode(ThemeMode.SYSTEM)
                 container.preferences.selectConversation("")
                 container.database.conversations().delete(id)
