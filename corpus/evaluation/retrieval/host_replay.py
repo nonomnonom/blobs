@@ -18,7 +18,7 @@ from blobs_corpus.names import name_key
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = "4262032e1679e6f3d38e6e15acc1a6d82fd995f3f900db3574db3272082a4bcb"
+LIBRARY_STORE_SHA256 = "d3d69c33e9a56ec38dccb5a402705dece19f62d0fc3a4cb2b49e3605c36c9907"
 QUERY_SHA256 = "fb9a8ef4a876f5f5a773bb965c4bc6b21884962585b632998c5f1eea0f79e678"
 STOP_WORDS = {
     "the",

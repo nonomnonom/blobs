@@ -73,6 +73,14 @@ room { schemaDirectory("$projectDir/schemas") }
 dependencyLocking { lockAllConfigurations() }
 
 dependencies {
+    constraints {
+        add("ktlint", libs.tooling.logback.classic)
+        add("ktlint", libs.tooling.logback.core)
+        add("androidLintTool", libs.tooling.commons.lang)
+        add("androidLintTool", libs.tooling.httpclient)
+        add("androidLintTool", libs.tooling.bouncycastle.pkix)
+        add("androidLintTool", libs.bouncycastle.prov)
+    }
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -107,3 +115,5 @@ dependencies {
 }
 
 kotlin { compilerOptions { allWarningsAsErrors.set(true) } }
+
+ktlint { version.set(libs.versions.ktlint.engine.get()) }

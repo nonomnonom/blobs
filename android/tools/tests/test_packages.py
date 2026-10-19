@@ -360,6 +360,8 @@ class PackageTests(unittest.TestCase):
                 "SECURITY.md",
                 "CODE_OF_CONDUCT.md",
                 ".editorconfig",
+                ".clang-format",
+                "ruff.toml",
             ]
             for name in expected:
                 path = workspace / name
@@ -406,6 +408,8 @@ class PackageTests(unittest.TestCase):
                 self.assertIn("blobs/SECURITY.md", names)
                 self.assertIn("blobs/CODE_OF_CONDUCT.md", names)
                 self.assertIn("blobs/.editorconfig", names)
+                self.assertIn("blobs/.clang-format", names)
+                self.assertIn("blobs/ruff.toml", names)
                 self.assertNotIn("blobs/android/tools/untracked-notes.txt", names)
                 self.assertNotIn("blobs/docs/untracked-internal-review.md", names)
                 self.assertFalse(any(name.startswith("blobs/design/") for name in names))

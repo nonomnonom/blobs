@@ -1,3 +1,19 @@
+buildscript {
+    val catalog = project.extensions.getByType<VersionCatalogsExtension>().named("libs")
+    dependencies {
+        constraints {
+            listOf(
+                "tooling-commons-lang",
+                "tooling-jose",
+                "tooling-jdom",
+                "tooling-bouncycastle-pkix",
+                "bouncycastle-prov",
+                "bouncycastle-util"
+            ).forEach { alias -> add("classpath", catalog.findLibrary(alias).get()) }
+        }
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.compose) apply false
@@ -22,3 +38,12 @@ tasks.register("verify") {
 }
 
 dependencyLocking { lockAllConfigurations() }
+
+ktlint { version.set(libs.versions.ktlint.engine.get()) }
+
+dependencies {
+    constraints {
+        add("ktlint", libs.tooling.logback.classic)
+        add("ktlint", libs.tooling.logback.core)
+    }
+}

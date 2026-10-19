@@ -10,7 +10,7 @@ import shutil
 import sqlite3
 import tempfile
 
-from .records import documents, LIMITS
+from .records import documents
 from .names import build_names
 
 

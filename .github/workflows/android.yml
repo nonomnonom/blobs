@@ -2,9 +2,9 @@ name: Android
 
 on:
   push:
-    paths: ['android/**', 'corpus/**', '.github/workflows/android.yml']
+    paths: ['android/**', 'corpus/**', '.clang-format', 'ruff.toml', '.editorconfig', '.github/workflows/android.yml']
   pull_request:
-    paths: ['android/**', 'corpus/**', '.github/workflows/android.yml']
+    paths: ['android/**', 'corpus/**', '.clang-format', 'ruff.toml', '.editorconfig', '.github/workflows/android.yml']
   workflow_dispatch:
 
 permissions:
@@ -35,6 +35,11 @@ jobs:
           version: '0.12.19'
       - name: Install pinned preparation environment
         run: uv sync --locked
+      - name: Check Python and native code quality
+        run: |
+          uv run --locked ruff check ../android/tools .
+          uv run --locked ruff format --check ../android/tools .
+          uv run --locked clang-format --dry-run --Werror ../android/app/src/main/cpp/blobs.cpp ../android/app/src/main/cpp/chat_prompt.cpp ../android/app/src/main/cpp/chat_prompt.h ../android/app/src/main/cpp/chat_prompt_test.cpp
       - name: Verify acquisition, normalization, recovery and native package contract
         run: |
           uv run --locked python -m unittest discover -s tests

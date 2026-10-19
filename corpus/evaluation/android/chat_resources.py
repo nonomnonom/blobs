@@ -105,7 +105,9 @@ def run_case(
     run_id: str,
     sample_interval_seconds: float,
 ) -> dict:
-    encode = lambda text: base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
+    def encode(text: str) -> str:
+        return base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
+
     test_method = (
         "installedLibraryAndModelCompleteOfflineChatFlow"
         if installed_model_key is not None

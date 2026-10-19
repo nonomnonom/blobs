@@ -7,7 +7,7 @@ import math
 from pathlib import Path
 import statistics
 
-from .export_host_run import export_run, read_json, sha256
+from .export_host_run import export_run, read_json
 
 
 def _percentile(values, fraction):

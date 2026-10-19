@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import zipfile
 
-from .library import build_library, passages
+from .library import build_library, passages as passages
 
 
 def verify_package(path: Path):

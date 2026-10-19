@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 import re
 import shutil
-import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request

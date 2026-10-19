@@ -38,6 +38,16 @@ uv run --locked python -m unittest discover -s tests
 uv run --locked python -m unittest discover -s ../android/tools/tests
 ```
 
+The default development group pins Ruff for Python lint and formatting and clang-format for authored C++. From `corpus/`, check both without changing files:
+
+```powershell
+uv run --locked ruff check ../android/tools .
+uv run --locked ruff format --check ../android/tools .
+uv run --locked clang-format --dry-run --Werror ../android/app/src/main/cpp/blobs.cpp ../android/app/src/main/cpp/chat_prompt.cpp ../android/app/src/main/cpp/chat_prompt.h ../android/app/src/main/cpp/chat_prompt_test.cpp
+```
+
+Use `ruff format` on the same Python paths to apply formatting; use `clang-format -i` on those four native files. Keep fetched third-party code and generated template includes unchanged. Review formatting separately from behavior changes. Ruff rules live in root `ruff.toml`; native style lives in `.clang-format`.
+
 When changing signing or publishing, include the publisher group so the signing contract test runs:
 
 ```powershell
@@ -53,7 +63,7 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 
 `verify` runs formatting checks, debug and release lint, JVM tests, both application builds, and instrumentation-test compilation. To apply Kotlin formatting, use `.\gradlew.bat ktlintFormat` and review the diff.
 
-Dependency versions belong in `android/gradle/libs.versions.toml` or `corpus/pyproject.toml`, with the corresponding Gradle or uv lockfile.
+Dependency versions belong in `android/gradle/libs.versions.toml` or `corpus/pyproject.toml`, with the corresponding Gradle or uv lockfile. Android host-tool constraints are scoped to the plugin classpath, ktlint or lint configurations. Gradle also verifies artifact SHA-256 values against `android/gradle/verification-metadata.xml`. When intentionally updating dependencies, generate the new entries with `--write-verification-metadata sha256`, review them against the publishers' artifacts/checksums, and run normal verification again without the write flag. Generating metadata records the current artifacts; it does not independently establish their authenticity.
 
 With an Android emulator or device connected, run the base application suite:
 

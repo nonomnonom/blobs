@@ -91,6 +91,8 @@ def write_source_archive(output):
         "SECURITY.md",
         "CODE_OF_CONDUCT.md",
         ".editorconfig",
+        ".clang-format",
+        "ruff.toml",
         ".gitignore",
         ".gitattributes",
     }

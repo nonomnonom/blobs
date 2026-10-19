@@ -1,6 +1,5 @@
 from contextlib import closing, redirect_stdout
 import errno
-import gzip
 import hashlib
 import html as html_module
 import io
