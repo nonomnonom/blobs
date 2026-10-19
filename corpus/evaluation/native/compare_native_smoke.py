@@ -22,6 +22,10 @@ def summarize(paths):
     if len(paths) < 3:
         raise ValueError('Require at least three audited runs per build')
     reports = [load(path) for path in paths]
+    warm_presence = [report['observations'].get('warm_inference_metrics') is not None
+                     for report in reports]
+    if any(warm_presence) and not all(warm_presence):
+        raise ValueError('All runs in one model group must include warm-turn metrics')
     fingerprints = {report['observations'].get('device_fingerprint') or report.get('device_fingerprint')
                     for report in reports}
     device_profiles = {json.dumps(report.get('device_profile'), sort_keys=True) for report in reports}
@@ -46,6 +50,7 @@ def summarize(paths):
         raise ValueError('Runs in one build must use the same thread-selection mode')
 
     rows = []
+    warm_rows = []
     for path, report in zip(paths, reports):
         observation = report['observations']
         metrics = observation.get('inference_metrics')
@@ -77,6 +82,42 @@ def summarize(paths):
                                       if metrics['generation_loop_us'] else None),
         ))
 
+        warm = report['observations'].get('warm_inference_metrics')
+        if warm is not None:
+            if (
+                not isinstance(warm, dict) or warm.get('model_cache_hit') is not True or
+                warm.get('model_load_us') != 0 or
+                warm.get('prompt_tokens') != metrics['prompt_tokens'] or
+                warm.get('output_tokens') != metrics['output_tokens'] or
+                warm.get('inference_threads') != metrics['inference_threads']
+            ):
+                raise ValueError(
+                    'Warm-turn cache evidence must have the same output token count as the cold workload'
+                )
+            warm_required = ('total_us', 'first_token_callback_us', 'context_setup_us', 'prefill_us',
+                             'model_load_us', 'generation_loop_us', 'prompt_tokens', 'output_tokens',
+                             'inference_threads')
+            if any(type(warm.get(field)) is not int or warm[field] < 0 for field in warm_required):
+                raise ValueError('Warm-turn native metrics are incomplete or invalid')
+            if not warm['total_us'] >= warm['first_token_callback_us'] >= warm['prefill_us']:
+                raise ValueError('Warm-turn timing stages are out of order')
+            warm_rows.append(dict(
+                audit_file=path.name,
+                audit_sha256=sha(path),
+                run_file=report['inputs']['run']['file'],
+                run_sha256=report['inputs']['run']['sha256'],
+                prompt_tokens=warm['prompt_tokens'], output_tokens=warm['output_tokens'],
+                total_ms=warm['total_us'] / 1000,
+                first_token_ms=warm['first_token_callback_us'] / 1000,
+                context_setup_ms=warm['context_setup_us'] / 1000,
+                prefill_ms=warm['prefill_us'] / 1000,
+                model_load_ms=warm['model_load_us'] / 1000,
+                inference_threads=warm['inference_threads'],
+                thread_mode=report.get('thread_mode', 'adaptive'),
+                decode_tokens_per_second=(warm['output_tokens'] * 1_000_000 / warm['generation_loop_us']
+                                          if warm['generation_loop_us'] else None),
+            ))
+
     fields = ('total_ms', 'first_token_ms', 'context_setup_ms', 'prefill_ms', 'model_load_ms',
               'decode_tokens_per_second', 'output_tokens', 'inference_threads')
     medians = {field: statistics.median(row[field] for row in rows) for field in fields}
@@ -88,6 +129,14 @@ def summarize(paths):
     output_counts = {row['output_tokens'] for row in rows}
     if len(output_counts) != 1:
         raise ValueError('Runs in one model group must have identical output token counts')
+    if warm_rows and len(warm_rows) != len(rows):
+        raise ValueError('All runs in one model group must include warm-turn metrics')
+    warm_medians = None
+    warm_ranges = None
+    if warm_rows:
+        warm_medians = {field: statistics.median(row[field] for row in warm_rows) for field in fields}
+        warm_ranges = {field: [min(row[field] for row in warm_rows), max(row[field] for row in warm_rows)]
+                       for field in fields}
     return dict(model=dict(bytes=next(iter(models))[0], sha256=next(iter(models))[1]),
                 device_fingerprint=next(iter(fingerprints)),
                 device_profile=json.loads(next(iter(device_profiles))),
@@ -96,7 +145,9 @@ def summarize(paths):
                 thread_mode=next(iter(thread_modes)),
                 requested_inference_threads=next(iter(requested_threads)),
                 prompt_tokens=next(iter(prompt_counts)), output_tokens=next(iter(output_counts)),
-                runs=rows, median=medians, range=ranges)
+                runs=rows, median=medians, range=ranges,
+                warm_turn=dict(runs=warm_rows, median=warm_medians, range=warm_ranges)
+                if warm_rows else None)
 
 
 def compare(baseline_paths, candidate_paths, runtime_lock_path: Path):
@@ -119,6 +170,37 @@ def compare(baseline_paths, candidate_paths, runtime_lock_path: Path):
     if baseline['output_tokens'] != candidate['output_tokens']:
         raise ValueError('Baseline and candidate must produce the same output token count')
     before, after = baseline['median'], candidate['median']
+    warm_comparison = None
+    if candidate['warm_turn'] is not None:
+        warm_after = candidate['warm_turn']['median']
+        if warm_after['output_tokens'] != baseline['output_tokens']:
+            raise ValueError('Warm-turn runs must produce the same output token count as baseline')
+        warm_comparison = dict(
+            reference='Baseline build per-turn model load vs candidate build after the model is cached',
+            baseline_cold_median=dict(
+                total_ms=before['total_ms'],
+                first_token_ms=before['first_token_ms'],
+                decode_tokens_per_second=before['decode_tokens_per_second'],
+            ),
+            candidate_warm_median=dict(
+                total_ms=warm_after['total_ms'],
+                first_token_ms=warm_after['first_token_ms'],
+                model_load_ms=warm_after['model_load_ms'],
+                decode_tokens_per_second=warm_after['decode_tokens_per_second'],
+            ),
+            candidate_warm_vs_baseline_cold_percent=dict(
+                total_latency=100 * (warm_after['total_ms'] / before['total_ms'] - 1),
+                first_token_latency=100 * (warm_after['first_token_ms'] / before['first_token_ms'] - 1),
+                decode_tokens_per_second=100 * (warm_after['decode_tokens_per_second'] /
+                                                before['decode_tokens_per_second'] - 1),
+            ),
+            candidate_warm_vs_candidate_cold_percent=dict(
+                total_latency=100 * (warm_after['total_ms'] / after['total_ms'] - 1),
+                first_token_latency=100 * (warm_after['first_token_ms'] / after['first_token_ms'] - 1),
+                decode_tokens_per_second=100 * (warm_after['decode_tokens_per_second'] /
+                                                after['decode_tokens_per_second'] - 1),
+            ),
+        )
     return dict(
         format=1,
         complete=True,
@@ -142,6 +224,8 @@ def compare(baseline_paths, candidate_paths, runtime_lock_path: Path):
             context_setup_latency=100 * (after['context_setup_ms'] / before['context_setup_ms'] - 1),
             decode_tokens_per_second=100 * (after['decode_tokens_per_second'] /
                                             before['decode_tokens_per_second'] - 1)),
+        candidate_warm_turn=candidate['warm_turn'],
+        candidate_warm_turn_vs_baseline_cold=warm_comparison,
         interpretation=('A lower total/first-token latency or higher decode rate is favorable in this '
                         'probe only. It measures app/runtime behavior, not generated-content quality.'),
     )

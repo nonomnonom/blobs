@@ -237,7 +237,10 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun selectModel(pack: PackageEntity) = action {
-        if (!work.value.busy) container.preferences.selectModel(pack.key)
+        if (!work.value.busy && selectedModel()?.key != pack.key) {
+            container.work.releaseInferenceModel()
+            container.preferences.selectModel(pack.key)
+        }
     }
 
     fun selectScope(value: Set<String>?) = action {
@@ -360,7 +363,10 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     fun downloadPackage(asset: DownloadablePackage) {
         if (container.work.downloadAndInstall(asset)) {
             if (asset.manifest.kind == "model") {
-                action { container.preferences.selectModel(asset.manifest.key) }
+                action {
+                    container.work.releaseInferenceModel()
+                    container.preferences.selectModel(asset.manifest.key)
+                }
             }
             mutable.value = mutable.value.copy(importOrigin = mutable.value.page)
             navigate(Page.IMPORT)
@@ -377,8 +383,12 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
             fail(R.string.keep_model)
             return@action
         }
-        if (!container.work.mutate { container.installer.remove(pack) }) return@action
-        if (mutable.value.options.model == pack.key) {
+        val wasSelected = mutable.value.options.model == pack.key
+        if (!container.work.mutate {
+                if (wasSelected) container.work.releaseInferenceModel()
+                container.installer.remove(pack)
+            }) return@action
+        if (wasSelected) {
             container.preferences.selectModel(
                 packages.value.firstOrNull {
                     it.kind == "model" &&

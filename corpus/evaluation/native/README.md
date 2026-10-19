@@ -14,6 +14,12 @@ The native path now allocates the smallest 512-token power-of-two context that c
 
 The three-run probe in [`the context-capacity evidence folder`](../evidence/native-context-capacity-adaptive-x86_64-android16-2026-10-19/) held the exact model, runtime, prompt, and 71-token output fixed. Median context setup fell from 169.094 ms to 24.021 ms (-85.8%), and first-token callback time fell from 684.478 ms to 528.656 ms (-22.8%). Total native-call latency measured 3,008 ms versus the 2,835 ms baseline (+6.1%); decode throughput measured 29.09 versus 33.85 tokens/s (-14.1%). This probe demonstrates lower setup time and first-token latency, but not a total-latency or decode-throughput win; the small emulator run group is too noisy for a broad performance claim. Repeat on additional device profiles before drawing device-wide conclusions.
 
+## Active-chat model reuse
+
+The native bridge keeps at most one loaded model while Blobs is active. It releases that model when the app backgrounds, when the selected model is changed or removed, or when Android reports low memory. The cache is keyed by the installed model file identity; if the identity cannot be checked, inference uses a temporary model instead of reusing an uncertain cache entry. This avoids repeated model loading across chat turns without retaining multiple model files in native memory.
+
+The three-run comparison in [`the model-cache evidence folder`](../evidence/native-model-cache-qwen3-06b-x86_64-android16-2026-10-19/) verifies cold load, warm cache hit, explicit release and reload, cancellation, and missing-model failure on each run. Its report is [`the comparison result`](../baselines/native-model-cache-qwen3-06b-x86_64-android16-2026-10-19.json). On the measured Android 16 x86_64 emulator, warm-turn median native-call latency was 2.235 seconds and first-callback latency was 294 ms, compared with 2.835 seconds and 684 ms for the earlier cold-per-turn baseline (-21.2% and -57.0%). The warm-turn model-load time was zero. These are results for this emulator and fixed 71-token probe; they do not establish behavior on every phone, measure retrieval quality, or grade generated answers.
+
 ## Run a measurement
 
 The extraction command below runs from `android/`. Run the staging, audit, and summary commands from `corpus/`. Build the debug app and instrumentation APK first. Extract the fixture's `model.gguf` payload from the v0.3.3 `qwen3-integration.blobs` package, preserving the filename required by the lock:
@@ -43,7 +49,7 @@ $adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
   /data/local/tmp/blobs-perf-qwen3-06b.gguf files/qwen3-smoke.gguf
 ```
 
-Install the app and test APKs, then run the fixed instrumentation test at least three times. Each run writes a small JSON report in the app's private files directory; pull it to a unique local filename after each invocation:
+Install the app and test APKs, then run the fixed instrumentation test at least three times. Each run measures a cold call, a warm call with the same model, a call after explicit release, cancellation, and missing-model handling. It writes a small JSON report in the app's private files directory; pull it to a unique local filename after each invocation:
 
 ```powershell
 $runId = 'candidate-01'
@@ -86,4 +92,4 @@ uv run --locked --project . python -m evaluation.native.compare_native_smoke `
   --output reports/native/comparison.json
 ```
 
-Baseline and candidate groups must use the same emulator profile, exact model, runtime revision, prompt workload, and output-token count. Their app and instrumentation APK hashes may differ, which lets this comparison measure code changes. Thread selection may differ between groups and is recorded in the result. At least three audited runs per build are required; the output reports medians, ranges, and relative latency/throughput changes, not answer quality. To record a new initial baseline without a candidate group, omit `--candidate-audit` and use three paths with `--baseline-audit`.
+Baseline and candidate groups must use the same emulator profile, exact model, runtime revision, prompt workload, and output-token count. Their app and instrumentation APK hashes may differ, which lets this comparison measure code changes. Thread selection may differ between groups and is recorded in the result. At least three audited runs per build are required; the output reports cold and warm medians, ranges, and relative latency/throughput changes, not answer quality. To record a new initial baseline without a candidate group, omit `--candidate-audit` and use three paths with `--baseline-audit`.

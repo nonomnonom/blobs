@@ -77,6 +77,26 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         thread_selection_valid = False
     cancellation = run.get('cancellation_metrics', {})
     failure = run.get('failure_metrics', {})
+    warm_inference = run.get('warm_inference_metrics')
+    reload_inference = run.get('reload_inference_metrics')
+    cache_run_present = warm_inference is not None or reload_inference is not None
+    cache_lifecycle_valid = not cache_run_present or (
+        isinstance(warm_inference, dict) and isinstance(reload_inference, dict) and
+        inference.get('model_cache_hit') is False and
+        warm_inference.get('model_cache_hit') is True and
+        warm_inference.get('model_load_us') == 0 and
+        reload_inference.get('model_cache_hit') is False and
+        type(reload_inference.get('model_load_us')) is int and
+        reload_inference['model_load_us'] > 0 and
+        warm_inference.get('prompt_tokens') == inference.get('prompt_tokens') and
+        reload_inference.get('prompt_tokens') == inference.get('prompt_tokens') and
+        warm_inference.get('output_tokens') == inference.get('output_tokens') and
+        reload_inference.get('output_tokens') == inference.get('output_tokens') and
+        run.get('warm_inference_result') in {0, 2} and
+        run.get('reload_inference_result') in {0, 2} and
+        cancellation.get('model_cache_hit') is True and
+        failure.get('model_cache_hit') is False
+    )
     context_tokens = inference.get('context_tokens')
     context_capacity_valid = (
         context_tokens is None or (
@@ -101,6 +121,7 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
                                    inference['prompt_tokens'] > 0 and
                                    type(inference.get('output_tokens')) is int and
                                    inference['output_tokens'] > 0),
+        model_cache_lifecycle_valid=bool(cache_lifecycle_valid),
         context_capacity_sufficient=bool(context_capacity_valid),
         thread_selection_valid=thread_selection_valid,
         inference_stage_order=(type(inference.get('total_us')) is int and
@@ -142,6 +163,8 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         checks=checks,
         observations=dict(
             inference_metrics=inference,
+            warm_inference_metrics=warm_inference,
+            reload_inference_metrics=reload_inference,
             cancellation_metrics=cancellation,
             failure_metrics=failure,
         ),

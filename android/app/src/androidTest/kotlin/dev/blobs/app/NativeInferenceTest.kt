@@ -529,6 +529,7 @@ class NativeInferenceTest {
         fun checkpoint() = saveReport(reportFile, report)
         checkpoint()
         val bridge = NativeBridge()
+        bridge.releaseModel()
         bridge.reset()
         val metrics = GenerationMetrics()
         val result = bridge.generateWithThreads(
@@ -547,9 +548,48 @@ class NativeInferenceTest {
         assertTrue(metrics.firstTokenCallbackUs >= metrics.prefillUs)
         assertTrue(metrics.totalUs >= metrics.firstTokenCallbackUs)
         assertTrue(metrics.modelLoadUs >= 0 && metrics.contextSetupUs >= 0)
+        assertTrue(metrics.modelLoadUs > 0 && !metrics.modelCacheHit)
         assertTrue(metrics.contextTokens >= metrics.promptTokens + SMOKE_MAX_OUTPUT_TOKENS)
         assertEquals(512L, metrics.contextTokens)
         assertEquals(selectedThreads.toLong(), metrics.inferenceThreads)
+
+        val warmMetrics = GenerationMetrics()
+        bridge.reset()
+        val warmResult = bridge.generateWithThreads(
+            model.toByteArray(),
+            SMOKE_SYSTEM_PROMPT.toByteArray(),
+            SMOKE_USER_PROMPT.toByteArray(),
+            SMOKE_MAX_OUTPUT_TOKENS,
+            selectedThreads,
+            TokenSink {},
+            warmMetrics
+        )
+        assertTrue("Warm native status $warmResult", warmResult == 0 || warmResult == 2)
+        assertTrue(warmMetrics.promptTokens > 0 && warmMetrics.outputTokens > 0)
+        assertTrue(warmMetrics.modelCacheHit)
+        assertEquals(0L, warmMetrics.modelLoadUs)
+        report.put("warm_inference_metrics", warmMetrics.json())
+            .put("warm_inference_result", warmResult)
+        checkpoint()
+
+        bridge.releaseModel()
+        bridge.reset()
+        val reloadMetrics = GenerationMetrics()
+        val reloadResult = bridge.generateWithThreads(
+            model.toByteArray(),
+            SMOKE_SYSTEM_PROMPT.toByteArray(),
+            SMOKE_USER_PROMPT.toByteArray(),
+            SMOKE_MAX_OUTPUT_TOKENS,
+            selectedThreads,
+            TokenSink {},
+            reloadMetrics
+        )
+        assertTrue("Reload native status $reloadResult", reloadResult == 0 || reloadResult == 2)
+        assertTrue(!reloadMetrics.modelCacheHit && reloadMetrics.modelLoadUs > 0)
+        report.put("reload_inference_metrics", reloadMetrics.json())
+            .put("reload_inference_result", reloadResult)
+        checkpoint()
+
         bridge.reset()
         var tokens = 0
         val cancellationMetrics = GenerationMetrics()
@@ -569,6 +609,7 @@ class NativeInferenceTest {
         assertEquals(1, stopped)
         assertEquals(3, tokens)
         assertEquals(3L, cancellationMetrics.outputTokens)
+        assertTrue(cancellationMetrics.modelCacheHit)
         val failureMetrics = GenerationMetrics()
         bridge.reset()
         try {
@@ -587,6 +628,7 @@ class NativeInferenceTest {
         assertTrue(failureMetrics.totalUs >= 0)
         assertEquals(-1L, failureMetrics.firstTokenCallbackUs)
         assertEquals(0L, failureMetrics.outputTokens)
+        assertTrue(!failureMetrics.modelCacheHit)
         report.put("failure_metrics", failureMetrics.json()).put("complete", true)
         checkpoint()
     }
@@ -606,6 +648,7 @@ class NativeInferenceTest {
         put("non_thinking_prefix", nonThinkingPrefix)
         put("inference_threads", inferenceThreads)
         put("context_tokens", contextTokens)
+        put("model_cache_hit", modelCacheHit)
     }
 
     private fun String.sha256(): String = MessageDigest.getInstance("SHA-256")

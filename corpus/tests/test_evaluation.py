@@ -60,7 +60,20 @@ class EvaluationInputTests(unittest.TestCase):
         workload = dict(id='native-inference-smoke-v1', system_sha256='f' * 64,
                         user_sha256='e' * 64, max_output_tokens=96)
 
-        def report(total_us, run_sha, app_sha, test_sha, thread_mode='adaptive'):
+        def report(total_us, run_sha, app_sha, test_sha, thread_mode='adaptive', cache=False):
+            observations = {'inference_metrics': {
+                'total_us': total_us, 'first_token_callback_us': 600_000,
+                'context_setup_us': 200_000, 'prefill_us': 500_000, 'model_load_us': 100_000,
+                'generation_loop_us': 300_000, 'prompt_tokens': 54,
+                'output_tokens': 12, 'inference_threads': 2,
+            }}
+            if cache:
+                observations['warm_inference_metrics'] = {
+                    'total_us': 800_000, 'first_token_callback_us': 400_000,
+                    'context_setup_us': 150_000, 'prefill_us': 350_000, 'model_load_us': 0,
+                    'generation_loop_us': 300_000, 'prompt_tokens': 54,
+                    'output_tokens': 12, 'inference_threads': 2, 'model_cache_hit': True,
+                }
             return dict(
                 format=1, complete=True,
                 checks={'exact_model_identity': True, 'installed_build_identity': True,
@@ -77,12 +90,7 @@ class EvaluationInputTests(unittest.TestCase):
                 thread_mode=thread_mode,
                 requested_inference_threads=2 if thread_mode == 'fixed' else None,
                 inputs={'run': {'file': 'run.json', 'sha256': run_sha}},
-                observations={'inference_metrics': {
-                    'total_us': total_us, 'first_token_callback_us': 600_000,
-                    'context_setup_us': 200_000, 'prefill_us': 500_000, 'model_load_us': 100_000,
-                    'generation_loop_us': 300_000, 'prompt_tokens': 54,
-                    'output_tokens': 12, 'inference_threads': 2,
-                }},
+                observations=observations,
             )
 
         with tempfile.TemporaryDirectory() as folder:
@@ -96,7 +104,7 @@ class EvaluationInputTests(unittest.TestCase):
             for index, total in enumerate((1_000_000, 1_100_000, 1_200_000)):
                 path = root / f'candidate-{index}.json'
                 path.write_text(json.dumps(report(total, chr(97 + index) * 64,
-                                                  'd' * 64, 'e' * 64, 'fixed')),
+                                                  'd' * 64, 'e' * 64, 'fixed', cache=True)),
                                 encoding='utf-8')
                 candidate.append(path)
             runtime = root / 'runtime.json'
@@ -114,6 +122,11 @@ class EvaluationInputTests(unittest.TestCase):
             self.assertNotEqual(result['application']['baseline'], result['application']['candidate'])
             self.assertNotIn('raw_answer', json.dumps(result))
             self.assertAlmostEqual(result['candidate_vs_baseline_percent']['total_latency'], 10)
+            self.assertAlmostEqual(
+                result['candidate_warm_turn_vs_baseline_cold']['candidate_warm_vs_baseline_cold_percent']
+                ['total_latency'], -20,
+            )
+            self.assertEqual(result['candidate_warm_turn']['median']['model_load_ms'], 0)
             self.assertEqual(result['baseline']['median']['context_setup_ms'], 200)
             self.assertEqual(result['candidate_vs_baseline_percent']['context_setup_latency'], 0)
 
@@ -128,6 +141,7 @@ class EvaluationInputTests(unittest.TestCase):
                 item = json.loads(path.read_text(encoding='utf-8'))
                 item['device_fingerprint'] = 'emulator-fingerprint'
                 item['observations']['inference_metrics']['output_tokens'] = 13
+                item['observations']['warm_inference_metrics']['output_tokens'] = 13
                 path.write_text(json.dumps(item), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'same output token count'):
                 compare_native_smoke(baseline, candidate, runtime)

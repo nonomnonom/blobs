@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 data class WorkState(
     val ready: Boolean = false,
@@ -90,7 +91,8 @@ class WorkController(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutable = MutableStateFlow(WorkState())
     val state = mutable.asStateFlow()
-    private val bridge by lazy { NativeBridge() }
+    private val bridgeDelegate = lazy { NativeBridge() }
+    private val bridge get() = bridgeDelegate.value
     private var job: Job? = null
 
     @Volatile private var stopped = false
@@ -472,13 +474,25 @@ class WorkController(
     }
 
     fun stop(background: Boolean = false) {
-        if (!mutable.value.busy) return
-        if (mutable.value.turnId.isNotEmpty()) {
+        if (mutable.value.busy && mutable.value.turnId.isNotEmpty()) {
             stopped = true
             interrupted = background
             bridge.stop()
-        } else if (!background) {
+        } else if (mutable.value.busy && !background) {
             job?.cancel()
+        }
+        if (background) releaseModelInBackground()
+    }
+
+    suspend fun releaseInferenceModel() = withContext(Dispatchers.IO) {
+        if (bridgeDelegate.isInitialized()) bridge.releaseModel()
+    }
+
+    fun trimInferenceMemory() = releaseModelInBackground()
+
+    private fun releaseModelInBackground() {
+        if (bridgeDelegate.isInitialized()) {
+            scope.launch { bridge.releaseModel() }
         }
     }
 

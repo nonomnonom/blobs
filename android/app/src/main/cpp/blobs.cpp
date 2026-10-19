@@ -5,7 +5,9 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
+#include <sys/stat.h>
 #include <vector>
 #include <stdexcept>
 #include "llama.h"
@@ -15,6 +17,17 @@ namespace {
 std::atomic<bool> cancelled{false};
 std::mutex owner;
 std::once_flag initialized;
+using Model = std::unique_ptr<llama_model, decltype(&llama_model_free)>;
+struct ModelFileIdentity {
+    dev_t device;
+    ino_t inode;
+    off_t size;
+    time_t modified_seconds;
+    long modified_nanoseconds;
+};
+Model cached_model(nullptr, llama_model_free);
+std::string cached_model_path;
+std::optional<ModelFileIdentity> cached_model_identity;
 using Clock = std::chrono::steady_clock;
 jlong elapsed_us(Clock::time_point start) {
     return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start).count();
@@ -30,7 +43,7 @@ struct Measurements {
     JNIEnv *env;
     jlongArray output;
     Clock::time_point start = Clock::now();
-    std::array<jlong, 14> values;
+    std::array<jlong, 15> values;
     Measurements(JNIEnv *env, jlongArray output) : env(env), output(output) {
         values.fill(-1);
         values[7] = values[10] = values[11] = 0;
@@ -50,6 +63,18 @@ struct Measurements {
 };
 bool abort_decode(void *) { return cancelled.load(); }
 bool load_progress(float, void *) { return !cancelled.load(); }
+std::optional<ModelFileIdentity> file_identity(const std::string &path) {
+    struct stat info{};
+    if (stat(path.c_str(), &info) != 0 || !S_ISREG(info.st_mode)) return std::nullopt;
+    return ModelFileIdentity{
+        info.st_dev, info.st_ino, info.st_size, info.st_mtime, info.st_mtim.tv_nsec
+    };
+}
+bool same_identity(const ModelFileIdentity &left, const ModelFileIdentity &right) {
+    return left.device == right.device && left.inode == right.inode && left.size == right.size &&
+        left.modified_seconds == right.modified_seconds &&
+        left.modified_nanoseconds == right.modified_nanoseconds;
+}
 int context_capacity(int prompt_tokens, int requested_output_tokens) {
     constexpr int minimum_context = 512;
     constexpr int maximum_context = 4096;
@@ -73,11 +98,19 @@ Java_dev_blobs_app_inference_NativeBridge_reset(JNIEnv *, jobject) { cancelled =
 extern "C" JNIEXPORT void JNICALL
 Java_dev_blobs_app_inference_NativeBridge_stop(JNIEnv *, jobject) { cancelled = true; }
 
+extern "C" JNIEXPORT void JNICALL
+Java_dev_blobs_app_inference_NativeBridge_releaseModel(JNIEnv *, jobject) {
+    std::lock_guard<std::mutex> lock(owner);
+    cached_model.reset();
+    cached_model_path.clear();
+    cached_model_identity.reset();
+}
+
 extern "C" JNIEXPORT jint JNICALL
 Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
     JNIEnv *env, jobject, jbyteArray path, jbyteArray system, jbyteArray user, jint limit, jint threads, jobject sink,
     jlongArray metrics) {
-    if (!metrics || env->GetArrayLength(metrics) != 14) {
+    if (!metrics || env->GetArrayLength(metrics) != 15) {
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "METRICS_SIZE");
         return 3;
     }
@@ -92,26 +125,48 @@ Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
     try {
         std::call_once(initialized, [] { llama_backend_init(); });
         if (cancelled) return 1;
-        auto params = llama_model_default_params();
-        params.n_gpu_layers = 0;
-        params.progress_callback = load_progress;
-        using Model = std::unique_ptr<llama_model, decltype(&llama_model_free)>;
-        Stage loading{measured.values[2]};
-        Model model(llama_model_load_from_file(utf8(env, path).c_str(), params), llama_model_free);
-        loading.stop();
-        if (!model) {
-            if (cancelled) return 1;
-            throw std::runtime_error("MODEL_LOAD");
+        const auto model_path = utf8(env, path);
+        const auto identity = file_identity(model_path);
+        const bool cache_hit = cached_model && identity && cached_model_identity &&
+            cached_model_path == model_path && same_identity(*identity, *cached_model_identity);
+        measured.values[14] = cache_hit ? 1 : 0;
+        Model transient_model(nullptr, llama_model_free);
+        llama_model *model = nullptr;
+        if (cache_hit) {
+            measured.values[2] = 0;
+            model = cached_model.get();
+        } else {
+            cached_model.reset();
+            cached_model_path.clear();
+            cached_model_identity.reset();
+            auto params = llama_model_default_params();
+            params.n_gpu_layers = 0;
+            params.progress_callback = load_progress;
+            Stage loading{measured.values[2]};
+            transient_model.reset(llama_model_load_from_file(model_path.c_str(), params));
+            loading.stop();
+            if (!transient_model) {
+                if (cancelled) return 1;
+                throw std::runtime_error("MODEL_LOAD");
+            }
+            if (identity) {
+                cached_model = std::move(transient_model);
+                cached_model_path = model_path;
+                cached_model_identity = identity;
+                model = cached_model.get();
+            } else {
+                model = transient_model.get();
+            }
         }
         Stage preparing{measured.values[3]};
         auto sys = utf8(env, system), question = utf8(env, user);
-        const char *tmpl = llama_model_chat_template(model.get(), nullptr);
+        const char *tmpl = llama_model_chat_template(model, nullptr);
         char architecture[64] = {};
-        llama_model_meta_val_str(model.get(), "general.architecture", architecture, sizeof(architecture));
+        llama_model_meta_val_str(model, "general.architecture", architecture, sizeof(architecture));
         const auto prepared = prepare_chat_prompt(architecture, tmpl, std::move(sys), std::move(question));
         const auto &prompt = prepared.text;
         measured.values[11] = prepared.non_thinking_prefix ? 1 : 0;
-        const auto *vocab = llama_model_get_vocab(model.get());
+        const auto *vocab = llama_model_get_vocab(model);
         int count = -llama_tokenize(vocab, prompt.data(), prompt.size(), nullptr, 0, true, true);
         if (count <= 0 || count > 3072) throw std::runtime_error("CONTEXT_FULL");
         std::vector<llama_token> tokens(count);
@@ -126,7 +181,7 @@ Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
         cp.n_threads = threads; cp.n_threads_batch = threads;
         cp.abort_callback = abort_decode;
         using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;
-        Context context(llama_init_from_model(model.get(), cp), llama_free);
+        Context context(llama_init_from_model(model, cp), llama_free);
         if (!context) throw std::runtime_error("CONTEXT_ALLOC");
         using Batch = std::unique_ptr<llama_batch_ext, decltype(&llama_batch_ext_free)>;
         Batch batch(llama_batch_ext_init(context.get()), llama_batch_ext_free);
