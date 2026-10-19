@@ -262,6 +262,7 @@ def record(paths, runtime_lock_path: Path):
         runs=result['runs'],
         median=result['median'],
         range=result['range'],
+        warm_turn=result['warm_turn'],
     )
 
 

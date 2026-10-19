@@ -19,6 +19,29 @@ uv run --locked --project . python -m evaluation.android.app_startup `
 
 The v0.3.7 release APK measured on Android 16 x86_64 had 684 ms median activity launch time (739 ms nearest-rank p95) and 31,955 KiB median process PSS (33,107 KiB p95) across seven process-cold launches. Individual launch times ranged from 488 to 739 ms, so this is a small emulator diagnostic rather than a device-wide claim. The installed base APK digest and every sample are in [`the launch report`](baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json).
 
+## Measure in-app model and library downloads
+
+`PackageLifecyclePerformanceTest` starts the normal `ProductViewModel` download action, then records catalog refresh, download plus archive verification/inspection, and package install/validation/activation separately. It downloads only from the signature-verified app package list, checks the final database entry and SHA-256, and records APK/package/device identities. This is a manual Android instrumentation test because it needs network access and a package that is not already installed in the debug app. Use a fresh debug app install or a package ID that has not been installed; it does not clear app data.
+
+From `android/`, build and install the debug app and instrumentation APK, then run a package from the signed list:
+
+```powershell
+.\gradlew.bat :app:assembleDebug :app:assembleDebugAndroidTest --offline --console=plain
+$adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
+& $adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
+& $adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+$runId = 'qwen-q8-01'
+& $adb -s emulator-5554 shell am instrument -w `
+  -e class 'dev.blobs.app.PackageLifecyclePerformanceTest#downloadsAndInstallsPinnedCatalogPackage' `
+  -e packageId qwen3-06b-q8 `
+  -e runId $runId `
+  dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner
+$report = & $adb -s emulator-5554 exec-out run-as dev.blobs.app.debug cat "files/package-lifecycle-$runId.json"
+$report | Set-Content -Encoding utf8 "../corpus/evaluation/evidence/package-lifecycle-qwen-$runId.json"
+```
+
+Pull `files/package-lifecycle-$runId.json` from `dev.blobs.app.debug` with `adb exec-out run-as` and retain it under `evaluation/evidence/`. On the recorded Android 16 x86_64 emulator, the 3.83 MB Wikipedia starter package took 2,796 ms for download and inspection, then 514 ms to install and validate (3,309 ms total). The 639.45 MB Qwen 0.6B package took 95,207 ms for download and inspection, then 8,007 ms to install and validate (103,213 ms total, about 6.7 MB/s over that emulator's network). These are single-run network diagnostics; package identity, archive and installed hashes are in [`the Qwen report`](evidence/android-package-lifecycle-qwen-q8-x86_64-android16-2026-10-19.json) and [`the starter-library report`](evidence/android-package-lifecycle-starter-x86_64-android16-2026-10-19.json).
+
 Install the locked evaluation dependencies and run the corpus tests from this directory's parent:
 
 ```powershell

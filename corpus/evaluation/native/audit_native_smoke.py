@@ -15,9 +15,14 @@ def load(path: Path):
     return value
 
 
-def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: Path,
-          app_apk_sha256: str, test_apk_sha256: str):
-    run, staging, lock, installed = map(load, (run_path, staging_path, lock_path, installed_path))
+def audit(run_path: Path, staging_path: Path | None, lock_path: Path, installed_path: Path,
+          app_apk_sha256: str, test_apk_sha256: str,
+          package_install_path: Path | None = None):
+    if (staging_path is None) == (package_install_path is None):
+        raise ValueError('Provide exactly one model staging or in-app installation report')
+    run, lock, installed = map(load, (run_path, lock_path, installed_path))
+    staging = load(staging_path) if staging_path else {}
+    package_install = load(package_install_path) if package_install_path else {}
     for value in (app_apk_sha256, test_apk_sha256):
         if not re.fullmatch(r'[a-f0-9]{64}', value):
             raise ValueError('APK hashes must be lowercase SHA-256 values')
@@ -28,18 +33,32 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
     locked_workload = lock.get('workload')
     profile = run.get('device_profile')
     staged_device = staging.get('device', {})
-    profile_valid = (
-        isinstance(profile, dict) and
-        profile.get('fingerprint') == run.get('fingerprint') and
-        profile.get('fingerprint') == staged_device.get('fingerprint') and
-        all(isinstance(profile.get(field), str) and profile[field]
-            for field in ('model', 'device', 'abi')) and
-        profile.get('abi') == staged_device.get('abi') and
-        isinstance(staging.get('serial'), str) and bool(staging['serial']) and
-        type(profile.get('api')) is int and profile['api'] >= 28 and
-        type(profile.get('available_processors')) is int and profile['available_processors'] > 0 and
-        type(profile.get('max_heap_bytes')) is int and profile['max_heap_bytes'] > 0
-    )
+    if package_install_path:
+        profile_valid = (
+            isinstance(profile, dict) and
+            profile.get('fingerprint') == run.get('fingerprint') ==
+            package_install.get('device_fingerprint') and
+            profile.get('model') == package_install.get('device_model') and
+            profile.get('api') == package_install.get('api') and
+            all(isinstance(profile.get(field), str) and profile[field]
+                for field in ('model', 'device', 'abi')) and
+            type(profile.get('api')) is int and profile['api'] >= 28 and
+            type(profile.get('available_processors')) is int and profile['available_processors'] > 0 and
+            type(profile.get('max_heap_bytes')) is int and profile['max_heap_bytes'] > 0
+        )
+    else:
+        profile_valid = (
+            isinstance(profile, dict) and
+            profile.get('fingerprint') == run.get('fingerprint') and
+            profile.get('fingerprint') == staged_device.get('fingerprint') and
+            all(isinstance(profile.get(field), str) and profile[field]
+                for field in ('model', 'device', 'abi')) and
+            profile.get('abi') == staged_device.get('abi') and
+            isinstance(staging.get('serial'), str) and bool(staging['serial']) and
+            type(profile.get('api')) is int and profile['api'] >= 28 and
+            type(profile.get('available_processors')) is int and profile['available_processors'] > 0 and
+            type(profile.get('max_heap_bytes')) is int and profile['max_heap_bytes'] > 0
+        )
     workload_valid = (
         isinstance(workload, dict) and
         workload.get('id') == 'native-inference-smoke-v1' and
@@ -49,11 +68,26 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         type(workload.get('max_output_tokens')) is int and
         1 <= workload['max_output_tokens'] <= 768
     )
+    if package_install_path:
+        model_identity = (
+            package_install.get('complete') is True and
+            package_install.get('kind') == 'model' and
+            package_install.get('package_id') == expected.get('id') and
+            package_install.get('installed_bytes') == expected.get('bytes') and
+            package_install.get('installed_sha256') == expected.get('sha256')
+        )
+    else:
+        model_identity = (
+            run.get('model_bytes') == expected.get('bytes') ==
+            staging.get('staged', {}).get('bytes') and
+            run.get('model_sha256') == expected.get('sha256') ==
+            staging.get('staged', {}).get('sha256')
+        )
     identity = (
         type(expected.get('bytes')) is int and expected['bytes'] > 0 and
         re.fullmatch(r'[a-f0-9]{64}', expected.get('sha256', '')) and
-        run.get('model_bytes') == expected['bytes'] == staging.get('staged', {}).get('bytes') and
-        run.get('model_sha256') == expected['sha256'] == staging.get('staged', {}).get('sha256')
+        run.get('model_bytes') == expected['bytes'] and
+        run.get('model_sha256') == expected['sha256'] and bool(model_identity)
     )
     inference = run.get('inference_metrics', {})
     if not isinstance(inference, dict):
@@ -108,14 +142,19 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         )
     )
     checks = dict(
-        inputs_complete=run.get('complete') is True and staging.get('complete') is True and
-                        installed.get('complete') is True,
+        inputs_complete=(run.get('complete') is True and
+                         (staging.get('complete') is True if staging_path else
+                          package_install.get('complete') is True) and
+                         installed.get('complete') is True),
         exact_model_identity=bool(identity),
         device_profile_complete=bool(profile_valid),
         pinned_runtime=bool(re.fullmatch(r'[a-f0-9]{40}', runtime_commit or '')),
         fixed_workload=bool(workload_valid),
         installed_build_identity=(installed.get('apk_sha256') == app_apk_sha256 and
-                                  installed.get('test_apk_sha256') == test_apk_sha256),
+                                  installed.get('test_apk_sha256') == test_apk_sha256 and
+                                  (not package_install_path or
+                                   (package_install.get('app_apk_sha256') == app_apk_sha256 and
+                                    package_install.get('test_apk_sha256') == test_apk_sha256))),
         inference_completed=run.get('inference_result') in {0, 2},
         inference_metrics_present=(type(inference.get('prompt_tokens')) is int and
                                    inference['prompt_tokens'] > 0 and
@@ -143,13 +182,14 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
     return dict(
         format=1,
         complete=True,
-        scope=('Exact x86_64 emulator model compatibility, native inference timing, adaptive '
-               'thread selection, cancellation and failure-path evidence. This is not model-package '
-               'import, ARM execution or phone-performance evidence.'),
+        scope=('Identified Android model compatibility, native inference timing, adaptive thread '
+               'selection, cancellation and failure-path evidence. This is not a phone-performance '
+               'prediction or generated-answer quality evaluation.'),
         inputs={name: dict(file=path.as_posix(), bytes=path.stat().st_size, sha256=sha(path))
                 for name, path in {
-                    'run': run_path, 'staging': staging_path, 'model_lock': lock_path,
-                    'installed_app': installed_path,
+                    **({'run': run_path, 'staging': staging_path} if staging_path else
+                       {'run': run_path, 'package_install': package_install_path}),
+                    'model_lock': lock_path, 'installed_app': installed_path,
                 }.items()},
         application=dict(package=installed.get('package'), apk_sha256=app_apk_sha256,
                          test_apk_sha256=test_apk_sha256),
@@ -159,7 +199,8 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         thread_mode=thread_mode,
         requested_inference_threads=requested_threads,
         device_fingerprint=run.get('fingerprint'),
-        device_profile=dict(profile, serial=staging.get('serial')) if profile_valid else None,
+        device_profile=(dict(profile, serial=staging.get('serial')) if staging_path else profile)
+        if profile_valid else None,
         checks=checks,
         observations=dict(
             inference_metrics=inference,
@@ -170,7 +211,9 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
         ),
         interpretation={
             'timing': 'Recorded stage durations describe this emulator run only.',
-            'packaging': 'The raw verified GGUF was staged directly; normal .blobs import remains separate.',
+            'model_source': ('Installed through the signed in-app package list.'
+                             if package_install_path else
+                             'Raw verified model staged as a test fixture.'),
         },
         script_sha256=sha(Path(__file__)),
     )
@@ -179,7 +222,9 @@ def audit(run_path: Path, staging_path: Path, lock_path: Path, installed_path: P
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', type=Path, required=True)
-    parser.add_argument('--staging', type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument('--staging', type=Path)
+    source.add_argument('--package-install', type=Path)
     parser.add_argument('--model-lock', type=Path, required=True)
     parser.add_argument('--installed-app', type=Path, required=True)
     parser.add_argument('--app-apk-sha256', required=True)
@@ -189,7 +234,7 @@ def main():
     if args.output.exists():
         raise FileExistsError(args.output)
     report = audit(args.run, args.staging, args.model_lock, args.installed_app,
-                   args.app_apk_sha256, args.test_apk_sha256)
+                   args.app_apk_sha256, args.test_apk_sha256, args.package_install)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     write_json(args.output, report)
     print(json.dumps(report['checks'], indent=2))

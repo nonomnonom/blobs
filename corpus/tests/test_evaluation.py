@@ -114,6 +114,10 @@ class EvaluationInputTests(unittest.TestCase):
             self.assertEqual(baseline_summary['median']['total_ms'], 1000)
             self.assertEqual(baseline_summary['runtime']['commit'], 'a' * 40)
             self.assertEqual(baseline_summary['output_tokens'], 12)
+            self.assertIsNone(baseline_summary['warm_turn'])
+
+            candidate_summary = record_native_smoke(candidate, runtime)
+            self.assertEqual(candidate_summary['warm_turn']['median']['total_ms'], 800)
 
             result = compare_native_smoke(baseline, candidate, runtime)
             self.assertEqual(result['baseline']['median']['total_ms'], 1000)
@@ -501,6 +505,61 @@ class EvaluationInputTests(unittest.TestCase):
                 audit_native_smoke(
                     paths['run.json'], paths['staging.json'], paths['lock.json'],
                     paths['installed.json'], 'b' * 64, 'c' * 64)
+
+    def test_native_smoke_audit_accepts_a_hash_matched_in_app_model_install(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            model_hash = 'a' * 64
+            run = dict(
+                complete=True, model_bytes=100, model_sha256=model_hash,
+                fingerprint='fixture', inference_result=0,
+                thread_mode='fixed', requested_inference_threads=2,
+                device_profile=dict(fingerprint='fixture', model='fixture', device='fixture',
+                                    api=36, abi='x86_64', available_processors=4,
+                                    max_heap_bytes=536870912),
+                workload=dict(id='native-inference-smoke-v1', system_sha256='d' * 64,
+                              user_sha256='e' * 64, max_output_tokens=96),
+                inference_metrics=dict(prompt_tokens=10, output_tokens=3,
+                                       non_thinking_prefix=True, inference_threads=2,
+                                       total_us=100, first_token_callback_us=80,
+                                       prefill_us=70, context_tokens=512),
+                cancellation_result=1,
+                cancellation_metrics=dict(output_tokens=3, non_thinking_prefix=True),
+                failure_metrics=dict(total_us=1, first_token_callback_us=-1, output_tokens=0),
+            )
+            package_install = dict(
+                complete=True, kind='model', package_id='fixture-model', installed_bytes=100,
+                installed_sha256=model_hash, device_fingerprint='fixture',
+                device_model='fixture', api=36, app_apk_sha256='b' * 64,
+                test_apk_sha256='c' * 64,
+            )
+            lock = dict(
+                model=dict(id='fixture-model', bytes=100, sha256=model_hash),
+                runtime=dict(revision='f' * 40),
+                workload=run['workload'],
+            )
+            installed = dict(complete=True, package='dev.blobs.fixture',
+                             apk_sha256='b' * 64, test_apk_sha256='c' * 64)
+            paths = {}
+            for name, value in {'run': run, 'package': package_install,
+                                'lock': lock, 'installed': installed}.items():
+                paths[name] = root / f'{name}.json'
+                paths[name].write_text(json.dumps(value), encoding='utf-8')
+
+            result = audit_native_smoke(
+                paths['run'], None, paths['lock'], paths['installed'], 'b' * 64, 'c' * 64,
+                package_install_path=paths['package'])
+            self.assertTrue(all(result['checks'].values()))
+            self.assertEqual(
+                result['interpretation']['model_source'],
+                'Installed through the signed in-app package list.')
+
+            package_install['installed_sha256'] = '9' * 64
+            paths['package'].write_text(json.dumps(package_install), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'exact_model_identity'):
+                audit_native_smoke(
+                    paths['run'], None, paths['lock'], paths['installed'], 'b' * 64, 'c' * 64,
+                    package_install_path=paths['package'])
 
     def test_chat_nonstream_keeps_full_output_without_fabricating_partial_arrival(self):
         packet = {'choices': [{'index': 0, 'message': {'content': '{}', 'reasoning_content': 'analysis'},
