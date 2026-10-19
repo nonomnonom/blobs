@@ -1,6 +1,27 @@
-# Blobs asset distribution
+# Blobs architecture
 
 Blobs is an offline-first Android research app with an online, curated asset library. After setup, model inference, retrieval, citations, and reading use files stored on the device. Network access is limited to explicit package downloads and signed download-list checks.
+
+## Application structure
+
+The Android app uses one Gradle application module. `AppContainer` composes app-scoped storage, package, retrieval and work objects. `ProductViewModel` owns navigation and UI actions; `ProductState` and `WorkState` describe the state consumed by Compose. `WorkController` coordinates exclusive answer, import and package operations and their cancellation. Feature screens live under `feature/`, with setup and settings in their own folders and shared package cards beside library screens.
+
+```mermaid
+flowchart LR
+    Screens[Compose screens] --> UI[ProductViewModel]
+    UI --> Work[WorkController]
+    UI --> Preferences[PreferencesStore]
+    Work --> Database[Room conversations and packages]
+    Work --> Retrieval[LibraryStore and SQLite FTS5]
+    Work --> Inference[NativeBridge and llama.cpp]
+    Work --> Packages[PackageDownloader and PackageInstaller]
+    UI --> Catalog[PackageCatalog]
+    Catalog --> Codec[CatalogCodec: schema and signatures]
+```
+
+`data/local` owns Room entities, DAOs and explicit migrations. `data/library` owns read-only source access, retrieval and document import. `data/packages` owns package identity, validation, downloading, installation and the curated download list. `inference` owns model integration, answer formatting and grounding checks; JNI code lives in `app/src/main/cpp`. The uv-managed `corpus/blobs_corpus` package owns corpus preparation and the shared `.blobs` archive contract. Android preparation scripts reuse that contract rather than maintaining a second builder.
+
+These are source boundaries within the current application, not separate services or independently deployed modules. Contributor commands and compatibility rules are in [Contributing](../CONTRIBUTING.md).
 
 ## Where files live
 

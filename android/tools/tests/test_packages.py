@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -222,6 +223,8 @@ class PackageTests(unittest.TestCase):
                 'README.md',
                 '.gitignore',
                 '.gitattributes',
+                'CONTRIBUTING.md',
+                '.editorconfig',
             ]
             for name in expected:
                 path = workspace / name
@@ -237,10 +240,14 @@ class PackageTests(unittest.TestCase):
                 'corpus/evaluation/reports/template.md',
                 'corpus/evaluation/results/local-run.json',
                 'android/build/generated.txt',
+                'android/tools/untracked-notes.txt',
+                'docs/untracked-internal-review.md',
             ]:
                 path = workspace / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text('generated fixture', encoding='utf-8')
+            subprocess.run(['git', '-C', str(workspace), 'init', '--quiet'], check=True)
+            subprocess.run(['git', '-C', str(workspace), 'add', '--', *expected], check=True)
             with patch.object(package_release, 'ROOT', root):
                 write_source_archive(output)
             with zipfile.ZipFile(output) as archive:
@@ -252,6 +259,10 @@ class PackageTests(unittest.TestCase):
                 self.assertIn('blobs/corpus/uv.lock', names)
                 self.assertIn('blobs/corpus/blobs_corpus/curate.py', names)
                 self.assertIn('blobs/corpus/README.md', names)
+                self.assertIn('blobs/CONTRIBUTING.md', names)
+                self.assertIn('blobs/.editorconfig', names)
+                self.assertNotIn('blobs/android/tools/untracked-notes.txt', names)
+                self.assertNotIn('blobs/docs/untracked-internal-review.md', names)
                 self.assertFalse(any(name.startswith('blobs/design/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/reports/') for name in names))
                 self.assertFalse(any(name.startswith('blobs/corpus/evaluation/results/') for name in names))
@@ -263,8 +274,22 @@ class PackageTests(unittest.TestCase):
                 self.assertFalse(any(name.startswith('blobs/android/.git/') for name in names))
                 self.assertFalse(any(name.startswith(('blobs/android/packages/', 'blobs/android/.local/', 'blobs/corpus/work/', 'blobs/corpus/artifacts/')) for name in names))
                 self.assertFalse(any(name.endswith(('.jks', '.keystore', '.gguf')) for name in names))
-            with self.assertRaises(FileExistsError):
-                write_source_archive(output)
+            with patch.object(package_release, 'ROOT', root):
+                with self.assertRaises(FileExistsError):
+                    write_source_archive(output)
+
+    def test_source_delivery_rejects_missing_tracked_source(self):
+        with tempfile.TemporaryDirectory() as folder:
+            workspace = Path(folder) / 'workspace'
+            source = workspace / 'android/tools/example.py'
+            source.parent.mkdir(parents=True)
+            source.write_text('print("source")\n', encoding='utf-8')
+            subprocess.run(['git', '-C', str(workspace), 'init', '--quiet'], check=True)
+            subprocess.run(['git', '-C', str(workspace), 'add', '--', 'android/tools/example.py'], check=True)
+            source.unlink()
+            with patch.object(package_release, 'ROOT', workspace / 'android'):
+                with self.assertRaisesRegex(ValueError, 'Tracked source file is missing'):
+                    write_source_archive(Path(folder) / 'source.zip')
 
     def test_heading_owns_its_passage_without_swallowing_body(self):
         rows = list(passages('Intro.\n\n=== Cooling ===\nTrees provide shade.\n\n'

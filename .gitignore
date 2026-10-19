@@ -4,6 +4,8 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 Thumbs.db
+/.local/
+/work/
 design/
 corpus/reports/
 corpus/evaluation/results/

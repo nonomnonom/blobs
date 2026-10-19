@@ -43,23 +43,36 @@ def verification_guide(version, source_name):
 
 
 def write_source_archive(output):
+    workspace = ROOT.parent.resolve()
+    repository = Path(subprocess.check_output(
+        ['git', '-C', str(workspace), 'rev-parse', '--show-toplevel'], text=True,
+        encoding='utf-8',
+    ).strip()).resolve()
+    if repository != workspace:
+        raise ValueError('Source delivery requires the Blobs Git checkout')
+    tracked = subprocess.check_output(
+        ['git', '-C', str(workspace), 'ls-files', '--cached', '-z'],
+    ).decode('utf-8').split('\0')
     excluded = {'.git', '.local', '.gradle', '.kotlin', '.idea', '.cxx', 'build', 'reports',
                 '__pycache__', 'node_modules', 'evidence', '.venv', '.cache'}
-    generated = {ROOT / 'packages', ROOT / 'release', ROOT.parent / 'corpus/work',
-                 ROOT.parent / 'corpus/artifacts', ROOT.parent / 'corpus/evaluation/results'}
+    generated = ('android/packages/', 'android/release/', 'corpus/work/',
+                 'corpus/artifacts/', 'corpus/evaluation/results/')
+    root_files = {'README.md', 'CONTRIBUTING.md', '.editorconfig', '.gitignore', '.gitattributes'}
     with zipfile.ZipFile(output, 'x', zipfile.ZIP_DEFLATED) as archive:
-        for base in [ROOT, ROOT.parent / 'corpus', ROOT.parent / '.github', ROOT.parent / 'docs']:
-            for directory, folders, files in os.walk(base):
-                folders[:] = sorted(p for p in folders if p not in excluded and
-                                    Path(directory) / p not in generated and
-                                    not p.startswith(('llama.cpp-', 'kleidiai-')))
-                for name in sorted(files):
-                    path = Path(directory) / name
-                    if name == 'local.properties' or path.suffix in ('.jks', '.keystore', '.pyc', '.log'):
-                        continue
-                    archive.write(path, 'blobs/' + path.relative_to(ROOT.parent).as_posix())
-        for name in ['README.md', '.gitignore', '.gitattributes']:
-            archive.write(ROOT.parent / name, 'blobs/' + name)
+        for name in sorted(set(tracked) - {''}):
+            relative = Path(name)
+            if relative.parts[0] not in {'android', 'corpus', '.github', 'docs'} and name not in root_files:
+                continue
+            if set(relative.parts) & excluded or name.startswith(generated):
+                continue
+            if relative.name == 'local.properties' or relative.suffix in ('.jks', '.keystore', '.pyc', '.log', '.dpapi'):
+                continue
+            path = workspace / relative
+            if path.is_symlink() or not path.resolve().is_relative_to(workspace):
+                raise ValueError(f'Source path leaves the checkout: {name}')
+            if not path.is_file():
+                raise ValueError(f'Tracked source file is missing: {name}')
+            archive.write(path, 'blobs/' + relative.as_posix())
 
 
 def verify_catalog_packages(model, library, version):
