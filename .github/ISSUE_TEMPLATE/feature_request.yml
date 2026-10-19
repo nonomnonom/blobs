@@ -1,0 +1,22 @@
+name: Feature request
+description: Explain a user need or a maintenance improvement.
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What problem should this solve?
+      description: Describe who encounters it and what they are trying to do.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the outcome and any alternatives you considered.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Relevant constraints
+      description: Consider offline use, privacy, device resources, compatibility or corpus attribution where relevant.

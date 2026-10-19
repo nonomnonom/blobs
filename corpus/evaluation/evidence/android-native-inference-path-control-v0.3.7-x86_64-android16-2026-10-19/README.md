@@ -1,0 +1,5 @@
+# Installed-package path control
+
+This six-run control compares the same verified Qwen 0.6B bytes on one Android 16 x86_64 emulator and one Blobs 0.3.7 debug/test APK pair. The package-path group loads `/data/user/0/dev.blobs.app.debug/files/packages/qwen3-06b-q8-23749fef-9465e63a22add535`. The control group loads `/data/user/0/dev.blobs.app.debug/files/qwen3-smoke.gguf`, a temporary copy made from that installed package. Run IDs `qwen-path-01` through `qwen-path-03` and `qwen-copy-04` through `qwen-copy-06` identify the control samples; all raw runs and passing audits are retained here.
+
+The matched comparison is [`the six-run report`](../android-native-inference-package-vs-file-copy-x86_64-android16-2026-10-19.json). Package-path versus copied-file medians were 3,049 versus 2,943 ms cold total, 2,564 versus 2,573 ms warm total, and 30.56 versus 29.55 tokens/s cold decode. Each run used the same 29-token prompt, 71-token output, four inference threads, model hash, APKs and runtime. Run-to-run timing spread is much larger than these differences, so this does not show a meaningful package-path penalty.

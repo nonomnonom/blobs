@@ -102,4 +102,32 @@ class FoundationTest {
             }
         }
     }
+
+    @Test
+    fun libraryToggleMigrationKeepsExistingPackagesEnabled() {
+        BundledSQLiteDriver().open(":memory:").use { connection ->
+            connection.prepare(
+                "CREATE TABLE packages (`key` TEXT NOT NULL PRIMARY KEY, packageId TEXT NOT NULL, version TEXT NOT NULL, kind TEXT NOT NULL, title TEXT NOT NULL, path TEXT NOT NULL, bytes INTEGER NOT NULL, sha256 TEXT NOT NULL, license TEXT NOT NULL, origin TEXT NOT NULL, installedAt INTEGER NOT NULL)"
+            ).use { it.step() }
+            connection.prepare(
+                "INSERT INTO packages VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+            ).use {
+                listOf("starter-1", "starter", "1", "library", "Starter", "/starter")
+                    .forEachIndexed { index, value -> it.bindText(index + 1, value) }
+                it.bindLong(7, 1)
+                listOf("hash", "CC0", "local").forEachIndexed { index, value ->
+                    it.bindText(index + 8, value)
+                }
+                it.bindLong(11, 1)
+                it.step()
+            }
+
+            BlobsDatabase.MIGRATION_2_3.migrate(connection)
+
+            connection.prepare("SELECT enabled FROM packages WHERE `key`='starter-1'").use {
+                assertTrue(it.step())
+                assertEquals(1L, it.getLong(0))
+            }
+        }
+    }
 }

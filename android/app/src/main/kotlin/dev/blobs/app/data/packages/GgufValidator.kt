@@ -22,16 +22,22 @@ object GgufValidator {
             require(depth <= 2)
             when (type.toInt()) {
                 0, 1, 7 -> skip(1)
+
                 2, 3 -> skip(2)
+
                 4, 5, 6 -> skip(4)
+
                 10, 11, 12 -> skip(8)
+
                 8 -> skip(u64())
+
                 9 -> {
                     val element = u32()
                     val count = u64()
                     require(count <= 10_000_000)
                     repeat(count.toInt()) { value(element, depth + 1) }
                 }
+
                 else -> error("GGUF_METADATA_TYPE")
             }
             require(input.filePointer <= 256L * 1024 * 1024)
@@ -51,15 +57,18 @@ object GgufValidator {
                     require(type == 8L)
                     architecture = text(128)
                 }
+
                 "general.alignment" -> {
                     require(type == 4L)
                     alignment = u32()
                 }
+
                 "tokenizer.chat_template" -> {
                     require(type == 8L)
                     skip(u64())
                     template = true
                 }
+
                 else -> value(type)
             }
         }

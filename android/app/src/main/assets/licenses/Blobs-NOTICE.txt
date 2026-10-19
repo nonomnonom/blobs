@@ -1,0 +1,12 @@
+Blobs
+Copyright 2026 Blobs contributors.
+
+The original Blobs source code, build and preparation tooling, and project
+documentation are licensed under the Apache License, Version 2.0.
+
+Original Blobs illustrations, mascot artwork, launcher artwork and branding
+assets are excluded from this license grant. No trademark rights are granted.
+
+Third-party code, fonts, icons, model weights and knowledge sources retain
+their own licenses and attribution requirements. See android/THIRD_PARTY_NOTICES.md,
+corpus/THIRD_PARTY_NOTICES.md, the bundled licenses, and each package manifest.

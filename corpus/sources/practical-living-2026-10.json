@@ -1,0 +1,54 @@
+{
+  "format": 1,
+  "id": "practical-living",
+  "edition": "2026-10.1",
+  "title": "Practical living",
+  "publisher": "Appropedia contributors",
+  "license": "CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/); Appropedia contributors, as specified in each included article. Text extracted and reformatted by Blobs; images, videos and hardware designs excluded.",
+  "saved": "2026-10-20",
+  "collection": "Practical living: garden, water and solar cooking concepts",
+  "origin": "https://www.appropedia.org/Appropedia:Intellectual_property",
+  "sources": [
+    {
+      "id": "rainwater-harvesting",
+      "host": "www.appropedia.org",
+      "url": "https://www.appropedia.org/Rainwater_harvesting",
+      "title": "Rainwater harvesting",
+      "updated": "2026-10-19",
+      "revision_id": 1281921,
+      "selector": "#mw-content-text .mw-parser-output",
+      "body_sha256": "7601e94974b6b62b97b2f6576b91d424d80a14098c85d2b66232e4407004d33b"
+    },
+    {
+      "id": "composting",
+      "host": "www.appropedia.org",
+      "url": "https://www.appropedia.org/Composting",
+      "title": "Composting",
+      "updated": "2025-11-28",
+      "revision_id": 1211872,
+      "selector": "#mw-content-text .mw-parser-output",
+      "body_sha256": "627f13d9546036cf0900447b66edad523a90cb4bf6b65bb8f4a5130d86ab8c09"
+    },
+    {
+      "id": "solar-cooker",
+      "host": "www.appropedia.org",
+      "url": "https://www.appropedia.org/Solar_cooker",
+      "title": "Solar cooker",
+      "updated": "2026-10-19",
+      "revision_id": 1281905,
+      "selector": "#mw-content-text .mw-parser-output",
+      "body_sha256": "9e518cb1fba9c8e6a9680df402f6546311a790e759896eda29034110f7870f83"
+    },
+    {
+      "id": "drip-irrigation",
+      "host": "www.appropedia.org",
+      "url": "https://www.appropedia.org/Drip_irrigation",
+      "title": "Drip irrigation",
+      "updated": "2026-08-31",
+      "revision_id": 1262631,
+      "selector": "#mw-content-text .mw-parser-output",
+      "body_sha256": "6bd653f3f0e04a03d20d5a1be09fa7ce68c46cc9f90b88cef054213ee4b4f7c0"
+    }
+  ],
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0/"
+}

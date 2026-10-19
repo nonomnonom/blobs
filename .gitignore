@@ -2,7 +2,12 @@
 *.pyc
 __pycache__/
 .pytest_cache/
+.ruff_cache/
 .DS_Store
 Thumbs.db
+/.local/
+/work/
+/.next/
 design/
 corpus/reports/
+corpus/evaluation/results/

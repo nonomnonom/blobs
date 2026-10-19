@@ -1,0 +1,214 @@
+{
+  "format": 1,
+  "complete": true,
+  "scope": "Fixed document-retrieval smoke cases on the exact packaged library and host runtime. Measures host retrieval only; it does not score generated answers or predict Android latency.",
+  "case_set": {
+    "id": "camping-safety-retrieval-v1",
+    "sha256": "809b08633da04219f05fa1958b66394147195cc7f84a0582497cd766c0f2d2fc"
+  },
+  "package": {
+    "file": "camping-safety-2026-10-v1.blobs",
+    "sha256": "8613b763c0935aaca7871f0184271ee11f2f74b693c7c5f2dc9e840f505c512e",
+    "manifest": {
+      "bytes": 110592,
+      "format": 1,
+      "id": "camping-safety",
+      "kind": "library",
+      "license": "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+      "origin": "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039",
+      "sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743",
+      "title": "Camping safely · U.S. national parks",
+      "version": "2026-10.1"
+    }
+  },
+  "runtime": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
+    "python": "3.13.12",
+    "sqlite": "3.50.4"
+  },
+  "retrieval_sources": {
+    "library_store": "3d951f9f85d13f282431018206dc5a12a8a26367273a99f879c29a44e0e100f8",
+    "query": "3fb8f2aabd9c6392d580362891748db37b8fe526096c09b27c3c2e8de3b0a414"
+  },
+  "host_runtime": {
+    "retrieval_smoke_sha256": "3b288ed9d45df9b5654a8f50635511d95f1c8f2effe1c277e05356c1394aa7de",
+    "host_replay_sha256": "46def999957b98fdd8aa21df01efb61f0e53662e10e058ad680ca90c80a75468"
+  },
+  "summary": {
+    "case_count": 8,
+    "expected_titles": 8,
+    "expected_titles_found": 8,
+    "expected_title_recall": 1.0,
+    "expected_titles_at_rank_1": 7,
+    "expected_title_mean_reciprocal_rank": 0.9375,
+    "host_elapsed_ms_median": 1.62135,
+    "host_elapsed_ms_p95": 2.0446
+  },
+  "results": [
+    {
+      "case_id": "camping-trip-planning",
+      "elapsed_host_ms": 1.4789,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 1 - Before the Trip"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 1 - Before the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "camping-rules-and-permits",
+      "elapsed_host_ms": 1.9624,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 1 - Before the Trip"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 1 - Before the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "camping-arrival-ranger",
+      "elapsed_host_ms": 2.0446,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "camping-current-conditions",
+      "elapsed_host_ms": 1.7638,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "camping-wildlife-food-storage",
+      "elapsed_host_ms": 1.7732,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_title_ranks": [
+        2
+      ],
+      "first_expected_title_rank": 2
+    },
+    {
+      "case_id": "camping-campfire-safety",
+      "elapsed_host_ms": 1.3455,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "camping-end-trip-checkin",
+      "elapsed_host_ms": 1.473,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "camping-leave-no-trace",
+      "elapsed_host_ms": 1.3504,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_document_titles": [
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_titles_found": [
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    }
+  ]
+}

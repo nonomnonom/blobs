@@ -1,0 +1,61 @@
+---
+title: Get started
+description: From installing Blobs to your first offline conversation.
+---
+
+## Install the app
+
+1. Open the [latest Blobs release](https://github.com/nonomnonom/blobs/releases/latest).
+2. Download the `.apk` file to your Android phone.
+3. Open it and follow Android’s installation prompt. If asked, allow installation from the app you used to open the APK. You can turn that permission off afterward.
+4. Open Blobs and tap **Get started**.
+
+Blobs supports Android 9 and newer, including GrapheneOS, on ARM64 and x86_64. You don’t need the Play Store, a Google account, or Google Play Services.
+
+## Choose a model
+
+<ScreenGallery names={['setup-model', 'setup-library']} />
+
+Blobs checks memory and available storage on the phone and recommends a model. This happens locally. You can accept the recommendation or choose another available model.
+
+A model is the part that writes your answers. Larger downloads need more storage and memory; a larger model isn’t always the more comfortable choice for your phone. Start with the recommendation, then change it later in **Settings → Models**.
+
+Before you tap **Download**, check the size and storage guidance. Keep the app open while setup finishes. An internet connection is needed for these downloads.
+
+Read [choosing a model](/docs/models) for the current options.
+
+## Get your starter library
+
+Download **Science and everyday questions**, the required starter library. This small collection gives Blobs sources to search from the first conversation.
+
+A library supplies reference material. It is separate from the model: adding a library gives Blobs more material to find, rather than replacing the model or training it again.
+
+Blobs checks downloaded files before installing them. Setup continues when both the model and starter library are ready.
+
+## Ask your first question
+
+Try a question about a topic in your starter library. When an answer includes citations, tap one to read the supporting passage inside Blobs.
+
+You can now use chat, library search, and saved sources offline. Try turning on airplane mode to explore without a connection.
+
+## Your first few minutes
+
+<Mermaid
+    title="From first launch to your first offline question"
+    chart="flowchart TD
+    A[Open Blobs] --> B[Check memory and free space locally]
+    B --> C[Review the model recommendation]
+    C --> D[Download and verify the model]
+    D --> E[Download and verify the starter library]
+    E --> F[Finish setup]
+    F --> G[Ask your first question offline]
+    G --> H[Open a citation and read its source]"
+/>
+
+Downloads begin when you choose them. You can [add optional libraries](/docs/library) later. [See the full screen tour](/docs/tour) if you’d like a look around first.
+
+## Add more when you want
+
+Open **Library** to discover optional downloads. Start with the topics you’ll actually use; you don’t need to download everything. [Explore the available libraries](/docs/library).
+
+If setup stops or storage runs short, see [download help](/docs/troubleshooting#downloads-and-storage).

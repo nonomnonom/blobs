@@ -1,0 +1,164 @@
+{
+  "format": 1,
+  "scope": "Android retrieval only; no generated answers are evaluated",
+  "created_at_epoch_ms": 1792368976988,
+  "case_set": {
+    "id": "backcountry-basics-retrieval-v2",
+    "sha256": "bd7736ba545ab73f4dcf43021210750a9ffc48069ad073953e60a446fcc4c9fe"
+  },
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "model": "sdk_gphone64_x86_64",
+    "abi": "x86_64",
+    "sdk": 36
+  },
+  "application": {
+    "package": "dev.blobs.app.debug",
+    "version": "0.3.4",
+    "apk_sha256": "2fbf0ecf4b37e53e8d090cebce0194ebb44e489ee7dcf1fa5c31a0eb1ec1e9aa",
+    "test_apk_sha256": "5fa12e63e9ae606086b826aa11e7d1988e5510a2f274519f2492bb3e88ebf7c4"
+  },
+  "package": {
+    "id": "backcountry-basics",
+    "version": "2026-10.2",
+    "title": "Backcountry planning essentials",
+    "license": "National Park Service text; public-domain status may vary by page; source credits The Mountaineers for the Ten Essentials system",
+    "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+    "payload_sha256": "3cbdba7648172b4b347920ab88c6f6727639a15e21394f2da6ebb1de63364141",
+    "package_sha256": "3cea7eef3ad9c4f2429153a5627652dbf8ba7092ed2867e1699fc013d6abca16",
+    "payload_bytes": 81920
+  },
+  "repeat_count": 5,
+  "summary": {
+    "case_count": 6,
+    "expected_titles": 6,
+    "expected_titles_found": 6,
+    "expected_title_recall": 1,
+    "expected_titles_at_rank_1": 6,
+    "expected_title_mean_reciprocal_rank": 1,
+    "case_median_elapsed_ms_median": 3,
+    "case_median_elapsed_ms_p95": 5
+  },
+  "cases": [
+    {
+      "case_id": "ten-essentials-overview",
+      "expected_document_titles": [
+        "Ten Essentials"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Ten Essentials"
+      ],
+      "elapsed_ms_samples": [
+        5,
+        7,
+        6,
+        5,
+        5
+      ],
+      "median_elapsed_ms": 5
+    },
+    {
+      "case_id": "trip-first-aid",
+      "expected_document_titles": [
+        "Ten Essentials"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Ten Essentials"
+      ],
+      "elapsed_ms_samples": [
+        4,
+        4,
+        3,
+        3,
+        5
+      ],
+      "median_elapsed_ms": 4
+    },
+    {
+      "case_id": "emergency-shelter",
+      "expected_document_titles": [
+        "Ten Essentials"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Ten Essentials"
+      ],
+      "elapsed_ms_samples": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "median_elapsed_ms": 3
+    },
+    {
+      "case_id": "navigation-tools",
+      "expected_document_titles": [
+        "Ten Essentials"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Ten Essentials"
+      ],
+      "elapsed_ms_samples": [
+        4,
+        3,
+        3,
+        4,
+        3
+      ],
+      "median_elapsed_ms": 3
+    },
+    {
+      "case_id": "water-planning",
+      "expected_document_titles": [
+        "Ten Essentials"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Ten Essentials"
+      ],
+      "elapsed_ms_samples": [
+        2,
+        2,
+        4,
+        5,
+        4
+      ],
+      "median_elapsed_ms": 4
+    },
+    {
+      "case_id": "weather-layers",
+      "expected_document_titles": [
+        "Ten Essentials"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Ten Essentials"
+      ],
+      "elapsed_ms_samples": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "median_elapsed_ms": 2
+    }
+  ]
+}

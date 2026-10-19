@@ -1,0 +1,1290 @@
+{
+  "format": 1,
+  "scope": "Android retrieval-only before/after comparison on a pinned full travel library; no generated answers are evaluated.",
+  "created_at_epoch_ms": 1792366832257,
+  "case_set": {
+    "id": "travel-retrieval-smoke-v1",
+    "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+  },
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "model": "sdk_gphone64_x86_64",
+    "abi": "x86_64",
+    "sdk": 36
+  },
+  "package": {
+    "id": "wikivoyage-en",
+    "version": "2026-09.2",
+    "title": "Travel guides · English",
+    "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+    "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+    "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+    "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+    "payload_bytes": 628436992
+  },
+  "implementation_source_sha256": {
+    "android/app/src/main/kotlin/dev/blobs/app/data/library/LibraryStore.kt": "3d951f9f85d13f282431018206dc5a12a8a26367273a99f879c29a44e0e100f8",
+    "android/app/src/main/kotlin/dev/blobs/app/data/library/RetrievalQuery.kt": "900078fd97096f3f7b2950d5c84286c605b8b4158a86fb5fcf298f68e3d452f2"
+  },
+  "comparison": {
+    "expected_title_rank_1_change": [
+      4,
+      6
+    ],
+    "mean_reciprocal_rank_change": [
+      0.7833333333333333,
+      1
+    ],
+    "median_run_median_ms_change": [
+      70,
+      77
+    ],
+    "median_run_p95_ms_change": [
+      247,
+      262
+    ]
+  },
+  "baseline": {
+    "label": "Before title-overlap ranking",
+    "application": {
+      "package": "dev.blobs.app.debug",
+      "version": "0.3.3",
+      "apk_sha256": "325bd1a3f99233184f9905707942d7decda659bbeff12d0568a3b5287bd2bdcd",
+      "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+    },
+    "summary": {
+      "runs": 3,
+      "expected_title_recall_per_run": [
+        1,
+        1,
+        1
+      ],
+      "expected_titles_at_rank_1_per_run": [
+        4,
+        4,
+        4
+      ],
+      "mean_reciprocal_rank_per_run": [
+        0.7833333333333333,
+        0.7833333333333333,
+        0.7833333333333333
+      ],
+      "median_of_run_medians_ms": 70,
+      "median_of_run_p95_ms": 247,
+      "run_medians_ms": [
+        70,
+        70,
+        71
+      ],
+      "run_p95_ms": [
+        241,
+        247,
+        250
+      ]
+    },
+    "runs": [
+      {
+        "format": 1,
+        "scope": "Android retrieval only; no generated answers are evaluated",
+        "created_at_epoch_ms": 1792366288650,
+        "case_set": {
+          "id": "travel-retrieval-smoke-v1",
+          "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+        },
+        "device": {
+          "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+          "model": "sdk_gphone64_x86_64",
+          "abi": "x86_64",
+          "sdk": 36
+        },
+        "application": {
+          "package": "dev.blobs.app.debug",
+          "version": "0.3.3",
+          "apk_sha256": "325bd1a3f99233184f9905707942d7decda659bbeff12d0568a3b5287bd2bdcd",
+          "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+        },
+        "package": {
+          "id": "wikivoyage-en",
+          "version": "2026-09.2",
+          "title": "Travel guides · English",
+          "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+          "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+          "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+          "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+          "payload_bytes": 628436992
+        },
+        "repeat_count": 5,
+        "summary": {
+          "case_count": 6,
+          "expected_titles": 6,
+          "expected_titles_found": 6,
+          "expected_title_recall": 1,
+          "expected_titles_at_rank_1": 4,
+          "expected_title_mean_reciprocal_rank": 0.7833333333333333,
+          "case_median_elapsed_ms_median": 70,
+          "case_median_elapsed_ms_p95": 241
+        },
+        "cases": [
+          {
+            "case_id": "jakarta-city",
+            "expected_document_titles": [
+              "Jakarta"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Jakarta",
+              "Kruger National Park",
+              "Jakarta/South",
+              "Jakarta/East",
+              "Organizing a group trip",
+              "Jakarta/Central"
+            ],
+            "elapsed_ms_samples": [
+              68,
+              67,
+              70,
+              68,
+              67
+            ],
+            "median_elapsed_ms": 68
+          },
+          {
+            "case_id": "japan-rail",
+            "expected_document_titles": [
+              "Rail travel in Japan"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Rail travel in Japan",
+              "Japan",
+              "Sites of Japan's Meiji Industrial Revolution",
+              "Rail travel in Belgium",
+              "Rail travel in South Korea",
+              "Rail travel in New Zealand"
+            ],
+            "elapsed_ms_samples": [
+              128,
+              133,
+              130,
+              149,
+              132
+            ],
+            "median_elapsed_ms": 132
+          },
+          {
+            "case_id": "beach-packing",
+            "expected_document_titles": [
+              "Packing for beach travel"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Packing for beach travel",
+              "Beach",
+              "Taking children to the beach",
+              "Bahrain",
+              "Ship Harbour Long Lake Wilderness Area",
+              "Miami Beach/Mid Beach"
+            ],
+            "elapsed_ms_samples": [
+              72,
+              75,
+              69,
+              74,
+              72
+            ],
+            "median_elapsed_ms": 72
+          },
+          {
+            "case_id": "china-visas",
+            "expected_document_titles": [
+              "Visa requirements for China"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Visa requirements for China",
+              "Czech Republic",
+              "Equatorial Guinea",
+              "Wenzhou",
+              "China",
+              "Mecca"
+            ],
+            "elapsed_ms_samples": [
+              40,
+              36,
+              32,
+              33,
+              35
+            ],
+            "median_elapsed_ms": 35
+          },
+          {
+            "case_id": "travel-basics",
+            "expected_document_titles": [
+              "Travel basics"
+            ],
+            "expected_title_ranks": [
+              5
+            ],
+            "selected_titles": [
+              "Previous Featured travel topics",
+              "Travel topics",
+              "Travel topics index",
+              "Travel topics/sandbox",
+              "Travel basics",
+              "Concerns"
+            ],
+            "elapsed_ms_samples": [
+              26,
+              25,
+              30,
+              26,
+              27
+            ],
+            "median_elapsed_ms": 26
+          },
+          {
+            "case_id": "bangkok-airport",
+            "expected_document_titles": [
+              "Bangkok"
+            ],
+            "expected_title_ranks": [
+              2
+            ],
+            "selected_titles": [
+              "Chao Phraya Basin",
+              "Bangkok",
+              "Bangkok to Ho Chi Minh City overland",
+              "Bangkok/Ramkhamhaeng",
+              "Bangkok/Siam Square",
+              "Bangkok Metropolitan Area"
+            ],
+            "elapsed_ms_samples": [
+              241,
+              241,
+              243,
+              236,
+              265
+            ],
+            "median_elapsed_ms": 241
+          }
+        ]
+      },
+      {
+        "format": 1,
+        "scope": "Android retrieval only; no generated answers are evaluated",
+        "created_at_epoch_ms": 1792366296102,
+        "case_set": {
+          "id": "travel-retrieval-smoke-v1",
+          "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+        },
+        "device": {
+          "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+          "model": "sdk_gphone64_x86_64",
+          "abi": "x86_64",
+          "sdk": 36
+        },
+        "application": {
+          "package": "dev.blobs.app.debug",
+          "version": "0.3.3",
+          "apk_sha256": "325bd1a3f99233184f9905707942d7decda659bbeff12d0568a3b5287bd2bdcd",
+          "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+        },
+        "package": {
+          "id": "wikivoyage-en",
+          "version": "2026-09.2",
+          "title": "Travel guides · English",
+          "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+          "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+          "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+          "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+          "payload_bytes": 628436992
+        },
+        "repeat_count": 5,
+        "summary": {
+          "case_count": 6,
+          "expected_titles": 6,
+          "expected_titles_found": 6,
+          "expected_title_recall": 1,
+          "expected_titles_at_rank_1": 4,
+          "expected_title_mean_reciprocal_rank": 0.7833333333333333,
+          "case_median_elapsed_ms_median": 70,
+          "case_median_elapsed_ms_p95": 247
+        },
+        "cases": [
+          {
+            "case_id": "jakarta-city",
+            "expected_document_titles": [
+              "Jakarta"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Jakarta",
+              "Kruger National Park",
+              "Jakarta/South",
+              "Jakarta/East",
+              "Organizing a group trip",
+              "Jakarta/Central"
+            ],
+            "elapsed_ms_samples": [
+              71,
+              69,
+              69,
+              70,
+              67
+            ],
+            "median_elapsed_ms": 69
+          },
+          {
+            "case_id": "japan-rail",
+            "expected_document_titles": [
+              "Rail travel in Japan"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Rail travel in Japan",
+              "Japan",
+              "Sites of Japan's Meiji Industrial Revolution",
+              "Rail travel in Belgium",
+              "Rail travel in South Korea",
+              "Rail travel in New Zealand"
+            ],
+            "elapsed_ms_samples": [
+              130,
+              134,
+              132,
+              128,
+              130
+            ],
+            "median_elapsed_ms": 130
+          },
+          {
+            "case_id": "beach-packing",
+            "expected_document_titles": [
+              "Packing for beach travel"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Packing for beach travel",
+              "Beach",
+              "Taking children to the beach",
+              "Bahrain",
+              "Ship Harbour Long Lake Wilderness Area",
+              "Miami Beach/Mid Beach"
+            ],
+            "elapsed_ms_samples": [
+              72,
+              73,
+              70,
+              72,
+              69
+            ],
+            "median_elapsed_ms": 72
+          },
+          {
+            "case_id": "china-visas",
+            "expected_document_titles": [
+              "Visa requirements for China"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Visa requirements for China",
+              "Czech Republic",
+              "Equatorial Guinea",
+              "Wenzhou",
+              "China",
+              "Mecca"
+            ],
+            "elapsed_ms_samples": [
+              33,
+              32,
+              32,
+              33,
+              32
+            ],
+            "median_elapsed_ms": 32
+          },
+          {
+            "case_id": "travel-basics",
+            "expected_document_titles": [
+              "Travel basics"
+            ],
+            "expected_title_ranks": [
+              5
+            ],
+            "selected_titles": [
+              "Previous Featured travel topics",
+              "Travel topics",
+              "Travel topics index",
+              "Travel topics/sandbox",
+              "Travel basics",
+              "Concerns"
+            ],
+            "elapsed_ms_samples": [
+              25,
+              25,
+              26,
+              26,
+              25
+            ],
+            "median_elapsed_ms": 25
+          },
+          {
+            "case_id": "bangkok-airport",
+            "expected_document_titles": [
+              "Bangkok"
+            ],
+            "expected_title_ranks": [
+              2
+            ],
+            "selected_titles": [
+              "Chao Phraya Basin",
+              "Bangkok",
+              "Bangkok to Ho Chi Minh City overland",
+              "Bangkok/Ramkhamhaeng",
+              "Bangkok/Siam Square",
+              "Bangkok Metropolitan Area"
+            ],
+            "elapsed_ms_samples": [
+              247,
+              247,
+              252,
+              255,
+              245
+            ],
+            "median_elapsed_ms": 247
+          }
+        ]
+      },
+      {
+        "format": 1,
+        "scope": "Android retrieval only; no generated answers are evaluated",
+        "created_at_epoch_ms": 1792366303586,
+        "case_set": {
+          "id": "travel-retrieval-smoke-v1",
+          "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+        },
+        "device": {
+          "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+          "model": "sdk_gphone64_x86_64",
+          "abi": "x86_64",
+          "sdk": 36
+        },
+        "application": {
+          "package": "dev.blobs.app.debug",
+          "version": "0.3.3",
+          "apk_sha256": "325bd1a3f99233184f9905707942d7decda659bbeff12d0568a3b5287bd2bdcd",
+          "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+        },
+        "package": {
+          "id": "wikivoyage-en",
+          "version": "2026-09.2",
+          "title": "Travel guides · English",
+          "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+          "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+          "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+          "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+          "payload_bytes": 628436992
+        },
+        "repeat_count": 5,
+        "summary": {
+          "case_count": 6,
+          "expected_titles": 6,
+          "expected_titles_found": 6,
+          "expected_title_recall": 1,
+          "expected_titles_at_rank_1": 4,
+          "expected_title_mean_reciprocal_rank": 0.7833333333333333,
+          "case_median_elapsed_ms_median": 71,
+          "case_median_elapsed_ms_p95": 250
+        },
+        "cases": [
+          {
+            "case_id": "jakarta-city",
+            "expected_document_titles": [
+              "Jakarta"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Jakarta",
+              "Kruger National Park",
+              "Jakarta/South",
+              "Jakarta/East",
+              "Organizing a group trip",
+              "Jakarta/Central"
+            ],
+            "elapsed_ms_samples": [
+              69,
+              68,
+              69,
+              69,
+              69
+            ],
+            "median_elapsed_ms": 69
+          },
+          {
+            "case_id": "japan-rail",
+            "expected_document_titles": [
+              "Rail travel in Japan"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Rail travel in Japan",
+              "Japan",
+              "Sites of Japan's Meiji Industrial Revolution",
+              "Rail travel in Belgium",
+              "Rail travel in South Korea",
+              "Rail travel in New Zealand"
+            ],
+            "elapsed_ms_samples": [
+              128,
+              128,
+              133,
+              135,
+              127
+            ],
+            "median_elapsed_ms": 128
+          },
+          {
+            "case_id": "beach-packing",
+            "expected_document_titles": [
+              "Packing for beach travel"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Packing for beach travel",
+              "Beach",
+              "Taking children to the beach",
+              "Bahrain",
+              "Ship Harbour Long Lake Wilderness Area",
+              "Miami Beach/Mid Beach"
+            ],
+            "elapsed_ms_samples": [
+              74,
+              73,
+              71,
+              71,
+              73
+            ],
+            "median_elapsed_ms": 73
+          },
+          {
+            "case_id": "china-visas",
+            "expected_document_titles": [
+              "Visa requirements for China"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Visa requirements for China",
+              "Czech Republic",
+              "Equatorial Guinea",
+              "Wenzhou",
+              "China",
+              "Mecca"
+            ],
+            "elapsed_ms_samples": [
+              33,
+              32,
+              35,
+              32,
+              32
+            ],
+            "median_elapsed_ms": 32
+          },
+          {
+            "case_id": "travel-basics",
+            "expected_document_titles": [
+              "Travel basics"
+            ],
+            "expected_title_ranks": [
+              5
+            ],
+            "selected_titles": [
+              "Previous Featured travel topics",
+              "Travel topics",
+              "Travel topics index",
+              "Travel topics/sandbox",
+              "Travel basics",
+              "Concerns"
+            ],
+            "elapsed_ms_samples": [
+              35,
+              31,
+              29,
+              25,
+              26
+            ],
+            "median_elapsed_ms": 29
+          },
+          {
+            "case_id": "bangkok-airport",
+            "expected_document_titles": [
+              "Bangkok"
+            ],
+            "expected_title_ranks": [
+              2
+            ],
+            "selected_titles": [
+              "Chao Phraya Basin",
+              "Bangkok",
+              "Bangkok to Ho Chi Minh City overland",
+              "Bangkok/Ramkhamhaeng",
+              "Bangkok/Siam Square",
+              "Bangkok Metropolitan Area"
+            ],
+            "elapsed_ms_samples": [
+              248,
+              251,
+              250,
+              254,
+              248
+            ],
+            "median_elapsed_ms": 250
+          }
+        ]
+      }
+    ]
+  },
+  "candidate": {
+    "label": "Stable title-overlap ranking with per-title score caching and exact-title tie-break",
+    "application": {
+      "package": "dev.blobs.app.debug",
+      "version": "0.3.3",
+      "apk_sha256": "4d6be178e4b2d4d22ec70014f2e4d95c4d54d595bc3bd14eac4d907d811d2228",
+      "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+    },
+    "summary": {
+      "runs": 3,
+      "expected_title_recall_per_run": [
+        1,
+        1,
+        1
+      ],
+      "expected_titles_at_rank_1_per_run": [
+        6,
+        6,
+        6
+      ],
+      "mean_reciprocal_rank_per_run": [
+        1,
+        1,
+        1
+      ],
+      "median_of_run_medians_ms": 77,
+      "median_of_run_p95_ms": 262,
+      "run_medians_ms": [
+        77,
+        77,
+        79
+      ],
+      "run_p95_ms": [
+        263,
+        262,
+        257
+      ]
+    },
+    "runs": [
+      {
+        "format": 1,
+        "scope": "Android retrieval only; no generated answers are evaluated",
+        "created_at_epoch_ms": 1792366816437,
+        "case_set": {
+          "id": "travel-retrieval-smoke-v1",
+          "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+        },
+        "device": {
+          "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+          "model": "sdk_gphone64_x86_64",
+          "abi": "x86_64",
+          "sdk": 36
+        },
+        "application": {
+          "package": "dev.blobs.app.debug",
+          "version": "0.3.3",
+          "apk_sha256": "4d6be178e4b2d4d22ec70014f2e4d95c4d54d595bc3bd14eac4d907d811d2228",
+          "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+        },
+        "package": {
+          "id": "wikivoyage-en",
+          "version": "2026-09.2",
+          "title": "Travel guides · English",
+          "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+          "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+          "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+          "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+          "payload_bytes": 628436992
+        },
+        "repeat_count": 5,
+        "summary": {
+          "case_count": 6,
+          "expected_titles": 6,
+          "expected_titles_found": 6,
+          "expected_title_recall": 1,
+          "expected_titles_at_rank_1": 6,
+          "expected_title_mean_reciprocal_rank": 1,
+          "case_median_elapsed_ms_median": 77,
+          "case_median_elapsed_ms_p95": 263
+        },
+        "cases": [
+          {
+            "case_id": "jakarta-city",
+            "expected_document_titles": [
+              "Jakarta"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Jakarta",
+              "Jakarta/South",
+              "Jakarta/East",
+              "Jakarta/Central",
+              "Greater Jakarta",
+              "Jakarta/West"
+            ],
+            "elapsed_ms_samples": [
+              82,
+              75,
+              73,
+              75,
+              77
+            ],
+            "median_elapsed_ms": 75
+          },
+          {
+            "case_id": "japan-rail",
+            "expected_document_titles": [
+              "Rail travel in Japan"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Rail travel in Japan",
+              "Rail travel in Belgium",
+              "Rail travel in South Korea",
+              "Rail travel in New Zealand",
+              "Rail travel in Turkey",
+              "Rail travel in Russia"
+            ],
+            "elapsed_ms_samples": [
+              137,
+              132,
+              133,
+              146,
+              141
+            ],
+            "median_elapsed_ms": 137
+          },
+          {
+            "case_id": "beach-packing",
+            "expected_document_titles": [
+              "Packing for beach travel"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Packing for beach travel",
+              "Beach",
+              "Taking children to the beach",
+              "Miami Beach/Mid Beach",
+              "Miami Beach/North Beach",
+              "Miami Beach/South Beach"
+            ],
+            "elapsed_ms_samples": [
+              76,
+              79,
+              79,
+              115,
+              86
+            ],
+            "median_elapsed_ms": 79
+          },
+          {
+            "case_id": "china-visas",
+            "expected_document_titles": [
+              "Visa requirements for China"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Visa requirements for China",
+              "China",
+              "Working in the United States",
+              "Czech Republic",
+              "Equatorial Guinea",
+              "Wenzhou"
+            ],
+            "elapsed_ms_samples": [
+              38,
+              36,
+              39,
+              36,
+              46
+            ],
+            "median_elapsed_ms": 38
+          },
+          {
+            "case_id": "travel-basics",
+            "expected_document_titles": [
+              "Travel basics"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Travel basics",
+              "Previous Featured travel topics",
+              "Travel topics",
+              "Travel topics index",
+              "Travel topics/sandbox"
+            ],
+            "elapsed_ms_samples": [
+              30,
+              31,
+              34,
+              31,
+              30
+            ],
+            "median_elapsed_ms": 31
+          },
+          {
+            "case_id": "bangkok-airport",
+            "expected_document_titles": [
+              "Bangkok"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Bangkok",
+              "Bangkok to Ho Chi Minh City overland",
+              "Bangkok/Ramkhamhaeng",
+              "Bangkok/Siam Square",
+              "Bangkok Metropolitan Area",
+              "One day in Bangkok"
+            ],
+            "elapsed_ms_samples": [
+              253,
+              263,
+              267,
+              262,
+              268
+            ],
+            "median_elapsed_ms": 263
+          }
+        ]
+      },
+      {
+        "format": 1,
+        "scope": "Android retrieval only; no generated answers are evaluated",
+        "created_at_epoch_ms": 1792366824217,
+        "case_set": {
+          "id": "travel-retrieval-smoke-v1",
+          "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+        },
+        "device": {
+          "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+          "model": "sdk_gphone64_x86_64",
+          "abi": "x86_64",
+          "sdk": 36
+        },
+        "application": {
+          "package": "dev.blobs.app.debug",
+          "version": "0.3.3",
+          "apk_sha256": "4d6be178e4b2d4d22ec70014f2e4d95c4d54d595bc3bd14eac4d907d811d2228",
+          "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+        },
+        "package": {
+          "id": "wikivoyage-en",
+          "version": "2026-09.2",
+          "title": "Travel guides · English",
+          "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+          "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+          "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+          "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+          "payload_bytes": 628436992
+        },
+        "repeat_count": 5,
+        "summary": {
+          "case_count": 6,
+          "expected_titles": 6,
+          "expected_titles_found": 6,
+          "expected_title_recall": 1,
+          "expected_titles_at_rank_1": 6,
+          "expected_title_mean_reciprocal_rank": 1,
+          "case_median_elapsed_ms_median": 77,
+          "case_median_elapsed_ms_p95": 262
+        },
+        "cases": [
+          {
+            "case_id": "jakarta-city",
+            "expected_document_titles": [
+              "Jakarta"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Jakarta",
+              "Jakarta/South",
+              "Jakarta/East",
+              "Jakarta/Central",
+              "Greater Jakarta",
+              "Jakarta/West"
+            ],
+            "elapsed_ms_samples": [
+              73,
+              75,
+              75,
+              81,
+              81
+            ],
+            "median_elapsed_ms": 75
+          },
+          {
+            "case_id": "japan-rail",
+            "expected_document_titles": [
+              "Rail travel in Japan"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Rail travel in Japan",
+              "Rail travel in Belgium",
+              "Rail travel in South Korea",
+              "Rail travel in New Zealand",
+              "Rail travel in Turkey",
+              "Rail travel in Russia"
+            ],
+            "elapsed_ms_samples": [
+              146,
+              139,
+              146,
+              139,
+              144
+            ],
+            "median_elapsed_ms": 144
+          },
+          {
+            "case_id": "beach-packing",
+            "expected_document_titles": [
+              "Packing for beach travel"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Packing for beach travel",
+              "Beach",
+              "Taking children to the beach",
+              "Miami Beach/Mid Beach",
+              "Miami Beach/North Beach",
+              "Miami Beach/South Beach"
+            ],
+            "elapsed_ms_samples": [
+              78,
+              84,
+              78,
+              80,
+              79
+            ],
+            "median_elapsed_ms": 79
+          },
+          {
+            "case_id": "china-visas",
+            "expected_document_titles": [
+              "Visa requirements for China"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Visa requirements for China",
+              "China",
+              "Working in the United States",
+              "Czech Republic",
+              "Equatorial Guinea",
+              "Wenzhou"
+            ],
+            "elapsed_ms_samples": [
+              39,
+              41,
+              38,
+              40,
+              42
+            ],
+            "median_elapsed_ms": 40
+          },
+          {
+            "case_id": "travel-basics",
+            "expected_document_titles": [
+              "Travel basics"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Travel basics",
+              "Previous Featured travel topics",
+              "Travel topics",
+              "Travel topics index",
+              "Travel topics/sandbox"
+            ],
+            "elapsed_ms_samples": [
+              31,
+              33,
+              34,
+              30,
+              32
+            ],
+            "median_elapsed_ms": 32
+          },
+          {
+            "case_id": "bangkok-airport",
+            "expected_document_titles": [
+              "Bangkok"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Bangkok",
+              "Bangkok to Ho Chi Minh City overland",
+              "Bangkok/Ramkhamhaeng",
+              "Bangkok/Siam Square",
+              "Bangkok Metropolitan Area",
+              "One day in Bangkok"
+            ],
+            "elapsed_ms_samples": [
+              262,
+              265,
+              252,
+              255,
+              270
+            ],
+            "median_elapsed_ms": 262
+          }
+        ]
+      },
+      {
+        "format": 1,
+        "scope": "Android retrieval only; no generated answers are evaluated",
+        "created_at_epoch_ms": 1792366832257,
+        "case_set": {
+          "id": "travel-retrieval-smoke-v1",
+          "sha256": "fd57caf9dd48f001e3d6f03665ddaee65f68e5bf6fd0d06c24f71eda2fd3b7f3"
+        },
+        "device": {
+          "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+          "model": "sdk_gphone64_x86_64",
+          "abi": "x86_64",
+          "sdk": 36
+        },
+        "application": {
+          "package": "dev.blobs.app.debug",
+          "version": "0.3.3",
+          "apk_sha256": "4d6be178e4b2d4d22ec70014f2e4d95c4d54d595bc3bd14eac4d907d811d2228",
+          "test_apk_sha256": "54857ee4e7cb48eaad0bcf0cb2c30c8b9522f228ea59b35cbcd474932064f41c"
+        },
+        "package": {
+          "id": "wikivoyage-en",
+          "version": "2026-09.2",
+          "title": "Travel guides · English",
+          "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+          "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+          "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+          "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+          "payload_bytes": 628436992
+        },
+        "repeat_count": 5,
+        "summary": {
+          "case_count": 6,
+          "expected_titles": 6,
+          "expected_titles_found": 6,
+          "expected_title_recall": 1,
+          "expected_titles_at_rank_1": 6,
+          "expected_title_mean_reciprocal_rank": 1,
+          "case_median_elapsed_ms_median": 79,
+          "case_median_elapsed_ms_p95": 257
+        },
+        "cases": [
+          {
+            "case_id": "jakarta-city",
+            "expected_document_titles": [
+              "Jakarta"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Jakarta",
+              "Jakarta/South",
+              "Jakarta/East",
+              "Jakarta/Central",
+              "Greater Jakarta",
+              "Jakarta/West"
+            ],
+            "elapsed_ms_samples": [
+              76,
+              86,
+              80,
+              76,
+              79
+            ],
+            "median_elapsed_ms": 79
+          },
+          {
+            "case_id": "japan-rail",
+            "expected_document_titles": [
+              "Rail travel in Japan"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Rail travel in Japan",
+              "Rail travel in Belgium",
+              "Rail travel in South Korea",
+              "Rail travel in New Zealand",
+              "Rail travel in Turkey",
+              "Rail travel in Russia"
+            ],
+            "elapsed_ms_samples": [
+              137,
+              134,
+              139,
+              150,
+              140
+            ],
+            "median_elapsed_ms": 139
+          },
+          {
+            "case_id": "beach-packing",
+            "expected_document_titles": [
+              "Packing for beach travel"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Packing for beach travel",
+              "Beach",
+              "Taking children to the beach",
+              "Miami Beach/Mid Beach",
+              "Miami Beach/North Beach",
+              "Miami Beach/South Beach"
+            ],
+            "elapsed_ms_samples": [
+              77,
+              80,
+              80,
+              78,
+              79
+            ],
+            "median_elapsed_ms": 79
+          },
+          {
+            "case_id": "china-visas",
+            "expected_document_titles": [
+              "Visa requirements for China"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Visa requirements for China",
+              "China",
+              "Working in the United States",
+              "Czech Republic",
+              "Equatorial Guinea",
+              "Wenzhou"
+            ],
+            "elapsed_ms_samples": [
+              39,
+              66,
+              39,
+              37,
+              41
+            ],
+            "median_elapsed_ms": 39
+          },
+          {
+            "case_id": "travel-basics",
+            "expected_document_titles": [
+              "Travel basics"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Travel basics",
+              "Previous Featured travel topics",
+              "Travel topics",
+              "Travel topics index",
+              "Travel topics/sandbox"
+            ],
+            "elapsed_ms_samples": [
+              31,
+              31,
+              33,
+              30,
+              34
+            ],
+            "median_elapsed_ms": 31
+          },
+          {
+            "case_id": "bangkok-airport",
+            "expected_document_titles": [
+              "Bangkok"
+            ],
+            "expected_title_ranks": [
+              1
+            ],
+            "selected_titles": [
+              "Bangkok",
+              "Bangkok to Ho Chi Minh City overland",
+              "Bangkok/Ramkhamhaeng",
+              "Bangkok/Siam Square",
+              "Bangkok Metropolitan Area",
+              "One day in Bangkok"
+            ],
+            "elapsed_ms_samples": [
+              319,
+              255,
+              265,
+              257,
+              256
+            ],
+            "median_elapsed_ms": 257
+          }
+        ]
+      }
+    ]
+  }
+}

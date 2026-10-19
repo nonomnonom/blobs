@@ -1,0 +1,37 @@
+---
+title: Privacy and offline use
+description: What stays on your phone, and when Blobs connects.
+---
+
+## On your phone
+
+Model inference, library search, citations, reading, conversations, drafts, and settings use local files and app-private storage. There is no hosted inference service or account to sign into.
+
+After a model and the starter library are installed, these features work without an internet connection. GrapheneOS is supported without Google Play Services.
+
+## When the app connects
+
+Network requests are limited to actions you start:
+
+- Download a model or library.
+- Tap **Check for updates** to refresh the signed download list.
+
+Opening a screen doesn’t automatically check for updates or start downloads. GitHub distributes the app and source. Hugging Face hosts the package list and downloadable assets; some model files come from their upstream model repositories. Those services receive normal connection information when you ask Blobs to fetch a file, rather than your chat messages.
+
+## Download checks
+
+Blobs verifies the signed list, expected file size, and SHA-256 before accepting downloaded assets. Packages also pass format and storage checks before atomic installation. A failed update leaves the previous working asset available.
+
+Read the [architecture](/docs/architecture) for the precise signing and rollback boundaries.
+
+## Files you share
+
+Exports can contain private messages, imported documents, or source text. Check a file before sending it to another person or service. Removing the app or clearing its Android storage removes local app data; keep any exports you need first.
+
+## About this documentation website
+
+This website is separate from the Android app. It serves static pages and a local search index. It includes no analytics scripts, external font requests, or hosted AI search. Your hosting provider still processes ordinary website requests. Theme preference is saved in your browser.
+
+## Report a security concern
+
+Use [GitHub’s private vulnerability reporting](https://github.com/nonomnonom/blobs/security/advisories/new) for a suspected security issue. Use [public issues](https://github.com/nonomnonom/blobs/issues) for ordinary bugs, and leave private conversations and files out of reports.

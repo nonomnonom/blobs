@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "id": "wikivoyage-en-all-nopic",
+  "edition": "2026-09",
+  "filename": "wikivoyage_en_all_nopic_2026-09.zim",
+  "url": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_en_all_nopic_2026-09.zim",
+  "bytes": 272495142,
+  "sha256": "4305c50550f065d83e70f75fd1d2016a694f5d67aa1e0ef00fdf6bb74fc092ac",
+  "checksum_source": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_en_all_nopic_2026-09.zim.meta4",
+  "metadata_source": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_en_all_nopic_2026-09.zim.meta4",
+  "verified_date": "2026-10-19",
+  "allowed_hosts": ["download.kiwix.org", "lb.download.kiwix.org", "mirror.download.kiwix.org", "mirrors.dotsrc.org", "ftp.nluug.nl", "wi.mirror.driftle.ss"],
+  "wiki_host": "en.wikivoyage.org",
+  "publisher": "Wikivoyage contributors",
+  "collection": "Wikivoyage · English travel guides",
+  "license": "CC BY-SA 4.0; see each guide's revision history for contributor attribution. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "scope": "English Wikivoyage full article text without images; Kiwix snapshot 2026-09. Travel details can change; check the guide's snapshot date and verify time-sensitive details before relying on them."
+}

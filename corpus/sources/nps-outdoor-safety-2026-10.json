@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "id": "nps-outdoor-safety",
+  "edition": "2026-10.2",
+  "title": "Outdoor safety · U.S. national parks",
+  "publisher": "National Park Service · U.S. Department of the Interior",
+  "license": "National Park Service text; no claim to original U.S. Government works. NPS content is generally public domain unless otherwise marked. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+  "saved": "2026-10-19",
+  "collection": "U.S. national park outdoor safety",
+  "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+  "sources": [
+    {
+      "id": "hiking-safety",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/hiking-safety.htm",
+      "title": "Hike Smart",
+      "updated": "2024-06-13",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "d391ecddda634e41f976698e482d9f1399971deb93ff83f361157f8f3f3806a7"
+    },
+    {
+      "id": "outdoor-emergency-plan",
+      "host": "home.nps.gov",
+      "url": "https://home.nps.gov/articles/gtgemergencyplan.htm",
+      "title": "Outdoor Emergency Plan",
+      "updated": "2023-06-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "76682befea8ec8c61adfe542027e83260a2d4800f916c8b1d29013c362f57799"
+    },
+    {
+      "id": "water-purification",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/2wayspurifywater.htm",
+      "title": "Two Ways to Purify Water",
+      "updated": "2022-08-24",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "b450b5ce821dd6ab6c8c5e7170b32b5bf93703c04f7c32d9bdfcbd92bd78269a"
+    },
+    {
+      "id": "water-hazards",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/subjects/healthandsafety/water-hazards.htm",
+      "title": "Water Hazards",
+      "updated": "2024-05-03",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "d071d232ef9100ac4d783f2266b2b60b8f2f7c2ec282fd7b70c4ebbc61b55393"
+    },
+    {
+      "id": "winter-hiking",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/000/winterhikingtips.htm",
+      "title": "Winter Hiking Tips",
+      "updated": "2025-04-02",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "fd5af3b99801f8b7c5086c532f8ff2f076634227ba753696375d8418119bbafc"
+    }
+  ]
+}

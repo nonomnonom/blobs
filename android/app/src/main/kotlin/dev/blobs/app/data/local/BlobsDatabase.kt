@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 
 @Database(
     entities = [ConversationEntity::class, TurnEntity::class, PackageEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class BlobsDatabase : RoomDatabase() {
@@ -30,11 +30,20 @@ abstract class BlobsDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.prepare(
+                    "ALTER TABLE packages ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1"
+                ).use { it.step() }
+            }
+        }
+
         fun open(context: Context, name: String = "blobs.db"): BlobsDatabase = Room
             .databaseBuilder(context.applicationContext, BlobsDatabase::class.java, name)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
             .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_2_3)
             .build()
     }
 }

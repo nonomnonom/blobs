@@ -32,10 +32,98 @@ class RetrievalQueryTest {
     }
 
     @Test
+    fun adjacentContentPhrasesAddSpecificityWithoutRemovingRecallTerms() {
+        assertEquals(
+            "\"trees\" OR \"reduce\" OR \"urban\" OR \"heat\" OR " +
+                "\"trees reduce\" OR \"reduce urban\" OR \"urban heat\"",
+            RetrievalQuery.match("How do trees reduce urban heat?")
+        )
+    }
+
+    @Test
+    fun genericGuideAndListWordingDoesNotBecomeRetrievalContent() {
+        assertEquals(
+            "\"lightweight\" OR \"emergency\" OR \"shelter\" OR \"options\" OR " +
+                "\"lightweight emergency\" OR \"emergency shelter\" OR \"shelter options\"",
+            RetrievalQuery.match(
+                "What lightweight emergency shelter options does the guide list?"
+            )
+        )
+    }
+
+    @Test
     fun anInstructionVerbDoesNotCreateUnrelatedEvidenceForAnUnknownSubject() {
         assertEquals(
             "\"zqxvblobsunobtainium\"",
             RetrievalQuery.match("Describe zqxvblobsunobtainium.")
         )
+    }
+
+    @Test
+    fun broadPlaceQuestionsCanPrioritizeThePlaceGuideWithoutOverridingSubtopics() {
+        assertTrue(
+            RetrievalQuery.isBroadTitleQuestion(
+                "What should I know before visiting Jakarta?",
+                "Jakarta"
+            )
+        )
+        assertTrue(
+            !RetrievalQuery.isBroadTitleQuestion(
+                "How can I travel around Japan by rail?",
+                "Japan"
+            )
+        )
+        assertTrue(
+            !RetrievalQuery.isBroadTitleQuestion(
+                "What should I pack for a beach trip?",
+                "Beach"
+            )
+        )
+    }
+
+    @Test
+    fun directTitleMatchDoesNotPromoteOneGenericWordOverMoreSpecificSources() {
+        val question = "How should I store food and behave around wildlife at a campsite?"
+        assertTrue(!RetrievalQuery.isDirectTitleMatch(question, "Wildlife"))
+        assertTrue(RetrievalQuery.isDirectTitleMatch(question, "Pian Upe Wildlife Reserve"))
+        assertTrue(
+            RetrievalQuery.isDirectTitleMatch(
+                "How can I get from the airport to Bangkok city?",
+                "Bangkok"
+            )
+        )
+        assertTrue(RetrievalQuery.isDirectTitleMatch("What is wildlife?", "Wildlife"))
+    }
+
+    @Test
+    fun titleOverlapRecognizesReorderedTopicWordsAndKeepsSpecificTitlesDistinct() {
+        val travelTerms = RetrievalQuery.titleTerms("What are the basics of travel?")
+        assertEquals(2, RetrievalQuery.titleOverlap(travelTerms, "Travel basics"))
+        val bangkokTerms = RetrievalQuery.titleTerms(
+            "How do I get from the airport to Bangkok city?"
+        )
+        assertEquals(1, RetrievalQuery.titleOverlap(bangkokTerms, "Bangkok"))
+        assertEquals(0, RetrievalQuery.titleOverlap(bangkokTerms, "Chao Phraya Basin"))
+        val packingTerms = RetrievalQuery.titleTerms("What should I pack for a beach trip?")
+        assertEquals(2, RetrievalQuery.titleOverlap(packingTerms, "Packing for beach travel"))
+        assertEquals(1, RetrievalQuery.titleOverlap(packingTerms, "Beach"))
+    }
+
+    @Test
+    fun evidenceOverlapRanksSpecificContentAcrossSeparateLibraries() {
+        val question = "How should I store food and behave around wildlife at a campsite?"
+        val duringStay = RetrievalQuery.evidenceOverlap(
+            RetrievalQuery.titleTerms(question),
+            "Camping safely",
+            "Food and wildlife",
+            "Store food safely and never approach or feed wildlife at your campsite."
+        )
+        val beforeTrip = RetrievalQuery.evidenceOverlap(
+            RetrievalQuery.titleTerms(question),
+            "Camping safely",
+            "Before the trip",
+            "Check campground rules, campsite conditions, and weather before leaving."
+        )
+        assertTrue(duringStay > beforeTrip)
     }
 }

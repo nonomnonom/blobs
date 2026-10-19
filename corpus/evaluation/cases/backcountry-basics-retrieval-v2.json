@@ -1,0 +1,41 @@
+{
+  "format": 1,
+  "id": "backcountry-basics-retrieval-v2",
+  "library": {
+    "id": "backcountry-basics",
+    "version": "2026-10.2",
+    "payload_sha256": "3cbdba7648172b4b347920ab88c6f6727639a15e21394f2da6ebb1de63364141"
+  },
+  "cases": [
+    {
+      "id": "ten-essentials-overview",
+      "question": "What are the ten essentials to bring on a national park trip?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "trip-first-aid",
+      "question": "What first-aid and personal medicine should I pack for a hike?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "emergency-shelter",
+      "question": "What lightweight emergency shelter options does the guide list?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "navigation-tools",
+      "question": "What navigation tools should I take even if I have a phone?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "water-planning",
+      "question": "What water and treatment supplies should I bring outdoors?",
+      "expected_document_titles": ["Ten Essentials"]
+    },
+    {
+      "id": "weather-layers",
+      "question": "What should I pack for sudden weather changes on a hike?",
+      "expected_document_titles": ["Ten Essentials"]
+    }
+  ]
+}

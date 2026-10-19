@@ -1,8 +1,9 @@
-from contextlib import redirect_stdout
+from contextlib import closing, redirect_stdout
 import hashlib
 import io
 import json
 from pathlib import Path
+import sqlite3
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -17,316 +18,1168 @@ from evaluation.answers.host_answers import (
     record_chat_chunk,
     sampling_for,
 )
+from evaluation.answers.compare_runs import compare as compare_answer_runs
 from evaluation.native.audit_native_prefill import audit as audit_native_prefill
 from evaluation.native.audit_native_smoke import audit as audit_native_smoke
 from evaluation.native.audit_product_answer import audit as audit_product_answer
-from evaluation.retrieval.host_replay import select_evidence
+from evaluation.native.build_answer_contract_fixture import build as build_answer_contract_fixture
+from evaluation.native.compare_native_smoke import (
+    compare as compare_native_smoke,
+    record as record_native_smoke,
+)
+from evaluation.retrieval.host_replay import (
+    direct_title_ids,
+    retrieve,
+    retrieval_query,
+    select_evidence,
+    verify_report_library,
+)
+from evaluation.retrieval.package_report import build_report as build_package_retrieval_report
+from evaluation.retrieval.retrieval_smoke import build_report as build_retrieval_smoke_report
 from evaluation.retrieval.host_rerank import named_openings_first, reciprocal_rank_order
 from evaluation.retrieval.title_coverage import inspect as inspect_titles
+from evaluation.retrieval.title_coverage import inspect_database as inspect_package_titles
 
 
 class EvaluationInputTests(unittest.TestCase):
+    def test_answer_contract_fixture_build_is_verified_and_reproducible(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            archive = build_answer_contract_fixture(root / "first")
+            repeated = build_answer_contract_fixture(root / "second")
+            manifest = verify_package(archive)
+            self.assertEqual(manifest["id"], "answer-contract-fixture")
+            self.assertEqual(manifest["version"], "2")
+            self.assertGreater(manifest["bytes"], 0)
+            self.assertEqual(
+                hashlib.sha256(archive.read_bytes()).hexdigest(),
+                hashlib.sha256(repeated.read_bytes()).hexdigest(),
+            )
+
+    def test_native_smoke_comparison_requires_repeated_paired_device_evidence(self):
+        workload = dict(
+            id="native-inference-smoke-v1",
+            system_sha256="f" * 64,
+            user_sha256="e" * 64,
+            max_output_tokens=96,
+        )
+
+        def report(total_us, run_sha, app_sha, test_sha, thread_mode="adaptive", cache=False):
+            observations = {
+                "inference_metrics": {
+                    "total_us": total_us,
+                    "first_token_callback_us": 600_000,
+                    "context_setup_us": 200_000,
+                    "prefill_us": 500_000,
+                    "model_load_us": 100_000,
+                    "generation_loop_us": 300_000,
+                    "prompt_tokens": 54,
+                    "output_tokens": 12,
+                    "inference_threads": 2,
+                }
+            }
+            if cache:
+                observations["warm_inference_metrics"] = {
+                    "total_us": 800_000,
+                    "first_token_callback_us": 400_000,
+                    "context_setup_us": 150_000,
+                    "prefill_us": 350_000,
+                    "model_load_us": 0,
+                    "generation_loop_us": 300_000,
+                    "prompt_tokens": 54,
+                    "output_tokens": 12,
+                    "inference_threads": 2,
+                    "model_cache_hit": True,
+                }
+            return dict(
+                format=1,
+                complete=True,
+                checks={
+                    "exact_model_identity": True,
+                    "installed_build_identity": True,
+                    "thread_selection_valid": True,
+                },
+                model={"bytes": 100, "sha256": "c" * 64},
+                application={"apk_sha256": app_sha, "test_apk_sha256": test_sha},
+                device_fingerprint="emulator-fingerprint",
+                device_profile=dict(
+                    fingerprint="emulator-fingerprint",
+                    model="Pixel_8_API_36",
+                    device="emu64xa",
+                    api=36,
+                    abi="x86_64",
+                    available_processors=2,
+                    max_heap_bytes=536870912,
+                    serial="emulator-5554",
+                ),
+                runtime_commit="a" * 40,
+                workload=workload,
+                thread_mode=thread_mode,
+                requested_inference_threads=2 if thread_mode == "fixed" else None,
+                inputs={"run": {"file": "run.json", "sha256": run_sha}},
+                observations=observations,
+            )
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            baseline, candidate = [], []
+            for index, total in enumerate((900_000, 1_000_000, 1_100_000)):
+                path = root / f"baseline-{index}.json"
+                path.write_text(
+                    json.dumps(report(total, str(index) * 64, "a" * 64, "b" * 64)), encoding="utf-8"
+                )
+                baseline.append(path)
+            for index, total in enumerate((1_000_000, 1_100_000, 1_200_000)):
+                path = root / f"candidate-{index}.json"
+                path.write_text(
+                    json.dumps(
+                        report(total, chr(97 + index) * 64, "d" * 64, "e" * 64, "fixed", cache=True)
+                    ),
+                    encoding="utf-8",
+                )
+                candidate.append(path)
+            runtime = root / "runtime.json"
+            runtime.write_text(json.dumps({"commit": "a" * 40}), encoding="utf-8")
+
+            baseline_summary = record_native_smoke(baseline, runtime)
+            self.assertEqual(baseline_summary["median"]["total_ms"], 1000)
+            self.assertEqual(baseline_summary["runtime"]["commit"], "a" * 40)
+            self.assertEqual(baseline_summary["output_tokens"], 12)
+            self.assertIsNone(baseline_summary["warm_turn"])
+
+            candidate_summary = record_native_smoke(candidate, runtime)
+            self.assertEqual(candidate_summary["warm_turn"]["median"]["total_ms"], 800)
+
+            result = compare_native_smoke(baseline, candidate, runtime)
+            self.assertEqual(result["baseline"]["median"]["total_ms"], 1000)
+            self.assertEqual(result["candidate"]["median"]["total_ms"], 1100)
+            self.assertEqual(result["baseline"]["median"]["inference_threads"], 2)
+            self.assertNotEqual(
+                result["application"]["baseline"], result["application"]["candidate"]
+            )
+            self.assertNotIn("raw_answer", json.dumps(result))
+            self.assertAlmostEqual(result["candidate_vs_baseline_percent"]["total_latency"], 10)
+
+            mutated = json.loads(candidate[-1].read_text(encoding="utf-8"))
+            mutated["device_profile"]["serial"] = "emulator-5556"
+            candidate[-1].write_text(json.dumps(mutated), encoding="utf-8")
+            serial_variant = compare_native_smoke(baseline, candidate, runtime)
+            self.assertEqual(serial_variant["candidate"]["median"]["total_ms"], 1100)
+
+            self.assertAlmostEqual(
+                result["candidate_warm_turn_vs_baseline_cold"][
+                    "candidate_warm_vs_baseline_cold_percent"
+                ]["total_latency"],
+                -20,
+            )
+            self.assertEqual(result["candidate_warm_turn"]["median"]["model_load_ms"], 0)
+            self.assertEqual(result["baseline"]["median"]["context_setup_ms"], 200)
+            self.assertEqual(result["candidate_vs_baseline_percent"]["context_setup_latency"], 0)
+
+            mutated = json.loads(candidate[-1].read_text(encoding="utf-8"))
+            mutated["device_fingerprint"] = "different-emulator"
+            candidate[-1].write_text(json.dumps(mutated), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "same identified device"):
+                compare_native_smoke(baseline, candidate, runtime)
+
+            mutated["device_fingerprint"] = "emulator-fingerprint"
+            for path in candidate:
+                item = json.loads(path.read_text(encoding="utf-8"))
+                item["device_fingerprint"] = "emulator-fingerprint"
+                item["observations"]["inference_metrics"]["output_tokens"] = 13
+                item["observations"]["warm_inference_metrics"]["output_tokens"] = 13
+                path.write_text(json.dumps(item), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "same output token count"):
+                compare_native_smoke(baseline, candidate, runtime)
+
+            for path in candidate:
+                item = json.loads(path.read_text(encoding="utf-8"))
+                item["model"]["sha256"] = "d" * 64
+                path.write_text(json.dumps(item), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "same exact model"):
+                compare_native_smoke(baseline, candidate, runtime)
+
+    def test_native_smoke_comparison_requires_three_runs_per_model(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            run = root / "one.json"
+            run.write_text("{}", encoding="utf-8")
+            runtime = root / "runtime.json"
+            runtime.write_text(json.dumps({"commit": "pinned"}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "at least three"):
+                compare_native_smoke([run], [run], runtime)
+
+    def test_answer_run_comparison_requires_identical_evidence_and_reports_mechanical_ids(self):
+        common = dict(
+            format=1,
+            complete=True,
+            runtime_commit="pinned",
+            server_sha256="a" * 64,
+            retrieval_report_sha256="b" * 64,
+            retrieval_variant="installedLibrary",
+            sampling_profile="product",
+            sampling={"temperature": 0.3},
+            context=4096,
+            threads=4,
+            batch=256,
+            ubatch=128,
+            source_id_scheme="S-prefixed",
+            model={"sha256": "c" * 64},
+            results=[
+                dict(
+                    case_id="case-1",
+                    question="Q?",
+                    evidence=[{"title": "Source"}],
+                    response={"content": "Claim [S1] and [S2]."},
+                    host_elapsed_ms=100,
+                )
+            ],
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            baseline = Path(folder) / "baseline.json"
+            candidate = Path(folder) / "candidate.json"
+            baseline.write_text(json.dumps(dict(common, system="Old prompt")), encoding="utf-8")
+            candidate.write_text(
+                json.dumps(
+                    dict(
+                        common,
+                        system="New prompt",
+                        results=[
+                            dict(
+                                common["results"][0],
+                                response={"content": "Claim [S1]."},
+                                host_elapsed_ms=80,
+                            )
+                        ],
+                    )
+                ),
+                encoding="utf-8",
+            )
+            result = compare_answer_runs(baseline, candidate)
+            self.assertEqual(result["candidate"]["latency"]["median_ms"], 80)
+            self.assertEqual(result["results"][0]["candidate_citation_ids"], ["S1"])
+            self.assertEqual(result["results"][0]["baseline_invalid_citation_ids"], ["S2"])
+            candidate.write_text(
+                json.dumps(
+                    dict(
+                        common,
+                        system="New prompt",
+                        results=[
+                            dict(common["results"][0], evidence=[{"title": "Different source"}])
+                        ],
+                    )
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "identical questions and retrieved evidence"):
+                compare_answer_runs(baseline, candidate)
+
+    def test_host_replay_name_routing_deduplicates_repeated_aliases(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "names.sqlite"
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript("""
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT);
+                    CREATE TABLE document_names(name TEXT,doc_id TEXT);
+                    INSERT INTO documents VALUES ('litre','Litre'),('monotonic','Monotonic function');
+                    INSERT INTO document_names VALUES ('litres','litre'),('increasing','monotonic');
+                """)
+                db.commit()
+            self.assertEqual(
+                retrieval_query(database, "litres per minute and litres increasing"),
+                '"litres" OR "per" OR "minute" OR "increasing" '
+                'OR "litres per" OR "per minute" OR "litres increasing" '
+                'OR title:"litre" OR title:"monotonic function"',
+            )
+
+    def test_host_replay_omits_generic_guide_and_list_terms(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "backcountry.sqlite"
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript("""
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT);
+                    CREATE TABLE document_names(name TEXT,doc_id TEXT);
+                """)
+                db.commit()
+            self.assertEqual(
+                retrieval_query(
+                    database, "What lightweight emergency shelter options does the guide list?"
+                ),
+                '"lightweight" OR "emergency" OR "shelter" OR "options" '
+                'OR "lightweight emergency" OR "emergency shelter" OR "shelter options"',
+            )
+
+    def test_host_replay_prioritizes_a_unique_exact_title_before_the_evidence_limit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "travel.sqlite"
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript("""
+                    PRAGMA user_version=2;
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT,publisher TEXT,url TEXT,
+                        license TEXT,updated TEXT,saved TEXT,body TEXT,collection TEXT);
+                    CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT,body TEXT,
+                        section TEXT,title TEXT);
+                    CREATE TABLE document_names(name TEXT,doc_id TEXT,
+                        PRIMARY KEY(name,doc_id)) WITHOUT ROWID;
+                    CREATE VIRTUAL TABLE passages_fts USING fts5(
+                        body,title,section,content='passages',content_rowid='id');
+                    INSERT INTO passages_fts(passages_fts,rank)
+                        VALUES ('rank','bm25(1.0,6.0,2.0)');
+                """)
+                for index in range(60):
+                    item_id, title = f"noise-{index}", f"Travel guide {index}"
+                    db.execute(
+                        "INSERT INTO documents VALUES (?,?,?,?,?,?,?,?,?)",
+                        (
+                            item_id,
+                            title,
+                            "Author",
+                            "local:test",
+                            "CC0",
+                            "today",
+                            "today",
+                            "What should I know before visiting a place? This guide has travel information.",
+                            "Travel",
+                        ),
+                    )
+                    db.execute(
+                        "INSERT INTO passages(doc_id,body,section,title) VALUES (?,?,?,?)",
+                        (
+                            item_id,
+                            "What should I know before visiting a place? This guide has travel information.",
+                            "Guide",
+                            title,
+                        ),
+                    )
+                db.execute(
+                    "INSERT INTO documents VALUES (?,?,?,?,?,?,?,?,?)",
+                    (
+                        "jakarta",
+                        "Jakarta",
+                        "Author",
+                        "local:test",
+                        "CC0",
+                        "today",
+                        "today",
+                        "Travel guide information.",
+                        "Travel",
+                    ),
+                )
+                db.execute(
+                    "INSERT INTO passages(doc_id,body,section,title) VALUES (?,?,?,?)",
+                    ("jakarta", "Travel guide information.", "Guide", "Jakarta"),
+                )
+                db.execute("INSERT INTO document_names VALUES ('jakarta','jakarta')")
+                db.execute("INSERT INTO passages_fts(passages_fts) VALUES ('rebuild')")
+                db.commit()
+
+            manifest = dict(id="travel", version="1", sha256="a" * 64, title="Travel")
+            self.assertNotEqual(retrieve(database, manifest, '"travel"')[0][0]["title"], "Jakarta")
+            priority = direct_title_ids(database, "What is Jakarta?", ["Jakarta"])
+            self.assertEqual(priority, ["jakarta"])
+            evidence, _ = retrieve(database, manifest, '"travel"', priority_ids=priority)
+            self.assertEqual(evidence[0]["title"], "Jakarta")
+
+    def test_host_replay_binds_native_evidence_to_exact_library_manifest(self):
+        manifest = dict(format=1, id="wikipedia-top1m-mini", version="2026-04.1", sha256="a" * 64)
+        verify_report_library(dict(library=manifest), manifest)
+        with self.assertRaisesRegex(ValueError, "different library package"):
+            verify_report_library(dict(library=dict(manifest, sha256="b" * 64)), manifest)
+
+    def test_package_retrieval_report_binds_exact_library_and_preserves_all_cases(self):
+        cases_path = (
+            Path(__file__).resolve().parents[1]
+            / "evaluation/cases/answer-contract-development-v2.json"
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            library = build_answer_contract_fixture(root / "fixture")
+            library_sha256 = hashlib.sha256(library.read_bytes()).hexdigest()
+            report = build_package_retrieval_report(library, cases_path, root / "work")
+
+        self.assertTrue(report["complete"])
+        self.assertEqual(report["package"]["manifest"]["id"], "answer-contract-fixture")
+        self.assertEqual(report["package"]["package_sha256"], library_sha256)
+        self.assertEqual(len(report["results"]), 6)
+        self.assertEqual(
+            [row["case_id"] for row in report["results"]],
+            [
+                case["id"]
+                for case in json.loads(cases_path.read_text(encoding="utf-8"))["cases"]["cases"]
+            ],
+        )
+        self.assertTrue(all(row["variant"] == "candidateLibrary" for row in report["results"]))
+        self.assertTrue(all(isinstance(row["evidence"], list) for row in report["results"]))
+
+    def test_retrieval_smoke_reports_title_coverage_without_passage_text(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            library = build_answer_contract_fixture(root / "fixture")
+            database = root / "fixture-library.sqlite"
+            from evaluation.retrieval.host_replay import unpack
+
+            manifest = unpack(library, database)
+            with closing(sqlite3.connect(database)) as db:
+                title = db.execute("SELECT title FROM documents ORDER BY title LIMIT 1").fetchone()[
+                    0
+                ]
+            cases = root / "cases.json"
+            cases.write_text(
+                json.dumps(
+                    {
+                        "format": 1,
+                        "id": "retrieval-smoke-test",
+                        "library": {
+                            "id": manifest["id"],
+                            "version": manifest["version"],
+                            "payload_sha256": manifest["sha256"],
+                        },
+                        "cases": [
+                            {
+                                "id": "exact-title",
+                                "question": f"Tell me about {title}",
+                                "expected_document_titles": [title],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = build_retrieval_smoke_report(library, cases, root / "work")
+
+        self.assertTrue(report["complete"])
+        self.assertEqual(report["summary"]["expected_title_recall"], 1.0)
+        self.assertEqual(report["summary"]["expected_titles_at_rank_1"], 1)
+        self.assertEqual(report["summary"]["expected_title_mean_reciprocal_rank"], 1.0)
+        self.assertEqual(report["results"][0]["expected_title_ranks"], [1])
+        serialized = json.dumps(report)
+        self.assertNotIn("text", report["results"][0])
+        self.assertNotIn("body", serialized)
+
     def test_qwen35_2b_text_profile_preserves_publisher_sampling_contract(self):
-        sampling = sampling_for('qwen35-2b-text')
+        sampling = sampling_for("qwen35-2b-text")
         self.assertEqual(
-            {key: sampling[key] for key in
-             ('temperature', 'top_p', 'top_k', 'min_p', 'presence_penalty', 'repeat_penalty')},
-            dict(temperature=1.0, top_p=1.0, top_k=20, min_p=0,
-                 presence_penalty=2.0, repeat_penalty=1.0),
+            {
+                key: sampling[key]
+                for key in (
+                    "temperature",
+                    "top_p",
+                    "top_k",
+                    "min_p",
+                    "presence_penalty",
+                    "repeat_penalty",
+                )
+            },
+            dict(
+                temperature=1.0,
+                top_p=1.0,
+                top_k=20,
+                min_p=0,
+                presence_penalty=2.0,
+                repeat_penalty=1.0,
+            ),
         )
-        self.assertEqual(sampling_for('controlled')['temperature'], 0.3)
+        self.assertEqual(sampling_for("controlled")["temperature"], 0.3)
         self.assertEqual(
-            {key: sampling_for('product')[key] for key in
-             ('temperature', 'top_p', 'top_k', 'min_p', 'presence_penalty',
-              'repeat_penalty', 'repeat_last_n')},
-            dict(temperature=0.3, top_p=0.8, top_k=20, min_p=0,
-                 presence_penalty=1.5, repeat_penalty=1.0, repeat_last_n=256),
+            {
+                key: sampling_for("product")[key]
+                for key in (
+                    "temperature",
+                    "top_p",
+                    "top_k",
+                    "min_p",
+                    "presence_penalty",
+                    "repeat_penalty",
+                    "repeat_last_n",
+                )
+            },
+            dict(
+                temperature=0.3,
+                top_p=0.8,
+                top_k=20,
+                min_p=0,
+                presence_penalty=1.5,
+                repeat_penalty=1.0,
+                repeat_last_n=256,
+            ),
         )
-        with self.assertRaisesRegex(ValueError, 'Unknown sampling profile'):
-            sampling_for('unreviewed')
+        with self.assertRaisesRegex(ValueError, "Unknown sampling profile"):
+            sampling_for("unreviewed")
 
     def test_native_prefill_audit_rejects_unpaired_runtime_evidence(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            model_hash, app_hash = 'a' * 64, 'b' * 64
-            protocol = root / 'protocol.json'
-            protocol.write_text(json.dumps(dict(model_sha256=model_hash, output_limit=2)), encoding='utf-8')
+            model_hash, app_hash = "a" * 64, "b" * 64
+            protocol = root / "protocol.json"
+            protocol.write_text(
+                json.dumps(dict(model_sha256=model_hash, output_limit=2)), encoding="utf-8"
+            )
             protocol_hash = hashlib.sha256(protocol.read_bytes()).hexdigest()
-            manifest = dict(complete=True, protocol_sha256=protocol_hash,
-                system={'sha256': 'c' * 64}, configurations=[
-                    dict(id='full-five', evidence_indices=[1, 2], user={'sha256': 'd' * 64}),
-                    dict(id='compact-three', evidence_indices=[1], user={'sha256': 'e' * 64})])
-            metric = dict(total_us=100, prefill_us=60, first_token_callback_us=70,
-                          generation_loop_us=30, prompt_tokens=10, output_tokens=2)
-            full = dict(complete=True, fingerprint='device', model_sha256=model_hash,
-                        system_sha256='c' * 64, output_limit=2, user_sha256='d' * 64,
-                        result=2, visible_answer='Truncated [1', metrics=metric)
-            compact_metric = dict(metric, total_us=70, prefill_us=30,
-                                  first_token_callback_us=40, prompt_tokens=5)
-            compact = dict(complete=True, fingerprint='device', model_sha256=model_hash,
-                           system_sha256='c' * 64, output_limit=2, user_sha256='e' * 64,
-                           result=0, visible_answer='Answer [1][2]', metrics=compact_metric)
+            manifest = dict(
+                complete=True,
+                protocol_sha256=protocol_hash,
+                system={"sha256": "c" * 64},
+                configurations=[
+                    dict(id="full-five", evidence_indices=[1, 2], user={"sha256": "d" * 64}),
+                    dict(id="compact-three", evidence_indices=[1], user={"sha256": "e" * 64}),
+                ],
+            )
+            metric = dict(
+                total_us=100,
+                prefill_us=60,
+                first_token_callback_us=70,
+                generation_loop_us=30,
+                prompt_tokens=10,
+                output_tokens=2,
+            )
+            full = dict(
+                complete=True,
+                fingerprint="device",
+                model_sha256=model_hash,
+                system_sha256="c" * 64,
+                output_limit=2,
+                user_sha256="d" * 64,
+                result=2,
+                visible_answer="Truncated [1",
+                metrics=metric,
+            )
+            compact_metric = dict(
+                metric, total_us=70, prefill_us=30, first_token_callback_us=40, prompt_tokens=5
+            )
+            compact = dict(
+                complete=True,
+                fingerprint="device",
+                model_sha256=model_hash,
+                system_sha256="c" * 64,
+                output_limit=2,
+                user_sha256="e" * 64,
+                result=0,
+                visible_answer="Answer [1][2]",
+                metrics=compact_metric,
+            )
             values = {
-                'manifest.json': manifest, 'full.json': full, 'compact.json': compact,
-                'staging.json': dict(complete=True, staged={'sha256': model_hash}),
-                'cleanup.json': dict(complete=True, targets_absent={'fixture': True}),
-                'installed.json': dict(complete=True, apk_sha256=app_hash),
+                "manifest.json": manifest,
+                "full.json": full,
+                "compact.json": compact,
+                "staging.json": dict(complete=True, staged={"sha256": model_hash}),
+                "cleanup.json": dict(complete=True, targets_absent={"fixture": True}),
+                "installed.json": dict(complete=True, apk_sha256=app_hash),
             }
-            paths = {'protocol.json': protocol}
+            paths = {"protocol.json": protocol}
             for name, value in values.items():
                 paths[name] = root / name
-                paths[name].write_text(json.dumps(value), encoding='utf-8')
+                paths[name].write_text(json.dumps(value), encoding="utf-8")
             result = audit_native_prefill(
-                protocol, paths['manifest.json'], paths['full.json'], paths['compact.json'],
-                paths['staging.json'], paths['cleanup.json'], paths['installed.json'],
-                app_hash, 'f' * 64)
-            self.assertEqual(result['decision'], 'reject_both')
-            compact['fingerprint'] = 'different-device'
-            paths['compact.json'].write_text(json.dumps(compact), encoding='utf-8')
-            with self.assertRaisesRegex(ValueError, 'exact_paired_runtime'):
+                protocol,
+                paths["manifest.json"],
+                paths["full.json"],
+                paths["compact.json"],
+                paths["staging.json"],
+                paths["cleanup.json"],
+                paths["installed.json"],
+                app_hash,
+                "f" * 64,
+            )
+            self.assertEqual(result["decision"], "reject_both")
+            compact["fingerprint"] = "different-device"
+            paths["compact.json"].write_text(json.dumps(compact), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exact_paired_runtime"):
                 audit_native_prefill(
-                    protocol, paths['manifest.json'], paths['full.json'], paths['compact.json'],
-                    paths['staging.json'], paths['cleanup.json'], paths['installed.json'],
-                    app_hash, 'f' * 64)
+                    protocol,
+                    paths["manifest.json"],
+                    paths["full.json"],
+                    paths["compact.json"],
+                    paths["staging.json"],
+                    paths["cleanup.json"],
+                    paths["installed.json"],
+                    app_hash,
+                    "f" * 64,
+                )
 
     def test_product_answer_audit_rejects_out_of_range_saved_citations(self):
         with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
             root = Path(folder)
-            payload, library_package = root / 'library.sqlite', root / 'library.blobs'
-            payload.write_bytes(b'library fixture')
-            package(payload, library_package, kind='library', id='library', version='1',
-                    title='Library', license='CC0', origin='local:test')
+            payload, library_package = root / "library.sqlite", root / "library.blobs"
+            payload.write_bytes(b"library fixture")
+            package(
+                payload,
+                library_package,
+                kind="library",
+                id="library",
+                version="1",
+                title="Library",
+                license="CC0",
+                origin="local:test",
+            )
             library = verify_package(library_package)
-            model_hash = 'a' * 64
-            run = dict(complete=True, generation_started=True, finished_within_timeout=True,
-                       status='COMPLETE', error='', model_file_bytes=100, model_sha256=model_hash,
-                       library_manifest=library, library_sha256=library['sha256'],
-                       evidence=json.dumps([dict(title='Fixture', text='Saved evidence')]),
-                       answer='Supported answer [1].', question='Question?',
-                       application_id='dev.blobs.fixture', first_visible_state_ms=1,
-                       saved_elapsed_ms=2, wall_elapsed_ms=3)
+            model_hash = "a" * 64
+            run = dict(
+                complete=True,
+                generation_started=True,
+                finished_within_timeout=True,
+                status="COMPLETE",
+                error="",
+                model_file_bytes=100,
+                model_sha256=model_hash,
+                library_manifest=library,
+                library_sha256=library["sha256"],
+                evidence=json.dumps([dict(title="Fixture", text="Saved evidence")]),
+                answer="Supported answer [1].",
+                question="Question?",
+                application_id="dev.blobs.fixture",
+                first_visible_state_ms=1,
+                saved_elapsed_ms=2,
+                wall_elapsed_ms=3,
+            )
             values = {
-                'run.json': run,
-                'failure.json': dict(complete=False, generation_started=False,
-                                     status='PREPARATION_FAILED',
-                                     error='java.lang.IllegalStateException: STORAGE'),
-                'staging.json': dict(complete=True, staged=dict(bytes=100, sha256=model_hash)),
-                'cleanup.json': dict(complete=True, targets_absent={'fixture': True}),
-                'lock.json': dict(model=dict(bytes=100, sha256=model_hash)),
-                'installed.json': dict(complete=True, apk_sha256='b' * 64),
+                "run.json": run,
+                "failure.json": dict(
+                    complete=False,
+                    generation_started=False,
+                    status="PREPARATION_FAILED",
+                    error="java.lang.IllegalStateException: STORAGE",
+                ),
+                "staging.json": dict(complete=True, staged=dict(bytes=100, sha256=model_hash)),
+                "cleanup.json": dict(complete=True, targets_absent={"fixture": True}),
+                "lock.json": dict(model=dict(bytes=100, sha256=model_hash)),
+                "installed.json": dict(complete=True, apk_sha256="b" * 64),
             }
             paths = {}
             for name, value in values.items():
                 paths[name] = root / name
-                paths[name].write_text(json.dumps(value), encoding='utf-8')
+                paths[name].write_text(json.dumps(value), encoding="utf-8")
             result = audit_product_answer(
-                paths['run.json'], paths['failure.json'], paths['staging.json'],
-                paths['cleanup.json'], paths['lock.json'], library_package,
-                paths['installed.json'], 'b' * 64, 'c' * 64)
-            self.assertTrue(all(result['checks'].values()))
-            run['answer'] = 'Unsupported source number [2].'
-            paths['run.json'].write_text(json.dumps(run), encoding='utf-8')
-            with self.assertRaisesRegex(ValueError, 'citations_present_and_in_range'):
+                paths["run.json"],
+                paths["failure.json"],
+                paths["staging.json"],
+                paths["cleanup.json"],
+                paths["lock.json"],
+                library_package,
+                paths["installed.json"],
+                "b" * 64,
+                "c" * 64,
+            )
+            self.assertTrue(all(result["checks"].values()))
+            run["answer"] = "Unsupported source number [2]."
+            paths["run.json"].write_text(json.dumps(run), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "citations_present_and_in_range"):
                 audit_product_answer(
-                    paths['run.json'], paths['failure.json'], paths['staging.json'],
-                    paths['cleanup.json'], paths['lock.json'], library_package,
-                    paths['installed.json'], 'b' * 64, 'c' * 64)
+                    paths["run.json"],
+                    paths["failure.json"],
+                    paths["staging.json"],
+                    paths["cleanup.json"],
+                    paths["lock.json"],
+                    library_package,
+                    paths["installed.json"],
+                    "b" * 64,
+                    "c" * 64,
+                )
 
     def test_native_smoke_audit_requires_exact_identity_and_lifecycle_results(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            model_hash = 'a' * 64
+            model_hash = "a" * 64
             values = {
-                'run.json': dict(complete=True, model_bytes=100, model_sha256=model_hash,
-                    fingerprint='fixture', answer_result=0, raw_answer='Supported answer.',
-                    answer_metrics=dict(prompt_tokens=10, output_tokens=3, non_thinking_prefix=True,
-                                        total_us=100, first_token_callback_us=80, prefill_us=70),
+                "run.json": dict(
+                    complete=True,
+                    model_bytes=100,
+                    model_sha256=model_hash,
+                    fingerprint="fixture",
+                    inference_result=0,
+                    thread_mode="fixed",
+                    requested_inference_threads=2,
+                    device_profile=dict(
+                        fingerprint="fixture",
+                        model="fixture",
+                        device="fixture",
+                        api=36,
+                        abi="x86_64",
+                        available_processors=4,
+                        max_heap_bytes=536870912,
+                    ),
+                    workload=dict(
+                        id="native-inference-smoke-v1",
+                        system_sha256="d" * 64,
+                        user_sha256="e" * 64,
+                        max_output_tokens=96,
+                    ),
+                    inference_metrics=dict(
+                        prompt_tokens=10,
+                        output_tokens=3,
+                        non_thinking_prefix=True,
+                        inference_threads=2,
+                        total_us=100,
+                        first_token_callback_us=80,
+                        prefill_us=70,
+                        context_tokens=512,
+                    ),
                     cancellation_result=1,
                     cancellation_metrics=dict(output_tokens=3, non_thinking_prefix=True),
-                    failure_metrics=dict(total_us=1, first_token_callback_us=-1, output_tokens=0)),
-                'staging.json': dict(complete=True, staged=dict(bytes=100, sha256=model_hash)),
-                'lock.json': dict(model=dict(bytes=100, sha256=model_hash)),
-                'installed.json': dict(complete=True, package='dev.blobs.fixture', apk_sha256='b' * 64),
+                    failure_metrics=dict(total_us=1, first_token_callback_us=-1, output_tokens=0),
+                ),
+                "staging.json": dict(
+                    complete=True,
+                    serial="emulator-5554",
+                    device=dict(fingerprint="fixture", abi="x86_64"),
+                    staged=dict(bytes=100, sha256=model_hash),
+                ),
+                "lock.json": dict(
+                    model=dict(bytes=100, sha256=model_hash),
+                    runtime=dict(revision="f" * 40),
+                    workload=dict(
+                        id="native-inference-smoke-v1",
+                        system_sha256="d" * 64,
+                        user_sha256="e" * 64,
+                        max_output_tokens=96,
+                    ),
+                ),
+                "installed.json": dict(
+                    complete=True,
+                    package="dev.blobs.fixture",
+                    apk_sha256="b" * 64,
+                    test_apk_sha256="c" * 64,
+                ),
             }
             paths = {}
             for name, value in values.items():
                 paths[name] = root / name
-                paths[name].write_text(json.dumps(value), encoding='utf-8')
+                paths[name].write_text(json.dumps(value), encoding="utf-8")
             result = audit_native_smoke(
-                paths['run.json'], paths['staging.json'], paths['lock.json'],
-                paths['installed.json'], 'b' * 64, 'c' * 64)
-            self.assertTrue(result['complete'])
-            self.assertTrue(all(result['checks'].values()))
-            values['run.json']['cancellation_metrics']['output_tokens'] = 4
-            paths['run.json'].write_text(json.dumps(values['run.json']), encoding='utf-8')
-            with self.assertRaisesRegex(ValueError, 'exact_three_token_cancellation'):
+                paths["run.json"],
+                paths["staging.json"],
+                paths["lock.json"],
+                paths["installed.json"],
+                "b" * 64,
+                "c" * 64,
+            )
+            self.assertTrue(result["complete"])
+            self.assertTrue(all(result["checks"].values()))
+            self.assertNotIn("raw_answer", json.dumps(result))
+            values["run.json"]["inference_metrics"]["context_tokens"] = 105
+            paths["run.json"].write_text(json.dumps(values["run.json"]), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "context_capacity_sufficient"):
                 audit_native_smoke(
-                    paths['run.json'], paths['staging.json'], paths['lock.json'],
-                    paths['installed.json'], 'b' * 64, 'c' * 64)
+                    paths["run.json"],
+                    paths["staging.json"],
+                    paths["lock.json"],
+                    paths["installed.json"],
+                    "b" * 64,
+                    "c" * 64,
+                )
+            values["run.json"]["inference_metrics"]["context_tokens"] = 512
+            paths["run.json"].write_text(json.dumps(values["run.json"]), encoding="utf-8")
+            values["installed.json"]["test_apk_sha256"] = "d" * 64
+            paths["installed.json"].write_text(
+                json.dumps(values["installed.json"]), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "installed_build_identity"):
+                audit_native_smoke(
+                    paths["run.json"],
+                    paths["staging.json"],
+                    paths["lock.json"],
+                    paths["installed.json"],
+                    "b" * 64,
+                    "c" * 64,
+                )
+            values["installed.json"]["test_apk_sha256"] = "c" * 64
+            paths["installed.json"].write_text(
+                json.dumps(values["installed.json"]), encoding="utf-8"
+            )
+            values["run.json"]["cancellation_metrics"]["output_tokens"] = 4
+            paths["run.json"].write_text(json.dumps(values["run.json"]), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exact_three_token_cancellation"):
+                audit_native_smoke(
+                    paths["run.json"],
+                    paths["staging.json"],
+                    paths["lock.json"],
+                    paths["installed.json"],
+                    "b" * 64,
+                    "c" * 64,
+                )
+
+    def test_native_smoke_audit_accepts_a_hash_matched_in_app_model_install(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            model_hash = "a" * 64
+            run = dict(
+                complete=True,
+                model_bytes=100,
+                model_sha256=model_hash,
+                fingerprint="fixture",
+                inference_result=0,
+                thread_mode="fixed",
+                requested_inference_threads=2,
+                device_profile=dict(
+                    fingerprint="fixture",
+                    model="fixture",
+                    device="fixture",
+                    api=36,
+                    abi="x86_64",
+                    available_processors=4,
+                    max_heap_bytes=536870912,
+                ),
+                workload=dict(
+                    id="native-inference-smoke-v1",
+                    system_sha256="d" * 64,
+                    user_sha256="e" * 64,
+                    max_output_tokens=96,
+                ),
+                inference_metrics=dict(
+                    prompt_tokens=10,
+                    output_tokens=3,
+                    non_thinking_prefix=True,
+                    inference_threads=2,
+                    total_us=100,
+                    first_token_callback_us=80,
+                    prefill_us=70,
+                    context_tokens=512,
+                ),
+                cancellation_result=1,
+                cancellation_metrics=dict(output_tokens=3, non_thinking_prefix=True),
+                failure_metrics=dict(total_us=1, first_token_callback_us=-1, output_tokens=0),
+            )
+            package_install = dict(
+                complete=True,
+                kind="model",
+                package_id="fixture-model",
+                installed_bytes=100,
+                installed_sha256=model_hash,
+                device_fingerprint="fixture",
+                device_model="fixture",
+                api=36,
+                app_apk_sha256="b" * 64,
+                test_apk_sha256="c" * 64,
+            )
+            lock = dict(
+                model=dict(id="fixture-model", bytes=100, sha256=model_hash),
+                runtime=dict(revision="f" * 40),
+                workload=run["workload"],
+            )
+            installed = dict(
+                complete=True,
+                package="dev.blobs.fixture",
+                apk_sha256="b" * 64,
+                test_apk_sha256="c" * 64,
+            )
+            paths = {}
+            for name, value in {
+                "run": run,
+                "package": package_install,
+                "lock": lock,
+                "installed": installed,
+            }.items():
+                paths[name] = root / f"{name}.json"
+                paths[name].write_text(json.dumps(value), encoding="utf-8")
+
+            result = audit_native_smoke(
+                paths["run"],
+                None,
+                paths["lock"],
+                paths["installed"],
+                "b" * 64,
+                "c" * 64,
+                package_install_path=paths["package"],
+            )
+            self.assertTrue(all(result["checks"].values()))
+            self.assertEqual(
+                result["interpretation"]["model_source"],
+                "Installed through the signed in-app package list.",
+            )
+
+            package_install["installed_sha256"] = "9" * 64
+            paths["package"].write_text(json.dumps(package_install), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exact_model_identity"):
+                audit_native_smoke(
+                    paths["run"],
+                    None,
+                    paths["lock"],
+                    paths["installed"],
+                    "b" * 64,
+                    "c" * 64,
+                    package_install_path=paths["package"],
+                )
 
     def test_chat_nonstream_keeps_full_output_without_fabricating_partial_arrival(self):
-        packet = {'choices': [{'index': 0, 'message': {'content': '{}', 'reasoning_content': 'analysis'},
-                               'finish_reason': 'stop'}],
-                  '__verbose': {'stop': True, 'content': 'analysis</think>{}', 'tokens': [1, 2, 3]},
-                  'usage': {'completion_tokens': 3}}
-        opener = SimpleNamespace(open=lambda request, timeout: io.BytesIO(json.dumps(packet).encode()))
+        packet = {
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"content": "{}", "reasoning_content": "analysis"},
+                    "finish_reason": "stop",
+                }
+            ],
+            "__verbose": {"stop": True, "content": "analysis</think>{}", "tokens": [1, 2, 3]},
+            "usage": {"completion_tokens": 3},
+        }
+        opener = SimpleNamespace(
+            open=lambda request, timeout: io.BytesIO(json.dumps(packet).encode())
+        )
         packets = list(completion_packets(opener, None, True))
         self.assertIsNone(packets[-1])
-        response = {'content': ''}
+        response = {"content": ""}
         record_chat_chunk(response, packets[0])
-        self.assertEqual(response['content'], '{}')
-        self.assertEqual(response['raw_content'], 'analysis</think>{}')
-        self.assertEqual(response['tokens'], [1, 2, 3])
-        self.assertTrue(response['raw_output_available'])
+        self.assertEqual(response["content"], "{}")
+        self.assertEqual(response["raw_content"], "analysis</think>{}")
+        self.assertEqual(response["tokens"], [1, 2, 3])
+        self.assertTrue(response["raw_output_available"])
 
     def test_streaming_missing_raw_output_and_terminal_marker_remain_missing(self):
-        packet = {'choices': [{'index': 0, 'delta': {'content': '{}'}, 'finish_reason': 'stop'}],
-                  '__verbose': {'stop': True, 'content': '', 'tokens': []}}
-        wire = b': comment\n\ndata: ' + json.dumps(packet).encode() + b'\n\n'
+        packet = {
+            "choices": [{"index": 0, "delta": {"content": "{}"}, "finish_reason": "stop"}],
+            "__verbose": {"stop": True, "content": "", "tokens": []},
+        }
+        wire = b": comment\n\ndata: " + json.dumps(packet).encode() + b"\n\n"
         opener = SimpleNamespace(open=lambda request, timeout: io.BytesIO(wire))
         packets = list(completion_packets(opener, None, False))
         self.assertNotIn(None, packets)
-        response = {'content': ''}
+        response = {"content": ""}
         record_chat_chunk(response, packets[0])
-        self.assertFalse(response['raw_output_available'])
-        self.assertEqual(response['content'], '{}')
+        self.assertFalse(response["raw_output_available"])
+        self.assertEqual(response["content"], "{}")
 
     def test_chat_stream_keeps_reasoning_out_of_final_and_retains_terminal_metadata(self):
-        response = {'content': ''}
-        for delta in [{'role': 'assistant', 'content': None}, {'reasoning_content': 'Private analysis'},
-                      {'content': '{"status":'}, {'content': '"insufficient","reason":"No cause supplied."}'}]:
-            record_chat_chunk(response, {'choices': [{'index': 0, 'delta': delta}]})
-        final = response['content']
-        raw = 'Private analysis</think>\n' + final
-        record_chat_chunk(response, {'choices': [{'index': 0, 'delta': {}, 'finish_reason': 'stop'}],
-            '__verbose': {'stop': True, 'content': raw, 'generation_settings': {'n_predict': 1280},
-                          'tokens_predicted': 30, 'stop_type': 'eos'}})
-        record_chat_chunk(response, {'choices': [], 'usage': {'completion_tokens': 30},
-                                     'timings': {'predicted_n': 30}})
-        self.assertEqual(response['content'], final)
-        self.assertEqual(response['reasoning_content'], 'Private analysis')
-        self.assertEqual(response['raw_content'], raw)
-        self.assertEqual(response['usage']['completion_tokens'], response['tokens_predicted'])
-        self.assertEqual(parse_answer(final, 1)['status'], 'insufficient')
+        response = {"content": ""}
+        for delta in [
+            {"role": "assistant", "content": None},
+            {"reasoning_content": "Private analysis"},
+            {"content": '{"status":'},
+            {"content": '"insufficient","reason":"No cause supplied."}'},
+        ]:
+            record_chat_chunk(response, {"choices": [{"index": 0, "delta": delta}]})
+        final = response["content"]
+        raw = "Private analysis</think>\n" + final
+        record_chat_chunk(
+            response,
+            {
+                "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+                "__verbose": {
+                    "stop": True,
+                    "content": raw,
+                    "generation_settings": {"n_predict": 1280},
+                    "tokens_predicted": 30,
+                    "stop_type": "eos",
+                },
+            },
+        )
+        record_chat_chunk(
+            response,
+            {"choices": [], "usage": {"completion_tokens": 30}, "timings": {"predicted_n": 30}},
+        )
+        self.assertEqual(response["content"], final)
+        self.assertEqual(response["reasoning_content"], "Private analysis")
+        self.assertEqual(response["raw_content"], raw)
+        self.assertEqual(response["usage"]["completion_tokens"], response["tokens_predicted"])
+        self.assertEqual(parse_answer(final, 1)["status"], "insufficient")
 
     def test_chat_stream_rejects_tools_multiple_choices_and_nontext(self):
         for choices in [
-            [{'index': 0, 'delta': {'tool_calls': [{'id': 'unexpected'}]}}],
-            [{'index': 0}, {'index': 1}],
-            [{'index': 0, 'delta': {'reasoning_content': 0}}],
+            [{"index": 0, "delta": {"tool_calls": [{"id": "unexpected"}]}}],
+            [{"index": 0}, {"index": 1}],
+            [{"index": 0, "delta": {"reasoning_content": 0}}],
         ]:
             with self.assertRaises(ValueError):
-                record_chat_chunk({'content': ''}, {'choices': choices})
+                record_chat_chunk({"content": ""}, {"choices": choices})
 
     @staticmethod
     def passage(identifier, title, text, *, opening=False):
-        return dict(passage_id=identifier, id=title, title=title, body=text,
-                    section=title, opening_title=title if opening else '',
-                    publisher='Fixture', url='https://example.invalid/' + title,
-                    license='CC0', saved='2026-10-17', updated='Unknown')
+        return dict(
+            passage_id=identifier,
+            id=title,
+            title=title,
+            body=text,
+            section=title,
+            opening_title=title if opening else "",
+            publisher="Fixture",
+            url="https://example.invalid/" + title,
+            license="CC0",
+            saved="2026-10-17",
+            updated="Unknown",
+        )
 
     def test_named_concepts_keep_definitions_without_replacing_single_topic_ranking(self):
-        rows = [self.passage(1, 'A', 'Specialized A detail'),
-                self.passage(2, 'A', 'Another A detail'),
-                self.passage(3, 'B', 'Specialized B detail'),
-                self.passage(4, 'A', 'Definition A', opening=True),
-                self.passage(5, 'B', 'Definition B', opening=True)]
-        manifest = dict(id='fixture', version='1', sha256='0' * 64, title='Fixture')
+        rows = [
+            self.passage(1, "A", "Specialized A detail"),
+            self.passage(2, "A", "Another A detail"),
+            self.passage(3, "B", "Specialized B detail"),
+            self.passage(4, "A", "Definition A", opening=True),
+            self.passage(5, "B", "Definition B", opening=True),
+        ]
+        manifest = dict(id="fixture", version="1", sha256="0" * 64, title="Fixture")
         original = json.dumps(rows)
         baseline = select_evidence(rows, manifest)
-        self.assertNotIn('Definition A', [p['text'] for p in baseline])
-        ordered, protected = named_openings_first(rows, ['A', 'B'])
+        self.assertNotIn("Definition A", [p["text"] for p in baseline])
+        ordered, protected = named_openings_first(rows, ["A", "B"])
         chosen = select_evidence(ordered, manifest)
-        self.assertIn('Definition A', [p['text'] for p in chosen])
-        self.assertIn('Definition B', [p['text'] for p in chosen])
-        self.assertEqual({p['passage_id'] for p in ordered}, {p['passage_id'] for p in rows})
+        self.assertIn("Definition A", [p["text"] for p in chosen])
+        self.assertIn("Definition B", [p["text"] for p in chosen])
+        self.assertEqual({p["passage_id"] for p in ordered}, {p["passage_id"] for p in rows})
         self.assertEqual(len(ordered), len(rows))
         self.assertEqual(protected, [4, 5])
         self.assertEqual(json.dumps(rows), original)
-        self.assertEqual(named_openings_first(rows, ['A']), (rows, []))
+        self.assertEqual(named_openings_first(rows, ["A"]), (rows, []))
         # Section labels alone cannot identify a real opening paragraph.
         self.assertNotIn(1, protected)
-        rows[0]['opening_title'] = 'Different document'
-        with self.assertRaisesRegex(ValueError, 'metadata'):
-            named_openings_first(rows, ['A', 'B'])
+        rows[0]["opening_title"] = "Different document"
+        with self.assertRaisesRegex(ValueError, "metadata"):
+            named_openings_first(rows, ["A", "B"])
 
     def test_named_coverage_retains_utf16_and_per_document_budgets_and_source_scope(self):
-        rows = [self.passage(1, 'A', '\U0001f600' * 1400, opening=True),
-                self.passage(2, 'B', '\U0001f601' * 1400, opening=True),
-                self.passage(3, 'A', 'x' * 400),
-                self.passage(4, 'A', 'Extra A'),
-                self.passage(5, 'B', 'Extra B')]
-        ordered, protected = named_openings_first(rows, ['A', 'B', 'Excluded C'])
-        selected = select_evidence(ordered, dict(id='fixture', version='1', sha256='0' * 64, title='Fixture'))
-        self.assertEqual(sum(len(p['text'].encode('utf-16-le')) // 2 for p in selected), 6000)
+        rows = [
+            self.passage(1, "A", "\U0001f600" * 1400, opening=True),
+            self.passage(2, "B", "\U0001f601" * 1400, opening=True),
+            self.passage(3, "A", "x" * 400),
+            self.passage(4, "A", "Extra A"),
+            self.passage(5, "B", "Extra B"),
+        ]
+        ordered, protected = named_openings_first(rows, ["A", "B", "Excluded C"])
+        selected = select_evidence(
+            ordered, dict(id="fixture", version="1", sha256="0" * 64, title="Fixture")
+        )
+        self.assertEqual(sum(len(p["text"].encode("utf-16-le")) // 2 for p in selected), 6000)
         self.assertLessEqual(len(selected), 6)
-        self.assertEqual([p['title'] for p in selected], ['A', 'B', 'A'])
-        self.assertEqual(selected[0]['text'], rows[0]['body'])
-        self.assertEqual(selected[1]['text'], rows[1]['body'])
+        self.assertEqual([p["title"] for p in selected], ["A", "B", "A"])
+        self.assertEqual(selected[0]["text"], rows[0]["body"])
+        self.assertEqual(selected[1]["text"], rows[1]["body"])
         self.assertEqual(protected, [1, 2])
-        self.assertNotIn('Excluded C', [p['title'] for p in selected])
+        self.assertNotIn("Excluded C", [p["title"] for p in selected])
 
     def test_rank_fusion_recovers_a_displaced_definition_before_its_document_cap_fills(self):
-        rows = [self.passage(i, f'Other{i}', f'Other passage {i}') for i in range(15)]
-        rows[0] = self.passage(0, 'Broader concept', 'Definition of the broader concept', opening=True)
-        rows[1] = self.passage(1, 'Mechanism', 'Definition of the mechanism', opening=True)
-        rows[3] = self.passage(3, 'Broader concept', 'Specialized mechanism detail')
-        rows[14] = self.passage(14, 'Broader concept', 'Another specialized mechanism detail')
+        rows = [self.passage(i, f"Other{i}", f"Other passage {i}") for i in range(15)]
+        rows[0] = self.passage(
+            0, "Broader concept", "Definition of the broader concept", opening=True
+        )
+        rows[1] = self.passage(1, "Mechanism", "Definition of the mechanism", opening=True)
+        rows[3] = self.passage(3, "Broader concept", "Specialized mechanism detail")
+        rows[14] = self.passage(14, "Broader concept", "Another specialized mechanism detail")
         neural = [1, 3, 14, 8, 7, 6, 5, 4, 0, 2, 9, 10, 11, 12, 13]
-        manifest = dict(id='fixture', version='1', sha256='0' * 64, title='Fixture')
+        manifest = dict(id="fixture", version="1", sha256="0" * 64, title="Fixture")
         baseline = select_evidence([rows[i] for i in neural], manifest)
-        self.assertNotIn(rows[0]['body'], [p['text'] for p in baseline])
+        self.assertNotIn(rows[0]["body"], [p["text"] for p in baseline])
         fused = reciprocal_rank_order(neural)
         selected = select_evidence([rows[i] for i in fused], manifest)
-        self.assertIn(rows[0]['body'], [p['text'] for p in selected])
-        self.assertIn(rows[1]['body'], [p['text'] for p in selected])
+        self.assertIn(rows[0]["body"], [p["text"] for p in selected])
+        self.assertIn(rows[1]["body"], [p["text"] for p in selected])
         self.assertEqual(set(fused), set(neural))
         self.assertEqual(len(fused), len(neural))
-        with self.assertRaisesRegex(ValueError, 'permutation'):
+        with self.assertRaisesRegex(ValueError, "permutation"):
             reciprocal_rank_order([0, 0])
 
     def test_title_inventory_preserves_missing_targets_and_input_identity(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            records, questions = root / 'records.jsonl', root / 'questions.json'
-            document = dict(id='fixture', title='Existing title', publisher='Fixture',
-                            url='https://example.invalid/fixture', license='CC0',
-                            updated='Unknown', saved='2026-10-17', collection='Fixture',
-                            body='This unrelated body does not establish answerability.')
-            records.write_text(json.dumps(document) + '\n', encoding='utf-8')
-            cases = [dict(id='comparison', category='comparison',
-                          expected_titles=['Existing title', 'Absent title']),
-                     dict(id='missing', category='recall', expected_titles=['Absent title'])]
-            questions.write_text(json.dumps(dict(cases=cases)), encoding='utf-8')
+            records, questions = root / "records.jsonl", root / "questions.json"
+            document = dict(
+                id="fixture",
+                title="Existing title",
+                publisher="Fixture",
+                url="https://example.invalid/fixture",
+                license="CC0",
+                updated="Unknown",
+                saved="2026-10-17",
+                collection="Fixture",
+                body="This unrelated body does not establish answerability.",
+            )
+            records.write_text(json.dumps(document) + "\n", encoding="utf-8")
+            cases = [
+                dict(
+                    id="comparison",
+                    category="comparison",
+                    expected_titles=["Existing title", "Absent title"],
+                ),
+                dict(id="missing", category="recall", expected_titles=["Absent title"]),
+            ]
+            questions.write_text(json.dumps(dict(cases=cases)), encoding="utf-8")
             original = questions.read_bytes()
             report = inspect_titles(records, questions)
-            self.assertEqual(report['results'][0]['present'], ['Existing title'])
-            self.assertEqual(report['results'][0]['absent'], ['Absent title'])
-            self.assertEqual(report['cases_with_no_target_titles'], 1)
-            self.assertEqual(report['cases_with_all_target_titles'], 0)
-            self.assertEqual(report['questions_sha256'], hashlib.sha256(original).hexdigest())
+            self.assertEqual(report["results"][0]["present"], ["Existing title"])
+            self.assertEqual(report["results"][0]["absent"], ["Absent title"])
+            self.assertEqual(report["cases_with_no_target_titles"], 1)
+            self.assertEqual(report["cases_with_all_target_titles"], 0)
+            self.assertEqual(report["questions_sha256"], hashlib.sha256(original).hexdigest())
             self.assertEqual(questions.read_bytes(), original)
-            cases[1]['id'] = 'comparison'
-            questions.write_text(json.dumps(dict(cases=cases)), encoding='utf-8')
-            with self.assertRaisesRegex(ValueError, 'unique'):
+            cases[1]["id"] = "comparison"
+            questions.write_text(json.dumps(dict(cases=cases)), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "unique"):
                 inspect_titles(records, questions)
 
+    def test_package_title_inventory_counts_redirect_aliases_separately_from_missing_titles(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            database, questions = root / "library.sqlite", root / "questions.json"
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript("""
+                    PRAGMA user_version=3;
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT NOT NULL);
+                    CREATE TABLE document_names(name TEXT NOT NULL,doc_id TEXT NOT NULL,
+                      PRIMARY KEY(name,doc_id)) WITHOUT ROWID;
+                    INSERT INTO documents VALUES ('one','Existing title'),('two','A redirect destination');
+                    INSERT INTO document_names VALUES
+                      ('existing title','one'),('redirect name','two');
+                """)
+            cases = [
+                dict(
+                    id="coverage",
+                    category="reasoning",
+                    expected_titles=["Existing title", "Redirect Name", "Absent title"],
+                )
+            ]
+            questions.write_text(json.dumps(dict(cases=cases)), encoding="utf-8")
+            report = inspect_package_titles(database, questions)
+            self.assertEqual(report["source_kind"], "sqlite-package-payload")
+            self.assertEqual(report["availability"], "document title or normalized redirect alias")
+            self.assertEqual(report["results"][0]["present"], ["Existing title", "Redirect Name"])
+            self.assertEqual(report["results"][0]["absent"], ["Absent title"])
+            self.assertEqual(report["absent_unique_titles"], ["Absent title"])
+
+    def test_package_title_inventory_supports_legacy_libraries_without_alias_table(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            database, questions = root / "legacy.sqlite", root / "questions.json"
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript("""
+                    PRAGMA user_version=1;
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT NOT NULL);
+                    INSERT INTO documents VALUES ('one','Existing title');
+                """)
+            questions.write_text(
+                json.dumps(
+                    dict(
+                        cases=[
+                            dict(
+                                id="legacy",
+                                category="recall",
+                                expected_titles=["Existing title", "Missing"],
+                            )
+                        ]
+                    )
+                ),
+                encoding="utf-8",
+            )
+            report = inspect_package_titles(database, questions)
+            self.assertEqual(report["schema"], 1)
+            self.assertEqual(report["results"][0]["present"], ["Existing title"])
+            self.assertEqual(report["results"][0]["absent"], ["Missing"])
+
     def test_citation_metadata_cannot_be_replaced_by_article_footnotes(self):
-        value = dict(status='answered', claims=[dict(text='Array x[2] has a value; an article printed [105].', sources=['S1'])])
+        value = dict(
+            status="answered",
+            claims=[dict(text="Array x[2] has a value; an article printed [105].", sources=["S1"])],
+        )
         self.assertEqual(parse_answer(json.dumps(value), 2), value)
-        value['claims'][0]['sources'] = ['S105']
-        with self.assertRaisesRegex(ValueError, 'unavailable'):
+        value["claims"][0]["sources"] = ["S105"]
+        with self.assertRaisesRegex(ValueError, "unavailable"):
             parse_answer(json.dumps(value), 2)
 
     def test_truncated_or_ambiguous_citation_envelopes_are_rejected(self):
         invalid = [
             '{"status":"answered","claims":[',
             '{"status":"insufficient","reason":"First","reason":"Replacement"}',
-            json.dumps(dict(status='answered', claims=[dict(text='Claim', sources=[])])),
-            json.dumps(dict(status='answered', claims=[dict(text='Claim', sources=['S1', 'S1'])])),
-            json.dumps(dict(status='answered', claims=[dict(text='Claim', sources=[True])])),
-            json.dumps(dict(status='answered', claims=[dict(text=' ', sources=['S1'])])),
-            json.dumps(dict(status='insufficient', reason='Unavailable', claims=[])),
+            json.dumps(dict(status="answered", claims=[dict(text="Claim", sources=[])])),
+            json.dumps(dict(status="answered", claims=[dict(text="Claim", sources=["S1", "S1"])])),
+            json.dumps(dict(status="answered", claims=[dict(text="Claim", sources=[True])])),
+            json.dumps(dict(status="answered", claims=[dict(text=" ", sources=["S1"])])),
+            json.dumps(dict(status="insufficient", reason="Unavailable", claims=[])),
             '{"status":"insufficient","reason":NaN}',
             '{"status":"insufficient","reason":"\\ud800"}',
         ]
@@ -335,27 +1188,46 @@ class EvaluationInputTests(unittest.TestCase):
                 parse_answer(content, 2)
 
     def test_insufficient_evidence_does_not_require_a_fabricated_citation(self):
-        value = dict(status='insufficient', reason='The saved sources do not contain the current rate.')
+        value = dict(
+            status="insufficient", reason="The saved sources do not contain the current rate."
+        )
         self.assertEqual(parse_answer(json.dumps(value), 3), value)
 
     def test_temporary_model_is_verified_and_removed_after_consumer_failure(self):
-        payload = b'GGUF' + b'original evaluation fixture' * 8
-        with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()), patch(
-            'evaluation.answers.host_answers.shutil.disk_usage', return_value=SimpleNamespace(free=10 * 1024**3)
+        payload = b"GGUF" + b"original evaluation fixture" * 8
+        with (
+            tempfile.TemporaryDirectory() as folder,
+            redirect_stdout(io.StringIO()),
+            patch(
+                "evaluation.answers.host_answers.shutil.disk_usage",
+                return_value=SimpleNamespace(free=10 * 1024**3),
+            ),
         ):
             root = Path(folder)
-            raw, packaged = root / 'input.gguf', root / 'input.blobs'
+            raw, packaged = root / "input.gguf", root / "input.blobs"
             raw.write_bytes(payload)
-            package(raw, packaged, kind='model', id='fixture', version='1', title='Fixture',
-                    license='CC0', origin='local:test')
+            package(
+                raw,
+                packaged,
+                kind="model",
+                id="fixture",
+                version="1",
+                title="Fixture",
+                license="CC0",
+                origin="local:test",
+            )
             original = packaged.read_bytes()
-            args = SimpleNamespace(model=None, model_package=packaged, work_directory=root / 'work',
-                                   model_sha256=hashlib.sha256(payload).hexdigest())
-            with self.assertRaisesRegex(RuntimeError, 'Consumer failed'):
+            args = SimpleNamespace(
+                model=None,
+                model_package=packaged,
+                work_directory=root / "work",
+                model_sha256=hashlib.sha256(payload).hexdigest(),
+            )
+            with self.assertRaisesRegex(RuntimeError, "Consumer failed"):
                 with prepared_model(args) as model:
                     self.assertEqual(model.read_bytes(), payload)
                     self.assertNotEqual(model, raw)
-                    raise RuntimeError('Consumer failed')
+                    raise RuntimeError("Consumer failed")
             self.assertEqual(list(args.work_directory.iterdir()), [])
             self.assertEqual(packaged.read_bytes(), original)
             self.assertEqual(raw.read_bytes(), payload)
@@ -363,30 +1235,71 @@ class EvaluationInputTests(unittest.TestCase):
     def test_wrong_model_pin_never_produces_an_extracted_candidate(self):
         with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
             root = Path(folder)
-            raw, packaged = root / 'input.gguf', root / 'input.blobs'
-            raw.write_bytes(b'GGUFfixture')
-            package(raw, packaged, kind='model', id='fixture', version='1', title='Fixture',
-                    license='CC0', origin='local:test')
-            args = SimpleNamespace(model=None, model_package=packaged, work_directory=root / 'work',
-                                   model_sha256='0' * 64)
-            with self.assertRaisesRegex(ValueError, 'selected model artifact'):
+            raw, packaged = root / "input.gguf", root / "input.blobs"
+            raw.write_bytes(b"GGUFfixture")
+            package(
+                raw,
+                packaged,
+                kind="model",
+                id="fixture",
+                version="1",
+                title="Fixture",
+                license="CC0",
+                origin="local:test",
+            )
+            args = SimpleNamespace(
+                model=None,
+                model_package=packaged,
+                work_directory=root / "work",
+                model_sha256="0" * 64,
+            )
+            with self.assertRaisesRegex(ValueError, "selected model artifact"):
                 with prepared_model(args):
-                    self.fail('Wrong model became available to the runner')
+                    self.fail("Wrong model became available to the runner")
             self.assertFalse(args.work_directory.exists())
 
     def test_ambiguous_retrieval_variants_cannot_silently_choose_context(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            model, retrieval, output = root / 'model.gguf', root / 'retrieval.json', root / 'answers.json'
-            model.write_bytes(b'GGUFfixture')
-            retrieval.write_text(json.dumps(dict(complete=True, cases={'cases':[{'id':'case'}]},
-                results=[dict(case_id='case', variant=name, evidence=[]) for name in
-                         ['baselineLibrary', 'candidateLibrary']])), encoding='utf-8')
-            command = ['host_answers', '--server', str(root / 'unused.exe'), '--model', str(model),
-                       '--model-sha256', hashlib.sha256(model.read_bytes()).hexdigest(),
-                       '--retrieval-report', str(retrieval), '--cases', 'case', '--output', str(output)]
-            with patch('sys.argv', command), patch('evaluation.answers.host_answers.subprocess.Popen') as process:
-                with self.assertRaisesRegex(ValueError, 'retrieval-variant'):
+            model, retrieval, output = (
+                root / "model.gguf",
+                root / "retrieval.json",
+                root / "answers.json",
+            )
+            model.write_bytes(b"GGUFfixture")
+            retrieval.write_text(
+                json.dumps(
+                    dict(
+                        complete=True,
+                        cases={"cases": [{"id": "case"}]},
+                        results=[
+                            dict(case_id="case", variant=name, evidence=[])
+                            for name in ["baselineLibrary", "candidateLibrary"]
+                        ],
+                    )
+                ),
+                encoding="utf-8",
+            )
+            command = [
+                "host_answers",
+                "--server",
+                str(root / "unused.exe"),
+                "--model",
+                str(model),
+                "--model-sha256",
+                hashlib.sha256(model.read_bytes()).hexdigest(),
+                "--retrieval-report",
+                str(retrieval),
+                "--cases",
+                "case",
+                "--output",
+                str(output),
+            ]
+            with (
+                patch("sys.argv", command),
+                patch("evaluation.answers.host_answers.subprocess.Popen") as process,
+            ):
+                with self.assertRaisesRegex(ValueError, "retrieval-variant"):
                     main()
                 process.assert_not_called()
             self.assertFalse(output.exists())

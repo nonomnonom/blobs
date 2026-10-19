@@ -1,0 +1,534 @@
+{
+  "application": {
+    "baseline": {
+      "apk_sha256": "19b1c23a278628da148ee283c49f0da02c0ca83b2eba2869adb4b3b487c243bc",
+      "test_apk_sha256": "bb3cb1f5c57a28c59bfb09da7a67e17aec5f76f7747a953b510f712dfdb16785"
+    },
+    "candidate": {
+      "apk_sha256": "ff836b40b5d8f66dc482fd007acba77e554dba00fc925f137df23d21d89bb863",
+      "test_apk_sha256": "7312de2f59c3bfdef6a08cff09998354a94670f9c9827309e2f545729fa2ca43"
+    }
+  },
+  "baseline": {
+    "apk_sha256": "19b1c23a278628da148ee283c49f0da02c0ca83b2eba2869adb4b3b487c243bc",
+    "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "device_profile": {
+      "abi": "x86_64",
+      "api": 36,
+      "available_processors": 4,
+      "device": "emu64xa",
+      "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+      "max_heap_bytes": 201326592,
+      "model": "sdk_gphone64_x86_64"
+    },
+    "median": {
+      "context_setup_ms": 169.094,
+      "decode_tokens_per_second": 33.85309758226899,
+      "first_token_ms": 684.478,
+      "inference_threads": 4,
+      "model_load_ms": 224.519,
+      "output_tokens": 71,
+      "prefill_ms": 283.91,
+      "total_ms": 2834.749
+    },
+    "model": {
+      "bytes": 639446688,
+      "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031"
+    },
+    "output_tokens": 71,
+    "prompt_tokens": 29,
+    "range": {
+      "context_setup_ms": [
+        165.964,
+        178.419
+      ],
+      "decode_tokens_per_second": [
+        25.826859643021873,
+        35.91338097167446
+      ],
+      "first_token_ms": [
+        677.331,
+        694.983
+      ],
+      "inference_threads": [
+        4,
+        4
+      ],
+      "model_load_ms": [
+        224.16,
+        227.386
+      ],
+      "output_tokens": [
+        71,
+        71
+      ],
+      "prefill_ms": [
+        278.46,
+        295.882
+      ],
+      "total_ms": [
+        2703.03,
+        3497.6
+      ]
+    },
+    "requested_inference_threads": null,
+    "runs": [
+      {
+        "audit_file": "audit-01.json",
+        "audit_sha256": "b331d24bf3d4abd7a9688c9c7d36aa84d4f676fc6e47a622906e0b910806d1cd",
+        "context_setup_ms": 165.964,
+        "decode_tokens_per_second": 35.91338097167446,
+        "first_token_ms": 677.331,
+        "inference_threads": 4,
+        "model_load_ms": 224.16,
+        "output_tokens": 71,
+        "prefill_ms": 283.91,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v1-x86_64-2026-10-19/run-01.json",
+        "run_sha256": "5252f600a047a132de8f82a5477e9397c5d9b18e02382a5c72ddf7729fa313eb",
+        "thread_mode": "adaptive",
+        "total_ms": 2703.03
+      },
+      {
+        "audit_file": "audit-02.json",
+        "audit_sha256": "695215e9f63ba23230f0745e42824264f617fe0fc6246383214f11d463219e65",
+        "context_setup_ms": 169.094,
+        "decode_tokens_per_second": 25.826859643021873,
+        "first_token_ms": 694.983,
+        "inference_threads": 4,
+        "model_load_ms": 227.386,
+        "output_tokens": 71,
+        "prefill_ms": 295.882,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v1-x86_64-2026-10-19/run-02.json",
+        "run_sha256": "297850569b1c700e6f1cba8915fd9a78993759db55f0459a3f4db1bb71c18674",
+        "thread_mode": "adaptive",
+        "total_ms": 3497.6
+      },
+      {
+        "audit_file": "audit-03.json",
+        "audit_sha256": "06e6056d0222bd450bb237a8f167a53d903f497c7b785651cb1ec830573a61a7",
+        "context_setup_ms": 178.419,
+        "decode_tokens_per_second": 33.85309758226899,
+        "first_token_ms": 684.478,
+        "inference_threads": 4,
+        "model_load_ms": 224.519,
+        "output_tokens": 71,
+        "prefill_ms": 278.46,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v1-x86_64-2026-10-19/run-03.json",
+        "run_sha256": "b85aa1ae3edb8f1834cd5d618558b5f40757e4de5dff6ce498ae8595f3984b2a",
+        "thread_mode": "adaptive",
+        "total_ms": 2834.749
+      }
+    ],
+    "runtime_commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "test_apk_sha256": "bb3cb1f5c57a28c59bfb09da7a67e17aec5f76f7747a953b510f712dfdb16785",
+    "thread_mode": "adaptive",
+    "warm_turn": null,
+    "workload": {
+      "id": "native-inference-smoke-v1",
+      "max_output_tokens": 96,
+      "system_sha256": "6c9d83e4a80a7550bef6f135352efa92b4bc8b06c8f7c5031e73d147b86981f1",
+      "user_sha256": "c423998c131a228c0e9d859b02ac54c1c68f3bb44d06ab4c9f20e9df409a76e6"
+    }
+  },
+  "candidate": {
+    "apk_sha256": "ff836b40b5d8f66dc482fd007acba77e554dba00fc925f137df23d21d89bb863",
+    "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "device_profile": {
+      "abi": "x86_64",
+      "api": 36,
+      "available_processors": 4,
+      "device": "emu64xa",
+      "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+      "max_heap_bytes": 201326592,
+      "model": "sdk_gphone64_x86_64"
+    },
+    "median": {
+      "context_setup_ms": 26.958,
+      "decode_tokens_per_second": 31.699683449639917,
+      "first_token_ms": 542.551,
+      "inference_threads": 4,
+      "model_load_ms": 234.772,
+      "output_tokens": 71,
+      "prefill_ms": 277.427,
+      "total_ms": 2838.976
+    },
+    "model": {
+      "bytes": 639446688,
+      "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031"
+    },
+    "output_tokens": 71,
+    "prompt_tokens": 29,
+    "range": {
+      "context_setup_ms": [
+        23.485,
+        30.997
+      ],
+      "decode_tokens_per_second": [
+        27.555319243897564,
+        32.46955179213633
+      ],
+      "first_token_ms": [
+        533.834,
+        598.357
+      ],
+      "inference_threads": [
+        4,
+        4
+      ],
+      "model_load_ms": [
+        223.722,
+        271.402
+      ],
+      "output_tokens": [
+        71,
+        71
+      ],
+      "prefill_ms": [
+        276.28,
+        300.476
+      ],
+      "total_ms": [
+        2721.555,
+        3120.347
+      ]
+    },
+    "requested_inference_threads": null,
+    "runs": [
+      {
+        "audit_file": "audit-01.json",
+        "audit_sha256": "d1d9127948575a9da9efbeb23dd3f428d913f7bb0a76b3d476dc0de7b506a350",
+        "context_setup_ms": 23.485,
+        "decode_tokens_per_second": 31.699683449639917,
+        "first_token_ms": 598.357,
+        "inference_threads": 4,
+        "model_load_ms": 271.402,
+        "output_tokens": 71,
+        "prefill_ms": 300.476,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-01.json",
+        "run_sha256": "0364f27755c7eb36999349a5bd749c6c0fcdc1620fddffdbd9ff2e679bae5752",
+        "thread_mode": "adaptive",
+        "total_ms": 2838.976
+      },
+      {
+        "audit_file": "audit-02.json",
+        "audit_sha256": "32c7580ee747fc00f5a0e7bba9583554149778599d2787f9b57942a41e1c1ba5",
+        "context_setup_ms": 30.997,
+        "decode_tokens_per_second": 32.46955179213633,
+        "first_token_ms": 533.834,
+        "inference_threads": 4,
+        "model_load_ms": 223.722,
+        "output_tokens": 71,
+        "prefill_ms": 276.28,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-02.json",
+        "run_sha256": "b049ec4984c90e2bb131e8e33a45c17b89f0ba0114d34514f3c1bd61e9a91291",
+        "thread_mode": "adaptive",
+        "total_ms": 2721.555
+      },
+      {
+        "audit_file": "audit-03.json",
+        "audit_sha256": "b68f86d5d3510e18422696bad0d078288511c94bd94551d5ff4f1e41e4d3bb2d",
+        "context_setup_ms": 26.958,
+        "decode_tokens_per_second": 27.555319243897564,
+        "first_token_ms": 542.551,
+        "inference_threads": 4,
+        "model_load_ms": 234.772,
+        "output_tokens": 71,
+        "prefill_ms": 277.427,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-03.json",
+        "run_sha256": "90815dae812b87de712e29a942467faeb983bdda72f86b1eb5ed76170f88c1c3",
+        "thread_mode": "adaptive",
+        "total_ms": 3120.347
+      }
+    ],
+    "runtime_commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "test_apk_sha256": "7312de2f59c3bfdef6a08cff09998354a94670f9c9827309e2f545729fa2ca43",
+    "thread_mode": "adaptive",
+    "warm_turn": {
+      "median": {
+        "context_setup_ms": 25.099,
+        "decode_tokens_per_second": 31.086032126319623,
+        "first_token_ms": 302.319,
+        "inference_threads": 4,
+        "model_load_ms": 0.0,
+        "output_tokens": 71,
+        "prefill_ms": 277.376,
+        "total_ms": 2584.751
+      },
+      "range": {
+        "context_setup_ms": [
+          24.277,
+          28.53
+        ],
+        "decode_tokens_per_second": [
+          29.305734760811546,
+          37.538609252685596
+        ],
+        "first_token_ms": [
+          298.389,
+          310.766
+        ],
+        "inference_threads": [
+          4,
+          4
+        ],
+        "model_load_ms": [
+          0.0,
+          0.0
+        ],
+        "output_tokens": [
+          71,
+          71
+        ],
+        "prefill_ms": [
+          269.322,
+          285.083
+        ],
+        "total_ms": [
+          2194.95,
+          2734.605
+        ]
+      },
+      "runs": [
+        {
+          "audit_file": "audit-01.json",
+          "audit_sha256": "d1d9127948575a9da9efbeb23dd3f428d913f7bb0a76b3d476dc0de7b506a350",
+          "context_setup_ms": 25.099,
+          "decode_tokens_per_second": 29.305734760811546,
+          "first_token_ms": 310.766,
+          "inference_threads": 4,
+          "model_load_ms": 0.0,
+          "output_tokens": 71,
+          "prefill_ms": 285.083,
+          "prompt_tokens": 29,
+          "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-01.json",
+          "run_sha256": "0364f27755c7eb36999349a5bd749c6c0fcdc1620fddffdbd9ff2e679bae5752",
+          "thread_mode": "adaptive",
+          "total_ms": 2734.605
+        },
+        {
+          "audit_file": "audit-02.json",
+          "audit_sha256": "32c7580ee747fc00f5a0e7bba9583554149778599d2787f9b57942a41e1c1ba5",
+          "context_setup_ms": 24.277,
+          "decode_tokens_per_second": 37.538609252685596,
+          "first_token_ms": 302.319,
+          "inference_threads": 4,
+          "model_load_ms": 0.0,
+          "output_tokens": 71,
+          "prefill_ms": 277.376,
+          "prompt_tokens": 29,
+          "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-02.json",
+          "run_sha256": "b049ec4984c90e2bb131e8e33a45c17b89f0ba0114d34514f3c1bd61e9a91291",
+          "thread_mode": "adaptive",
+          "total_ms": 2194.95
+        },
+        {
+          "audit_file": "audit-03.json",
+          "audit_sha256": "b68f86d5d3510e18422696bad0d078288511c94bd94551d5ff4f1e41e4d3bb2d",
+          "context_setup_ms": 28.53,
+          "decode_tokens_per_second": 31.086032126319623,
+          "first_token_ms": 298.389,
+          "inference_threads": 4,
+          "model_load_ms": 0.0,
+          "output_tokens": 71,
+          "prefill_ms": 269.322,
+          "prompt_tokens": 29,
+          "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-03.json",
+          "run_sha256": "90815dae812b87de712e29a942467faeb983bdda72f86b1eb5ed76170f88c1c3",
+          "thread_mode": "adaptive",
+          "total_ms": 2584.751
+        }
+      ]
+    },
+    "workload": {
+      "id": "native-inference-smoke-v1",
+      "max_output_tokens": 96,
+      "system_sha256": "6c9d83e4a80a7550bef6f135352efa92b4bc8b06c8f7c5031e73d147b86981f1",
+      "user_sha256": "c423998c131a228c0e9d859b02ac54c1c68f3bb44d06ab4c9f20e9df409a76e6"
+    }
+  },
+  "candidate_vs_baseline_percent": {
+    "context_setup_latency": -84.05738819828025,
+    "decode_tokens_per_second": -6.361054929747256,
+    "first_token_latency": -20.735071105280213,
+    "total_latency": 0.14911373105697123
+  },
+  "candidate_warm_turn": {
+    "median": {
+      "context_setup_ms": 25.099,
+      "decode_tokens_per_second": 31.086032126319623,
+      "first_token_ms": 302.319,
+      "inference_threads": 4,
+      "model_load_ms": 0.0,
+      "output_tokens": 71,
+      "prefill_ms": 277.376,
+      "total_ms": 2584.751
+    },
+    "range": {
+      "context_setup_ms": [
+        24.277,
+        28.53
+      ],
+      "decode_tokens_per_second": [
+        29.305734760811546,
+        37.538609252685596
+      ],
+      "first_token_ms": [
+        298.389,
+        310.766
+      ],
+      "inference_threads": [
+        4,
+        4
+      ],
+      "model_load_ms": [
+        0.0,
+        0.0
+      ],
+      "output_tokens": [
+        71,
+        71
+      ],
+      "prefill_ms": [
+        269.322,
+        285.083
+      ],
+      "total_ms": [
+        2194.95,
+        2734.605
+      ]
+    },
+    "runs": [
+      {
+        "audit_file": "audit-01.json",
+        "audit_sha256": "d1d9127948575a9da9efbeb23dd3f428d913f7bb0a76b3d476dc0de7b506a350",
+        "context_setup_ms": 25.099,
+        "decode_tokens_per_second": 29.305734760811546,
+        "first_token_ms": 310.766,
+        "inference_threads": 4,
+        "model_load_ms": 0.0,
+        "output_tokens": 71,
+        "prefill_ms": 285.083,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-01.json",
+        "run_sha256": "0364f27755c7eb36999349a5bd749c6c0fcdc1620fddffdbd9ff2e679bae5752",
+        "thread_mode": "adaptive",
+        "total_ms": 2734.605
+      },
+      {
+        "audit_file": "audit-02.json",
+        "audit_sha256": "32c7580ee747fc00f5a0e7bba9583554149778599d2787f9b57942a41e1c1ba5",
+        "context_setup_ms": 24.277,
+        "decode_tokens_per_second": 37.538609252685596,
+        "first_token_ms": 302.319,
+        "inference_threads": 4,
+        "model_load_ms": 0.0,
+        "output_tokens": 71,
+        "prefill_ms": 277.376,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-02.json",
+        "run_sha256": "b049ec4984c90e2bb131e8e33a45c17b89f0ba0114d34514f3c1bd61e9a91291",
+        "thread_mode": "adaptive",
+        "total_ms": 2194.95
+      },
+      {
+        "audit_file": "audit-03.json",
+        "audit_sha256": "b68f86d5d3510e18422696bad0d078288511c94bd94551d5ff4f1e41e4d3bb2d",
+        "context_setup_ms": 28.53,
+        "decode_tokens_per_second": 31.086032126319623,
+        "first_token_ms": 298.389,
+        "inference_threads": 4,
+        "model_load_ms": 0.0,
+        "output_tokens": 71,
+        "prefill_ms": 269.322,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/runs/run-03.json",
+        "run_sha256": "90815dae812b87de712e29a942467faeb983bdda72f86b1eb5ed76170f88c1c3",
+        "thread_mode": "adaptive",
+        "total_ms": 2584.751
+      }
+    ]
+  },
+  "candidate_warm_turn_vs_baseline_cold": {
+    "baseline_cold_median": {
+      "decode_tokens_per_second": 33.85309758226899,
+      "first_token_ms": 684.478,
+      "total_ms": 2834.749
+    },
+    "candidate_warm_median": {
+      "decode_tokens_per_second": 31.086032126319623,
+      "first_token_ms": 302.319,
+      "model_load_ms": 0.0,
+      "total_ms": 2584.751
+    },
+    "candidate_warm_vs_baseline_cold_percent": {
+      "decode_tokens_per_second": -8.173743774036947,
+      "first_token_latency": -55.8321816040837,
+      "total_latency": -8.81905240993116
+    },
+    "candidate_warm_vs_candidate_cold_percent": {
+      "decode_tokens_per_second": -1.9358279217367547,
+      "first_token_latency": -44.278233751297115,
+      "total_latency": -8.954813284790008
+    },
+    "reference": "Baseline build per-turn model load vs candidate build after the model is cached"
+  },
+  "complete": true,
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "device_profile": {
+    "abi": "x86_64",
+    "api": 36,
+    "available_processors": 4,
+    "device": "emu64xa",
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "max_heap_bytes": 201326592,
+    "model": "sdk_gphone64_x86_64"
+  },
+  "format": 1,
+  "inputs": {
+    "baseline_audits": [
+      {
+        "file": "evaluation/evidence/native-inference-smoke-v1-x86_64-2026-10-19/audit-01.json",
+        "sha256": "b331d24bf3d4abd7a9688c9c7d36aa84d4f676fc6e47a622906e0b910806d1cd"
+      },
+      {
+        "file": "evaluation/evidence/native-inference-smoke-v1-x86_64-2026-10-19/audit-02.json",
+        "sha256": "695215e9f63ba23230f0745e42824264f617fe0fc6246383214f11d463219e65"
+      },
+      {
+        "file": "evaluation/evidence/native-inference-smoke-v1-x86_64-2026-10-19/audit-03.json",
+        "sha256": "06e6056d0222bd450bb237a8f167a53d903f497c7b785651cb1ec830573a61a7"
+      }
+    ],
+    "candidate_audits": [
+      {
+        "file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/audit-01.json",
+        "sha256": "d1d9127948575a9da9efbeb23dd3f428d913f7bb0a76b3d476dc0de7b506a350"
+      },
+      {
+        "file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/audit-02.json",
+        "sha256": "32c7580ee747fc00f5a0e7bba9583554149778599d2787f9b57942a41e1c1ba5"
+      },
+      {
+        "file": "evaluation/evidence/native-inference-smoke-v2-x86_64-android16-2026-10-19/audit-03.json",
+        "sha256": "b68f86d5d3510e18422696bad0d078288511c94bd94551d5ff4f1e41e4d3bb2d"
+      }
+    ],
+    "runtime_lock": {
+      "file": "../android/third_party/llama.lock.json",
+      "sha256": "d800db62c2036a984d924a3fe193df15cf17bf624aab459045556eb6c5a75003"
+    }
+  },
+  "interpretation": "A lower total/first-token latency or higher decode rate is favorable in this probe only. It measures app/runtime behavior, not generated-content quality.",
+  "runtime": {
+    "commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "lock_sha256": "d800db62c2036a984d924a3fe193df15cf17bf624aab459045556eb6c5a75003"
+  },
+  "scope": "Repeated native smoke comparison on the same Android device, with the same model, fixed workload and pinned llama.cpp runtime. Baseline and candidate app builds may differ. This checks basic model compatibility and latency only; it is not RAG quality, phone performance, or a production-model selection.",
+  "script_sha256": "04632335ba122d1866bb69ea341704b8db00439be68d1ad781c06c561f058f4a"
+}

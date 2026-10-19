@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "id": "backcountry-basics",
+  "edition": "2026-10.2",
+  "title": "Backcountry trip planning · U.S. national parks",
+  "publisher": "National Park Service · U.S. Department of the Interior",
+  "license": "National Park Service text; no claim to original U.S. Government works. NPS content is generally public domain unless otherwise marked. The Ten Essentials system credits The Mountaineers. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+  "saved": "2026-10-19",
+  "collection": "U.S. national park trip planning and backcountry camping",
+  "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+  "sources": [
+    {
+      "id": "ten-essentials",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/10essentials.htm",
+      "title": "Ten Essentials",
+      "updated": "2026-05-28",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "dbc91d59c408e9e8b4014d9c2db67505c62bb17a64638c2ec113a7f82b15af49"
+    },
+    {
+      "id": "trip-planning-guide",
+      "host": "home.nps.gov",
+      "url": "https://home.nps.gov/subjects/healthandsafety/trip-planning-guide.htm",
+      "title": "Trip Planning Guide",
+      "updated": "2026-08-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "4cb054e437e915d59b9193fde4eb3cfe9dba3fc693eabb8721653c8b431af4fb"
+    },
+    {
+      "id": "backcountry-camping",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/subjects/camping/backcountry-camping.htm",
+      "title": "Wilderness & Backcountry Camping",
+      "updated": "2024-07-02",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "d9876de00df3b01d750cadcecb72a4fc7c3f2403d32c06c88fc551854b561970"
+    }
+  ]
+}

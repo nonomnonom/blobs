@@ -1,0 +1,46 @@
+{
+  "name": "@blobs/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "serve out",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "postbuild": "node scripts/normalize-export.mjs",
+    "test": "node --test scripts/*.test.mjs"
+  },
+  "dependencies": {
+    "beautiful-mermaid": "1.1.3",
+    "fumadocs-core": "16.17.7",
+    "fumadocs-mdx": "15.4.8",
+    "fumadocs-ui": "16.17.7",
+    "next": "16.4.2",
+    "next-themes": "0.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/mdx": "2.0.14",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.2",
+    "prettier": "3.9.10",
+    "serve": "14.2.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "compression": "1.8.2"
+  }
+}

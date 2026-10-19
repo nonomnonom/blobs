@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "id": "ready-emergency-preparedness",
+  "edition": "2026-10.1",
+  "title": "Emergency preparedness · U.S. households",
+  "publisher": "Ready.gov · Federal Emergency Management Agency",
+  "license": "FEMA/Ready.gov text; FEMA states most FEMA.gov material may be reused, while page-specific third-party restrictions may apply. Text only; no images, logos or endorsement.",
+  "saved": "2026-10-19",
+  "collection": "U.S. household emergency preparedness",
+  "origin": "https://www.fema.gov/about/website-information",
+  "sources": [
+    {
+      "id": "family-plan",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/plan",
+      "title": "Make A Plan",
+      "updated": "2026-09-01",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "05401c1742ae13cef8c5d784cb77eafa7c8d438d6c6abbd17841e7c7d4fb3cda"
+    },
+    {
+      "id": "emergency-kit",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/kit",
+      "title": "Build A Kit",
+      "updated": "2026-07-01",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "918456efe4b60990a7ba90a29db7bfab86e8017d6089af2a8b099da24fda497f"
+    },
+    {
+      "id": "evacuation",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/evacuation",
+      "title": "Evacuation",
+      "updated": "2026-03-20",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "a194f7995683ebd9d1263110383269650596c119124be416e31fe264048dd6c7"
+    },
+    {
+      "id": "power-outages",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/power-outages",
+      "title": "Power Outages",
+      "updated": "2026-06-04",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "4e190ac459890c174c8ee2f509af26f5720d775c423492b4caad5ed0ee9a01ae"
+    }
+  ]
+}

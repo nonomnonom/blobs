@@ -16,8 +16,8 @@ android {
         applicationId = "dev.blobs.app"
         minSdk = 28
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 17
+        versionName = "0.3.13"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["notAnnotation"] = "dev.blobs.app.ManualCheck"
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
@@ -48,7 +48,11 @@ android {
         }
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    packaging.resources.excludes += "META-INF/LICENSE.md"
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -72,6 +76,14 @@ room { schemaDirectory("$projectDir/schemas") }
 dependencyLocking { lockAllConfigurations() }
 
 dependencies {
+    constraints {
+        add("ktlint", libs.tooling.logback.classic)
+        add("ktlint", libs.tooling.logback.core)
+        add("androidLintTool", libs.tooling.commons.lang)
+        add("androidLintTool", libs.tooling.httpclient)
+        add("androidLintTool", libs.tooling.bouncycastle.pkix)
+        add("androidLintTool", libs.bouncycastle.prov)
+    }
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -88,6 +100,11 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.sqlite.bundled)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.pdfbox.android) {
+        exclude(group = "org.bouncycastle")
+    }
+    implementation(libs.bouncycastle.prov)
+    implementation(libs.bouncycastle.util)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
@@ -101,3 +118,5 @@ dependencies {
 }
 
 kotlin { compilerOptions { allWarningsAsErrors.set(true) } }
+
+ktlint { version.set(libs.versions.ktlint.engine.get()) }

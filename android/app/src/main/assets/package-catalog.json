@@ -1,0 +1,430 @@
+{
+  "format": 1,
+  "revision": 2026102002,
+  "release_tag": "v0.3.10",
+  "packages": [
+    {
+      "file_name": "qwen3-integration.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/qwen3-integration.blobs",
+      "download_format": "blobs",
+      "download_bytes": 639447235,
+      "download_sha256": "0089dba9c9af05ebecb3a0110866f0716f439da2cb6d7d90a66a911062305e43",
+      "manifest": {
+        "format": 1,
+        "id": "qwen3-06b-q8",
+        "version": "23749fef",
+        "kind": "model",
+        "title": "Qwen3 0.6B Q8",
+        "bytes": 639446688,
+        "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/tree/23749fefcc72300e3a2ad315e1317431b06b590a"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 4096,
+      "description": "A compact instruction model for everyday offline questions.",
+      "language": "English",
+      "publisher": "Qwen",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 2048,
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "gemma-4-E2B_q4_0-it.gguf",
+      "url": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/675cff42a74c774d6cb76f76d8eacb49b48c9b93/gemma-4-E2B_q4_0-it.gguf",
+      "download_format": "gguf",
+      "download_bytes": 3349516256,
+      "download_sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+      "manifest": {
+        "format": 1,
+        "id": "gemma4-e2b-q4",
+        "version": "675cff42",
+        "kind": "model",
+        "title": "Gemma 4 E2B · Frontier",
+        "bytes": 3349516256,
+        "sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/tree/675cff42a74c774d6cb76f76d8eacb49b48c9b93"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 8192,
+      "description": "A balanced on-device model for research questions and follow-ups.",
+      "language": "English",
+      "publisher": "Google",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 4096,
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "gemma-4-E4B_q4_0-it.gguf",
+      "url": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/4b4a2c1d584be7264f87aac328a1bc739ce81b6c/gemma-4-E4B_q4_0-it.gguf",
+      "download_format": "gguf",
+      "download_bytes": 5154941280,
+      "download_sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+      "manifest": {
+        "format": 1,
+        "id": "gemma4-e4b-q4",
+        "version": "4b4a2c1d",
+        "kind": "model",
+        "title": "Gemma 4 E4B · Frontier",
+        "bytes": 5154941280,
+        "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/tree/4b4a2c1d584be7264f87aac328a1bc739ce81b6c"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 12288,
+      "description": "A larger on-device model for phones with more available memory.",
+      "language": "English",
+      "publisher": "Google",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 6144,
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikipedia-starter-schema3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/wikipedia-starter-schema3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 3828868,
+      "download_sha256": "d893c8b5c21596d11db3260b77b8be88cf3cab813e34065f4c0a1bfeacfe0ff9",
+      "manifest": {
+        "format": 1,
+        "id": "wikipedia-starter",
+        "version": "2026-10-17.5",
+        "kind": "library",
+        "title": "Science and everyday questions",
+        "bytes": 8757248,
+        "sha256": "141b449c10fc5a76428f616c413f7066633b5fe426f84a9d5d2f45612b989a54",
+        "license": "CC BY-SA 4.0; adapted plain text; individual article attribution included",
+        "origin": "https://en.wikipedia.org/wiki/Wikipedia:Copyrights"
+      },
+      "role": "starter",
+      "description": "A small set of science and everyday reference articles to get started offline.",
+      "language": "English",
+      "publisher": "Blobs · Wikipedia contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/wikipedia-en-top1m-mini-2026-04.blobs",
+      "download_format": "blobs",
+      "download_bytes": 1804630820,
+      "download_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
+      "manifest": {
+        "format": 1,
+        "id": "wikipedia-top1m-mini",
+        "version": "2026-04.1",
+        "kind": "library",
+        "title": "Wikipedia Top 1M introductions",
+        "bytes": 5011431424,
+        "sha256": "4ae8d2b3315ffab81bef6968ff84934a987d28843d15caa3a2d920756228e395",
+        "license": "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs",
+        "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim"
+      },
+      "role": "optional",
+      "description": "A broader offline collection of Wikipedia introductions for optional installation.",
+      "language": "English",
+      "publisher": "Blobs · Wikipedia contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikivoyage-en-2026-09-v3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/cae7f6c11e3bad49897dd17bb580ed5bf2da15ed/packages/wikivoyage-en-2026-09-v3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 295304448,
+      "download_sha256": "2ff792457b81790fdba6c9f5118b15294448b3d96f934dca1844868c912bfdf8",
+      "manifest": {
+        "bytes": 628633600,
+        "format": 1,
+        "id": "wikivoyage-en",
+        "kind": "library",
+        "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
+        "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
+        "sha256": "da61f4c387b8fc439c081841b78526368e4639534292362d072f8ee20b85d773",
+        "title": "Travel guides · English",
+        "version": "2026-09.3"
+      },
+      "role": "optional",
+      "description": "Offline destination guides and travel basics. This snapshot is from September 2026. Opening hours, fares, visas and local safety advice can change; check current details before you travel.",
+      "language": "English",
+      "publisher": "Wikivoyage contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "nps-outdoor-safety-2026-10-v2.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/nps-outdoor-safety-2026-10-v2.blobs",
+      "download_format": "blobs",
+      "download_bytes": 39256,
+      "download_sha256": "e0bc383811ad95c5079b931292f33320a9477d0fb77846ef0e91de869e71fcd8",
+      "manifest": {
+        "bytes": 151552,
+        "format": 1,
+        "id": "nps-outdoor-safety",
+        "kind": "library",
+        "license": "U.S. Government work · National Park Service (public domain unless marked)",
+        "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+        "sha256": "c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f",
+        "title": "Outdoor safety · U.S. national parks",
+        "version": "2026-10.2"
+      },
+      "role": "optional",
+      "description": "Five U.S. national-park guides for hiking, outdoor emergencies, water treatment, natural-water hazards, and winter hiking. Conditions differ by place; follow current park and emergency guidance. Blobs is not affiliated with or endorsed by NPS.",
+      "language": "English",
+      "publisher": "National Park Service",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "ready-emergency-preparedness-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/ready-emergency-preparedness-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 25054,
+      "download_sha256": "5e39ee9eb713ae790b426d9e7088ffdd5ab55edc29705cb62503159f207e9d0d",
+      "manifest": {
+        "format": 1,
+        "id": "ready-emergency-preparedness",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Emergency preparedness · U.S. households",
+        "bytes": 106496,
+        "sha256": "aaa6315c84831b62c25458541513c3e9e0b3c9f25e0558d525596a27d6b5304c",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Offline U.S. household guides for emergency plans, supply kits, evacuation, and power outages. This snapshot can become outdated; follow current local instructions in an emergency. Blobs is independent and is not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "camping-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/camping-safety-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 25535,
+      "download_sha256": "8613b763c0935aaca7871f0184271ee11f2f74b693c7c5f2dc9e840f505c512e",
+      "manifest": {
+        "format": 1,
+        "id": "camping-safety",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Camping safely · U.S. national parks",
+        "bytes": 110592,
+        "sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743",
+        "license": "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+        "origin": "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039"
+      },
+      "role": "optional",
+      "description": "A four-step U.S. National Park Service camping-safety guide: prepare, check conditions on arrival, camp safely, and close out your trip. Pages last updated in 2017–2019; check current park rules and alerts. Blobs is independent and not endorsed by NPS.",
+      "language": "English",
+      "publisher": "National Park Service",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "backcountry-basics-2026-10-v3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/backcountry-basics-2026-10-v3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 29597,
+      "download_sha256": "e8b66c6a4ba1ca797ed3f03ff4aeb6bf647a007d9cde904b1aecd0e2468d711d",
+      "manifest": {
+        "format": 1,
+        "id": "backcountry-basics",
+        "version": "2026-10.3",
+        "kind": "library",
+        "title": "Backcountry trip planning · U.S. national parks",
+        "bytes": 118784,
+        "sha256": "c2d3f6bc7ce50bcaca70a0d4ca54666aebb4d6d3243c805dfc9b3a25da66021f",
+        "license": "National Park Service text; public-domain status may vary by page; source credits The Mountaineers for the Ten Essentials system",
+        "origin": "https://www.nps.gov/aboutus/disclaimer.htm"
+      },
+      "role": "optional",
+      "description": "A compact guide to planning national park trips, packing essentials, and preparing for backcountry conditions. The day and overnight trip guide does not cover multi-day backcountry travel. Rules, permits, weather, closures, and alerts can change; check current park guidance.",
+      "language": "English",
+      "publisher": "National Park Service",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "weather-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/weather-safety-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 26824,
+      "download_sha256": "739094b1aa407a742f37e636ed24e389c2c1722fef18d89a38589b178a2f45d1",
+      "manifest": {
+        "format": 1,
+        "id": "weather-safety",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Weather & wildfire safety · U.S. guidance",
+        "bytes": 114688,
+        "sha256": "3793f9a274cedf3e36c6160de6742a23d64988cec00027dc6b964335bb15b236",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Prepare for floods, thunderstorms, winter storms, and wildfires with four Ready.gov guides. U.S. guidance from March-August 2026. No live forecasts or alerts; follow current local instructions. Blobs is independent and not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "earthquake-tsunami-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/earthquake-tsunami-safety-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 14750,
+      "download_sha256": "9edabd91404f15033dcac058a5876bc3a4f0b0ce129c2d936617287d88f0674d",
+      "manifest": {
+        "format": 1,
+        "id": "earthquake-tsunami-safety",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Earthquake & tsunami safety · U.S. guidance",
+        "bytes": 90112,
+        "sha256": "2acc2b72ca7ade2ee58d9f05242cf38f28e529b4266a885274c949eae46f08c4",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Two Ready.gov guides for earthquake preparation, protective actions, tsunami evacuation, and hazards after shaking. U.S. guidance from May-September 2026. No live warnings or evacuation maps; follow local authorities. Blobs is independent and not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "emergency-food-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/emergency-food-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 7662,
+      "download_sha256": "5552eea8cadb4a86e1f53bbaf7df5b90a5b6aa317a0095c8563393740aa75d24",
+      "manifest": {
+        "format": 1,
+        "id": "emergency-food",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Food during power outages · U.S. guidance",
+        "bytes": 73728,
+        "sha256": "d90ef82573ca930b5123e33ec971beea93dcb5fefc0f4ab265152463a990efec",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Plan food supplies, cook safely, and protect refrigerator and freezer food during outages with one Ready.gov guide. U.S. household guidance from March 2026; follow current local food-safety advice. Blobs is independent and not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "practical-living-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/8eb5bf7f426dad543d8e3a28e00d35f357b4f5ad/packages/practical-living-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 81377,
+      "download_sha256": "b4e59dacbcc9f70a8ffe28130e920a64f6d96bda2c836bebd874f28a633cd1b6",
+      "manifest": {
+        "format": 1,
+        "id": "practical-living",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Practical living",
+        "bytes": 229376,
+        "sha256": "3bd3da23ad4ae106f0875d7669130267f63ae0c7f21e43ec9d417225143b83b1",
+        "license": "CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/); Appropedia contributors. See each article for its source and contributor history.",
+        "origin": "https://www.appropedia.org/Appropedia:Intellectual_property"
+      },
+      "role": "optional",
+      "description": "Four Appropedia guides to composting, drip irrigation, rainwater collection and solar cooking. Saved October 2026, without diagrams or videos.",
+      "language": "English",
+      "publisher": "Appropedia contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "bali-travel-2026-09-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/8eb5bf7f426dad543d8e3a28e00d35f357b4f5ad/packages/bali-travel-2026-09-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 673641,
+      "download_sha256": "fae6783ac8b72040fbb13f2a6b00417c5032b5817b5da08f8c0e49d7381a6dc8",
+      "manifest": {
+        "format": 1,
+        "id": "bali-travel",
+        "version": "2026-09.1",
+        "kind": "library",
+        "title": "Bali travel guides",
+        "bytes": 1499136,
+        "sha256": "24dcc4b2747064de96a4898af0c51c96515119ee4505581e97178a8e0ad16cf1",
+        "license": "CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); Wikivoyage contributors. See each guide for its source and contributor history.",
+        "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides"
+      },
+      "role": "optional",
+      "description": "30 guides to Bali, Ubud, Denpasar and nearby islands. Read about places and getting around. September 2026 text snapshot; no offline maps. Also in Travel guides · English.",
+      "language": "English",
+      "publisher": "Wikivoyage contributors",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    }
+  ]
+}

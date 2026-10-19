@@ -10,8 +10,8 @@ import dev.blobs.app.data.RecoveryExport
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
-import dev.blobs.app.data.packages.PackageManifest
-import dev.blobs.app.data.preferences.PreferencesStore
+import dev.blobs.app.data.local.TurnEntity
+import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.data.preferences.ThemeMode
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -27,54 +28,18 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-enum class Page {
-    CHAT,
-    WELCOME,
-    INTRO,
-    SETUP,
-    IMPORT,
-    HISTORY,
-    LIBRARY,
-    BROWSE,
-    SOURCES,
-    READER,
-    MODELS,
-    SETTINGS,
-    APPEARANCE,
-    STORAGE,
-    DATA,
-    PRIVACY,
-    HELP,
-    ABOUT
-}
-
-data class ProductState(
-    val page: Page = Page.CHAT,
-    val draft: String = "",
-    val options: PreferencesStore.Options = PreferencesStore.Options(),
-    val loaded: Boolean = false,
-    val notice: Int? = null,
-    val sources: List<Evidence> = emptyList(),
-    val query: String = "",
-    val offset: Int = 0,
-    val hasMore: Boolean = false,
-    val searching: Boolean = false,
-    val reader: Evidence? = null,
-    val readerIsFull: Boolean = false,
-    val importOrigin: Page = Page.SETUP,
-    val importUri: Uri? = null,
-    val manifest: PackageManifest? = null
-)
-
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ProductViewModel(private val container: AppContainer) : ViewModel() {
     private val mutable = MutableStateFlow(ProductState())
     val state = mutable.asStateFlow()
     val work = container.work.state
+    val catalog = container.catalog
+    val catalogState = container.catalog.state
     private val conversation = MutableStateFlow("")
     val conversationId = conversation.asStateFlow()
     private val dao = container.database.conversations()
     private val draftLock = Mutex()
+    private var draftRevision = 0L
     private val backStack = ArrayDeque<Page>()
     private var searchJob: Job? = null
     private var inspectionJob: Job? = null
@@ -98,6 +63,20 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                     } else {
                         createConversation()
                     }
+                    val installed = container.database.packages().all()
+                    val restored = work.first { it.ready || it.notice != null }
+                    val needsSetup = installed.none { it.kind == "model" } ||
+                        !catalog.hasStarterLibrary(installed)
+                    val pendingKind = restored.download?.manifest?.kind
+                        ?: restored.pendingImport?.manifest?.kind
+                    mutable.value = mutable.value.copy(
+                        page = if (options.welcomed && needsSetup) Page.SETUP else Page.CHAT,
+                        importOrigin = when {
+                            needsSetup -> Page.SETUP
+                            pendingKind == "model" -> Page.MODELS
+                            else -> Page.LIBRARY
+                        }
+                    )
                 }
                 mutable.value = mutable.value.copy(options = options, loaded = true)
             }
@@ -106,36 +85,77 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
 
     fun navigate(page: Page) {
         if (page == mutable.value.page) return
+        if (page == Page.SOURCES) mutable.value = mutable.value.copy(browseCollection = null)
         backStack.addLast(mutable.value.page)
         mutable.value = mutable.value.copy(page = page)
         if (page in setOf(Page.BROWSE, Page.SOURCES)) search("")
     }
 
     fun back(): Boolean {
+        if (mutable.value.page == Page.SETUP) {
+            when (setupStep()) {
+                SetupStep.MODEL -> mutable.value = mutable.value.copy(page = Page.WELCOME)
+                SetupStep.LIBRARY -> mutable.value = mutable.value.copy(setupStep = SetupStep.MODEL)
+                SetupStep.READY -> mutable.value = mutable.value.copy(setupStep = SetupStep.LIBRARY)
+            }
+            return true
+        }
         if (backStack.isEmpty()) return false
         mutable.value = mutable.value.copy(page = backStack.removeLast())
         return true
     }
 
-    fun welcome(setup: Boolean) = action {
-        if (setup) mutable.value = mutable.value.copy(page = Page.WELCOME)
-        container.preferences.welcome()
-        if (setup) navigate(Page.INTRO) else goHome()
-    }
-
-    fun startWithFiles() = action {
-        mutable.value = mutable.value.copy(page = Page.WELCOME)
-        container.preferences.welcome()
+    fun welcome(): Job {
+        backStack.clear()
+        mutable.value = mutable.value.copy(
+            page = Page.WELCOME,
+            setupStep = null,
+            options = mutable.value.options.copy(welcomed = true)
+        )
         navigate(Page.SETUP)
+        return action { container.preferences.welcome() }
     }
 
-    fun finishSetup() = goHome()
+    fun finishSetup() {
+        if (selectedModel() == null || !hasStarterLibrary()) {
+            navigate(Page.SETUP)
+            return
+        }
+        goHome()
+    }
+
+    private fun hasStarterLibrary(): Boolean = catalog.hasStarterLibrary(packages.value)
+
+    fun setupStep(requested: SetupStep? = mutable.value.setupStep): SetupStep = when {
+        requested == SetupStep.MODEL -> SetupStep.MODEL
+        packages.value.none { it.kind == "model" } -> SetupStep.MODEL
+        requested == SetupStep.LIBRARY || !hasStarterLibrary() -> SetupStep.LIBRARY
+        else -> SetupStep.READY
+    }
+
+    fun continueSetup() {
+        if (selectedModel() == null) return
+        mutable.value = mutable.value.copy(
+            setupStep = when (setupStep()) {
+                SetupStep.MODEL -> if (hasStarterLibrary()) SetupStep.READY else SetupStep.LIBRARY
+                SetupStep.LIBRARY -> if (hasStarterLibrary()) SetupStep.READY else SetupStep.LIBRARY
+                SetupStep.READY -> SetupStep.READY
+            }
+        )
+    }
 
     fun finishImport() {
+        if (work.value.importComplete && mutable.value.importOrigin == Page.SETUP) {
+            mutable.value = mutable.value.copy(setupStep = null)
+        }
         container.work.clearNotice()
         val origin = mutable.value.importOrigin
-        if (mutable.value.page == Page.IMPORT && backStack.lastOrNull() == origin) {
-            back()
+        if (mutable.value.page == Page.IMPORT) {
+            if (backStack.lastOrNull() == origin) {
+                back()
+            } else {
+                mutable.value = mutable.value.copy(page = origin)
+            }
         } else {
             navigate(origin)
         }
@@ -144,6 +164,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     fun draft(value: String) {
         val id = conversation.value
         if (id.isEmpty()) return
+        draftRevision++
         mutable.value = mutable.value.copy(draft = value.take(4000))
         val captured = mutable.value.draft
         action { draftLock.withLock { dao.saveDraft(id, captured) } }
@@ -178,35 +199,67 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         mutable.value = mutable.value.copy(page = Page.CHAT)
     }
 
-    fun send(question: String = mutable.value.draft, widen: Boolean = false) = action {
-        if (work.value.busy || question.isBlank()) return@action
-        if (packages.value.none { it.kind == "library" }) {
-            navigate(Page.SETUP)
-            return@action
-        }
-        val model = selectedModel() ?: run {
-            navigate(Page.MODELS)
-            return@action
-        }
-        val chosen = if (widen) null else selectedScope()
-        if (chosen?.isEmpty() == true) {
-            fail(R.string.empty_scope)
-            return@action
-        }
-        draftLock.withLock {
-            if (widen) container.preferences.selectScope("*")
-            if (container.work.answer(
-                    conversation.value,
-                    question.trim(),
-                    model,
-                    packages.value.toList(),
-                    chosen
-                )
-            ) {
-                mutable.value = mutable.value.copy(draft = "")
+    fun send(question: String = mutable.value.draft) = submit(question)
+
+    fun retry(turn: TurnEntity, widen: Boolean = false) = submit(turn.question, turn, widen)
+
+    private fun submit(question: String, retry: TurnEntity? = null, widen: Boolean = false) =
+        action {
+            if (work.value.busy || question.isBlank()) return@action
+            if (!hasStarterLibrary()) {
+                navigate(Page.SETUP)
+                return@action
+            }
+            val model = (
+                if (retry == null) {
+                    selectedModel()
+                } else {
+                    packages.value.find {
+                        it.kind == "model" && it.sha256 == retry.model.substringAfterLast(" · ")
+                    }
+                }
+                ) ?: run {
+                navigate(Page.MODELS)
+                return@action
+            }
+            val chosen = when {
+                widen -> null
+
+                retry != null -> retry.scope.takeUnless {
+                    it == "*"
+                }?.split('\n')?.filter(String::isNotBlank)?.toSet()
+
+                else -> selectedScope()
+            }
+            if (chosen?.isEmpty() == true) {
+                fail(R.string.empty_scope)
+                return@action
+            }
+            draftLock.withLock {
+                val submittingThread = conversation.value
+                val submittingRevision = draftRevision
+                if (widen) container.preferences.selectScope("*")
+                if (container.work.answer(
+                        submittingThread,
+                        question.trim(),
+                        model,
+                        packages.value.toList(),
+                        chosen,
+                        retry?.id
+                    )
+                ) {
+                    if (retry == null && conversation.value == submittingThread) {
+                        if (draftRevision == submittingRevision &&
+                            mutable.value.draft.trim() == question.trim()
+                        ) {
+                            mutable.value = mutable.value.copy(draft = "")
+                        } else {
+                            dao.saveDraft(submittingThread, mutable.value.draft)
+                        }
+                    }
+                }
             }
         }
-    }
 
     fun selectedModel(): PackageEntity? =
         packages.value.find { it.kind == "model" && it.key == mutable.value.options.model }
@@ -223,7 +276,10 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun selectModel(pack: PackageEntity) = action {
-        if (!work.value.busy) container.preferences.selectModel(pack.key)
+        if (!work.value.busy && selectedModel()?.key != pack.key) {
+            container.work.releaseInferenceModel()
+            container.preferences.selectModel(pack.key)
+        }
     }
 
     fun selectScope(value: Set<String>?) = action {
@@ -261,10 +317,16 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     fun search(query: String, offset: Int = 0) {
         searchJob?.cancel()
         mutable.value = mutable.value.copy(query = query, searching = true, offset = offset)
+        val browseKey = mutable.value.browseCollection.takeIf { mutable.value.page == Page.BROWSE }
+        val searchPackages = if (browseKey != null) {
+            packages.value.filter { it.key == browseKey }.map { it.copy(enabled = true) }
+        } else {
+            packages.value
+        }
         searchJob = action {
             val result =
                 withContext(Dispatchers.IO) {
-                    container.library.browse(packages.value, query, offset)
+                    container.library.browse(searchPackages, query, offset)
                 }
             mutable.value =
                 mutable.value.copy(
@@ -273,6 +335,11 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                     searching = false
                 )
         }
+    }
+
+    fun browseCollection(pack: PackageEntity) {
+        mutable.value = mutable.value.copy(browseCollection = pack.key)
+        navigate(Page.BROWSE)
     }
 
     fun inspect(uri: Uri) {
@@ -300,6 +367,35 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun importDocuments(uris: List<Uri>, context: Context) {
+        if (work.value.pendingImport != null) {
+            navigate(Page.IMPORT)
+            return
+        }
+        if (container.work.importDocuments(
+                uris,
+                context.getString(R.string.import_documents_title)
+            )
+        ) {
+            navigate(Page.IMPORT)
+        }
+    }
+
+    fun setLibraryEnabled(pack: PackageEntity, enabled: Boolean) = action {
+        if (pack.kind != "library" || work.value.busy) return@action
+        container.work.mutate {
+            container.database.packages().setEnabled(pack.key, enabled)
+        }
+    }
+
+    fun exportCollection(context: Context, pack: PackageEntity, uri: Uri) = action {
+        withContext(Dispatchers.IO) {
+            val output = requireNotNull(context.contentResolver.openOutputStream(uri))
+            container.installer.exportCollection(pack, output)
+        }
+        fail(R.string.collection_export_saved)
+    }
+
     fun dismissImport() {
         inspectionJob?.cancel()
         mutable.value = mutable.value.copy(manifest = null, importUri = null)
@@ -315,6 +411,21 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun downloadPackage(asset: DownloadablePackage) {
+        if (container.work.downloadAndInstall(asset)) {
+            if (asset.manifest.kind == "model") {
+                action {
+                    container.work.releaseInferenceModel()
+                    container.preferences.selectModel(asset.manifest.key)
+                }
+            }
+            mutable.value = mutable.value.copy(importOrigin = mutable.value.page)
+            navigate(Page.IMPORT)
+        }
+    }
+
+    fun refreshCatalog() = action { container.catalog.refreshNow() }
+
     fun remove(pack: PackageEntity) = action {
         if (work.value.busy) return@action
         if (pack.kind == "model" &&
@@ -323,8 +434,13 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
             fail(R.string.keep_model)
             return@action
         }
-        if (!container.work.mutate { container.installer.remove(pack) }) return@action
-        if (mutable.value.options.model == pack.key) {
+        val wasSelected = mutable.value.options.model == pack.key
+        val removed = container.work.mutate {
+            if (wasSelected) container.work.releaseInferenceModel()
+            container.installer.remove(pack)
+        }
+        if (!removed) return@action
+        if (wasSelected) {
             container.preferences.selectModel(
                 packages.value.firstOrNull {
                     it.kind == "model" &&
@@ -358,7 +474,6 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun theme(mode: ThemeMode) = action { container.preferences.setThemeMode(mode) }
-    fun textScale(scale: Float) = action { container.preferences.setTextScale(scale) }
     fun reducedMotion(value: Boolean) = action { container.preferences.setReducedMotion(value) }
     fun stop() = container.work.stop()
     fun resumeImport() = container.work.resumeImport()
@@ -377,10 +492,10 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                     writer.appendLine("## ${item.title}\n")
                     if (item.draft.isNotBlank()) writer.appendLine("Draft: ${item.draft}\n")
                     for (turn in dao.turns(item.id)) {
-                        writer.appendLine(
-                            "### ${turn.question}\n\n${if (work.value.turnId == turn.id && work.value.text.isNotBlank()) work.value.text else turn.answer}\n\nStatus: ${turn.status}\nModel: ${turn.model}\n"
-                        )
                         val live = work.value
+                        writer.appendLine(
+                            "### ${turn.question}\n\n${if (live.turnId == turn.id && live.text.isNotBlank()) live.text else turn.answer}\n\nStatus: ${turn.status}\nModel: ${turn.model}\n"
+                        )
                         val sourceData = if (live.turnId ==
                             turn.id
                         ) {

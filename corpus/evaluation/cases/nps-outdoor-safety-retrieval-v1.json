@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "id": "nps-outdoor-safety-retrieval-v1",
+  "library": {
+    "id": "nps-outdoor-safety",
+    "version": "2026-10.1",
+    "payload_sha256": "be7583a3c330317e63cc81e0c3290db4b42f834bb5290d426f05e6758cf34cfa"
+  },
+  "cases": [
+    {
+      "id": "lost-outdoors",
+      "question": "What should I do if I become lost outdoors?",
+      "expected_document_titles": ["Outdoor Emergency Plan"]
+    },
+    {
+      "id": "signal-search-and-rescue",
+      "question": "How can I signal rescuers when lost in a park?",
+      "expected_document_titles": ["Outdoor Emergency Plan"]
+    },
+    {
+      "id": "water-treatment",
+      "question": "How long should I boil backcountry water before drinking it?",
+      "expected_document_titles": ["Two Ways to Purify Water"]
+    },
+    {
+      "id": "hike-preparation",
+      "question": "What should I plan and bring before a hike?",
+      "expected_document_titles": ["Hike Smart"]
+    },
+    {
+      "id": "winter-hiking",
+      "question": "How should I prepare for hiking in winter?",
+      "expected_document_titles": ["Winter Hiking Tips"]
+    }
+  ]
+}

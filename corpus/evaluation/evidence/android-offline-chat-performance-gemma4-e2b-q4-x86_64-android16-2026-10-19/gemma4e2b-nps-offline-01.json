@@ -1,0 +1,99 @@
+{
+  "format": 1,
+  "run_id": "gemma4e2b-nps-offline-01",
+  "complete": true,
+  "question": "What hazards are present in natural water?",
+  "expected_evidence_publisher": "National Park Service · U.S. Department of the Interior",
+  "application_id": "dev.blobs.app.debug",
+  "fingerprint": "google\/sdk_gphone64_x86_64\/emu64xa:16\/BE4B.251210.005\/14574095:user\/release-keys",
+  "api": 36,
+  "airplane_mode_enabled": true,
+  "generation_started": true,
+  "model_preparation": "Catalog-installed model package; package identity and GGUF are verified before the offline chat path.",
+  "timeout_ms": 600000,
+  "timing_scope": "End-to-end app observation on this device. First nonblank WorkState text is not native token latency. No phone-performance extrapolation.",
+  "model_manifest": {
+    "format": 1,
+    "id": "gemma4-e2b-q4",
+    "version": "675cff42",
+    "kind": "model",
+    "title": "Gemma 4 E2B · Frontier",
+    "bytes": 3349516256,
+    "sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+    "license": "Apache-2.0",
+    "origin": "https:\/\/huggingface.co\/google\/gemma-4-E2B-it-qat-q4_0-gguf\/tree\/675cff42a74c774d6cb76f76d8eacb49b48c9b93"
+  },
+  "library_manifest": {
+    "format": 1,
+    "id": "nps-outdoor-safety",
+    "version": "2026-10.2",
+    "kind": "library",
+    "title": "Outdoor safety · U.S. national parks",
+    "bytes": 151552,
+    "sha256": "c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f",
+    "license": "U.S. Government work · National Park Service (public domain unless marked)",
+    "origin": "https:\/\/www.nps.gov\/aboutus\/disclaimer.htm"
+  },
+  "model_sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+  "model_key": "gemma4-e2b-q4-675cff42-fa401b55b07ee70a",
+  "library_sha256": "c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f",
+  "library_key": "nps-outdoor-safety-2026-10.2-c5ee800abfdd9c49",
+  "finished_within_timeout": true,
+  "wall_elapsed_ms": 48706,
+  "first_visible_state_ms": 43466,
+  "evidence_ready_state_ms": 19,
+  "status": "COMPLETE",
+  "evidence_count": 4,
+  "evidence_sources": [
+    {
+      "id": "nps-outdoor-safety-2026-10.2-c5ee800abfdd9c49\/nps-outdoor-safety-water-hazards",
+      "title": "Water Hazards",
+      "publisher": "National Park Service · U.S. Department of the Interior",
+      "url": "https:\/\/www.nps.gov\/subjects\/healthandsafety\/water-hazards.htm",
+      "edition": "Outdoor safety · U.S. national parks · 2026-10.2 · c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f"
+    },
+    {
+      "id": "nps-outdoor-safety-2026-10.2-c5ee800abfdd9c49\/nps-outdoor-safety-water-purification",
+      "title": "Two Ways to Purify Water",
+      "publisher": "National Park Service · U.S. Department of the Interior",
+      "url": "https:\/\/www.nps.gov\/articles\/2wayspurifywater.htm",
+      "edition": "Outdoor safety · U.S. national parks · 2026-10.2 · c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f"
+    },
+    {
+      "id": "nps-outdoor-safety-2026-10.2-c5ee800abfdd9c49\/nps-outdoor-safety-outdoor-emergency-plan",
+      "title": "Outdoor Emergency Plan",
+      "publisher": "National Park Service · U.S. Department of the Interior",
+      "url": "https:\/\/home.nps.gov\/articles\/gtgemergencyplan.htm",
+      "edition": "Outdoor safety · U.S. national parks · 2026-10.2 · c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f"
+    },
+    {
+      "id": "nps-outdoor-safety-2026-10.2-c5ee800abfdd9c49\/nps-outdoor-safety-hiking-safety",
+      "title": "Hike Smart",
+      "publisher": "National Park Service · U.S. Department of the Interior",
+      "url": "https:\/\/www.nps.gov\/articles\/hiking-safety.htm",
+      "edition": "Outdoor safety · U.S. national parks · 2026-10.2 · c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f"
+    }
+  ],
+  "saved_elapsed_ms": 48699,
+  "error": "",
+  "performance": {
+    "retrieval_elapsed_ms": 8,
+    "native_generation": {
+      "total_us": 48680499,
+      "queue_us": 7,
+      "model_load_us": 733594,
+      "template_and_tokenize_us": 7397,
+      "context_setup_us": 19528,
+      "prefill_us": 42681858,
+      "generation_loop_us": 5233636,
+      "token_callback_us": 55832,
+      "first_token_callback_us": 43446292,
+      "prompt_tokens": 1175,
+      "output_tokens": 33,
+      "non_thinking_prefix": false,
+      "inference_threads": 4,
+      "context_tokens": 2048,
+      "model_cache_hit": false
+    }
+  }
+}

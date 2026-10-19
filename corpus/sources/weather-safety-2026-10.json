@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "id": "weather-safety",
+  "edition": "2026-10.1",
+  "title": "Weather & wildfire safety · U.S. guidance",
+  "publisher": "Ready.gov · Federal Emergency Management Agency",
+  "license": "FEMA/Ready.gov text; FEMA states most FEMA.gov material may be reused, while page-specific third-party restrictions may apply. Text only; no images, logos or endorsement.",
+  "saved": "2026-10-19",
+  "collection": "U.S. weather and wildfire preparedness",
+  "origin": "https://www.fema.gov/about/website-information",
+  "sources": [
+    {
+      "id": "floods",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/floods",
+      "title": "Floods",
+      "updated": "2026-08-27",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "745f1a94c2b56de2d23dd9938962b6322ee7dd44b6615247049030bfafb46293"
+    },
+    {
+      "id": "thunderstorms-lightning",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/thunderstorms-lightning",
+      "title": "Thunderstorms & Lightning",
+      "updated": "2026-05-11",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "11f02c3ae2c7e2449f2dc7c07aa4dc0d9549961ffc8900feb5e8acadf5f77b38"
+    },
+    {
+      "id": "winter-weather",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/winter-weather",
+      "title": "Winter Weather",
+      "updated": "2026-03-10",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "75f4083e60a4bfba3768d20e614c14bc765a50d8384e60c3e28765f1fab4f730"
+    },
+    {
+      "id": "wildfires",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/wildfires",
+      "title": "Wildfires",
+      "updated": "2026-08-11",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "778e91d9dc49b5f8eebdea3f3c56e838d02358fe3d83ee82c701337fecd0fab2"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "id": "wikipedia-en-top1m-mini",
+  "edition": "2026-04",
+  "filename": "wikipedia_en_top1m_mini_2026-04.zim",
+  "url": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim",
+  "bytes": 3022411034,
+  "sha256": "56b963ffb5f5246da10cf87d1bdbaaad457b39e3b766d52844ccd1aab3a49a34",
+  "checksum_source": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim.sha256",
+  "metadata_source": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim.meta4",
+  "verified_date": "2026-10-17",
+  "allowed_hosts": ["download.kiwix.org", "lb.download.kiwix.org", "mirror.download.kiwix.org", "mirrors.dotsrc.org", "ftp.nluug.nl", "wi.mirror.driftle.ss", "dumps.wikimedia.org"],
+  "publisher": "Wikipedia contributors",
+  "collection": "Wikipedia · April 2026 top million lead articles",
+  "license": "CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "scope": "Kiwix English top one million article introductions without images; snapshot 2026-04; not all English Wikipedia."
+}

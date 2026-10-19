@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "id": "camping-safety",
+  "edition": "2026-10.1",
+  "title": "Camping safely · U.S. national parks",
+  "publisher": "National Park Service · U.S. Department of the Interior",
+  "license": "National Park Service text; no claim to original U.S. Government works. NPS content is generally public domain unless otherwise marked. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+  "saved": "2026-10-19",
+  "collection": "U.S. national park camping safety",
+  "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+  "sources": [
+    {
+      "id": "before-trip",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/camp-safety-before-the-trip.htm",
+      "title": "Camping Safely Step 1 - Before the Trip",
+      "updated": "2019-07-01",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "f7de9dd152a0c288a0677fc0992864f2d5fab429167dcf0a4793301beca1f3ad"
+    },
+    {
+      "id": "upon-arrival",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/camp-safety-upon-arrival.htm",
+      "title": "Camping Safely Step 2 - Upon Arrival",
+      "updated": "2017-04-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "f045183b150be761fd7bc94c1ca9c4f02011ca28d3e5f32dd3ba2a3187682996"
+    },
+    {
+      "id": "during-stay",
+      "host": "home.nps.gov",
+      "url": "https://home.nps.gov/articles/camp-safety-during-your-stay.htm",
+      "title": "Camping Safely Step 3 - During Your Stay",
+      "updated": "2017-04-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "933d2bb22b924aed6b581684ac686339c5d4fca04f70e4d8cac6b544184670f7"
+    },
+    {
+      "id": "after-trip",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/camp-safety-after-the-trip.htm",
+      "title": "Camping Safely Step 4 - After the Trip",
+      "updated": "2019-07-01",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "c65fa72838fd626bcd0cc7cfe4a4f2ca7825745b68b858ca4f0e87bc3c353e64"
+    }
+  ]
+}

@@ -1,10 +1,13 @@
 package dev.blobs.app.feature.settings
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -12,33 +15,35 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.preferences.ThemeMode
@@ -52,12 +57,9 @@ import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.SectionLabel
 import dev.blobs.app.ui.fileSize
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @Composable
 fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
-    val state by model.state.collectAsStateWithLifecycle()
     val packages by model.packages.collectAsStateWithLifecycle()
     val conversations by model.conversations.collectAsStateWithLifecycle()
     val count = conversations.count { it.title.isNotBlank() || it.draft.isNotBlank() }
@@ -69,29 +71,11 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
         }
     )
     ScrollPage {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Heading(R.string.settings_title)
-                Text(
-                    stringResource(R.string.settings_body),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Image(painterResource(R.drawable.blob_wave), null, Modifier.size(76.dp))
-        }
         Column {
             SectionLabel(R.string.settings_experience)
             MenuRow(
                 R.string.appearance,
-                stringResource(
-                    R.string.appearance_summary,
-                    theme,
-                    (
-                        state.options.textScale *
-                            100
-                        ).toInt()
-                )
+                theme
             ) { model.navigate(Page.APPEARANCE) }
             SectionLabel(R.string.settings_phone)
             MenuRow(
@@ -111,7 +95,7 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
                 )
             ) { model.navigate(Page.STORAGE) }
             MenuRow(
-                R.string.history,
+                R.string.conversation_data,
                 pluralStringResource(R.plurals.conversations_summary, count, count)
             ) {
                 model.navigate(Page.DATA)
@@ -133,92 +117,43 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
 @Composable
 fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewModel) {
     ScrollPage {
-        Heading(R.string.appearance_title)
-        if (LocalDensity.current.fontScale < 1.5f) Body(R.string.appearance_body)
+        Body(R.string.appearance_body)
         val themes = listOf(
-            ThemeMode.SYSTEM to R.string.theme_system,
             ThemeMode.LIGHT to R.string.theme_light,
-            ThemeMode.DARK to R.string.theme_dark
+            ThemeMode.DARK to R.string.theme_dark,
+            ThemeMode.SYSTEM to R.string.theme_system
         )
         SectionLabel(R.string.appearance)
-        if (LocalDensity.current.fontScale < 1.5f) {
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow
-            ) {
-                Row(Modifier.fillMaxWidth().padding(4.dp)) {
-                    themes.forEach { (mode, title) ->
-                        Surface(
-                            modifier = Modifier.weight(1f).selectable(
-                                selected = theme == mode,
-                                role = Role.RadioButton,
-                                onClick = { model.theme(mode) }
-                            ),
-                            shape = RoundedCornerShape(24.dp),
-                            color = if (theme ==
-                                mode
-                            ) {
-                                MaterialTheme.colorScheme.surfaceContainerLowest
-                            } else {
-                                MaterialTheme.colorScheme.surfaceContainerLow
-                            }
-                        ) {
-                            Text(
-                                stringResource(title),
-                                Modifier.padding(horizontal = 8.dp, vertical = 16.dp),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                }
-            }
-        } else {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(
+                if (LocalDensity.current.fontScale >= 1.5f) 6.dp else 10.dp
+            )
+        ) {
             themes.forEach { (mode, title) ->
-                Row(
-                    Modifier.fillMaxWidth().heightIn(min = 56.dp).selectable(
-                        selected = theme == mode,
-                        role = Role.RadioButton,
-                        onClick = { model.theme(mode) }
-                    ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(title), Modifier.weight(1f))
-                    RadioButton(selected = theme == mode, onClick = null)
+                ThemeOption(mode, stringResource(title), theme == mode, Modifier.weight(1f)) {
+                    model.theme(mode)
                 }
             }
         }
-        SectionLabel(R.string.text_size)
-        Text(stringResource(R.string.text_size_value, (state.options.textScale * 100).toInt()))
-        var scale by remember(state.options.textScale) {
-            mutableFloatStateOf(state.options.textScale)
-        }
-        val sizeLabel = stringResource(R.string.text_size)
-        val sizeValue = stringResource(R.string.text_size_value, (scale * 100).toInt())
-        Slider(
-            modifier = Modifier.semantics {
-                contentDescription = sizeLabel
-                stateDescription = sizeValue
-            },
-            value = scale,
-            onValueChange = {
-                scale = it
-            },
-            onValueChangeFinished = { model.textScale(scale) },
-            valueRange =
-            1f..2f,
-            steps = 3
-        )
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
-            Text(
-                stringResource(R.string.reading_preview),
-                Modifier.fillMaxWidth().padding(20.dp),
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Column(
+                Modifier.fillMaxWidth().padding(22.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_auto_stories),
+                    null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    stringResource(R.string.reading_preview),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
         Row(
             Modifier.fillMaxWidth().heightIn(min = 56.dp).toggleable(
@@ -237,25 +172,105 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
 }
 
 @Composable
-fun AboutScreen() {
-    val context = LocalContext.current
-    val notices by produceState("") {
-        value = withContext(Dispatchers.IO) {
-            context.assets.list("licenses").orEmpty().sorted().joinToString("\n\n") { file ->
-                "$file\n\n" +
-                    context.assets.open("licenses/$file").bufferedReader().use { it.readText() }
+private fun ThemeOption(
+    mode: ThemeMode,
+    title: String,
+    selected: Boolean,
+    modifier: Modifier,
+    choose: () -> Unit
+) {
+    Surface(
+        modifier = modifier.selectable(
+            selected = selected,
+            role = Role.RadioButton,
+            onClick = choose
+        ),
+        shape = RoundedCornerShape(15.dp),
+        border = BorderStroke(
+            if (selected) 2.dp else 1.dp,
+            if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            }
+        ),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface
+    ) {
+        Box {
+            Column(
+                Modifier.fillMaxWidth().padding(
+                    horizontal = if (LocalDensity.current.fontScale >= 1.5f) 6.dp else 8.dp,
+                    vertical = 10.dp
+                ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                val paper = Color(0xFFFFFEFA)
+                val night = Color(0xFF20232B)
+                val backdrop = when (mode) {
+                    ThemeMode.LIGHT -> Brush.horizontalGradient(listOf(paper, paper))
+
+                    ThemeMode.DARK -> Brush.horizontalGradient(listOf(night, night))
+
+                    ThemeMode.SYSTEM -> Brush.horizontalGradient(
+                        0f to paper,
+                        .5f to paper,
+                        .5f to night,
+                        1f to night
+                    )
+                }
+                Column(
+                    Modifier.fillMaxWidth().height(
+                        80.dp
+                    ).clip(RoundedCornerShape(8.dp)).background(backdrop)
+                        .padding(horizontal = 8.dp, vertical = 13.dp).clearAndSetSemantics { },
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    repeat(3) { line ->
+                        Box(
+                            Modifier.fillMaxWidth(if (line == 0) .5f else .8f).height(9.dp)
+                                .clip(RoundedCornerShape(3.dp)).background(
+                                    if (line == 0) {
+                                        if (mode ==
+                                            ThemeMode.DARK
+                                        ) {
+                                            Color(0xFF90B9FF)
+                                        } else {
+                                            Color(0xFF145DE5)
+                                        }
+                                    } else {
+                                        if (mode ==
+                                            ThemeMode.DARK
+                                        ) {
+                                            Color(0xFF444B5A)
+                                        } else {
+                                            Color(0xFFE6EFFF)
+                                        }
+                                    }
+                                )
+                        )
+                    }
+                }
+                Text(
+                    title,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    )
+                )
+            }
+            if (selected) {
+                Icon(
+                    painterResource(R.drawable.ic_check),
+                    null,
+                    Modifier.align(Alignment.TopEnd).padding(5.dp).size(18.dp)
+                        .background(MaterialTheme.colorScheme.background, RoundedCornerShape(9.dp)),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
-    }
-    androidx.compose.foundation.lazy.LazyColumn(
-        modifier = Modifier.fillMaxWidth().padding(24.dp),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(20.dp)
-    ) {
-        item { Heading(R.string.about) }
-        item { Body(R.string.about_body) }
-        item { Heading(R.string.licenses) }
-        val chunks = notices.chunked(2400)
-        items(chunks.size) { index -> Text(chunks[index]) }
     }
 }
 
@@ -263,12 +278,52 @@ fun AboutScreen() {
 fun DataScreen(busy: Boolean, model: ProductViewModel, export: () -> Unit) {
     var deleting by remember { mutableStateOf(false) }
     ScrollPage {
-        Heading(R.string.history)
+        Heading(R.string.data_heading)
         Body(R.string.export_body)
-        PrimaryAction(R.string.export, onClick = export)
-        TextButton(onClick = {
-            deleting = true
-        }, enabled = !busy) { Text(stringResource(R.string.delete_all)) }
+        val conversations by model.conversations.collectAsStateWithLifecycle()
+        val count = conversations.count { it.title.isNotBlank() || it.draft.isNotBlank() }
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ) {
+            Column(
+                Modifier.fillMaxWidth().padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_chat_bubble),
+                    null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(count.toString(), style = MaterialTheme.typography.displayLarge)
+                Text(
+                    pluralStringResource(R.plurals.saved_conversations_label, count),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        if (busy) Body(R.string.busy_help)
+        PrimaryAction(R.string.export, count > 0, onClick = export)
+        HorizontalDivider(Modifier.padding(top = 20.dp))
+        Text(
+            stringResource(R.string.clear_conversations),
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            stringResource(R.string.data_keeps_files),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        OutlinedButton(
+            onClick = { deleting = true },
+            enabled = !busy && count > 0,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            )
+        ) { Text(stringResource(R.string.delete_all), Modifier.padding(vertical = 6.dp)) }
     }
     if (deleting) {
         AlertDialog(

@@ -1,8 +1,8 @@
 # Blobs Android
 
-Native offline research chat built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. The app imports local model and library packages, retrieves source passages, streams answers, and opens citations without leaving the app.
+Offline Android research chat compatible with GrapheneOS, built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. First-run setup helps users choose and download a model and starter library. The app searches saved sources, streams answers, and opens citations without leaving the app. To install the APK, follow [Get started](https://nonomnonom.github.io/blobs/docs/get-started/).
 
-The APK declares no `INTERNET` permission and has no Google Play Services dependency. A development computer prepares packages; the phone imports them through Android's document picker.
+The APK has no Google Play Services dependency. First-run setup offers user-started downloads for pinned model weights and a starter knowledge library. It verifies every downloaded byte against the catalog's pinned size and SHA-256. `.blobs` packages also validate their manifest; direct GGUF model downloads pass the GGUF validator before atomic installation. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available later in Library and Settings → Models for air-gapped setup and alternate packages. Signed catalog refresh, online update checks, cache recovery, and the current Hugging Face publishing status are documented in [`../docs/architecture.md`](../docs/architecture.md).
 
 ## Requirements
 
@@ -26,30 +26,17 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Use `./gradlew` on Linux or macOS. `verify` runs formatting checks, lint, JVM tests, debug/release assembly, and instrumentation-test compilation. Run `connectedDebugAndroidTest` on a disposable emulator when platform behavior changes.
+Use `./gradlew` on Linux or macOS. `verify` runs formatting checks, lint, JVM tests, debug/release assembly, and instrumentation-test compilation. Run `connectedDebugAndroidTest` for Android platform integration checks.
 
 ## Prepare local packages
 
-The builders never download implicitly. `prepare_model.py` downloads only the selected pinned model and verifies its exact size and SHA-256 before packaging it.
+The builders never download implicitly. `prepare_model.py` downloads only the selected pinned fallback model and verifies its exact size and SHA-256 before packaging it. First-run Gemma 4 model downloads use the exact repository revision, file size, and SHA-256 pinned in `app/src/main/assets/package-catalog.json`.
 
 ```powershell
 uv run --locked --project ../corpus python tools/prepare_model.py small
 uv run --locked --project ../corpus python tools/build_package.py library corpus/starter.documents.jsonl packages/wikipedia-starter.blobs --id wikipedia-starter --version 2026-10-17.3 --title "Science and everyday questions" --license "CC BY-SA 4.0" --origin "https://en.wikipedia.org/"
 ```
 
-Generated packages are ignored by Git. Import them from the welcome flow or from **Settings → Models and libraries → Add from this phone**. The review screen shows package identity, size, license, and storage requirements before installation.
+Generated packages are ignored by Git. The recommended first-run models and libraries are offered directly in setup. Alternate `.blobs` packages can be imported from **Library → Import a library**, or **Settings → Models → Add a model file**. Every download goes through pinned byte count and hash checks; `.blobs` packages also validate manifests, and all payloads pass storage and SQLite/GGUF validation before activation.
 
-## Code ownership
-
-| Path | Responsibility |
-| --- | --- |
-| `app/src/main/kotlin/dev/blobs/app/feature/` | Chat, history, library, settings, and welcome screens |
-| `app/src/main/kotlin/dev/blobs/app/ui/` | Shared components, theme, navigation, and product state |
-| `app/src/main/kotlin/dev/blobs/app/data/local/` | Room conversations, turns, package records, and migrations |
-| `app/src/main/kotlin/dev/blobs/app/data/library/` | Read-only FTS5 retrieval and immutable evidence |
-| `app/src/main/kotlin/dev/blobs/app/data/packages/` | Streaming validation, staging, activation, pause, and resume |
-| `app/src/main/kotlin/dev/blobs/app/data/WorkController.kt` | Single owner for generation and package/data mutations |
-| `app/src/main/cpp/` and `inference/` | JNI boundary and pinned local inference runtime |
-| `tools/` | Runtime preparation, package/APK verification, signing, and release assembly |
-
-Read the [architecture](docs/ARCHITECTURE.md), [engineering rules](docs/ENGINEERING.md), [testing guide](docs/TESTING.md), [release guide](docs/RELEASE.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
+Third-party component and dataset licenses are listed in [third-party notices](THIRD_PARTY_NOTICES.md).

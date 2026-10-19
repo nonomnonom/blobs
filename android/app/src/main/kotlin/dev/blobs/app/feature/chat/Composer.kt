@@ -32,7 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -44,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
+import dev.blobs.app.ui.ModelLogo
 import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.ProductState
 import dev.blobs.app.ui.ProductViewModel
@@ -54,7 +57,9 @@ internal fun Composer(
     state: ProductState,
     work: WorkState,
     followUp: Boolean,
-    model: ProductViewModel
+    model: ProductViewModel,
+    modifier: Modifier = Modifier,
+    onFocusChange: (Boolean) -> Unit = {}
 ) {
     var choosingModel by remember { mutableStateOf(false) }
     val packages by model.packages.collectAsStateWithLifecycle()
@@ -67,23 +72,27 @@ internal fun Composer(
     } else {
         pluralStringResource(R.plurals.selected_sources, sourceCount, sourceCount)
     }
+    val large = LocalDensity.current.fontScale >= 1.5f
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         shape = RoundedCornerShape(26.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        shadowElevation = 0.dp
     ) {
-        Column(Modifier.padding(8.dp)) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val inputLabel =
                 stringResource(if (followUp) R.string.follow_up_hint else R.string.question_hint)
             TextField(
                 value = state.draft,
                 onValueChange = model::draft,
                 placeholder = { Text(inputLabel, style = MaterialTheme.typography.bodyLarge) },
-                modifier = Modifier.fillMaxWidth().heightIn(max = 140.dp).semantics {
-                    contentDescription =
-                        inputLabel
-                },
+                modifier = Modifier.fillMaxWidth().heightIn(
+                    min = 94.dp,
+                    max = if (large) 240.dp else 140.dp
+                )
+                    .onFocusChanged { onFocusChange(it.hasFocus) }
+                    .semantics { contentDescription = inputLabel },
                 textStyle = MaterialTheme.typography.bodyLarge,
                 maxLines = 4,
                 enabled = state.loaded,
@@ -96,57 +105,56 @@ internal fun Composer(
                     disabledIndicatorColor = Color.Transparent
                 )
             )
+            if (large) {
+                ModelPickerButton(
+                    modelTitle,
+                    modelLabel,
+                    !work.busy,
+                    Modifier.fillMaxWidth(),
+                    true
+                ) {
+                    choosingModel =
+                        true
+                }
+            }
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(
-                    onClick = { choosingModel = true },
-                    enabled = !work.busy,
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp).semantics {
-                        contentDescription =
-                            modelLabel
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                    )
-                ) {
-                    Text(
+                if (!large) {
+                    ModelPickerButton(
                         modelTitle,
-                        Modifier.weight(1f, fill = false),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Icon(
-                        painterResource(R.drawable.ic_expand_more),
-                        null,
-                        Modifier.padding(start = 6.dp).size(16.dp)
-                    )
+                        modelLabel,
+                        !work.busy,
+                        Modifier.weight(1f),
+                        false
+                    ) {
+                        choosingModel =
+                            true
+                    }
                 }
                 TextButton(
                     onClick = { model.navigate(Page.SOURCES) },
                     enabled = !work.busy,
-                    modifier = Modifier.heightIn(min = 48.dp).semantics {
-                        contentDescription =
-                            scopeLabel
-                    }
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = (if (large) Modifier.weight(1f) else Modifier).heightIn(min = 48.dp)
+                        .semantics { contentDescription = scopeLabel }
                 ) {
+                    Icon(
+                        painterResource(R.drawable.ic_auto_stories),
+                        null,
+                        Modifier.padding(end = 6.dp).size(16.dp)
+                    )
                     Text(
-                        if (state.options.scope ==
-                            "*"
-                        ) {
+                        if (state.options.scope == "*") {
                             stringResource(R.string.sources)
                         } else {
                             stringResource(R.string.sources_count, sourceCount)
                         },
                         style = MaterialTheme.typography.bodySmall
-                    )
-                    Icon(
-                        painterResource(R.drawable.ic_expand_more),
-                        null,
-                        Modifier.padding(start = 6.dp).size(16.dp)
                     )
                 }
                 val answering = work.busy && work.turnId.isNotEmpty()
@@ -192,8 +200,10 @@ internal fun Composer(
                                         choosingModel = false
                                     }
                                 ).padding(vertical = 12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                ModelLogo(pack.title)
                                 Column(Modifier.weight(1f)) {
                                     Text(pack.title, style = MaterialTheme.typography.titleMedium)
                                     Text(
@@ -221,5 +231,35 @@ internal fun Composer(
                 }) { Text(stringResource(R.string.done)) }
             }
         )
+    }
+}
+
+@Composable
+private fun ModelPickerButton(
+    title: String,
+    label: String,
+    enabled: Boolean,
+    modifier: Modifier,
+    large: Boolean,
+    onClick: () -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.heightIn(min = 48.dp).semantics { contentDescription = label },
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
+    ) {
+        ModelLogo(title, 24.dp)
+        Text(
+            title,
+            Modifier.weight(1f).padding(horizontal = 6.dp),
+            maxLines = if (large) Int.MAX_VALUE else 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodySmall
+        )
+        Icon(painterResource(R.drawable.ic_expand_more), null, Modifier.size(16.dp))
     }
 }

@@ -1,3 +1,6 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+
 # Track bounded reviewed records. Large phone packages use release hosting;
 # raw archives, build caches and experimental models stay out of Git.
 corpus/artifacts/records/**/*.jsonl.gz filter=lfs diff=lfs merge=lfs -text

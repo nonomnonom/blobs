@@ -1,0 +1,28 @@
+---
+title: Contribute
+description: Focused changes, reproducible evidence, and a useful offline app.
+---
+
+Bug fixes, accessibility improvements, documentation corrections, reproducible corpus fixes, and focused performance work are welcome.
+
+## Start with a concrete problem
+
+Check [existing issues](https://github.com/nonomnonom/blobs/issues) or open a [proposal](https://github.com/nonomnonom/blobs/issues/new/choose). Describe what happens, what you expected, and the affected version. Discuss large changes before implementing them.
+
+Read the canonical [contribution guide](https://github.com/nonomnonom/blobs/blob/main/CONTRIBUTING.md) for file ownership, formatting commands, checks, and review expectations. The [developer guide](/docs/developers) is the shortest path to a working checkout.
+
+## Keep offline behavior intact
+
+Preserve user-initiated downloads, pinned hashes, signed metadata, bounded parsing, cancellation, atomic installation, and explicit data migrations. Put a change in the layer that owns its behavior.
+
+## Show the result
+
+Run checks relevant to your change. Include reproduction or regression evidence and explain compatibility or rollback implications. UI changes should include light, dark, and large-text screenshots. Application checks focus on flows, source contracts, and performance rather than manually grading model answers.
+
+Documentation changes use `npm run lint`, `npm run typecheck`, and `npm run build` from `docs/web`. Check navigation and search in the exported site before submitting.
+
+## Licenses and community
+
+Original Blobs code, tooling, and documentation use [Apache-2.0](https://github.com/nonomnonom/blobs/blob/main/LICENSE). Original artwork and branding are excluded; see [NOTICE](https://github.com/nonomnonom/blobs/blob/main/NOTICE). Preserve third-party licenses and attribution.
+
+Follow the [code of conduct](https://github.com/nonomnonom/blobs/blob/main/CODE_OF_CONDUCT.md). Report security vulnerabilities [privately](https://github.com/nonomnonom/blobs/security/advisories/new), not in public issues.

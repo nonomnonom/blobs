@@ -23,4 +23,4 @@ struct PreparedChatPrompt {
 };
 
 PreparedChatPrompt prepare_chat_prompt(std::string_view architecture, const char *chat_template,
-                                      std::string system, std::string user);
+                                       std::string system, std::string user);
