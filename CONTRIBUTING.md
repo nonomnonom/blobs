@@ -2,6 +2,8 @@
 
 Start with the [build guide](README.md#build) and [architecture](docs/architecture.md). Blobs has one Android application module and a separate uv-managed corpus workspace. Keep a change in the layer that owns its behavior; introduce another module or dependency when it solves a concrete ownership or build problem.
 
+Bug fixes, accessibility improvements, documentation, reproducible corpus corrections and focused performance improvements are welcome. Use the [issue forms](https://github.com/nonomnonom/blobs/issues/new/choose) for bugs and proposals; discuss major changes before building them so the work fits the project's scope. Include reproduction steps, an affected version and relevant evidence. Use [private reporting](SECURITY.md) for vulnerabilities and follow the [code of conduct](CODE_OF_CONDUCT.md) in project spaces.
+
 ## Where changes belong
 
 | Area | Location |
@@ -36,6 +38,12 @@ uv run --locked python -m unittest discover -s tests
 uv run --locked python -m unittest discover -s ../android/tools/tests
 ```
 
+When changing signing or publishing, include the publisher group so the signing contract test runs:
+
+```powershell
+uv run --locked --group publisher python -m unittest discover -s ../android/tools/tests
+```
+
 From `android/`:
 
 ```powershell
@@ -44,6 +52,8 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 ```
 
 `verify` runs formatting checks, debug and release lint, JVM tests, both application builds, and instrumentation-test compilation. To apply Kotlin formatting, use `.\gradlew.bat ktlintFormat` and review the diff.
+
+Dependency versions belong in `android/gradle/libs.versions.toml` or `corpus/pyproject.toml`, with the corresponding Gradle or uv lockfile.
 
 With an Android emulator or device connected, run the base application suite:
 
@@ -58,5 +68,7 @@ Add regression coverage for changes to validation, ordering, cancellation, recov
 ## Reviews and source delivery
 
 Keep commits focused and use the existing Conventional Commit style. Describe the concrete problem, resulting behavior, compatibility implications and validation in the [pull-request template](.github/pull_request_template.md). Keep structural moves separate from product behavior changes when they can be reviewed independently.
+
+The repository owner reviews changes for correctness, offline behavior, data preservation, compatibility, scope and relevant verification before merging. Contributions to licensed source code and documentation use Apache-2.0; preserve existing third-party notices and identify any newly introduced material and its license. See [NOTICE](NOTICE) for artwork and other exclusions. Reviews and design discussions should be public unless they contain security or private information. No review deadline is promised.
 
 Release source archives are assembled from tracked files in the Blobs Git checkout, using their current working copies. Add new public source files to Git before assembling a kit. Untracked notes, local assets and generated output are excluded; missing tracked source files cause packaging to fail. The source ZIP includes this guide and the shared editor configuration. See [the Android guide](android/README.md) for package preparation and [asset publishing](docs/architecture.md#trust-and-publishing) for catalog revisions and signing.

@@ -62,4 +62,6 @@ GitHub hosts the source and Android releases. Hugging Face hosts the signed down
 
 ## License
 
-No license is granted for the original Blobs application code or artwork at this time. Third-party components and datasets retain their own licenses; see [`android/THIRD_PARTY_NOTICES.md`](android/THIRD_PARTY_NOTICES.md) and [`corpus/THIRD_PARTY_NOTICES.md`](corpus/THIRD_PARTY_NOTICES.md).
+Original Blobs source code, tooling and documentation are licensed under [Apache-2.0](LICENSE). Original Blobs artwork and branding are excluded from that grant; see [NOTICE](NOTICE). Third-party components, model weights and datasets retain their own licenses; see [`android/THIRD_PARTY_NOTICES.md`](android/THIRD_PARTY_NOTICES.md) and [`corpus/THIRD_PARTY_NOTICES.md`](corpus/THIRD_PARTY_NOTICES.md).
+
+Report ordinary bugs or feature requests through [GitHub issues](https://github.com/nonomnonom/blobs/issues). For security vulnerabilities, use [private reporting](SECURITY.md). Participation follows the [community code of conduct](CODE_OF_CONDUCT.md).

@@ -57,7 +57,8 @@ def write_source_archive(output):
                 '__pycache__', 'node_modules', 'evidence', '.venv', '.cache'}
     generated = ('android/packages/', 'android/release/', 'corpus/work/',
                  'corpus/artifacts/', 'corpus/evaluation/results/')
-    root_files = {'README.md', 'CONTRIBUTING.md', '.editorconfig', '.gitignore', '.gitattributes'}
+    root_files = {'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE', 'SECURITY.md',
+                  'CODE_OF_CONDUCT.md', '.editorconfig', '.gitignore', '.gitattributes'}
     with zipfile.ZipFile(output, 'x', zipfile.ZIP_DEFLATED) as archive:
         for name in sorted(set(tracked) - {''}):
             relative = Path(name)

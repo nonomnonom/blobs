@@ -224,6 +224,10 @@ class PackageTests(unittest.TestCase):
                 '.gitignore',
                 '.gitattributes',
                 'CONTRIBUTING.md',
+                'LICENSE',
+                'NOTICE',
+                'SECURITY.md',
+                'CODE_OF_CONDUCT.md',
                 '.editorconfig',
             ]
             for name in expected:
@@ -260,6 +264,10 @@ class PackageTests(unittest.TestCase):
                 self.assertIn('blobs/corpus/blobs_corpus/curate.py', names)
                 self.assertIn('blobs/corpus/README.md', names)
                 self.assertIn('blobs/CONTRIBUTING.md', names)
+                self.assertIn('blobs/LICENSE', names)
+                self.assertIn('blobs/NOTICE', names)
+                self.assertIn('blobs/SECURITY.md', names)
+                self.assertIn('blobs/CODE_OF_CONDUCT.md', names)
                 self.assertIn('blobs/.editorconfig', names)
                 self.assertNotIn('blobs/android/tools/untracked-notes.txt', names)
                 self.assertNotIn('blobs/docs/untracked-internal-review.md', names)

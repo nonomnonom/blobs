@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a reproducible problem with Blobs or its tools.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a security vulnerability, use [private reporting](https://github.com/nonomnonom/blobs/security/advisories/new).
+        Remove private conversations, credentials and personal information from examples and logs.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Android app
+        - Corpus preparation
+        - Build or release tooling
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Blobs release or commit
+      placeholder: A release tag or commit hash
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Android version and device/emulator, or host OS and tool versions. Mention GrapheneOS if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the model/library edition when relevant. Use a small synthetic document for import problems.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Supporting evidence
+      description: Relevant logs, screenshots or a minimal reproduction, with private information removed.
