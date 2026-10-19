@@ -9,7 +9,7 @@ The active implementation is in [`android/`](android/README.md). Reproducible co
 - First-run setup for downloading and verifying a model and knowledge library in the app. Add documents or import a library from Library; manage models in Settings.
 - Native CPU inference through a pinned llama.cpp revision.
 - SQLite FTS5 retrieval with immutable source evidence.
-- Streamed answers with `[S1]` source references and in-app article reading.
+- Streamed answers with source citations and in-app article reading.
 - Conversation history, drafts, cancellation, export, appearance, storage, privacy, and help.
 - Bounded package validation, resumable import, atomic activation, and rollback-safe failure handling.
 - Android, JVM, Python, package, APK, and release-kit verification.

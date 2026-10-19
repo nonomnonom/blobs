@@ -43,6 +43,27 @@ data class UserDocument(
 )
 
 class UserLibraryPackage(private val context: Context) {
+    private val archiveDirectory = File(context.filesDir, "document-imports").apply { mkdirs() }
+
+    fun discardGeneratedArchive(uri: Uri) {
+        if (uri.scheme != "file") return
+        val file = File(requireNotNull(uri.path)).canonicalFile
+        if (file.parentFile == archiveDirectory.canonicalFile &&
+            file.name.startsWith("blobs-user-library-") && file.extension == "blobs"
+        ) {
+            file.delete()
+        }
+    }
+
+    fun recoverGeneratedArchives(retained: Uri?) {
+        val retainedFile = retained?.takeIf {
+            it.scheme == "file"
+        }?.path?.let { File(it).canonicalFile }
+        archiveDirectory.listFiles().orEmpty().filter { it.canonicalFile != retainedFile }.forEach {
+            discardGeneratedArchive(Uri.fromFile(it))
+        }
+    }
+
     suspend fun prepare(uris: List<Uri>): File {
         require(uris.isNotEmpty() && uris.size <= MAX_DOCUMENTS) { "DOCUMENT_COUNT" }
         val jobContext = currentCoroutineContext()
@@ -67,7 +88,7 @@ class UserLibraryPackage(private val context: Context) {
             item.document.copy(id = "document-${(index + 1).toString().padStart(4, '0')}")
         }
         val database = File.createTempFile("blobs-user-library-", ".sqlite", context.cacheDir)
-        val archive = File.createTempFile("blobs-user-library-", ".blobs", context.cacheDir)
+        val archive = File.createTempFile("blobs-user-library-", ".blobs", archiveDirectory)
         try {
             jobContext.ensureActive()
             buildDatabase(database, packTitle, documents, jobContext::ensureActive)
@@ -100,14 +121,19 @@ class UserLibraryPackage(private val context: Context) {
     }
 
     fun export(pack: PackageEntity, library: LibraryStore, output: OutputStream) {
-        val documents = library.documentsForExport(pack)
-        require(documents.isNotEmpty() && documents.size <= MAX_DOCUMENTS)
         OutputStreamWriter(output, StandardCharsets.UTF_8).buffered().use { writer ->
+            require(pack.origin == "local:user-documents") { "NOT_USER_COLLECTION" }
+            var count = 0
+            var codePoints = 0L
             writer.append("{\"format\":\"blobs-collection\",\"version\":1,\"title\":")
             writer.append(JSONObject.quote(pack.title))
             writer.append(",\"documents\":[")
-            documents.forEachIndexed { index, document ->
-                if (index > 0) writer.append(',')
+            library.forEachDocument(pack) { document ->
+                count++
+                require(count <= MAX_DOCUMENTS) { "DOCUMENT_COUNT" }
+                codePoints += document.body.codePointCount(0, document.body.length)
+                require(codePoints <= MAX_COLLECTION_CODEPOINTS) { "COLLECTION_TOO_LARGE" }
+                if (count > 1) writer.append(',')
                 writer.append("{\"title\":${JSONObject.quote(document.title)}")
                 writer.append(",\"publisher\":${JSONObject.quote(document.publisher)}")
                 writer.append(",\"url\":${JSONObject.quote(document.url)}")
@@ -116,6 +142,7 @@ class UserLibraryPackage(private val context: Context) {
                 writer.append(",\"saved\":${JSONObject.quote(document.saved)}")
                 writer.append(",\"body\":${JSONObject.quote(document.body)}}")
             }
+            require(count > 0) { "DOCUMENT_COUNT" }
             writer.append("]}")
         }
     }
@@ -330,7 +357,7 @@ class UserLibraryPackage(private val context: Context) {
                         collection
                     )
                 )
-                spans(document.body).forEachIndexed { index, span ->
+                documentSpans(document.body).forEachIndexed { index, span ->
                     checkActive()
                     passageInsert.bindLong(1, passageId)
                     passageInsert.bindText(2, document.id)
@@ -375,33 +402,6 @@ class UserLibraryPackage(private val context: Context) {
         db.prepare(sql).use { it.step() }
     }
 
-    private fun spans(body: String): List<Span> {
-        val result = mutableListOf<Span>()
-        var start = 0
-        while (start < body.length) {
-            while (start < body.length && body[start].isWhitespace()) start++
-            if (start >= body.length) break
-            val remaining = body.codePointCount(start, body.length)
-            var end = body.offsetByCodePoints(start, minOf(PASSAGE_LENGTH, remaining))
-            if (end < body.length) {
-                val window = body.substring(start, end)
-                val paragraph = window.lastIndexOf("\n\n").takeIf { it >= PASSAGE_LENGTH / 2 }
-                val sentence = listOf(". ", "? ", "! ").map { window.lastIndexOf(it) + 1 }
-                    .filter { it >= PASSAGE_LENGTH / 2 }.maxOrNull()
-                val whitespace = maxOf(window.lastIndexOf(' '), window.lastIndexOf('\n'))
-                val relative = paragraph?.plus(2) ?: sentence ?: whitespace.takeIf { it > 0 }
-                if (relative != null) end = start + relative
-            }
-            while (end > start && body[end - 1].isWhitespace()) end--
-            if (end <= start) end = body.offsetByCodePoints(start, 1)
-            val startCodePoint = body.codePointCount(0, start)
-            val endCodePoint = body.codePointCount(0, end)
-            result.add(Span(startCodePoint, endCodePoint, body.substring(start, end)))
-            start = end
-        }
-        return result
-    }
-
     private fun sha256(file: File): String = file.inputStream().use { input ->
         val digest = MessageDigest.getInstance("SHA-256")
         val buffer = ByteArray(64 * 1024)
@@ -417,7 +417,6 @@ class UserLibraryPackage(private val context: Context) {
         val document: UserDocument,
         val collectionTitle: String? = null
     )
-    private data class Span(val startCodePoint: Int, val endCodePoint: Int, val text: String)
     private class InputBudget(var bytes: Long = 0) {
         fun add(count: Int) {
             bytes += count
@@ -458,6 +457,5 @@ class UserLibraryPackage(private val context: Context) {
         private const val MAX_DOCUMENT_CODEPOINTS = 1_000_000
         private const val MAX_COLLECTION_CODEPOINTS = 5_000_000
         private const val MAX_TITLE_LENGTH = 160
-        private const val PASSAGE_LENGTH = 1400
     }
 }

@@ -19,7 +19,7 @@ data class DeviceProfile(
             val lowRamDevice = activityManager.isLowRamDevice
             val freeStorage = StatFs(context.filesDir.path).availableBytes
             val recommendedModel = if (lowRamDevice) {
-                catalog.models.first()
+                catalog.models.minBy { it.manifest.bytes }
             } else {
                 catalog.recommendedModel(memory.totalMem, freeStorage)
             }

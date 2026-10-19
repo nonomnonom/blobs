@@ -2,6 +2,7 @@ package dev.blobs.app.data.packages
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.blobs.app.BuildConfig
 import dev.blobs.app.data.local.PackageEntity
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -14,6 +15,8 @@ import java.security.Signature
 import java.util.Base64
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -21,6 +24,70 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class PackageCatalogTest {
+    @Test
+    fun newerAppOnlyLibrariesAreNotOfferedToThisVersion() {
+        val payload = JSONObject(catalogPayload())
+        val packages = payload.getJSONArray("packages")
+        val future = JSONObject(packages.getJSONObject(1).toString())
+        future.put("file_name", "future.blobs")
+        future.put("url", future.getString("url").replace("starter.blobs", "future.blobs"))
+        future.put("role", "optional")
+        future.getJSONObject("manifest").put("id", "future-library")
+        future.getJSONObject("compatibility").put("minimum_app_version", "999.0.0")
+        packages.put(future)
+        assertEquals(2, CatalogCodec.parseCatalog(payload.toString()).size)
+    }
+
+    @Test
+    fun acceptsTheCurrentAppVersionAndRejectsMalformedVersionRequirements() {
+        val payload = JSONObject(catalogPayload())
+        val compatibility = payload.getJSONArray("packages").getJSONObject(0)
+            .getJSONObject("compatibility")
+        compatibility.put("minimum_app_version", BuildConfig.VERSION_NAME)
+        assertEquals(2, CatalogCodec.parseCatalog(payload.toString()).size)
+        compatibility.put("minimum_app_version", "unknown")
+        assertThrows(IllegalArgumentException::class.java) {
+            CatalogCodec.parseCatalog(payload.toString())
+        }
+    }
+
+    @Test
+    fun modelRecommendationRespectsMemoryEvenWhenTheListIsReordered() {
+        val payload = JSONObject(catalogPayload())
+        val packages = payload.getJSONArray("packages")
+        val larger = JSONObject(packages.getJSONObject(0).toString())
+        larger.put("file_name", "larger.gguf")
+        larger.put("url", larger.getString("url").replace("research.gguf", "larger.gguf"))
+        larger.put("recommended_up_to_memory_mb", 8192)
+        larger.getJSONObject("manifest").put("id", "larger-model")
+        larger.getJSONObject("compatibility").put("minimum_ram_mb", 8192)
+        payload.put(
+            "packages",
+            JSONArray().put(larger).put(packages.getJSONObject(0)).put(packages.getJSONObject(1))
+        )
+        val cache =
+            File(
+                InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,
+                UUID.randomUUID().toString()
+            )
+        val key = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
+        try {
+            val catalog = PackageCatalog(
+                payload.toString(),
+                cache,
+                key.public,
+                URL("https://huggingface.co/catalog.json"),
+                { throw AssertionError("Recommendation must stay offline") }
+            )
+            assertEquals(
+                "research-model",
+                catalog.recommendedModel(6L * 1024 * 1024 * 1024, Long.MAX_VALUE).manifest.id
+            )
+        } finally {
+            cache.deleteRecursively()
+        }
+    }
+
     @Test
     fun bundledCatalogOffersThePinnedOutdoorSafetyLibraryOffline() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext

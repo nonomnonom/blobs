@@ -181,16 +181,18 @@ private fun CollectionCard(
                             )
                         }
                         DropdownMenu(expanded = options, onDismissRequest = { options = false }) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(stringResource(R.string.export_collection))
-                                },
-                                enabled = !busy,
-                                onClick = {
-                                    options = false
-                                    export()
-                                }
-                            )
+                            if (pack.origin == "local:user-documents") {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(stringResource(R.string.export_collection))
+                                    },
+                                    enabled = !busy,
+                                    onClick = {
+                                        options = false
+                                        export()
+                                    }
+                                )
+                            }
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.storage)) },
                                 onClick = {

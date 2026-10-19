@@ -81,15 +81,18 @@ class PackageCatalog internal constructor(
     }
 
     fun recommendedModel(totalMemoryBytes: Long, freeStorageBytes: Long): DownloadablePackage {
-        val availableModels = models
+        val availableModels = models.sortedBy { it.recommendedUpToMemoryMb }
         val memoryMb = (totalMemoryBytes / (1024L * 1024L)).coerceAtLeast(1)
         val preferredIndex = availableModels.indexOfFirst { it.recommendedUpToMemoryMb >= memoryMb }
             .let { if (it < 0) availableModels.lastIndex else it }
         return availableModels.subList(0, preferredIndex + 1).lastOrNull {
-            packageFitsStorage(it, freeStorageBytes)
+            packageFitsStorage(it, freeStorageBytes) && packageFitsMemory(it, totalMemoryBytes)
         }
-            ?: availableModels.first()
+            ?: availableModels.minBy { it.manifest.bytes }
     }
+
+    fun packageFitsMemory(asset: DownloadablePackage, totalMemoryBytes: Long): Boolean =
+        totalMemoryBytes / (1024L * 1024L) >= (asset.compatibility?.minimumRamMb ?: 0)
 
     fun packageFitsStorage(asset: DownloadablePackage, freeStorageBytes: Long): Boolean =
         freeStorageBytes >= requiredStorageBytes(asset)

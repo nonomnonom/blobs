@@ -138,22 +138,20 @@ class LibraryStore {
         }
     }
 
-    fun documentsForExport(pack: PackageEntity): List<LibraryDocument> {
+    fun forEachDocument(pack: PackageEntity, consume: (LibraryDocument) -> Unit) {
         require(pack.kind == "library")
-        return open(pack.path).use { db ->
+        open(pack.path).use { db ->
             db.prepare(
                 "SELECT id,title,publisher,url,license,updated,saved,body,collection FROM documents ORDER BY id"
             ).use { statement ->
-                buildList {
-                    while (statement.step()) {
-                        add(
-                            LibraryDocument(
-                                statement.getText(0), statement.getText(1), statement.getText(2),
-                                statement.getText(3), statement.getText(4), statement.getText(5),
-                                statement.getText(6), statement.getText(7), statement.getText(8)
-                            )
+                while (statement.step()) {
+                    consume(
+                        LibraryDocument(
+                            statement.getText(0), statement.getText(1), statement.getText(2),
+                            statement.getText(3), statement.getText(4), statement.getText(5),
+                            statement.getText(6), statement.getText(7), statement.getText(8)
                         )
-                    }
+                    )
                 }
             }
         }

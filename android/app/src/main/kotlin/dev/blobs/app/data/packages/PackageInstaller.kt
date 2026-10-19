@@ -64,7 +64,10 @@ class PackageInstaller(
 
     suspend fun discardPending() = withContext(Dispatchers.IO) {
         mutations.withLock {
-            pending()?.let { File(root, "${it.manifest.key}.partial").delete() }
+            pending()?.let {
+                File(root, "${it.manifest.key}.partial").delete()
+                userLibraries.discardGeneratedArchive(it.uri)
+            }
             journal.delete()
         }
     }
@@ -76,12 +79,13 @@ class PackageInstaller(
     suspend fun importDocuments(uris: List<Uri>, progress: (Long, Long) -> Unit): PackageEntity =
         withContext(Dispatchers.IO) {
             val archive = userLibraries.prepare(uris)
+            val uri = Uri.fromFile(archive)
             try {
-                val uri = Uri.fromFile(archive)
                 val manifest = inspect(uri)
                 install(uri, manifest) { bytes -> progress(bytes, manifest.bytes) }
             } finally {
-                archive.delete()
+                val retainedForResume = runCatching { pending()?.uri == uri }.getOrDefault(true)
+                if (!retainedForResume) userLibraries.discardGeneratedArchive(uri)
             }
         }
 
@@ -203,6 +207,7 @@ class PackageInstaller(
                 if (!paused) {
                     staging.delete()
                     journal.delete()
+                    userLibraries.discardGeneratedArchive(uri)
                 }
                 if (!activated) target.delete()
             }
@@ -257,6 +262,7 @@ class PackageInstaller(
                         file.name != "${pending?.manifest?.key}.partial" -> file.delete()
                 }
             }
+            userLibraries.recoverGeneratedArchives(pending?.uri)
             pending
         }
     }

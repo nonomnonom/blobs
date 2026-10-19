@@ -38,6 +38,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     val conversationId = conversation.asStateFlow()
     private val dao = container.database.conversations()
     private val draftLock = Mutex()
+    private var draftRevision = 0L
     private val backStack = ArrayDeque<Page>()
     private var searchJob: Job? = null
     private var inspectionJob: Job? = null
@@ -144,6 +145,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     fun draft(value: String) {
         val id = conversation.value
         if (id.isEmpty()) return
+        draftRevision++
         mutable.value = mutable.value.copy(draft = value.take(4000))
         val captured = mutable.value.draft
         action { draftLock.withLock { dao.saveDraft(id, captured) } }
@@ -215,9 +217,11 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                 return@action
             }
             draftLock.withLock {
+                val submittingThread = conversation.value
+                val submittingRevision = draftRevision
                 if (widen) container.preferences.selectScope("*")
                 if (container.work.answer(
-                        conversation.value,
+                        submittingThread,
                         question.trim(),
                         model,
                         packages.value.toList(),
@@ -225,7 +229,15 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                         retry?.id
                     )
                 ) {
-                    if (retry == null) mutable.value = mutable.value.copy(draft = "")
+                    if (retry == null && conversation.value == submittingThread) {
+                        if (draftRevision == submittingRevision &&
+                            mutable.value.draft.trim() == question.trim()
+                        ) {
+                            mutable.value = mutable.value.copy(draft = "")
+                        } else {
+                            dao.saveDraft(submittingThread, mutable.value.draft)
+                        }
+                    }
                 }
             }
         }
@@ -362,6 +374,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
             val output = requireNotNull(context.contentResolver.openOutputStream(uri))
             container.installer.exportCollection(pack, output)
         }
+        fail(R.string.export_saved)
     }
 
     fun dismissImport() {
@@ -460,10 +473,10 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                     writer.appendLine("## ${item.title}\n")
                     if (item.draft.isNotBlank()) writer.appendLine("Draft: ${item.draft}\n")
                     for (turn in dao.turns(item.id)) {
-                        writer.appendLine(
-                            "### ${turn.question}\n\n${if (work.value.turnId == turn.id && work.value.text.isNotBlank()) work.value.text else turn.answer}\n\nStatus: ${turn.status}\nModel: ${turn.model}\n"
-                        )
                         val live = work.value
+                        writer.appendLine(
+                            "### ${turn.question}\n\n${if (live.turnId == turn.id && live.text.isNotBlank()) live.text else turn.answer}\n\nStatus: ${turn.status}\nModel: ${turn.model}\n"
+                        )
                         val sourceData = if (live.turnId ==
                             turn.id
                         ) {

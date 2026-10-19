@@ -82,6 +82,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
     var comparing by rememberSaveable { mutableStateOf(false) }
     val selected = available.find { it.fileName == selectedFile } ?: profile.recommendedModel
     val fits = model.catalog.packageFitsStorage(selected, profile.freeStorageBytes)
+    val fitsMemory = model.catalog.packageFitsMemory(selected, profile.totalMemoryBytes)
     val installed = packages.find { it.key == selected.manifest.key }
     val starter = catalog.packages.single { it.role == PackageRole.STARTER }
     val hasStarter = model.catalog.hasStarterLibrary(packages)
@@ -150,7 +151,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                                         if (selected ==
                                             profile.recommendedModel
                                         ) {
-                                            if (profile.recommendedModelFitsStorage) {
+                                            if (profile.recommendedModelFitsStorage && fitsMemory) {
                                                 R.string.recommended
                                             } else {
                                                 R.string.model_smallest_option
@@ -181,10 +182,15 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                                 ),
                                 style = MaterialTheme.typography.bodySmall
                             )
-                            if (fits) {
+                            if (fits && fitsMemory) {
                                 Text(
                                     stringResource(R.string.runs_on_phone),
                                     style = MaterialTheme.typography.bodySmall
+                                )
+                            } else if (!fitsMemory) {
+                                Text(
+                                    stringResource(R.string.model_memory_warning),
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
                             }
                         }

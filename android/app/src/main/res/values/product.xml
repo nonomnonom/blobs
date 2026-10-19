@@ -122,6 +122,7 @@
     <string name="settings">Settings</string>
     <string name="appearance">Appearance</string>
     <string name="appearance_body">Choose how Blobs looks and feels.</string>
+    <string name="model_memory_warning">A smaller model is a better fit for this phone.</string>
     <string name="reading_preview">Follow a question. Find a connection. Take your time with the sources.</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>

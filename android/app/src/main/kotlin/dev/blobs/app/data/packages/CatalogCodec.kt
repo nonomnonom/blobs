@@ -1,5 +1,6 @@
 package dev.blobs.app.data.packages
 
+import dev.blobs.app.BuildConfig
 import java.security.KeyFactory
 import java.security.MessageDigest
 import java.security.PublicKey
@@ -22,6 +23,15 @@ internal object CatalogCodec {
         val packages = buildList {
             for (index in 0 until entries.length()) {
                 val item = entries.getJSONObject(index)
+                val compatibility = requireNotNull(item.optJSONObject("compatibility")) {
+                    "CATALOG_COMPATIBILITY"
+                }
+                if (!supportsMinimumVersion(
+                        compatibility.optString("minimum_app_version", "0.0.0")
+                    )
+                ) {
+                    continue
+                }
                 val asset = DownloadablePackage(
                     fileName = item.getString("file_name"),
                     url = item.getString("url"),
@@ -82,6 +92,18 @@ internal object CatalogCodec {
         require(packages.count { it.role == PackageRole.STARTER } == 1)
         require(packages.map { it.manifest.key }.distinct().size == packages.size)
         return packages
+    }
+
+    private fun supportsMinimumVersion(version: String): Boolean {
+        require(version.matches(Regex("[0-9]+\\.[0-9]+\\.[0-9]+"))) { "CATALOG_APP_VERSION" }
+        val required = version.split('.').map {
+            requireNotNull(it.toIntOrNull()) { "CATALOG_APP_VERSION" }
+        }
+        val current = BuildConfig.VERSION_NAME.split('.').map(String::toInt)
+        val difference = required.zip(current).firstOrNull { (minimum, installed) ->
+            minimum != installed
+        }
+        return difference == null || difference.first < difference.second
     }
 
     fun verifyAndParse(envelopeText: String, publicKey: PublicKey): List<DownloadablePackage> =

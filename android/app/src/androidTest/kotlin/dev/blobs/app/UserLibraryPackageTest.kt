@@ -12,9 +12,12 @@ import com.tom_roush.pdfbox.pdmodel.font.PDType1Font
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.UserLibraryPackage
 import dev.blobs.app.data.local.BlobsDatabase
+import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.PackageInstaller
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -22,6 +25,61 @@ import org.junit.Test
 
 class UserLibraryPackageTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
+
+    @Test
+    fun cancelledDocumentImportKeepsItsArchiveUntilResumeCompletes() = runBlocking {
+        val name = "resume-documents-${UUID.randomUUID()}.db"
+        val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
+        val isolated = object : ContextWrapper(context) {
+            override fun getFilesDir() = folder
+        }
+        val source = File(folder, "notes.txt").apply {
+            writeText("Notes about clean drinking water.")
+        }
+        val database = BlobsDatabase.open(context, name)
+        try {
+            val installer = PackageInstaller(isolated, database.packages(), LibraryStore())
+            val result = runCatching {
+                installer.importDocuments(listOf(Uri.fromFile(source))) { _, _ ->
+                    throw CancellationException("Pause after staging starts")
+                }
+            }
+            assertTrue(result.exceptionOrNull() is CancellationException)
+            val pending = requireNotNull(installer.pending())
+            val archive = File(requireNotNull(pending.uri.path))
+            assertTrue("A resumable import must keep its generated archive", archive.isFile)
+            val restarted = PackageInstaller(isolated, database.packages(), LibraryStore())
+            assertEquals(pending, restarted.recover())
+            restarted.install(pending.uri, pending.manifest) {}
+            assertEquals(1, database.packages().all().size)
+            assertTrue("The generated archive must be removed after activation", !archive.exists())
+            assertTrue("The user's original document must remain", source.isFile)
+        } finally {
+            database.close()
+            context.deleteDatabase(name)
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun failedCollectionExportClosesTheDestination() {
+        val pack = PackageEntity(
+            "missing", "missing", "1", "library", "Missing collection",
+            File(context.cacheDir, "missing-${UUID.randomUUID()}.sqlite").path,
+            1, "0".repeat(64), "Test", "local:user-documents", 1
+        )
+        var closed = false
+        val destination = object : ByteArrayOutputStream() {
+            override fun close() {
+                closed = true
+                super.close()
+            }
+        }
+        val result =
+            runCatching { UserLibraryPackage(context).export(pack, LibraryStore(), destination) }
+        assertTrue(result.isFailure)
+        assertTrue("The destination must close even when reading the collection fails", closed)
+    }
 
     @Test
     fun localMarkdownBecomesSearchableAndExportsAsPortableJson() = runBlocking {

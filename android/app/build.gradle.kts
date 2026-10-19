@@ -48,7 +48,10 @@ android {
         }
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     packaging.resources.excludes += "META-INF/LICENSE.md"
     externalNativeBuild {
         cmake {

@@ -13,14 +13,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.ModelLogo
 import dev.blobs.app.ui.PrimaryAction
@@ -36,6 +39,9 @@ fun ModelsScreen(
     pickFile: () -> Unit
 ) {
     val catalog by model.catalogState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val profile =
+        remember(context, catalog.packages) { DeviceProfile.inspect(context, model.catalog) }
     val selected = model.selectedModel()?.key
     val installed = packages.filter { it.kind == "model" }
     ScrollPage {
@@ -48,6 +54,12 @@ fun ModelsScreen(
                 "${fileSize(asset.downloadBytes)} · ${asset.manifest.license}",
                 pack?.key == selected
             ) {
+                if (!model.catalog.packageFitsMemory(asset, profile.totalMemoryBytes)) {
+                    Text(
+                        stringResource(R.string.model_memory_warning),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 if (pack != null) {
                     OutlinedButton(
                         onClick = { model.selectModel(pack) },
