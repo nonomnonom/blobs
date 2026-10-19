@@ -238,7 +238,7 @@ class LaunchTest {
             }
         ) {
             compose.onNodeWithText(compose.activity.getString(R.string.download_starter))
-                .performScrollTo().assertIsDisplayed()
+                .assertIsDisplayed()
             compose.onAllNodesWithText(compose.activity.getString(R.string.add_package))
                 .assertCountEquals(0)
         }

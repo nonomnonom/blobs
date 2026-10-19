@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -45,6 +46,18 @@ def fixture_inputs(url="https://huggingface.co/datasets/nonomnonom/blobs-catalog
 
 
 class StageMultiLibraryBenchmarkTest(unittest.TestCase):
+    def test_workflow_case_sets_resolve_against_the_bundled_catalog(self):
+        root = Path(__file__).resolve().parents[3]
+        workflow = (root / '.github/workflows/android.yml').read_text(encoding='utf-8')
+        names = set(re.findall(r'multi-library-retrieval-scaling-v\d+\.json', workflow))
+        self.assertTrue(names)
+        for name in names:
+            packages = read_inputs(
+                root / 'corpus/evaluation/cases' / name,
+                root / 'android/app/src/main/assets/package-catalog.json',
+            )
+            self.assertTrue(packages)
+
     def test_resolves_only_matching_hash_pinned_library_packages(self):
         case, catalog, _ = fixture_inputs()
         with tempfile.TemporaryDirectory() as directory:

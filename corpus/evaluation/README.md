@@ -179,13 +179,13 @@ A matched v0.3.7 comparison then reduced the production multi-library candidate 
 
 The v3 case set adds a maximum rank of 4 for the specific camping wildlife and food-storage source. The Android test enforces the bound whenever the expected library is enabled. The candidate meets it at library counts four, five, and six. Its reports include the selected library and document IDs, sections, and lexical overlap counts, but omit passage text and model output. Generic one-word titles no longer outrank more specific evidence solely for an exact one-word match, and cross-library ties preserve the caller's package and per-library candidate order.
 
-The current [`v4 run`](evidence/android-multi-library-retrieval-scaling-v4-x86_64-android16-2026-10-19.json) uses the `main` debug build (version name 0.3.8), the six-library fixture, and the updated NPS outdoor-safety 2026-10.2 package. It adds a natural-water-hazards query. On this Android 16 x86_64 emulator, the seven-query, five-sample run measured 309 ms median and 425 ms p95 across query medians at six libraries. Every expected source was retrieved whenever its library was enabled; `Water Hazards` ranked first at enabled-library counts two through six. The report records the APK hash and per-query samples. This is device-specific retrieval evidence, with no model or generated-answer evaluation.
+The recorded [`v4 run`](evidence/android-multi-library-retrieval-scaling-v4-x86_64-android16-2026-10-19.json) uses the v0.3.8 debug build, the six-library fixture, and the updated NPS outdoor-safety 2026-10.2 package. It adds a natural-water-hazards query. On this Android 16 x86_64 emulator, the seven-query, five-sample run measured 309 ms median and 425 ms p95 across query medians at six libraries. Every expected source was retrieved whenever its library was enabled; `Water Hazards` ranked first at enabled-library counts two through six. The report records the APK hash and per-query samples. This is device-specific retrieval evidence, with no model or generated-answer evaluation.
 
 To reproduce the six-library benchmark, stage the case's exact catalog versions by their package SHA-256, then install the debug app and instrumentation APK. The staging command downloads only missing or invalid files from the catalog's immutable Hugging Face revision:
 
 ```powershell
 uv run --locked --project corpus python android/tools/stage_multi_library_benchmark.py `
-  --cases corpus/evaluation/cases/multi-library-retrieval-scaling-v4.json `
+  --cases corpus/evaluation/cases/multi-library-retrieval-scaling-v5.json `
   --catalog android/app/src/main/assets/package-catalog.json `
   --output-dir android/.local/hf-publish/packages
 
@@ -196,7 +196,7 @@ Pop-Location
 
 $stage = '/sdcard/Android/data/dev.blobs.app.debug/files'
 & $adb shell mkdir -p $stage
-& $adb push corpus/evaluation/cases/multi-library-retrieval-scaling-v4.json `
+& $adb push corpus/evaluation/cases/multi-library-retrieval-scaling-v5.json `
   "$stage/retrieval-benchmark-multi-library.json"
 Get-ChildItem android/.local/hf-publish/packages -Filter '*.blobs' |
   Where-Object Name -In @(

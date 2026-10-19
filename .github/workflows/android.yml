@@ -98,7 +98,7 @@ jobs:
       - name: Stage hash-pinned multi-library retrieval packages
         run: >-
           uv run --locked --project ../corpus python tools/stage_multi_library_benchmark.py
-          --cases ../corpus/evaluation/cases/multi-library-retrieval-scaling-v4.json
+          --cases ../corpus/evaluation/cases/multi-library-retrieval-scaling-v5.json
           --catalog app/src/main/assets/package-catalog.json
           --output-dir .local/ci-multi-library
       - name: Enable KVM for this runner
@@ -119,7 +119,7 @@ jobs:
             bash ./gradlew :app:installDebug :app:installDebugAndroidTest --console=plain
             stage=/sdcard/Android/data/dev.blobs.app.debug/files
             adb shell mkdir -p "$stage"
-            adb push ../corpus/evaluation/cases/multi-library-retrieval-scaling-v4.json "$stage/retrieval-benchmark-multi-library.json"
+            adb push ../corpus/evaluation/cases/multi-library-retrieval-scaling-v5.json "$stage/retrieval-benchmark-multi-library.json"
             adb push .local/ci-multi-library/*.blobs "$stage/"
             mkdir -p app/build/reports/androidTests/connected/debug
             output="$(adb shell am instrument -w -e class dev.blobs.app.MultiLibraryRetrievalScalingTest dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner 2>&1)"
