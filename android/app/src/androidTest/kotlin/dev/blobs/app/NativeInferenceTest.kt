@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.StatFs
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.AtomicFile
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
@@ -476,10 +477,19 @@ class NativeInferenceTest {
         require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
         val requestedThreads = args.getString("smokeThreads")?.toIntOrNull()
         require(requestedThreads == null || requestedThreads in 1..4)
+        val requireAirplaneMode = args.getString("requireAirplaneMode") == "true"
         val selectedThreads = requestedThreads
             ?: inferenceThreadCount(Runtime.getRuntime().availableProcessors())
         val threadMode = if (requestedThreads == null) "adaptive" else "fixed"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val airplaneModeEnabled = Settings.Global.getInt(
+            context.contentResolver,
+            Settings.Global.AIRPLANE_MODE_ON,
+            0
+        ) == 1
+        if (requireAirplaneMode) {
+            assertTrue("Airplane mode must be enabled for this offline run", airplaneModeEnabled)
+        }
         val reportFile = File(context.filesDir, "native-$runId.json")
         check(!reportFile.exists())
         val hash = MessageDigest.getInstance("SHA-256")
@@ -496,6 +506,7 @@ class NativeInferenceTest {
             put("run_id", runId)
             put("complete", false)
             put("fingerprint", Build.FINGERPRINT)
+            put("airplane_mode_enabled", airplaneModeEnabled)
             put("thread_mode", threadMode)
             put("requested_inference_threads", requestedThreads ?: JSONObject.NULL)
             put(
