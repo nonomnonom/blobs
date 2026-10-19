@@ -25,8 +25,18 @@ No catalog request or model/library download starts in the background. A failed 
 
 ## Trust and publishing
 
-Catalog envelopes use ECDSA P-256 with SHA-256. The app embeds the trusted public keys and accepts the current and previous key during rotation. The signing key is kept outside Git and release artifacts. Each package reference points to an immutable Hugging Face revision; package size and SHA-256 are checked before installation. Model and library payloads also pass format, path, storage, and database validation.
+Catalog envelopes use ECDSA P-256 with SHA-256. The app embeds the current trusted public key (v2); the retired v1 key is no longer accepted by new builds. Key rotation ships with an app update so the trusted key set remains part of the reviewed application source. The signing key is kept outside Git and release artifacts. Each package reference points to an immutable Hugging Face revision; package size and SHA-256 are checked before installation. Model and library payloads also pass format, path, storage, and database validation.
 
 Before publishing an asset, maintainers verify its origin, redistribution rights, license and attribution, package compatibility, size, and digest. A corrected asset is published as a new immutable package version and catalog entry; removing an entry does not silently remove a user's installed files.
 
 The repeatable Hugging Face publisher is `android/tools/publish_hf_assets.py`. It checks staged assets against the app's package list, publishes only the allow-listed README and package files, pins URLs to the resulting revision, signs the refreshed list, and updates the app's bundled fallback list. GitHub remains the source and APK distribution channel.
+
+Signed lists carry a positive increasing `revision`. The app atomically records the highest accepted revision and its payload digest before replacing the cached list. It rejects older revisions and different payloads reusing the same revision. The bundled list supplies a minimum revision for fresh installs. A missing list cache can be restored from the same accepted payload; a damaged revision record blocks online refresh while bundled metadata and installed libraries remain available. Restoring private app data can also restore an older revision boundary; this is not hardware-backed rollback protection.
+
+Publish with an explicit revision greater than every previously published revision:
+
+```powershell
+uv run --locked --project ../corpus --group publisher python tools/publish_hf_assets.py --revision NEXT_REVISION
+```
+
+The publisher validates staged archives against both their full digest and embedded manifest before upload. Installed starter editions remain usable when an update is advertised. Installing or enabling a library edition disables other editions of that library in one database transaction and retains their files for manual rollback.

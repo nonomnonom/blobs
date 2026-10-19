@@ -12,7 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('model', choices=['standard', 'small', 'integration'], default='small', nargs='?')
     args = parser.parse_args()
-    pin = json.loads((ROOT / 'models.lock.json').read_text())[args.model]
+    pin = json.loads((ROOT / 'models.lock.json').read_text(encoding="utf-8"))[args.model]
     output = ROOT / 'packages' / f'qwen3-{args.model}.blobs'
     if output.exists():
         existing = verify_package(output)

@@ -19,6 +19,9 @@ LIBRARY_FORMATS = {"blobs"}
 def validate_catalog(parsed: object) -> None:
     if not isinstance(parsed, dict) or parsed.get("format") != 1:
         raise SystemExit("Catalog schema is not supported.")
+    revision = parsed.get("revision")
+    if type(revision) is not int or not 1 <= revision <= 9_007_199_254_740_991:
+        raise SystemExit("Catalog revision must be a positive, increasing safe integer.")
     if contains_replacement_character(parsed):
         raise SystemExit("Catalog contains a Unicode replacement character.")
     release_tag = parsed.get("release_tag")

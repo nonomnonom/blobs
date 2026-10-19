@@ -29,7 +29,7 @@ def inspect(data, owner):
                 inspect(archive.read(name), owner)
 
 
-for line in (ROOT / 'app/gradle.lockfile').read_text().splitlines():
+for line in (ROOT / 'app/gradle.lockfile').read_text(encoding="utf-8").splitlines():
     if '=' not in line or line.startswith('#'):
         continue
     coordinate, configurations = line.split('=', 1)

@@ -62,7 +62,7 @@ class PackageCatalogTest {
     @Test
     fun acceptsCatalogSignedByTrustedKey() {
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
-        val packages = PackageCatalog.verifyAndParse(
+        val packages = CatalogCodec.verifyAndParse(
             signedEnvelope(catalogPayload(), pair),
             pair.public
         )
@@ -83,7 +83,7 @@ class PackageCatalogTest {
         val newKey = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
         val envelope = signedEnvelope(catalogPayload(), newKey)
 
-        val packages = PackageCatalog.verifyAndParse(
+        val packages = CatalogCodec.verifyAndParse(
             envelope,
             listOf(oldKey.public, newKey.public)
         )
@@ -105,7 +105,7 @@ class PackageCatalogTest {
         val changed = envelope.replace(originalPayload, changedPayload)
 
         assertThrows(IllegalArgumentException::class.java) {
-            PackageCatalog.verifyAndParse(changed, pair.public)
+            CatalogCodec.verifyAndParse(changed, pair.public)
         }
     }
 
@@ -118,7 +118,7 @@ class PackageCatalogTest {
         val envelope = signedEnvelope(catalogPayload(), attacker)
 
         assertThrows(IllegalArgumentException::class.java) {
-            PackageCatalog.verifyAndParse(envelope, trusted.public)
+            CatalogCodec.verifyAndParse(envelope, trusted.public)
         }
     }
 
@@ -171,7 +171,10 @@ class PackageCatalogTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val cache = File(context.cacheDir, "catalog-update-${UUID.randomUUID()}")
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
-        val updated = catalogPayload().replace("\"version\":\"1\"", "\"version\":\"2\"")
+        val updated = catalogPayload().replace(
+            "\"revision\": 1",
+            "\"revision\": 2"
+        ).replace("\"version\":\"1\"", "\"version\":\"2\"")
         try {
             val catalog = PackageCatalog(
                 catalogPayload(),
@@ -205,6 +208,72 @@ class PackageCatalogTest {
         }
     }
 
+    @Test
+    fun rejectsRollbackAndRevisionReuseAfterRestartAndCacheLoss() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val cache = File(context.cacheDir, "catalog-rollback-${UUID.randomUUID()}")
+        val pair = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
+        val latest = catalogPayload().replace("\"revision\": 1", "\"revision\": 2")
+            .replace("Research model", "Updated model")
+        var response = signedEnvelope(latest, pair)
+        fun open() = PackageCatalog(
+            catalogPayload(),
+            cache,
+            pair.public,
+            URL("https://huggingface.co/catalog.json"),
+            { Response(it, 200, response.toByteArray(), emptyMap()) }
+        )
+        try {
+            val first = open()
+            assertEquals(CatalogRefreshOutcome.UPDATED, first.refreshNow())
+            response = signedEnvelope(catalogPayload(), pair)
+            val restarted = open()
+            assertEquals("Updated model", restarted.models.single().manifest.title)
+            assertEquals(CatalogRefreshOutcome.UNAVAILABLE, restarted.refreshNow())
+            assertEquals("Updated model", restarted.models.single().manifest.title)
+            response = signedEnvelope(latest.replace("Updated model", "Reused revision"), pair)
+            assertEquals(CatalogRefreshOutcome.UNAVAILABLE, restarted.refreshNow())
+            File(cache, "catalog.signed.json").delete()
+            response = signedEnvelope(catalogPayload(), pair)
+            val missingCache = open()
+            assertEquals(CatalogSource.BUNDLED, missingCache.state.value.source)
+            assertEquals(CatalogRefreshOutcome.UNAVAILABLE, missingCache.refreshNow())
+            response = signedEnvelope(latest, pair)
+            assertEquals(CatalogRefreshOutcome.UPDATED, missingCache.refreshNow())
+            File(cache, "accepted-revision.json").writeText("damaged")
+            val damagedState = open()
+            assertEquals(CatalogSource.BUNDLED, damagedState.state.value.source)
+            assertEquals(CatalogRefreshOutcome.UNAVAILABLE, damagedState.refreshNow())
+            assertEquals(1, damagedState.models.size)
+        } finally {
+            cache.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun retiredKeyCannotRefreshOrRestoreCache() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val cache = File(context.cacheDir, "catalog-retired-${UUID.randomUUID()}")
+        val old = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
+        val current = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
+        cache.mkdirs()
+        val envelope = signedEnvelope(catalogPayload(), old)
+        File(cache, "catalog.signed.json").writeText(envelope)
+        try {
+            val catalog = PackageCatalog(
+                catalogPayload(),
+                cache,
+                current.public,
+                URL("https://huggingface.co/catalog.json"),
+                { Response(it, 200, envelope.toByteArray(), emptyMap()) }
+            )
+            assertEquals(CatalogSource.BUNDLED, catalog.state.value.source)
+            assertEquals(CatalogRefreshOutcome.UNAVAILABLE, catalog.refreshNow())
+        } finally {
+            cache.deleteRecursively()
+        }
+    }
+
     private fun signedEnvelope(payload: String, keyPair: java.security.KeyPair): String {
         val bytes = payload.toByteArray(StandardCharsets.UTF_8)
         val signer = Signature.getInstance("SHA256withECDSA")
@@ -218,6 +287,7 @@ class PackageCatalogTest {
     private fun catalogPayload() = """
         {
           "format": 1,
+          "revision": 1,
           "release_tag": "v0.3.1",
           "packages": [
             {

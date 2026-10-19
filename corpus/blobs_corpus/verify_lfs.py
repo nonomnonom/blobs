@@ -47,7 +47,7 @@ def verify_lfs(source: Path, output: Path, work: Path | None = None):
             for item in files:
                 shutil.copyfile(source.parent / item['name'], edition / item['name'])
             shutil.copyfile(source, edition / 'manifest.json')
-            (origin / '.gitattributes').write_text('records/*.jsonl.gz filter=lfs diff=lfs merge=lfs -text\n')
+            (origin / '.gitattributes').write_text('records/*.jsonl.gz filter=lfs diff=lfs merge=lfs -text\n', encoding='utf-8')
             run(['add', '.gitattributes', 'records'], origin)
             run(['-c', 'user.name=Blobs verification', '-c', 'user.email=verification@blobs.invalid',
                  '-c', 'commit.gpgsign=false', 'commit', '-m', 'Verify reviewed corpus LFS objects'], origin)

@@ -66,11 +66,11 @@ def fetch(name, url, checksum):
 
 
 def main():
-    llama = json.loads((ROOT / 'third_party/llama.lock.json').read_text())
+    llama = json.loads((ROOT / 'third_party/llama.lock.json').read_text(encoding="utf-8"))
     fetch('llama.cpp-' + llama['commit'],
           f"https://codeload.github.com/ggml-org/llama.cpp/zip/{llama['commit']}",
           llama['archive_sha256'])
-    arm = json.loads((ROOT / 'third_party/kleidiai.lock.json').read_text())
+    arm = json.loads((ROOT / 'third_party/kleidiai.lock.json').read_text(encoding="utf-8"))
     target = fetch('kleidiai-' + arm['version'], arm['archive_url'], arm['archive_sha256'])
     notices = ROOT / 'app/src/main/assets/licenses/KleidiAI.txt'
     texts = ['KleidiAI ' + arm['version'] + '\nCopyright 2024-2026 Arm Limited and/or its affiliates\n' + arm['repository']]

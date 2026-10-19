@@ -11,18 +11,13 @@ import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.security.KeyFactory
 import java.security.PublicKey
-import java.security.Signature
-import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 
 data class CatalogSnapshot(
     val packages: List<DownloadablePackage>,
@@ -48,29 +43,29 @@ class PackageCatalog internal constructor(
     constructor(context: Context) : this(
         fallbackCatalog = context.assets.open(FILE_NAME).bufferedReader().use { it.readText() },
         cacheDirectory = File(context.filesDir, "asset-catalog"),
-        publicKey = loadPublicKey(
+        publicKey = CatalogCodec.loadPublicKey(
             context.assets.open(PUBLIC_KEY_FILE).bufferedReader().use { it.readText() }
         ),
         endpoint = URL(CATALOG_URL),
         openConnection = { it.openConnection() as HttpURLConnection },
-        hasInternet = { context.hasValidatedInternet() },
-        additionalPublicKeys = listOf(
-            loadPublicKey(
-                context.assets.open(ROTATED_PUBLIC_KEY_FILE).bufferedReader().use { it.readText() }
-            )
-        )
+        hasInternet = { context.hasValidatedInternet() }
     )
 
-    private val bundledStarterId = parseCatalog(fallbackCatalog)
-        .single { it.role == PackageRole.STARTER }.manifest.id
+    private val bundledPackages = CatalogCodec.parseCatalog(fallbackCatalog)
+    private val bundledStarterId = bundledPackages.single {
+        it.role == PackageRole.STARTER
+    }.manifest.id
 
     private val trustedPublicKeys = listOf(publicKey) + additionalPublicKeys
 
     private val cacheFile = AtomicFile(File(cacheDirectory, CACHED_CATALOG_FILE))
     private val etagFile = File(cacheDirectory, ETAG_FILE)
     private val checkedFile = File(cacheDirectory, CHECKED_FILE)
+    private val revisionFile = AtomicFile(File(cacheDirectory, "accepted-revision.json"))
+    private var minimumRevision = CatalogRevision.fromPayload(fallbackCatalog)
+    private var revisionStateHealthy = true
     private val updates = Mutex()
-    private val mutableSnapshot = MutableStateFlow(initialSnapshot(fallbackCatalog))
+    private val mutableSnapshot = MutableStateFlow(initialSnapshot())
     val state = mutableSnapshot.asStateFlow()
 
     val models: List<DownloadablePackage>
@@ -128,6 +123,7 @@ class PackageCatalog internal constructor(
     }
 
     private fun fetchCatalog(): CatalogRefreshOutcome {
+        check(revisionStateHealthy) { "CATALOG_REVISION_STATE" }
         var current = endpoint
         var connection: HttpURLConnection? = null
         var redirects = 0
@@ -168,7 +164,7 @@ class PackageCatalog internal constructor(
                     throw IOException("CATALOG_HTTP_$response")
                 }
                 val length = opened.getHeaderFieldLong("Content-Length", -1L)
-                if (length > MAX_CATALOG_BYTES) throw IOException("CATALOG_SIZE")
+                if (length > CatalogCodec.MAX_CATALOG_BYTES) throw IOException("CATALOG_SIZE")
                 val envelope = opened.inputStream.use { input ->
                     val output = ByteArrayOutputStream()
                     val buffer = ByteArray(16 * 1024)
@@ -176,7 +172,7 @@ class PackageCatalog internal constructor(
                         val read = input.read(buffer)
                         if (read < 0) break
                         if (output.size() + read >
-                            MAX_CATALOG_BYTES
+                            CatalogCodec.MAX_CATALOG_BYTES
                         ) {
                             throw IOException("CATALOG_SIZE")
                         }
@@ -184,7 +180,14 @@ class PackageCatalog internal constructor(
                     }
                     output.toByteArray()
                 }
-                val parsed = verifyAndParse(envelope.toString(Charsets.UTF_8), trustedPublicKeys)
+                val payload = CatalogCodec.verifiedPayload(
+                    envelope.toString(Charsets.UTF_8),
+                    trustedPublicKeys
+                )
+                val parsed = CatalogCodec.parseCatalog(payload)
+                val revision = CatalogRevision.fromPayload(payload)
+                require(revision.accepts(minimumRevision)) { "CATALOG_ROLLBACK" }
+                rememberRevision(revision)
                 writeAtomically(cacheFile.baseFile, envelope)
                 opened.getHeaderField("ETag")?.takeIf(String::isNotBlank)?.let {
                     writeAtomically(etagFile, it.toByteArray(Charsets.UTF_8))
@@ -203,15 +206,39 @@ class PackageCatalog internal constructor(
         }
     }
 
-    private fun initialSnapshot(fallbackCatalog: String): CatalogSnapshot {
-        val fallback = parseCatalog(fallbackCatalog)
+    private fun rememberRevision(revision: CatalogRevision) {
+        writeAtomically(revisionFile.baseFile, revision.json().toByteArray(Charsets.UTF_8))
+        minimumRevision = revision
+    }
+
+    private fun initialSnapshot(): CatalogSnapshot {
+        try {
+            if (revisionFile.baseFile.exists() ||
+                File(revisionFile.baseFile.path + ".bak").exists()
+            ) {
+                val saved = revisionFile.openRead().bufferedReader().use { it.readText() }
+                val revision = CatalogRevision.fromRecord(saved)
+                if (revision.number >= minimumRevision.number) minimumRevision = revision
+            }
+        } catch (error: Exception) {
+            revisionStateHealthy = false
+            Log.w(TAG, "Unable to read download list revision", error)
+        }
         val cached = runCatching {
-            verifyAndParse(cacheFile.baseFile.readText(Charsets.UTF_8), trustedPublicKeys)
+            check(revisionStateHealthy)
+            val envelope = cacheFile.openRead().bufferedReader().use { it.readText() }
+            val payload = CatalogCodec.verifiedPayload(envelope, trustedPublicKeys)
+            val parsed = CatalogCodec.parseCatalog(payload)
+            val revision = CatalogRevision.fromPayload(payload)
+            require(revision.accepts(minimumRevision)) { "CATALOG_ROLLBACK" }
+            rememberRevision(revision)
+            parsed
         }.getOrNull()
-        val lastChecked = checkedFile.takeIf(File::isFile)
-            ?.readText(Charsets.UTF_8)?.toLongOrNull()
+        val lastChecked = runCatching {
+            checkedFile.takeIf(File::isFile)?.readText(Charsets.UTF_8)?.toLongOrNull()
+        }.getOrNull()
         return if (cached == null) {
-            CatalogSnapshot(fallback, lastChecked, null, false, CatalogSource.BUNDLED)
+            CatalogSnapshot(bundledPackages, lastChecked, null, false, CatalogSource.BUNDLED)
         } else {
             CatalogSnapshot(
                 cached,
@@ -225,8 +252,7 @@ class PackageCatalog internal constructor(
 
     companion object {
         const val FILE_NAME = "package-catalog.json"
-        const val PUBLIC_KEY_FILE = "catalog-public-key.pem"
-        private const val ROTATED_PUBLIC_KEY_FILE = "catalog-public-key-v2.pem"
+        const val PUBLIC_KEY_FILE = "catalog-public-key-v2.pem"
         const val CATALOG_URL =
             "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/main/catalog.signed.json"
         private const val TAG = "PackageCatalog"
@@ -236,8 +262,6 @@ class PackageCatalog internal constructor(
         private const val CONNECT_TIMEOUT_MS = 15_000
         private const val READ_TIMEOUT_MS = 20_000
         private const val MAX_REDIRECTS = 5
-        private const val MAX_CATALOG_BYTES = 1_048_576L
-        private const val RELEASE_ROOT = "https://github.com/nonomnonom/blobs/releases/download"
         private val ALLOWED_HOSTS = setOf(
             "huggingface.co",
             "hf.co",
@@ -246,111 +270,6 @@ class PackageCatalog internal constructor(
             "us.aws.cdn.hf.co",
             "cas-bridge.xethub.hf.co"
         )
-
-        internal fun parseCatalog(text: String): List<DownloadablePackage> {
-            val catalog = JSONObject(text)
-            require(catalog.getInt("format") == 1)
-            val tag = catalog.getString("release_tag")
-            require(tag.matches(Regex("v[0-9]+\\.[0-9]+\\.[0-9]+")))
-            val entries = catalog.getJSONArray("packages")
-            val packages = buildList {
-                for (index in 0 until entries.length()) {
-                    val item = entries.getJSONObject(index)
-                    val asset = DownloadablePackage(
-                        fileName = item.getString("file_name"),
-                        url = item.getString("url"),
-                        downloadBytes = item.getLong("download_bytes"),
-                        downloadSha256 = item.getString("download_sha256"),
-                        format = DownloadFormat.valueOf(
-                            item.getString("download_format").uppercase()
-                        ),
-                        manifest = PackageManifest.parse(item.getJSONObject("manifest").toString()),
-                        role = PackageRole.valueOf(item.getString("role").uppercase()),
-                        recommendedUpToMemoryMb = item.optLong(
-                            "recommended_up_to_memory_mb",
-                            Long.MAX_VALUE
-                        ),
-                        description = item.optString("description"),
-                        language = item.optString("language"),
-                        publisher = item.optString("publisher"),
-                        compatibility = item.optJSONObject("compatibility")?.let { compatibility ->
-                            PackageCompatibility(
-                                runtime = compatibility.optString("runtime"),
-                                format = compatibility.optString("format"),
-                                minimumRamMb = compatibility.optLong("minimum_ram_mb", 0),
-                                corpusSchema = compatibility.optInt("corpus_schema", 0),
-                                retrievalFormat = compatibility.optString("retrieval_format"),
-                                minimumAppVersion = compatibility.optString(
-                                    "minimum_app_version",
-                                    "0.0.0"
-                                )
-                            )
-                        }
-                    )
-                    val pinnedHuggingFaceRevision =
-                        asset.url.startsWith("https://huggingface.co/") &&
-                            asset.url.contains(Regex("/resolve/[a-f0-9]{40}/"))
-                    val pinnedRelease = asset.url == "$RELEASE_ROOT/$tag/${asset.fileName}"
-                    require(pinnedHuggingFaceRevision || pinnedRelease) { "CATALOG_URL" }
-                    require(asset.description.isNotBlank()) { "CATALOG_DESCRIPTION" }
-                    require(asset.language.isNotBlank()) { "CATALOG_LANGUAGE" }
-                    require(asset.publisher.isNotBlank()) { "CATALOG_PUBLISHER" }
-                    requireNotNull(asset.compatibility) { "CATALOG_COMPATIBILITY" }
-                    if (asset.manifest.kind == "model") {
-                        require(
-                            asset.compatibility.runtime == "llama.cpp" &&
-                                asset.compatibility.format == "GGUF" &&
-                                asset.compatibility.minimumRamMb > 0
-                        ) { "CATALOG_MODEL_COMPATIBILITY" }
-                    } else {
-                        require(
-                            asset.compatibility.format == "Blobs library archive" &&
-                                asset.compatibility.corpusSchema == 3 &&
-                                asset.compatibility.retrievalFormat == "SQLite FTS5"
-                        ) { "CATALOG_LIBRARY_COMPATIBILITY" }
-                    }
-                    add(asset)
-                }
-            }
-            require(packages.any { it.manifest.kind == "model" })
-            require(packages.count { it.role == PackageRole.STARTER } == 1)
-            require(packages.map { it.manifest.key }.distinct().size == packages.size)
-            return packages
-        }
-
-        internal fun verifyAndParse(
-            envelopeText: String,
-            publicKey: PublicKey
-        ): List<DownloadablePackage> = verifyAndParse(envelopeText, listOf(publicKey))
-
-        internal fun verifyAndParse(
-            envelopeText: String,
-            publicKeys: List<PublicKey>
-        ): List<DownloadablePackage> {
-            val envelope = JSONObject(envelopeText)
-            require(envelope.getInt("format") == 1) { "CATALOG_FORMAT" }
-            val payload = Base64.getDecoder().decode(envelope.getString("payload"))
-            val signatureBytes = Base64.getDecoder().decode(envelope.getString("signature"))
-            val verified = publicKeys.any { key ->
-                runCatching {
-                    Signature.getInstance("SHA256withECDSA").apply {
-                        initVerify(key)
-                        update(payload)
-                    }.verify(signatureBytes)
-                }.getOrDefault(false)
-            }
-            require(verified) { "CATALOG_SIGNATURE" }
-            return parseCatalog(payload.toString(Charsets.UTF_8))
-        }
-
-        internal fun loadPublicKey(pem: String): PublicKey {
-            val encoded = pem.replace(
-                Regex("-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\\s"),
-                ""
-            )
-            return KeyFactory.getInstance("EC")
-                .generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode(encoded)))
-        }
 
         private fun Context.hasValidatedInternet(): Boolean {
             val connectivity = getSystemService(ConnectivityManager::class.java) ?: return false
@@ -374,60 +293,3 @@ class PackageCatalog internal constructor(
         }
     }
 }
-
-data class DownloadablePackage(
-    val fileName: String,
-    val url: String,
-    val downloadBytes: Long,
-    val downloadSha256: String,
-    val format: DownloadFormat,
-    val manifest: PackageManifest,
-    val role: PackageRole,
-    val recommendedUpToMemoryMb: Long,
-    val description: String = "",
-    val language: String = "",
-    val publisher: String = "",
-    val compatibility: PackageCompatibility? = null
-) {
-    init {
-        require(
-            fileName.matches(
-                if (format == DownloadFormat.BLOBS) {
-                    Regex("[a-z0-9][a-z0-9.-]{0,100}\\.blobs")
-                } else {
-                    Regex("[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}\\.gguf")
-                }
-            )
-        )
-        require(downloadBytes in 1..40_000_000_000L)
-        require(downloadSha256.matches(Regex("[a-f0-9]{64}")))
-        require(
-            if (format == DownloadFormat.BLOBS) {
-                url.startsWith("https://github.com/nonomnonom/blobs/releases/download/") ||
-                    url.startsWith("https://huggingface.co/") &&
-                    url.contains(Regex("/resolve/[a-f0-9]{40}/"))
-            } else {
-                url.startsWith("https://huggingface.co/") &&
-                    url.contains(Regex("/resolve/[a-f0-9]{40}/"))
-            }
-        )
-        require(manifest.kind in setOf("model", "library"))
-        require((manifest.kind == "model") == (role == PackageRole.MODEL))
-        require(recommendedUpToMemoryMb > 0)
-        require(description.length <= 2_000 && language.length <= 64 && publisher.length <= 160)
-        require(compatibility == null || compatibility.minimumRamMb >= 0)
-    }
-}
-
-data class PackageCompatibility(
-    val runtime: String,
-    val format: String,
-    val minimumRamMb: Long,
-    val corpusSchema: Int,
-    val retrievalFormat: String,
-    val minimumAppVersion: String
-)
-
-enum class DownloadFormat { BLOBS, GGUF }
-
-enum class PackageRole { MODEL, STARTER, OPTIONAL }
