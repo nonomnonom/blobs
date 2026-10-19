@@ -218,3 +218,66 @@ The complete report is emitted as ordered `REPORT_PART:i/n:` chunks under the `B
 The pinned travel package was also compared before and after stable title-overlap ranking on the same Android 16 x86_64 emulator, using three runs per build and the same six-query case set. [`The comparison evidence`](evidence/android-retrieval-travel-title-ranking-x86_64-android16-2026-10-19.json) records 6/6 expected sources at rank 1 in all candidate runs, up from 4/6 at baseline; mean reciprocal rank rose from 0.783 to 1.0. The median of run medians increased from 70 ms to 78 ms, and the median run p95 from 247 ms to 261 ms. That is a small absolute latency cost on this emulator in exchange for better source ordering; it is not a device-wide performance claim.
 
 The new camping-safety package was exercised through the same Android 16 x86_64 production retrieval path. [`Its report`](evidence/android-retrieval-camping-safety-x86_64-android16-2026-10-19.json) records five repeats for each of eight queries: all eight expected sources were found, seven at rank 1, with a 3 ms median of case medians and a 6 ms p95 on this emulator. The report identifies the exact package, app APK, test APK, and case-set hashes. It evaluates retrieval only.
+
+## Measure the offline chat path
+
+`NativeInferenceTest#verifiedModelFileProducesSavedCitedAnswer` measures the full app path after local assets are staged: model-file validation, normal library-package installation, retrieval, `WorkController`, generation, and saved-turn completion. It asserts airplane mode from inside the test, measures end-to-end and first-visible-state latency, and records only model/library identity plus retrieved source metadata. Generated answer text is neither stored nor evaluated. The app may report `UNVERIFIED`; that is recorded as app state and is not treated as a test failure.
+
+The [`three-run Android 16 x86_64 report`](evidence/android-offline-chat-performance-v2-x86_64-android16-2026-10-19/summary.json) uses the same Qwen3 0.6B Q8 file, NPS outdoor-safety package, question, and APKs in every run. Median end-to-end time was 21.915 s (nearest-rank p95 22.264 s). Retrieved evidence was ready in 19 ms median (32 ms p95); first-visible-state time was 17.218 s median (17.396 s p95), so the measured delay follows retrieval and sits in the generation/stream path. `Water Hazards` was first in the evidence list in all three runs. This is one debug emulator profile and a verified model-file fixture; it does not measure the in-app model-download step or predict phone performance. The raw reports and APK identities are retained in the same evidence folder.
+
+To repeat, build/install the debug and instrumentation APKs, then copy the locked model fixture and pinned library package to app-private files. This avoids external-storage access differences between Android versions:
+
+```powershell
+$adb = "$env:ANDROID_HOME/platform-tools/adb.exe"
+Push-Location android
+.\gradlew.bat :app:installDebug :app:installDebugAndroidTest --offline --console=plain
+Pop-Location
+& $adb push android/.local/perf/qwen3-integration.gguf /data/local/tmp/blobs-qwen3.gguf
+& $adb shell run-as dev.blobs.app.debug cp /data/local/tmp/blobs-qwen3.gguf files/qwen3-smoke.gguf
+& $adb push android/.local/hf-publish/packages/nps-outdoor-safety-2026-10-v2.blobs /data/local/tmp/nps-outdoor-safety.blobs
+& $adb shell run-as dev.blobs.app.debug cp /data/local/tmp/nps-outdoor-safety.blobs files/nps-outdoor-safety.blobs
+```
+
+Use a unique run ID each time. URL-safe Base64 keeps question and publisher arguments intact through `adb shell`; the instrumentation decodes them locally. Save each report from the app-private directory. Preserve the previous airplane-mode value and restore it in a `finally` block when scripting repeated runs.
+
+```powershell
+$question = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('What hazards are present in natural water?')).TrimEnd('=').Replace('+','-').Replace('/','_')
+$publisher = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('National Park Service · U.S. Department of the Interior')).TrimEnd('=').Replace('+','-').Replace('/','_')
+$title = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('Water Hazards')).TrimEnd('=').Replace('+','-').Replace('/','_')
+$previousAirplaneMode = (& $adb shell settings get global airplane_mode_on).Trim()
+try {
+  & $adb shell cmd connectivity airplane-mode enable
+  & $adb shell am instrument --user 0 -w `
+    -e class 'dev.blobs.app.NativeInferenceTest#verifiedModelFileProducesSavedCitedAnswer' `
+    -e modelFile '/data/user/0/dev.blobs.app.debug/files/qwen3-smoke.gguf' `
+    -e modelSha256 9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031 `
+    -e libraryPackage '/data/user/0/dev.blobs.app.debug/files/nps-outdoor-safety.blobs' `
+    -e runId offline-chat-01 -e questionBase64 $question `
+    -e expectedPublisherBase64 $publisher -e expectedEvidenceTitleBase64 $title `
+    -e timeoutSeconds 180 -e requireAirplaneMode true `
+    dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner
+  $report = & $adb exec-out run-as dev.blobs.app.debug cat files/answer-offline-chat-01.json
+  $report | Set-Content -Encoding utf8NoBOM corpus/evaluation/evidence/chat-run-01.json
+} finally {
+  if ($previousAirplaneMode -eq '1') {
+    & $adb shell cmd connectivity airplane-mode enable
+  } else {
+    & $adb shell cmd connectivity airplane-mode disable
+  }
+}
+```
+
+After at least three successful runs, hash the exact installed app and test APKs into `installed-app.json`, then create a summary in a new write-once output path:
+
+```powershell
+uv run --locked --project . python -m evaluation.android.chat_performance `
+  --run evaluation/evidence/chat-run-01.json `
+  --run evaluation/evidence/chat-run-02.json `
+  --run evaluation/evidence/chat-run-03.json `
+  --installed-app evaluation/evidence/installed-app.json `
+  --expected-title 'Water Hazards' `
+  --expected-publisher 'National Park Service · U.S. Department of the Interior' `
+  --output evaluation/baselines/android-offline-chat-local.json
+```
+
+The summarizer requires matching device, app, model, and library identities; verified airplane mode; successful saved turns; and the expected source metadata. It rejects reports containing generated answer text and reports latency distributions without scoring the model.

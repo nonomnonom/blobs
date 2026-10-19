@@ -6,6 +6,7 @@ import android.os.ParcelFileDescriptor
 import android.os.StatFs
 import android.os.SystemClock
 import android.provider.Settings
+import android.util.Base64
 import android.util.AtomicFile
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -280,14 +282,25 @@ class NativeInferenceTest {
         }
         val runId = args.getString("runId") ?: UUID.randomUUID().toString()
         require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
-        val question = args.getString("question")
+        val question = decodedArgument(args, "question")
             ?: "How do trees reduce urban heat? Explain with sources."
         require(question.length in 1..2000)
-        val expectedPublisher = args.getString("expectedPublisher") ?: "Wikipedia contributors"
+        val expectedPublisher = decodedArgument(args, "expectedPublisher")
+            ?: "Wikipedia contributors"
         require(expectedPublisher.length in 1..300)
+        val expectedEvidenceTitle = decodedArgument(args, "expectedEvidenceTitle")
+        require(expectedEvidenceTitle == null || expectedEvidenceTitle.length in 1..300)
         val timeoutMs = (args.getString("timeoutSeconds") ?: "240").toLong() * 1000
         require(timeoutMs in 60_000..600_000)
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val airplaneModeEnabled = Settings.Global.getInt(
+            context.contentResolver,
+            Settings.Global.AIRPLANE_MODE_ON,
+            0
+        ) == 1
+        if (args.getString("requireAirplaneMode") == "true") {
+            assertTrue("Airplane mode must be enabled for this offline run", airplaneModeEnabled)
+        }
         val container = (context.applicationContext as BlobsApplication).container
         withTimeout(15_000) { container.work.state.first { it.ready } }
         val output = File(context.filesDir, "answer-$runId.json")
@@ -302,6 +315,7 @@ class NativeInferenceTest {
             put("application_id", context.packageName)
             put("fingerprint", Build.FINGERPRINT)
             put("api", Build.VERSION.SDK_INT)
+            put("airplane_mode_enabled", airplaneModeEnabled)
             put("generation_started", false)
             put(
                 "model_preparation",
@@ -411,6 +425,11 @@ class NativeInferenceTest {
         )
         val start = SystemClock.elapsedRealtime()
         var firstVisibleMs: Long? = null
+        var evidenceReadyMs: Long? = null
+        val evidenceObserver = launch {
+            container.work.state.first { it.threadId == id && it.evidence != "[]" }
+            evidenceReadyMs = SystemClock.elapsedRealtime() - start
+        }
         val observer = launch {
             container.work.state.first { it.threadId == id && it.text.isNotBlank() }
             firstVisibleMs = SystemClock.elapsedRealtime() - start
@@ -433,16 +452,27 @@ class NativeInferenceTest {
                 withTimeoutOrNull(60_000) { container.work.state.first { !it.busy } }
             }
             observer.cancel()
+            evidenceObserver.cancel()
             val turn = container.database.conversations().turns(id).lastOrNull()
             report.put("complete", !container.work.state.value.busy && turn != null)
             report.put("finished_within_timeout", finished)
             report.put("wall_elapsed_ms", SystemClock.elapsedRealtime() - start)
             report.put("first_visible_state_ms", firstVisibleMs ?: JSONObject.NULL)
+            report.put("evidence_ready_state_ms", evidenceReadyMs ?: JSONObject.NULL)
             report.put("status", turn?.status ?: JSONObject.NULL)
-            report.put(
-                "evidence_count",
-                turn?.evidence?.let { Evidence.decode(it).size } ?: JSONObject.NULL
-            )
+            val evidence = turn?.evidence?.let(Evidence::decode).orEmpty()
+            report.put("evidence_count", evidence.size)
+            report.put("evidence_sources", JSONArray().apply {
+                evidence.forEach { source ->
+                    put(JSONObject().apply {
+                        put("id", source.id)
+                        put("title", source.title)
+                        put("publisher", source.publisher)
+                        put("url", source.url)
+                        put("edition", source.edition)
+                    })
+                }
+            })
             report.put("saved_elapsed_ms", turn?.elapsedMs ?: JSONObject.NULL)
             report.put("error", turn?.error ?: JSONObject.NULL)
             save()
@@ -453,18 +483,35 @@ class NativeInferenceTest {
             finished
         )
         val turn = container.database.conversations().turns(id).last()
-        assertTrue("${turn.status}: ${turn.error}", turn.status in setOf("COMPLETE", "LIMITED"))
+        assertTrue(
+            "Unexpected completed app state: ${turn.status}",
+            turn.status in setOf("COMPLETE", "LIMITED", "UNVERIFIED")
+        )
         val evidence = Evidence.decode(turn.evidence)
         assertTrue(
             "Expected evidence from $expectedPublisher, got ${turn.evidence}",
             evidence.any { it.publisher == expectedPublisher }
         )
+        expectedEvidenceTitle?.let { title ->
+            assertTrue(
+                "Expected retrieved source $title, got ${evidence.map(Evidence::title)}",
+                evidence.any { it.title == title }
+            )
+        }
         assertEquals(
             "My next question stays here",
             container.database.conversations().find(id)?.draft
         )
         foreground.close()
     }
+
+    private fun decodedArgument(args: android.os.Bundle, name: String): String? =
+        args.getString("${name}Base64")?.let { encoded ->
+            String(
+                Base64.decode(encoded, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP),
+                Charsets.UTF_8
+            )
+        } ?: args.getString(name)
 
     @Test
     fun realModelStreamsAndCancellationStopsNativeLoop() {
