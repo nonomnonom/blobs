@@ -16,8 +16,8 @@ android {
         applicationId = "dev.blobs.app"
         minSdk = 28
         targetSdk = 37
-        versionCode = 11
-        versionName = "0.3.7"
+        versionCode = 12
+        versionName = "0.3.8"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["notAnnotation"] = "dev.blobs.app.ManualCheck"
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
