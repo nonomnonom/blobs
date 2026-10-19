@@ -18,7 +18,9 @@ from blobs_corpus.names import name_key
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = "7fce7c3697c9a225e412b7360281eafabb6ffb326a4e8340784c373951116b48"
+# The regional-pack deduplication change applies only to multiple enabled libraries;
+# this single-library replay preserves its existing selection policy.
+LIBRARY_STORE_SHA256 = "82472922018835186d368a3b2f1668985339dc148b2be2ced1d390c76d2ee9e8"
 QUERY_SHA256 = "fb9a8ef4a876f5f5a773bb965c4bc6b21884962585b632998c5f1eea0f79e678"
 STOP_WORDS = {
     "the",

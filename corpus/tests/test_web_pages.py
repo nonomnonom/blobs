@@ -6,10 +6,36 @@ import tempfile
 import unittest
 
 from blobs_corpus.web_pages import SameHostRedirect, extract, read_lock
-from blobs_corpus.web_pages import _source_text
+from blobs_corpus.web_pages import _source_text, snapshot_url
 
 
 class PinnedWebPageTests(unittest.TestCase):
+    def test_wiki_revision_is_pinned_and_current_revision_is_not_a_substitute(self):
+        text = "A source article with practical instructions and attributed authors. " * 8
+        source = dict(
+            id="composting",
+            host="www.appropedia.org",
+            title="Composting",
+            url="https://www.appropedia.org/Composting",
+            updated="2025-11-28",
+            selector="#article",
+            revision_id=1211872,
+            body_sha256=hashlib.sha256(text.strip().encode("utf-8")).hexdigest(),
+        )
+        html = (
+            '<html><head><script>RLCONF={"wgRevisionId":1211872,"wgCurRevisionId":9999999};</script></head>'
+            '<body><h1>Composting</h1><div id="article"><span class="mw-editsection">edit</span>'
+            f"<p>{text}</p><figure>Excluded image and caption</figure></div></body></html>"
+        ).encode("utf-8")
+        self.assertEqual(snapshot_url(source), source["url"] + "?oldid=1211872")
+        self.assertEqual(_source_text(html, source), ("Composting", text.strip()))
+        with self.assertRaisesRegex(ValueError, "Wiki revision changed"):
+            _source_text(html.replace(b'"wgRevisionId":1211872', b'"wgRevisionId":9999999'), source)
+        with self.assertRaisesRegex(ValueError, "Reviewed source text changed"):
+            _source_text(
+                html.replace(b"practical instructions", b"unreviewed instructions"), source
+            )
+
     def test_source_lock_rejects_external_hosts(self):
         with tempfile.TemporaryDirectory() as folder:
             lock_path = Path(folder) / "lock.json"

@@ -45,6 +45,56 @@ Existing editions already in Git LFS remain available there; this new travel edi
 
 The pipeline acquires a pinned source archive, extracts bounded records, normalizes article text and attribution, validates quality constraints, exports immutable record shards, builds a SQLite FTS5 payload, and packages that payload with an exact manifest.
 
+### Regional travel and practical living
+
+| Pack | Contents | Download | On phone |
+| --- | --- | --- | --- |
+| Bali travel guides | 30 English Wikivoyage guides, including Bali, Ubud, Denpasar and Nusa Penida | 673.6 KB | 1.50 MB |
+| Practical living | Four English Appropedia articles: composting, drip irrigation, rainwater harvesting and solar cookers | 81.4 KB | 229.4 KB |
+
+Bali is a September 2026 text snapshot selected from the full English travel library. It
+describes places and getting around; it contains no map tiles, live transport data or route
+calculation. Installing both travel packs does not add new Bali articles. Android retrieval
+avoids repeating the same passages from overlapping packs.
+
+Practical living contains community reference text saved on 20 October 2026, without source
+diagrams, embedded media or linked resources. It is a small collection of concepts rather
+than a complete construction, drinking-water or food-safety manual. Each included article
+specifies CC BY-SA 3.0; this article-specific notice takes precedence over Appropedia's
+general CC BY-SA 4.0 footer. Source URLs, revision identities and contributor-history links
+are retained. See [data notices](THIRD_PARTY_NOTICES.md) for attribution and adaptation details.
+
+The [publication receipt](evaluation/evidence/regional-practical-libraries-2026-10-20.json)
+pins packages, reviewed records, counts and hashes. Download both record editions without
+the full travel collection:
+
+```powershell
+hf download nonomnonom/blobs-catalog --type dataset `
+  --revision 7f417f7e72f9326aa381278308b255611c0635ad `
+  --include "records/bali-travel-2026-09.1/*" `
+  --include "records/practical-living-2026-10.1/*" `
+  --local-dir work/regional-records
+```
+
+Pass a downloaded `documents.jsonl.gz` to `python -m blobs_corpus.package library` with
+schema 3 and the exact identity in that edition's `receipt.json` to rebuild its package.
+For source acquisition instead, `web_pages acquire` and `web_pages extract` accept
+`sources/practical-living-2026-10.json`; the lock pins each wiki revision and normalized text.
+The commands refuse changed revisions or article text rather than updating a published edition.
+
+To recreate the Bali selection from the verified full travel records:
+
+```powershell
+uv run --locked python -m blobs_corpus.subset `
+  sources/bali-travel-2026-09.json `
+  work/verified-records/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
+  work/bali-records/documents.jsonl.gz
+```
+
+The selection lock pins the source manifest and every selected article's identity, title,
+URL and text hash. Selection preserves original text, dates, rights and provenance and
+publishes its output atomically without replacing an existing file.
+
 ### Focused preparedness libraries
 
 Three small, optional English packs complement the travel, outdoor, camping, and general

@@ -1,5 +1,28 @@
 # Native inference performance smoke
 
+The runner now reports `reused_prompt_tokens` and `processed_prompt_tokens` alongside its
+existing timings. `NativeContextCacheTest` exercises exact-prefix reuse, changed instructions
+and questions, context growth, shortened prompts, Stop, interrupted prefill, failed model
+loading, and explicit memory release. It uses a locally supplied, hash-verified model and
+discards generated text. Run it after installing the app and instrumentation APK:
+
+```powershell
+adb shell am instrument -w `
+  -e notAnnotation unused.Annotation `
+  -e class dev.blobs.app.NativeContextCacheTest `
+  -e modelFile APP_READABLE_GGUF_PATH `
+  -e modelSha256 EXPECTED_SHA256 `
+  -e runId context-cache-01 `
+  dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Use a new run ID for every capture; the test refuses to overwrite its report. Add
+`-e expectPrefixReuse true` only for a model whose memory supports partial prefix removal.
+The report is saved as `files/context-cache-RUN_ID.json` in the debug app. Timing and native
+heap samples describe that workload and device. The separate in-app performance capture
+also records reused/processed token counts, response-start timing, Stop and PSS; use that
+path to assess the effect on application interactions. No cache is persisted to disk.
+
 This manual Android instrumentation run measures model load, prompt preparation, context setup, prefill, first-token callback, and decode latency. It also records the device profile, exact model and llama.cpp revision, application/test APK digests, prompt hashes, output-token count, and selected thread count. The generated text is discarded; no answer is saved or graded. Results describe the measured emulator or phone and should not be generalized to other hardware.
 
 The pinned Qwen3 0.6B fixture and fixed workload are described in [`../locks/qwen3-0.6b-native-smoke-v1.lock.json`](../locks/qwen3-0.6b-native-smoke-v1.lock.json). The checked-in [`../baselines/qwen3-0.6b-native-inference-smoke-v1-x86_64-2026-10-19.json`](../baselines/qwen3-0.6b-native-inference-smoke-v1-x86_64-2026-10-19.json) contains three successful runs on an Android 16 x86_64 emulator, with median and range rather than a device-independent target.

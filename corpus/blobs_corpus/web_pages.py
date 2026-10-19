@@ -15,12 +15,12 @@ import urllib.request
 from selectolax.lexbor import LexborHTMLParser
 
 from .acquire import checked_url
-from .normalize import _blocks, clean
+from .normalize import FURNITURE, _blocks, clean
 from .records import validate_document
 
 MAX_SOURCE_BYTES = 5_000_000
 MAX_SOURCES = 40
-EXTRACTOR_VERSION = "2"
+EXTRACTOR_VERSION = "3"
 
 
 def read_lock(path: Path) -> dict:
@@ -69,6 +69,10 @@ def read_lock(path: Path) -> dict:
                 raise ValueError
         except ValueError as error:
             raise ValueError(f"Invalid page update date: {source_id}") from error
+        if "revision_id" in source and (
+            type(source["revision_id"]) is not int or source["revision_id"] <= 0
+        ):
+            raise ValueError(f"Invalid wiki revision: {source_id}")
     for field in ("publisher", "license", "saved", "collection", "origin"):
         if not isinstance(lock.get(field), str) or not lock[field].strip():
             raise ValueError(f"Missing web-corpus metadata: {field}")
@@ -98,7 +102,7 @@ def acquire(lock_path: Path, directory: Path) -> list[Path]:
             raise OSError("Keep at least 1 GiB free while acquiring source snapshots")
         opener = urllib.request.build_opener(SameHostRedirect(source["host"]))
         request = urllib.request.Request(
-            source["url"],
+            snapshot_url(source),
             headers={
                 "User-Agent": "BlobsCorpus/0.1 (reproducible offline library)",
                 "Accept-Encoding": "identity",
@@ -128,14 +132,18 @@ def acquire(lock_path: Path, directory: Path) -> list[Path]:
 
 def _remove_furniture(root):
     for node in root.css(
-        "script,style,nav,footer,form,figure,img,svg,picture,iframe,video,audio,"
-        "[role~='navigation'],.RelatedGrid,[class*='RelatedGrid']"
+        FURNITURE + ",figure,img,svg,picture,iframe,video,audio,.RelatedGrid,[class*='RelatedGrid']"
     ):
         node.decompose()
     for node in root.css("h4"):
         links = node.css("a")
         if len(links) > 1 and all("#" in link.attributes.get("href", "") for link in links):
             node.decompose()
+
+
+def snapshot_url(source: dict) -> str:
+    revision = source.get("revision_id")
+    return source["url"] + f"?oldid={revision}" if revision else source["url"]
 
 
 def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
@@ -150,19 +158,33 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
     title = clean(title_node.text()) if title_node else ""
     if title != source["title"]:
         raise ValueError(f"Unexpected source title for {source['id']}: {title!r}")
-    page_text = tree.body.text(separator=" ", strip=True) if tree.body else ""
-    update_dates = re.findall(
-        r"Last updated:\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})"
-        r"|Last Updated:\s*(\d{2}/\d{2}/\d{4})",
-        page_text,
-    )
-    if len(update_dates) != 1:
-        raise ValueError(f"Expected one page update date: {source['id']}")
-    date_text = next(value for value in update_dates[0] if value)
-    date_format = "%m/%d/%Y" if "/" in date_text else "%B %d, %Y"
-    updated = datetime.strptime(date_text, date_format).date().isoformat()
-    if updated != source["updated"]:
-        raise ValueError(f"Page update date changed: {source['id']} ({updated})")
+    if "revision_id" in source:
+        configs = []
+        for script in tree.css("script"):
+            match = re.search(r"\bRLCONF\s*=\s*", script.text())
+            if match:
+                configs.append(json.JSONDecoder().raw_decode(script.text()[match.end() :])[0])
+        if (
+            len(configs) != 1
+            or not isinstance(configs[0], dict)
+            or type(configs[0].get("wgRevisionId")) is not int
+            or configs[0]["wgRevisionId"] != source["revision_id"]
+        ):
+            raise ValueError(f"Wiki revision changed: {source['id']}")
+    else:
+        page_text = tree.body.text(separator=" ", strip=True) if tree.body else ""
+        update_dates = re.findall(
+            r"Last updated:\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})"
+            r"|Last Updated:\s*(\d{2}/\d{2}/\d{4})",
+            page_text,
+        )
+        if len(update_dates) != 1:
+            raise ValueError(f"Expected one page update date: {source['id']}")
+        date_text = next(value for value in update_dates[0] if value)
+        date_format = "%m/%d/%Y" if "/" in date_text else "%B %d, %Y"
+        updated = datetime.strptime(date_text, date_format).date().isoformat()
+        if updated != source["updated"]:
+            raise ValueError(f"Page update date changed: {source['id']} ({updated})")
     root = tree.css_first(source["selector"])
     if root is None:
         raise ValueError(f"Missing locked article body selector: {source['id']}")
@@ -192,12 +214,15 @@ def extract(lock_path: Path, snapshots: Path, output: Path) -> Path:
         raw = path.read_bytes()
         title, body = _source_text(raw, source)
         url = source["url"]
+        attribution = (
+            " Attribution/history: " + url + "?action=history" if "revision_id" in source else ""
+        )
         item = dict(
             id=f"{lock['id']}-{source['id']}",
             title=title,
             publisher=lock["publisher"],
             url=url,
-            license=lock["license"],
+            license=lock["license"] + attribution,
             updated=source["updated"],
             saved=lock["saved"],
             collection=lock["collection"],
@@ -209,6 +234,8 @@ def extract(lock_path: Path, snapshots: Path, output: Path) -> Path:
                 body_sha256=hashlib.sha256(body.encode("utf-8")).hexdigest(),
                 source_url=url,
                 source_host=source["host"],
+                snapshot_url=snapshot_url(source),
+                revision_id=source.get("revision_id"),
                 extractor=f"blobs_corpus.web_pages/{EXTRACTOR_VERSION}",
                 extractor_sha256=hashlib.sha256(
                     Path(__file__).read_bytes()

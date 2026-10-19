@@ -320,23 +320,37 @@ class LibraryStore {
                 indexed
             }
             ranked.map { it.value }
-        }.let { candidates ->
-            val diverse = candidates.distinctBy { it.evidence.id }
+        }.let { matched ->
+            // Regional packs can contain the same reviewed article as a larger collection.
+            fun documentKey(evidence: Evidence) = Triple(
+                evidence.url,
+                evidence.id.substringAfter('/'),
+                evidence.title
+            )
+            val candidates = if (enabledLibraries.size > 1) {
+                matched.distinctBy {
+                    Triple(documentKey(it.evidence), it.evidence.section, it.evidence.text)
+                }
+            } else {
+                matched
+            }
+            val diverse = candidates.distinctBy { documentKey(it.evidence) }
             val selected = mutableListOf<Evidence>()
             val selectedPassages = mutableSetOf<Pair<String, Long>>()
-            val perDocument = mutableMapOf<String, Int>()
+            val perDocument = mutableMapOf<Triple<String, String, String>, Int>()
             var characters = 0
             fun append(candidate: RetrievalCandidate) {
                 val evidence = candidate.evidence
                 val passageKey = evidence.id to candidate.passageId
                 if (
                     selected.size < 6 &&
-                    perDocument.getOrDefault(evidence.id, 0) < 2 &&
+                    perDocument.getOrDefault(documentKey(evidence), 0) < 2 &&
                     characters + evidence.text.length <= 6000 &&
                     selectedPassages.add(passageKey)
                 ) {
                     selected += evidence
-                    perDocument[evidence.id] = perDocument.getOrDefault(evidence.id, 0) + 1
+                    val key = documentKey(evidence)
+                    perDocument[key] = perDocument.getOrDefault(key, 0) + 1
                     characters += evidence.text.length
                 }
             }

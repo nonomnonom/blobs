@@ -662,6 +662,10 @@ class NativeInferenceTest {
         assertTrue(warmMetrics.promptTokens > 0 && warmMetrics.outputTokens > 0)
         assertTrue(warmMetrics.modelCacheHit)
         assertEquals(0L, warmMetrics.modelLoadUs)
+        assertEquals(
+            warmMetrics.promptTokens,
+            warmMetrics.reusedPromptTokens + warmMetrics.processedPromptTokens
+        )
         report.put("warm_inference_metrics", warmMetrics.json())
             .put("warm_inference_result", warmResult)
         checkpoint()
@@ -743,6 +747,8 @@ class NativeInferenceTest {
         put("inference_threads", inferenceThreads)
         put("context_tokens", contextTokens)
         put("model_cache_hit", modelCacheHit)
+        put("reused_prompt_tokens", reusedPromptTokens)
+        put("processed_prompt_tokens", processedPromptTokens)
     }
 
     private fun String.sha256(): String = MessageDigest.getInstance("SHA-256")

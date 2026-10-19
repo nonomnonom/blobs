@@ -12,6 +12,37 @@ import org.junit.Test
 
 class LibraryRetrievalTest {
     @Test
+    fun overlappingRegionalLibrariesDoNotRepeatTheSameEvidenceOrEscapeScope() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
+        try {
+            val (full, _) = spanBackedLibrary(folder)
+            val regional = full.copy(key = "regional", packageId = "regional")
+            val store = LibraryStore()
+            val result = store.retrieve(listOf(full, regional), "evaporation", null)
+            assertEquals(1, result.size)
+            assertEquals("span/unicode", result.single().id)
+            assertEquals(
+                "regional/unicode",
+                store.retrieve(
+                    listOf(full, regional),
+                    "evaporation",
+                    setOf("regional/unicode")
+                ).single().id
+            )
+            assertTrue(
+                store.retrieve(
+                    listOf(full, regional.copy(enabled = false)),
+                    "evaporation",
+                    setOf("regional/unicode")
+                ).isEmpty()
+            )
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
     fun spanBackedLibraryReconstructsUnicodeEvidenceAndRejectsInvalidOffsets() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }

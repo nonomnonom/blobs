@@ -21,6 +21,10 @@ flowchart LR
 
 `data/local` owns Room entities, DAOs and explicit migrations. `data/library` owns read-only source access, retrieval and document import. `data/packages` owns package identity, validation, downloading, installation and the curated download list. `inference` owns model integration, answer formatting and grounding checks; JNI code lives in `app/src/main/cpp`. The uv-managed `corpus/blobs_corpus` package owns corpus preparation and the shared `.blobs` archive contract. Android preparation scripts reuse that contract rather than maintaining a second builder.
 
+The native runner retains one model and one bounded context in memory while the app is active. It reuses only an exact token prefix of the newly rendered prompt, removes all following cached tokens, and evaluates at least the final input token to refresh logits. A changed model identity, insufficient context capacity, missing sliding-window state, or unsupported partial memory removal creates a fresh context. Interrupted prefill and failed decodes discard their context. After an explicitly aborted generation, the runner can retain the completed prompt only if the runtime confirms that its positions remain present and can remove the generated tail; otherwise it discards the context. No cache is saved to disk. Leaving the app or releasing the model clears both weights and context. Context capacity remains bounded to 4,096 tokens, with at most 3,072 input and 768 output tokens.
+
+Regional text packs use the existing library format and installation path. Retrieval removes identical passages from overlapping packs and applies its document budget across the same source article. A source scope still selects only the user's chosen installed documents. The Bali pack is a small selection of the full travel library; it does not introduce maps, GPS, routing graphs or navigation permissions.
+
 These are source boundaries within the current application, not separate services or independently deployed modules. Contributor commands and compatibility rules are in [Contributing](../CONTRIBUTING.md).
 
 ## Where files live

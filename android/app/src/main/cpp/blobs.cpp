@@ -18,6 +18,7 @@ std::atomic<bool> cancelled{false};
 std::mutex owner;
 std::once_flag initialized;
 using Model = std::unique_ptr<llama_model, decltype(&llama_model_free)>;
+using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;
 struct ModelFileIdentity {
     dev_t device;
     ino_t inode;
@@ -28,6 +29,36 @@ struct ModelFileIdentity {
 Model cached_model(nullptr, llama_model_free);
 std::string cached_model_path;
 std::optional<ModelFileIdentity> cached_model_identity;
+// Destroy the context before its model, including at process shutdown.
+Context cached_context(nullptr, llama_free);
+std::vector<llama_token> cached_prompt;
+void clear_context() {
+    cached_context.reset();
+    cached_prompt.clear();
+}
+struct ContextGuard {
+    bool healthy = false;
+    bool persistent;
+    bool prompt_complete = false;
+    bool recoverable_abort = false;
+    ~ContextGuard() {
+        if (healthy && persistent)
+            return;
+        if (persistent && prompt_complete && recoverable_abort && cached_context) {
+            auto memory = llama_get_memory(cached_context.get());
+            const auto keep = static_cast<llama_pos>(cached_prompt.size()) - 1;
+            // Only the completed prompt is reusable after an aborted generation ubatch.
+            // Remove its final token too: the next request must refresh its logits.
+            if (memory && keep >= 0 && llama_memory_seq_pos_min(memory, 0) == 0 &&
+                llama_memory_seq_pos_max(memory, 0) >= keep - 1 &&
+                llama_memory_seq_rm(memory, 0, keep, -1)) {
+                cached_prompt.resize(keep);
+                return;
+            }
+        }
+        clear_context();
+    }
+};
 using Clock = std::chrono::steady_clock;
 jlong elapsed_us(Clock::time_point start) {
     return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start).count();
@@ -48,7 +79,7 @@ struct Measurements {
     JNIEnv *env;
     jlongArray output;
     Clock::time_point start = Clock::now();
-    std::array<jlong, 15> values;
+    std::array<jlong, 17> values;
     Measurements(JNIEnv *env, jlongArray output) : env(env), output(output) {
         values.fill(-1);
         values[7] = values[10] = values[11] = 0;
@@ -114,6 +145,7 @@ extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_stop
 extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_releaseModel(JNIEnv *,
                                                                                          jobject) {
     std::lock_guard<std::mutex> lock(owner);
+    clear_context();
     cached_model.reset();
     cached_model_path.clear();
     cached_model_identity.reset();
@@ -122,7 +154,7 @@ extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_rele
 extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_generateMeasured(
     JNIEnv *env, jobject, jbyteArray path, jbyteArray system, jbyteArray user, jint limit,
     jint threads, jobject sink, jlongArray metrics) {
-    if (!metrics || env->GetArrayLength(metrics) != 15) {
+    if (!metrics || env->GetArrayLength(metrics) != 17) {
         env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"), "METRICS_SIZE");
         return 3;
     }
@@ -150,6 +182,7 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
             measured.values[2] = 0;
             model = cached_model.get();
         } else {
+            clear_context();
             cached_model.reset();
             cached_model_path.clear();
             cached_model_identity.reset();
@@ -192,21 +225,44 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
             throw std::runtime_error("TOKENIZE");
         measured.values[9] = count;
         preparing.stop();
+        ContextGuard context_guard{false, identity.has_value()};
         Stage allocating{measured.values[4]};
         auto cp = llama_context_default_params();
         cp.n_ctx = context_capacity(count, limit);
         cp.n_batch = 256;
         cp.n_ubatch = 128;
-        measured.values[13] = cp.n_ctx;
         cp.n_threads = threads;
         cp.n_threads_batch = threads;
         cp.abort_callback = abort_decode;
-        using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;
-        Context context(llama_init_from_model(model, cp), llama_free);
-        if (!context)
-            throw std::runtime_error("CONTEXT_ALLOC");
+        int reused = 0;
+        if (cached_context && llama_n_ctx(cached_context.get()) >= cp.n_ctx) {
+            // Re-evaluate the last input token to produce logits, even for an identical prompt.
+            const int maximum = std::min(count - 1, static_cast<int>(cached_prompt.size()));
+            while (reused < maximum && tokens[reused] == cached_prompt[reused])
+                ++reused;
+            auto memory = llama_get_memory(cached_context.get());
+            // Sliding-window/recurrent contexts may no longer hold the required prefix.
+            if (!memory || llama_memory_seq_pos_min(memory, 0) != 0 ||
+                llama_memory_seq_pos_max(memory, 0) < reused - 1 ||
+                !llama_memory_seq_rm(memory, 0, reused, -1)) {
+                clear_context();
+                reused = 0;
+            }
+        } else {
+            clear_context();
+        }
+        if (!cached_context) {
+            cached_context.reset(llama_init_from_model(model, cp));
+            if (!cached_context)
+                throw std::runtime_error("CONTEXT_ALLOC");
+        }
+        auto *context = cached_context.get();
+        llama_set_n_threads(context, threads, threads);
+        measured.values[13] = llama_n_ctx(context);
+        measured.values[15] = reused;
+        measured.values[16] = 0;
         using Batch = std::unique_ptr<llama_batch_ext, decltype(&llama_batch_ext_free)>;
-        Batch batch(llama_batch_ext_init(context.get()), llama_batch_ext_free);
+        Batch batch(llama_batch_ext_init(context), llama_batch_ext_free);
         if (!batch)
             throw std::runtime_error("CONTEXT_ALLOC");
         allocating.stop();
@@ -218,10 +274,15 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
                 llama_batch_ext_set_pos(batch.get(), index, &pos);
             }
             llama_batch_ext_set_output_logits(batch.get(), n - 1, true);
-            return llama_process(context.get(), LLAMA_PROCESS_TYPE_DECODE, batch.get());
+            context_guard.healthy = false;
+            const int result = llama_process(context, LLAMA_PROCESS_TYPE_DECODE, batch.get());
+            context_guard.recoverable_abort = result == 2 && cancelled.load();
+            if (result == 0)
+                context_guard.healthy = true;
+            return result;
         };
         Stage prefill{measured.values[5]};
-        for (int pos = 0; pos < count; pos += 256) {
+        for (int pos = reused; pos < count; pos += 256) {
             if (cancelled)
                 return 1;
             if (decode(tokens.data() + pos, std::min(256, count - pos), pos)) {
@@ -229,7 +290,13 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
                     return 1;
                 throw std::runtime_error("DECODE");
             }
+            measured.values[16] += std::min(256, count - pos);
+            // A later cancelled prefill must not preserve a partially replaced prompt.
+            context_guard.healthy = false;
         }
+        cached_prompt = tokens;
+        context_guard.healthy = true;
+        context_guard.prompt_complete = true;
         prefill.stop();
         using Sampler = std::unique_ptr<llama_sampler, decltype(&llama_sampler_free)>;
         Sampler sampler(llama_sampler_chain_init(llama_sampler_chain_default_params()),
@@ -254,7 +321,7 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
         for (int i = 0; i < std::min(static_cast<int>(limit), 768); ++i) {
             if (cancelled)
                 return 1;
-            auto token = llama_sampler_sample(sampler.get(), context.get(), -1);
+            auto token = llama_sampler_sample(sampler.get(), context, -1);
             if (llama_vocab_is_eog(vocab, token))
                 return 0;
             std::vector<char> piece(256);
@@ -278,6 +345,11 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
             env->DeleteLocalRef(bytes);
             if (env->ExceptionCheck())
                 return 3;
+            if (cancelled)
+                return 1;
+            // No next sample needs logits after the final output token.
+            if (i + 1 == std::min(static_cast<int>(limit), 768))
+                break;
             if (decode(&token, 1, count + i)) {
                 if (cancelled)
                     return 1;

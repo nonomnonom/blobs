@@ -146,6 +146,11 @@ class AppJourneyPerformanceTest {
                             ).put("sampled_peak_pss_kb", peakPssKb)
                             .put("retrieval_ms", performance.retrievalElapsedMs)
                             .put("model_cache_hit", performance.generation.modelCacheHit)
+                            .put("reused_prompt_tokens", performance.generation.reusedPromptTokens)
+                            .put(
+                                "processed_prompt_tokens",
+                                performance.generation.processedPromptTokens
+                            )
                             .put("pss_at_first_text_kb", responseMemory.totalPss)
                             .put("native_threads", performance.generation.inferenceThreads)
                             .put(

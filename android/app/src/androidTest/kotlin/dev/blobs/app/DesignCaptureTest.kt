@@ -184,7 +184,9 @@ class DesignCaptureTest {
             "nps-outdoor-safety",
             "weather-safety",
             "earthquake-tsunami-safety",
-            "emergency-food"
+            "emergency-food",
+            "bali-travel",
+            "practical-living"
         )) {
             val asset = model.catalog.additionalLibraries.find { it.manifest.id == id } ?: continue
             val saved = model.packages.value.any { it.key == asset.manifest.key }
@@ -192,11 +194,7 @@ class DesignCaptureTest {
                 text(if (saved) R.string.your_collections else R.string.discover_more)
             ).performClick()
             val section = if (saved) "saved" else "discover"
-            val title = compose.onNodeWithText(asset.manifest.title).performScrollTo()
-            val distance = title.fetchSemanticsNode().boundsInRoot.top -
-                110 * compose.activity.resources.displayMetrics.density
-            compose.onAllNodes(hasScrollAction())[0]
-                .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, distance) }
+            compose.onNodeWithText(asset.manifest.title).performScrollTo()
             capture("$section-$id", waitForMarker = false)
             compose.onNodeWithContentDescription(
                 compose.activity.getString(R.string.library_details_for, asset.manifest.title)
@@ -250,16 +248,21 @@ class DesignCaptureTest {
                 page(destination)
                 capture(destination.name.lowercase())
                 if (destination == Page.SOURCES) {
-                    compose.runOnUiThread { model.search(source.title) }
+                    compose.waitUntil(10_000) { !model.state.value.searching }
+                    val scopeTitle = model.state.value.sources.first().title
+                    compose.runOnUiThread { model.search(scopeTitle) }
                     compose.waitUntil(10_000) {
                         !model.state.value.searching &&
-                            model.state.value.sources.any { it.id == source.id }
+                            model.state.value.sources.any { it.title == scopeTitle }
                     }
-                    compose.onNode(
-                        hasText(source.title) and hasClickAction() and !hasSetTextAction()
-                    )
+                    val selectedSource = model.state.value.sources.first { it.title == scopeTitle }
+                    compose.onAllNodes(
+                        hasText(scopeTitle) and hasClickAction() and !hasSetTextAction()
+                    )[0]
                         .performScrollTo().performClick()
-                    compose.waitUntil(10_000) { model.selectedScope()?.contains(source.id) == true }
+                    compose.waitUntil(10_000) {
+                        model.selectedScope()?.contains(selectedSource.id) == true
+                    }
                     capture("sources-selected", waitForMarker = false)
                     compose.onNodeWithText(text(R.string.all_sources))
                         .performScrollTo().performClick()

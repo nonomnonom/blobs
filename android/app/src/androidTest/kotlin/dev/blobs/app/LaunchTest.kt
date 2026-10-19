@@ -172,7 +172,9 @@ class LaunchTest {
                 "backcountry-basics",
                 "weather-safety",
                 "earthquake-tsunami-safety",
-                "emergency-food"
+                "emergency-food",
+                "practical-living",
+                "bali-travel"
             ),
             catalog.additionalLibraries.map { it.manifest.id }.toSet()
         )
