@@ -19,6 +19,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class MultiLibraryRetrievalScalingTest {
@@ -31,7 +32,7 @@ class MultiLibraryRetrievalScalingTest {
             return
         }
         val configFile = File(externalFiles, CONFIG_FILE)
-        assertTrue("Push $CONFIG_FILE and all pinned packages to app storage", configFile.isFile)
+        assumeTrue("Stage $CONFIG_FILE and its pinned packages to app storage", configFile.isFile)
 
         val config = JSONObject(configFile.readText())
         assertEquals(1, config.getInt("format"))

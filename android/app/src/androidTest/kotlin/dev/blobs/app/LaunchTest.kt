@@ -126,7 +126,17 @@ class LaunchTest {
         assertEquals("model", catalog.models.first().manifest.kind)
         assertEquals("library", catalog.starterLibrary.manifest.kind)
         assertEquals("wikipedia-starter", catalog.starterLibrary.manifest.id)
-        assertEquals(4, catalog.additionalLibraries.size)
+        assertEquals(
+            setOf(
+                "wikipedia-top1m-mini",
+                "wikivoyage-en",
+                "nps-outdoor-safety",
+                "ready-emergency-preparedness",
+                "camping-safety",
+                "backcountry-basics"
+            ),
+            catalog.additionalLibraries.map { it.manifest.id }.toSet()
+        )
         assertTrue(catalog.additionalLibraries.all { it.role == PackageRole.OPTIONAL })
         val outdoorSafety = catalog.additionalLibraries.single {
             it.manifest.id == "nps-outdoor-safety"

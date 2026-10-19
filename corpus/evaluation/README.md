@@ -167,9 +167,14 @@ The v3 case set adds a maximum rank of 4 for the specific camping wildlife and f
 
 The current [`v4 run`](evidence/android-multi-library-retrieval-scaling-v4-x86_64-android16-2026-10-19.json) uses the `main` debug build (version name 0.3.8), the six-library fixture, and the updated NPS outdoor-safety 2026-10.2 package. It adds a natural-water-hazards query. On this Android 16 x86_64 emulator, the seven-query, five-sample run measured 309 ms median and 425 ms p95 across query medians at six libraries. Every expected source was retrieved whenever its library was enabled; `Water Hazards` ranked first at enabled-library counts two through six. The report records the APK hash and per-query samples. This is device-specific retrieval evidence, with no model or generated-answer evaluation.
 
-To reproduce, first stage the six exact `.blobs` files named in the case set under `android/.local/hf-publish/packages/`, then install the debug app and instrumentation APK. Push the fixture and packages *after* installation because reinstalling the test target clears its app-specific external files:
+To reproduce the six-library benchmark, stage the case's exact catalog versions by their package SHA-256, then install the debug app and instrumentation APK. The staging command downloads only missing or invalid files from the catalog's immutable Hugging Face revision:
 
 ```powershell
+uv run --locked --project corpus python android/tools/stage_multi_library_benchmark.py `
+  --cases corpus/evaluation/cases/multi-library-retrieval-scaling-v4.json `
+  --catalog android/app/src/main/assets/package-catalog.json `
+  --output-dir android/.local/hf-publish/packages
+
 $adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
 Push-Location android
 .\gradlew.bat :app:installDebug :app:installDebugAndroidTest --offline --console=plain
@@ -177,12 +182,12 @@ Pop-Location
 
 $stage = '/sdcard/Android/data/dev.blobs.app.debug/files'
 & $adb shell mkdir -p $stage
-& $adb push corpus/evaluation/cases/multi-library-retrieval-scaling-v3.json `
+& $adb push corpus/evaluation/cases/multi-library-retrieval-scaling-v4.json `
   "$stage/retrieval-benchmark-multi-library.json"
 Get-ChildItem android/.local/hf-publish/packages -Filter '*.blobs' |
   Where-Object Name -In @(
     'wikipedia-starter-schema3.blobs',
-    'nps-outdoor-safety-2026-10-v1.blobs',
+    'nps-outdoor-safety-2026-10-v2.blobs',
     'ready-emergency-preparedness-2026-10-v1.blobs',
     'camping-safety-2026-10-v1.blobs',
     'backcountry-basics-2026-10-v3.blobs',
@@ -191,7 +196,6 @@ Get-ChildItem android/.local/hf-publish/packages -Filter '*.blobs' |
 & $adb shell am instrument -w `
   -e class dev.blobs.app.MultiLibraryRetrievalScalingTest `
   dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner
-& $adb logcat -d -s BlobsCorpusScaleBench:I
 ```
 
 The report is emitted in ordered `REPORT_PART:i/n:` chunks. Join those chunks to recover its JSON. It includes the APK and test-APK digests, device fingerprint, package identities, and per-query samples. Keep each run in a new evidence file.
