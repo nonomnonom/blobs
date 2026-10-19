@@ -75,6 +75,9 @@ class PackageCatalog internal constructor(
     val additionalLibraries: List<DownloadablePackage>
         get() = state.value.packages.filter { it.role == PackageRole.OPTIONAL }
 
+    val recoverableDownloads: List<DownloadablePackage>
+        get() = (state.value.packages + bundledPackages).distinctBy { it.manifest.key }
+
     fun hasStarterLibrary(installed: List<PackageEntity>): Boolean = installed.any {
         it.kind == "library" &&
             (it.packageId == bundledStarterId || it.packageId == starterLibrary.manifest.id)

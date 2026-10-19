@@ -207,7 +207,9 @@ fun BlobsApp(container: AppContainer) {
                                         (state.notice ?: work.notice)?.let {
                                             Notice(it, model::dismissNotice)
                                         }
-                                        if (work.transferActive || work.hasPendingTransfer) {
+                                        if (state.page != Page.SETUP &&
+                                            (work.transferActive || work.hasPendingTransfer)
+                                        ) {
                                             androidx.compose.material3.TextButton(onClick = {
                                                 model.navigate(Page.IMPORT)
                                             }, modifier = Modifier.fillMaxWidth()) {
@@ -215,7 +217,6 @@ fun BlobsApp(container: AppContainer) {
                                                     if (work.transferActive) {
                                                         stringResource(
                                                             R.string.downloading_package,
-                                                            work.importTitle,
                                                             (work.phaseProgress * 100).toInt()
                                                         )
                                                     } else {

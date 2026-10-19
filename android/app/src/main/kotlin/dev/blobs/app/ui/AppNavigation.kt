@@ -190,12 +190,14 @@ internal fun AppHeader(
     ) {
         if (chat) {
             GlyphButton(R.drawable.ic_menu, R.string.open_navigation, onClick = openNavigation)
-        } else if (state.page != Page.IMPORT || reviewing) {
-            GlyphButton(R.drawable.ic_arrow_back, R.string.back) {
-                if (reviewing) model.dismissImport() else model.back()
-            }
         } else {
-            Spacer(Modifier.padding(start = 16.dp))
+            GlyphButton(R.drawable.ic_arrow_back, R.string.back) {
+                when {
+                    reviewing -> model.dismissImport()
+                    state.page == Page.IMPORT -> model.finishImport()
+                    else -> model.back()
+                }
+            }
         }
         Text(
             stringResource(

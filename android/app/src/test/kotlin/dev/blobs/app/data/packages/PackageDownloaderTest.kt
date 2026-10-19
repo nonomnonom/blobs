@@ -8,13 +8,72 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
 import java.security.MessageDigest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PackageDownloaderTest {
+    @Test
+    fun cancellationDisconnectsAStalledReadWithoutWaitingForItsTimeout() = runBlocking {
+        val root = Files.createTempDirectory("blobs-stalled-download").toFile()
+        val reading = CountDownLatch(1)
+        val disconnected = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val downloader = PackageDownloader(root, { Long.MAX_VALUE }) { url ->
+            object : HttpURLConnection(url) {
+                override fun connect() = Unit
+                override fun usingProxy() = false
+                override fun getResponseCode() = HTTP_OK
+                override fun disconnect() {
+                    disconnected.countDown()
+                    release.countDown()
+                }
+                override fun getInputStream(): InputStream = object : InputStream() {
+                    override fun read(): Int {
+                        reading.countDown()
+                        check(release.await(10, TimeUnit.SECONDS))
+                        throw IOException("Socket closed")
+                    }
+                }
+            }
+        }
+        val job = launch(Dispatchers.IO) {
+            try {
+                downloader.download(asset(byteArrayOf(1))) { _, _ -> }
+            } catch (_: IOException) {
+                // The fixture reports a closed socket after the read is released.
+            }
+        }
+        try {
+            assertTrue(withContext(Dispatchers.IO) { reading.await(5, TimeUnit.SECONDS) })
+            job.cancel()
+            assertTrue(
+                "Pausing must close the active connection",
+                withContext(Dispatchers.IO) { disconnected.await(2, TimeUnit.SECONDS) }
+            )
+            assertTrue(
+                withTimeoutOrNull(3000) {
+                    job.join()
+                    true
+                } == true
+            )
+        } finally {
+            release.countDown()
+            job.cancelAndJoin()
+            root.deleteRecursively()
+        }
+    }
+
     @Test
     fun verifiesAndActivatesTheExactCatalogArchive() = runBlocking {
         val root = Files.createTempDirectory("blobs-download-test").toFile()

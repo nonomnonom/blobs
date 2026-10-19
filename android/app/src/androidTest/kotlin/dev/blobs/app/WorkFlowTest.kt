@@ -144,11 +144,16 @@ class WorkFlowTest {
         assertEquals(512L, paused.progress)
         assertFalse(paused.transferActive)
         assertEquals(R.string.download_failed, paused.notice)
-        work.resumeImport()
-        withTimeout(10_000) { work.state.first { !it.busy && it.importComplete } }
+        assertEquals(null, downloader.pending(listOf(asset.copy(downloadSha256 = "0".repeat(64)))))
+        val restarted = WorkController(db, LibraryStore(), installer, downloader, listOf(asset))
+        withTimeout(10_000) { restarted.state.first { it.ready } }
+        assertEquals(asset, restarted.state.value.download)
+        assertEquals(512L, restarted.state.value.progress)
+        restarted.resumeImport()
+        withTimeout(10_000) { restarted.state.first { !it.busy && it.importComplete } }
         assertEquals("bytes=512-", range)
         assertEquals(manifest.key, db.packages().all().single().key)
-        assertFalse(work.state.value.hasPendingTransfer)
+        assertFalse(restarted.state.value.hasPendingTransfer)
         assertTrue(root.listFiles().orEmpty().isEmpty())
     }
 

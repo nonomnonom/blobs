@@ -178,6 +178,29 @@ class DesignCaptureTest {
         capture("library")
         compose.onNodeWithText(text(R.string.discover_more)).performClick()
         capture("discover")
+        for (id in listOf("wikivoyage-en", "nps-outdoor-safety")) {
+            val asset = model.catalog.additionalLibraries.find { it.manifest.id == id } ?: continue
+            val saved = model.packages.value.any { it.key == asset.manifest.key }
+            compose.onNodeWithText(
+                text(if (saved) R.string.your_collections else R.string.discover_more)
+            ).performClick()
+            val section = if (saved) "saved" else "discover"
+            val title = compose.onNodeWithText(asset.manifest.title).performScrollTo()
+            val distance = title.fetchSemanticsNode().boundsInRoot.top -
+                110 * compose.activity.resources.displayMetrics.density
+            compose.onAllNodes(hasScrollAction())[0]
+                .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, distance) }
+            capture("$section-$id", waitForMarker = false)
+            compose.onNodeWithContentDescription(
+                compose.activity.getString(R.string.library_details_for, asset.manifest.title)
+            ).performScrollTo().performClick()
+            capture("$section-$id-credits", waitForMarker = false)
+            compose.onAllNodes(hasScrollAction())[0]
+                .performSemanticsAction(SemanticsActions.ScrollBy) {
+                    it(0f, 280 * compose.activity.resources.displayMetrics.density)
+                }
+            capture("$section-$id-credits-later", waitForMarker = false)
+        }
         compose.onNodeWithText(text(R.string.your_collections)).performClick()
         compose.onNodeWithText(text(R.string.browse_collection)).performScrollTo().performClick()
         compose.waitUntil(10_000) { !model.state.value.searching }

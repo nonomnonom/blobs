@@ -44,7 +44,8 @@ class WorkController(
     private val db: BlobsDatabase,
     private val library: LibraryStore,
     private val installer: PackageInstaller,
-    private val downloader: PackageDownloader
+    private val downloader: PackageDownloader,
+    private val availableDownloads: List<DownloadablePackage> = emptyList()
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutable = MutableStateFlow(WorkState())
@@ -69,7 +70,33 @@ class WorkController(
                 db.conversations().recoverInterrupted()
                 try {
                     val pending = installer.recover()
-                    mutable.value = WorkState(ready = true, pendingImport = pending)
+                    val download = downloader.pending(availableDownloads)
+                    val alreadyInstalled = download != null &&
+                        db.packages().all().any { it.key == download.manifest.key }
+                    if (alreadyInstalled) downloader.discard(requireNotNull(download))
+                    mutable.value = if (download != null && !alreadyInstalled) {
+                        WorkState(
+                            ready = true,
+                            pendingImport = pending,
+                            download = download,
+                            progress = if (pending == null) downloader.savedBytes(download) else 0L,
+                            total = if (pending ==
+                                null
+                            ) {
+                                download.downloadBytes
+                            } else {
+                                download.manifest.bytes
+                            },
+                            downloading = pending == null,
+                            inAppDownload = true,
+                            packageKind = download.manifest.kind,
+                            importTitle = download.manifest.title,
+                            downloadTotal = download.downloadBytes,
+                            installTotal = download.manifest.bytes
+                        )
+                    } else {
+                        WorkState(ready = true, pendingImport = pending)
+                    }
                 } catch (_: Exception) {
                     mutable.value =
                         WorkState(ready = true, notice = R.string.import_recovery_failed)
@@ -436,6 +463,7 @@ class WorkController(
         )
         job = scope.launch {
             try {
+                downloader.remember(asset)
                 val file = downloader.download(asset) { bytes, total ->
                     mutable.update { it.copy(progress = bytes, total = total) }
                 }
@@ -519,11 +547,11 @@ class WorkController(
     }
 
     fun resumeImport() {
-        val pending = state.value.pendingImport
-        if (pending != null) {
-            install(pending.uri, pending.manifest)
+        val download = state.value.download
+        if (download != null) {
+            downloadAndInstall(download)
         } else {
-            state.value.download?.let(::downloadAndInstall)
+            state.value.pendingImport?.let { install(it.uri, it.manifest) }
         }
     }
 

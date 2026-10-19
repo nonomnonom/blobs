@@ -15,7 +15,6 @@
     <string name="your_choice">Your choice</string>
     <string name="setup_model_intro">Blobs needs a model to answer on your phone. We\'ve picked a good fit for this device.</string>
     <string name="setup_model_once">One download now. Offline answers from here on.</string>
-    <string name="setup_library_intro">Start with a collection of knowledge to explore. These are the sources behind your answers.</string>
     <string name="setup_library_later">Add your own files later, from Library.</string>
     <string name="setup_ready_intro">Your model and library are ready. Where will your curiosity take you?</string>
     <string name="setup_ready_later">You can add more libraries whenever you like.</string>

@@ -54,11 +54,20 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
         work.packageKind == "library" &&
         !work.inAppDownload &&
         work.total == 0L
+    val discardLabel = if (work.inAppDownload) {
+        R.string.discard_download
+    } else {
+        R.string.import_cancel_action
+    }
+    val discardTitle = if (work.inAppDownload) {
+        R.string.discard_download_title
+    } else {
+        R.string.import_cancel_title
+    }
+    val pauseLabel = if (work.inAppDownload) R.string.pause_download else R.string.pause_import
     val running = work.transferActive
     val checking = running && work.total > 0 && work.progress == work.total
-    BackHandler {
-        if (running || work.hasPendingTransfer) cancelling = true else model.finishImport()
-    }
+    BackHandler(enabled = state.page == Page.IMPORT) { model.finishImport() }
     val failed = work.notice in setOf(
         R.string.import_failed,
         R.string.storage_failed,
@@ -220,13 +229,22 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                     onClick = model::stop,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) {
-                    Text(stringResource(R.string.pause_import), Modifier.padding(vertical = 6.dp))
+                    Text(
+                        stringResource(pauseLabel),
+                        Modifier.padding(vertical = 6.dp)
+                    )
                 }
             }
         } else if (work.hasPendingTransfer) {
             if (failed) Body(work.notice ?: R.string.import_failed)
             PrimaryAction(
-                if (failed) R.string.retry else R.string.resume_import,
+                if (failed) {
+                    R.string.retry
+                } else if (work.inAppDownload) {
+                    R.string.resume_download
+                } else {
+                    R.string.resume_import
+                },
                 !work.busy,
                 model::resumeImport
             )
@@ -237,9 +255,11 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 if (failed) Body(work.notice ?: R.string.import_failed)
                 PrimaryAction(
-                    if (state.importOrigin ==
-                        Page.SETUP
+                    if (state.importOrigin == Page.SETUP && work.importComplete &&
+                        work.packageKind == "model" && !model.catalog.hasStarterLibrary(packages)
                     ) {
+                        R.string.setup_next_library
+                    } else if (state.importOrigin == Page.SETUP) {
                         R.string.return_setup
                     } else {
                         R.string.done
@@ -259,7 +279,9 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                 )
             ) {
                 Text(
-                    stringResource(R.string.import_cancel_action),
+                    stringResource(
+                        discardLabel
+                    ),
                     Modifier.padding(vertical = 6.dp)
                 )
             }
@@ -268,13 +290,25 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
     if (cancelling) {
         AlertDialog(
             onDismissRequest = { cancelling = false },
-            title = { Text(stringResource(R.string.import_cancel_title)) },
+            title = {
+                Text(
+                    stringResource(
+                        discardTitle
+                    )
+                )
+            },
             text = { Text(stringResource(R.string.import_cancel_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     cancelling = false
                     model.discardImport()
-                }) { Text(stringResource(R.string.import_cancel_action)) }
+                }) {
+                    Text(
+                        stringResource(
+                            discardLabel
+                        )
+                    )
+                }
             },
             dismissButton = {
                 TextButton(onClick = { cancelling = false }) { Text(stringResource(R.string.back)) }

@@ -110,6 +110,12 @@ internal fun HomeContent(
                     }
                     if (index == 0) HorizontalDivider()
                 }
+                Text(
+                    stringResource(R.string.home_sources_hint),
+                    Modifier.padding(top = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         } else {
             Text(

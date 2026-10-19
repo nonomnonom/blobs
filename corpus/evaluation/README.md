@@ -19,6 +19,34 @@ uv run --locked --project . python -m evaluation.android.app_startup `
 
 The v0.3.8 release APK measured on Android 16 x86_64 had 682 ms median activity launch time (753 ms nearest-rank p95) and 31,680 KiB median process PSS (33,753 KiB p95) across seven process-cold launches. The v0.3.7 run on the same emulator measured 684 ms median (739 ms p95) and 31,955 KiB median PSS (33,107 KiB p95). These small repeated emulator samples show similar startup and memory use across the two releases; they are not device-wide estimates. The installed APK digests and raw samples are in [`the v0.3.8 report`](baselines/android-startup-v0.3.8-x86_64-android16-2026-10-19.json) and [`the v0.3.7 report`](baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json).
 
+## Measure an application journey per device profile
+
+`AppJourneyPerformanceTest` measures local-library search, time to the first visible response,
+stopping an active response, and sampled process memory. Response start is the first nonempty
+streamed text state ready for display, not a measured frame presentation time. It uses an installed model and the
+enabled libraries, stops each of three responses after text appears, and checks that the next
+draft remains saved. Generated wording is not scored. APK, model, library, RAM, CPU, ABI, and
+OS identities accompany the measurements.
+
+Install the debug app and instrumentation APK, set up the model and libraries in Blobs, and
+keep the test device unlocked. From `corpus/`:
+
+```powershell
+uv run --locked python -m evaluation.android.app_performance `
+  --serial emulator-5554 `
+  --profile android16-4gb-2core `
+  --model-key MODEL_KEY `
+  --output work/application-performance
+```
+
+Pass `--adb PATH_TO_ADB` if it is not on PATH. `MODEL_KEY` is the installed package key:
+`id-version-first16charactersOfPayloadSha256`, as recorded in package installation reports.
+The command restarts the debug app five times to capture Android's process-cold startup
+`TotalTime`, retaining OS caches. It then runs the instrumentation capture. It does not clear
+app data, download assets, or enable networking. Repeat on each device or explicitly configured
+emulator profile; retain separate reports instead of combining different hardware into one score.
+Memory is the largest observed PSS sample taken once per second, not the exact peak allocation.
+
 ## Published travel retrieval check
 
 The [2026-09.3 travel report](baselines/wikivoyage-en-2026-09.3-retrieval-smoke-v1-host.json) uses the exact archive downloaded from its immutable public HF revision and the [v2 case lock](cases/travel-retrieval-smoke-v2.json). The six questions and expected source identities are unchanged from v1; only the package identity is updated. All six expected source documents appeared at rank 1. Host median retrieval was 78.3 ms and nearest-rank p95 was 235.5 ms in this single run. This verifies the fixed source-retrieval cases, not general relevance, phone latency, or generated-answer correctness.

@@ -3,16 +3,22 @@ package dev.blobs.app.data.packages
 import android.content.Context
 import android.net.Uri
 import android.os.StatFs
+import android.util.AtomicFile
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 /** Resumable, pinned downloads for the small first-run package catalog. */
 class PackageDownloader(
@@ -22,6 +28,8 @@ class PackageDownloader(
         it.openConnection() as HttpURLConnection
     }
 ) {
+    private val journal by lazy { AtomicFile(File(root, "pending-download.json")) }
+
     constructor(context: Context) : this(
         File(context.filesDir, "package-downloads"),
         { StatFs(File(context.filesDir, "package-downloads").path).availableBytes }
@@ -29,6 +37,42 @@ class PackageDownloader(
 
     init {
         root.mkdirs()
+    }
+
+    fun remember(asset: DownloadablePackage) {
+        val output = journal.startWrite()
+        try {
+            output.write(
+                JSONObject().put("key", asset.manifest.key)
+                    .put("file_name", asset.fileName)
+                    .put("sha256", asset.downloadSha256).toString().toByteArray(Charsets.UTF_8)
+            )
+            journal.finishWrite(output)
+        } catch (error: Exception) {
+            journal.failWrite(output)
+            throw error
+        }
+    }
+
+    fun pending(available: List<DownloadablePackage>): DownloadablePackage? {
+        if (!journal.baseFile.exists()) return null
+        require(journal.baseFile.length() <= 4096) { "DOWNLOAD_JOURNAL" }
+        val saved = JSONObject(journal.openRead().bufferedReader().use { it.readText() })
+        return available.firstOrNull {
+            it.manifest.key == saved.getString("key") &&
+                it.fileName == saved.getString("file_name") &&
+                it.downloadSha256 == saved.getString("sha256")
+        }
+    }
+
+    fun savedBytes(asset: DownloadablePackage): Long {
+        val complete = File(root, asset.fileName)
+        val partial = File(root, "${asset.fileName}.part")
+        return when {
+            complete.isFile -> complete.length()
+            File(root, "${asset.fileName}.resume").isFile -> partial.length()
+            else -> 0L
+        }.coerceIn(0L, asset.downloadBytes)
     }
 
     suspend fun download(asset: DownloadablePackage, progress: (Long, Long) -> Unit): File =
@@ -73,14 +117,22 @@ class PackageDownloader(
             if (available < required) throw IOException("STORAGE")
 
             var currentUrl = URL(asset.url)
-            var connection: HttpURLConnection? = null
+            val connection = AtomicReference<HttpURLConnection?>()
+            val cancellation = launch(Dispatchers.IO, start = CoroutineStart.UNDISPATCHED) {
+                try {
+                    awaitCancellation()
+                } finally {
+                    connection.getAndSet(null)?.disconnect()
+                }
+            }
             try {
                 var redirects = 0
                 var response: Int
                 while (true) {
                     currentCoroutineContext().ensureActive()
                     val opened = openConnection(currentUrl)
-                    connection = opened
+                    connection.set(opened)
+                    currentCoroutineContext().ensureActive()
                     opened.instanceFollowRedirects = false
                     opened.connectTimeout = 20_000
                     opened.readTimeout = 60_000
@@ -100,10 +152,10 @@ class PackageDownloader(
                         "DOWNLOAD_HOST"
                     }
                     currentUrl = next
-                    connection = null
+                    connection.set(null)
                 }
 
-                val active = connection
+                val active = requireNotNull(connection.get())
                 if (response == HttpURLConnection.HTTP_OK && offset > 0) {
                     offset = 0
                     partial.delete()
@@ -169,8 +221,12 @@ class PackageDownloader(
                 resume.delete()
                 progress(asset.downloadBytes, asset.downloadBytes)
                 target
+            } catch (error: Exception) {
+                currentCoroutineContext().ensureActive()
+                throw error
             } finally {
-                connection?.disconnect()
+                connection.getAndSet(null)?.disconnect()
+                cancellation.cancel()
             }
         }
 
@@ -181,6 +237,7 @@ class PackageDownloader(
             require(file.parentFile == directory) { "DOWNLOAD_PATH" }
             if (file.exists() && !file.delete()) throw IOException("DOWNLOAD_DELETE")
         }
+        journal.delete()
     }
 
     fun removeInstalledArchive(uri: Uri) {
@@ -188,6 +245,7 @@ class PackageDownloader(
         val source = File(requireNotNull(uri.path)).canonicalFile
         if (source.parentFile == root.canonicalFile && source.extension in setOf("blobs", "gguf")) {
             source.delete()
+            journal.delete()
         }
     }
 

@@ -21,6 +21,6 @@ class AppContainer(context: Context) {
     val downloader: PackageDownloader by lazy { PackageDownloader(applicationContext) }
     val catalog: PackageCatalog by lazy { PackageCatalog(applicationContext) }
     val work: WorkController by lazy {
-        WorkController(database, library, installer, downloader)
+        WorkController(database, library, installer, downloader, catalog.recoverableDownloads)
     }
 }

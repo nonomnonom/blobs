@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -62,6 +63,20 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                     } else {
                         createConversation()
                     }
+                    val installed = container.database.packages().all()
+                    val restored = work.first { it.ready || it.notice != null }
+                    val needsSetup = installed.none { it.kind == "model" } ||
+                        !catalog.hasStarterLibrary(installed)
+                    val pendingKind = restored.download?.manifest?.kind
+                        ?: restored.pendingImport?.manifest?.kind
+                    mutable.value = mutable.value.copy(
+                        page = if (options.welcomed && needsSetup) Page.SETUP else Page.CHAT,
+                        importOrigin = when {
+                            needsSetup -> Page.SETUP
+                            pendingKind == "model" -> Page.MODELS
+                            else -> Page.LIBRARY
+                        }
+                    )
                 }
                 mutable.value = mutable.value.copy(options = options, loaded = true)
             }
@@ -135,8 +150,12 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         }
         container.work.clearNotice()
         val origin = mutable.value.importOrigin
-        if (mutable.value.page == Page.IMPORT && backStack.lastOrNull() == origin) {
-            back()
+        if (mutable.value.page == Page.IMPORT) {
+            if (backStack.lastOrNull() == origin) {
+                back()
+            } else {
+                mutable.value = mutable.value.copy(page = origin)
+            }
         } else {
             navigate(origin)
         }
@@ -374,7 +393,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
             val output = requireNotNull(context.contentResolver.openOutputStream(uri))
             container.installer.exportCollection(pack, output)
         }
-        fail(R.string.export_saved)
+        fail(R.string.collection_export_saved)
     }
 
     fun dismissImport() {

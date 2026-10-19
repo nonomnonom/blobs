@@ -81,11 +81,15 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
     }
     var comparing by rememberSaveable { mutableStateOf(false) }
     val selected = available.find { it.fileName == selectedFile } ?: profile.recommendedModel
+    androidx.compose.runtime.LaunchedEffect(work.download?.fileName) {
+        work.download?.takeIf { it.manifest.kind == "model" }?.let { selectedFile = it.fileName }
+    }
     val fits = model.catalog.packageFitsStorage(selected, profile.freeStorageBytes)
     val fitsMemory = model.catalog.packageFitsMemory(selected, profile.totalMemoryBytes)
     val installed = packages.find { it.key == selected.manifest.key }
     val starter = catalog.packages.single { it.role == PackageRole.STARTER }
     val hasStarter = model.catalog.hasStarterLibrary(packages)
+    val starterFits = model.catalog.packageFitsStorage(starter, profile.freeStorageBytes)
     val pending = work.hasPendingTransfer || work.transferActive
     if (step == SetupStep.READY) {
         ReadyScreen(model.selectedModel()?.title.orEmpty(), readyScroll, model::finishSetup)
@@ -253,11 +257,11 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
 
                 SetupStep.LIBRARY -> {
                     WorldScene(
-                        Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(28.dp)),
-                        size = 180.dp
+                        Modifier.fillMaxWidth().height(if (large) 128.dp else 200.dp)
+                            .clip(RoundedCornerShape(28.dp)),
+                        size = if (large) 116.dp else 180.dp
                     )
                     Heading(R.string.setup_library_title)
-                    Body(R.string.setup_library_intro)
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -276,7 +280,12 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                                 style = MaterialTheme.typography.titleLarge
                             )
                             Text(
-                                "${fileSize(starter.downloadBytes)} · ${starter.manifest.license}",
+                                stringResource(
+                                    R.string.library_download_summary,
+                                    starter.language,
+                                    fileSize(starter.downloadBytes),
+                                    fileSize(starter.manifest.bytes)
+                                ),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -286,6 +295,24 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                             starter.description,
                             style = MaterialTheme.typography.bodyMedium
                         )
+                    }
+                    if (!hasStarter && !starterFits) {
+                        Text(
+                            stringResource(
+                                R.string.model_space_to_free,
+                                fileSize(
+                                    (
+                                        model.catalog.requiredStorageBytes(starter) -
+                                            profile.freeStorageBytes
+                                        )
+                                        .coerceAtLeast(0)
+                                )
+                            ),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        TextButton(onClick = {
+                            profile = DeviceProfile.inspect(context, model.catalog)
+                        }) { Text(stringResource(R.string.check_storage)) }
                     }
                 }
 
@@ -298,7 +325,14 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 when {
-                    pending -> PrimaryAction(R.string.download_progress_action) {
+                    pending -> PrimaryAction(
+                        if (!work.transferActive && work.inAppDownload) {
+                            R.string.resume_download
+                        } else {
+                            R.string.download_progress_action
+                        }
+                    ) {
+                        if (!work.transferActive && work.inAppDownload) model.resumeImport()
                         model.navigate(Page.IMPORT)
                     }
 
@@ -314,7 +348,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                         } else {
                             R.string.download_selected_model
                         },
-                        !work.busy && (fits || installed != null)
+                        work.ready && !work.busy && (fits || installed != null)
                     ) {
                         if (installed !=
                             null
@@ -328,7 +362,10 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
 
                     hasStarter -> PrimaryAction(R.string.setup_continue) { model.continueSetup() }
 
-                    else -> PrimaryAction(R.string.download_starter, !work.busy) {
+                    else -> PrimaryAction(
+                        R.string.download_starter,
+                        work.ready && !work.busy && starterFits
+                    ) {
                         model.downloadPackage(starter)
                     }
                 }

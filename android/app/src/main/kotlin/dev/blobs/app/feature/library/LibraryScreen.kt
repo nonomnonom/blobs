@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.packages.PackageRole
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.MenuRow
@@ -64,7 +65,11 @@ fun LibraryScreen(
     val libraries = packages.filter { it.kind == "library" }
     val available = catalog.packages.filter { asset ->
         asset.manifest.kind == "library" && libraries.none { it.key == asset.manifest.key }
-    }
+    }.sortedWith(
+        compareBy<dev.blobs.app.data.packages.DownloadablePackage> {
+            if (it.role == PackageRole.STARTER) 0 else 1
+        }.thenBy { it.downloadBytes }
+    )
     Column {
         PrimaryTabRow(selectedTabIndex = if (discover) 1 else 0) {
             Tab(selected = !discover, onClick = {
@@ -113,7 +118,11 @@ fun LibraryScreen(
                 Heading(R.string.discover_heading)
                 Body(R.string.discover_description)
                 CatalogStatus(catalog, work.busy, model::refreshCatalog)
-                if (available.isEmpty()) Body(R.string.all_caught_up)
+                if (available.isEmpty()) {
+                    Body(R.string.all_caught_up)
+                } else {
+                    Body(R.string.library_small_downloads)
+                }
                 available.forEach { asset ->
                     LibraryDownloadCard(asset, !work.busy) { model.downloadPackage(asset) }
                 }
@@ -130,6 +139,8 @@ private fun CollectionCard(
     model: ProductViewModel,
     export: () -> Unit
 ) {
+    val catalog by model.catalogState.collectAsStateWithLifecycle()
+    val metadata = catalog.packages.find { it.manifest.key == pack.key }
     var options by rememberSaveable { mutableStateOf(false) }
     val large = LocalDensity.current.fontScale >= 1.5f
     Surface(
@@ -204,10 +215,20 @@ private fun CollectionCard(
                     }
                 }
                 Text(
-                    fileSize(pack.bytes),
+                    metadata?.let {
+                        stringResource(
+                            R.string.library_saved_summary,
+                            it.language,
+                            fileSize(pack.bytes)
+                        )
+                    } ?: fileSize(pack.bytes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (metadata != null) {
+                    Text(metadata.description, style = MaterialTheme.typography.bodyMedium)
+                    LibraryDetails(metadata)
+                }
                 OutlinedButton(onClick = {
                     model.browseCollection(pack)
                 }, modifier = Modifier.fillMaxWidth()) {

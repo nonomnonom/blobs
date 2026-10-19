@@ -28,6 +28,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
@@ -60,35 +62,66 @@ internal fun LibraryDownloadCard(
             if (library.description.isNotBlank()) {
                 Text(library.description, style = MaterialTheme.typography.bodyMedium)
             }
-            androidx.compose.foundation.layout.FlowRow(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
+            Text(
+                stringResource(
+                    R.string.library_download_summary,
+                    library.language,
                     fileSize(library.downloadBytes),
-                    Modifier,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                TextButton(onClick = onDownload, enabled = enabled) {
-                    Text(stringResource(R.string.download_library))
-                }
+                    fileSize(library.manifest.bytes)
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            LibraryDetails(library, enabled, onDownload)
+        }
+    }
+}
+
+@Composable
+internal fun LibraryDetails(
+    library: DownloadablePackage,
+    enabled: Boolean = true,
+    download: (() -> Unit)? = null
+) {
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable(library.manifest.key) {
+        mutableStateOf(false)
+    }
+    val detailsLabel = stringResource(R.string.library_details_for, library.manifest.title)
+    val downloadLabel = stringResource(R.string.download_library_named, library.manifest.title)
+    FlowRow(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        TextButton(
+            onClick = { expanded = !expanded },
+            modifier = Modifier.semantics { contentDescription = detailsLabel }
+        ) {
+            Text(stringResource(R.string.library_details))
+        }
+        if (download != null) {
+            Button(
+                onClick = download,
+                enabled = enabled,
+                modifier = Modifier.semantics { contentDescription = downloadLabel }
+            ) {
+                Text(stringResource(R.string.download_library))
             }
-            var details by remember { mutableStateOf(false) }
-            TextButton(onClick = {
-                details = !details
-            }) { Text(stringResource(R.string.source_details)) }
-            if (details) {
-                Text(
-                    listOf(
-                        library.publisher,
-                        library.language,
-                        library.manifest.license
-                    ).filter(String::isNotBlank).joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+        }
+    }
+    if (expanded) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(library.publisher, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                stringResource(R.string.library_edition, library.manifest.version),
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(library.manifest.license, style = MaterialTheme.typography.bodySmall)
+            Text(
+                stringResource(R.string.library_source_credits),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
