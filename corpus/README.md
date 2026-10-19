@@ -88,7 +88,7 @@ The resulting package is an optional library alongside the starter library. Its 
 
 ### Build the U.S. outdoor-safety library
 
-This small survival-oriented edition contains four National Park Service pages on hiking preparation, outdoor emergencies, water treatment, and winter hiking. It is explicitly U.S. national-park guidance; it does not replace current park rules, weather alerts, or emergency services. The source lock pins each page's title, update date, canonical URL, and normalized article-text SHA-256. Ingest rejects a title or article-text change for review, while ignoring unrelated changes to page chrome. Source images and navigation are excluded.
+This small survival-oriented edition contains five National Park Service pages on hiking preparation, outdoor emergencies, water treatment, natural-water hazards, and winter hiking. It is explicitly U.S. national-park guidance; it does not replace current park rules, weather alerts, or emergency services. The source lock pins each page's title, update date, canonical URL, and normalized article-text SHA-256. Ingest rejects a title or article-text change for review, while ignoring unrelated changes to page chrome. Source images and navigation are excluded.
 
 ```powershell
 uv run --locked python -m blobs_corpus.web_pages acquire `
@@ -97,21 +97,21 @@ uv run --locked python -m blobs_corpus.web_pages acquire `
 uv run --locked python -m blobs_corpus.web_pages extract `
   sources/nps-outdoor-safety-2026-10.json `
   work/sources/nps-outdoor-safety-2026-10 `
-  artifacts/records/nps-outdoor-safety-2026-10/documents.jsonl.gz
+  artifacts/records/nps-outdoor-safety-2026-10.2/documents.jsonl.gz
 
 uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/nps-outdoor-safety-2026-10/documents.jsonl.gz `
-  work/packages/nps-outdoor-safety-2026-10-v1.blobs `
+  artifacts/records/nps-outdoor-safety-2026-10.2/documents.jsonl.gz `
+  work/packages/nps-outdoor-safety-2026-10-v2.blobs `
   --schema 3 `
   --id nps-outdoor-safety `
-  --version 2026-10.1 `
+  --version 2026-10.2 `
   --title "Outdoor safety · U.S. national parks" `
   --license "U.S. Government work · National Park Service (public domain unless marked)" `
   --origin "https://www.nps.gov/aboutus/disclaimer.htm" `
-  --work-directory work/build/nps-outdoor-safety-2026-10
+  --work-directory work/build/nps-outdoor-safety-2026-10.2
 ```
 
-The [NPS reuse notice](https://www.nps.gov/aboutus/disclaimer.htm) says government-created NPS material is generally public domain unless otherwise marked and warns that some page material can have third-party restrictions. This edition contains text-only extracts from the four locked NPS pages, no images, and no NPS marks. It is a small set of U.S. national-park safety guides, not a comprehensive survival manual. The user-facing package description must state that local conditions and rules vary, advise following current ranger and emergency-service instructions, and clarify that Blobs is not an NPS product or endorsement. Review source rights and content again before making a new edition.
+The [NPS reuse notice](https://www.nps.gov/aboutus/disclaimer.htm) says government-created NPS material is generally public domain unless otherwise marked and warns that some page material can have third-party restrictions. This edition contains text-only extracts from the five locked NPS pages, no images, and no NPS marks. It is a small set of U.S. national-park safety guides, not a comprehensive survival manual. The user-facing package description must state that local conditions and rules vary, advise following current ranger and emergency-service instructions, and clarify that Blobs is not an NPS product or endorsement. Review source rights and content again before making a new edition.
 
 ### Build the U.S. emergency-preparedness library
 

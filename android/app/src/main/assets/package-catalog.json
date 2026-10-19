@@ -4,7 +4,7 @@
   "packages": [
     {
       "file_name": "qwen3-integration.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/qwen3-integration.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/qwen3-integration.blobs",
       "download_format": "blobs",
       "download_bytes": 639447235,
       "download_sha256": "0089dba9c9af05ebecb3a0110866f0716f439da2cb6d7d90a66a911062305e43",
@@ -91,7 +91,7 @@
     },
     {
       "file_name": "wikipedia-starter-schema3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/wikipedia-starter-schema3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/wikipedia-starter-schema3.blobs",
       "download_format": "blobs",
       "download_bytes": 3828868,
       "download_sha256": "d893c8b5c21596d11db3260b77b8be88cf3cab813e34065f4c0a1bfeacfe0ff9",
@@ -119,7 +119,7 @@
     },
     {
       "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/wikipedia-en-top1m-mini-2026-04.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/wikipedia-en-top1m-mini-2026-04.blobs",
       "download_format": "blobs",
       "download_bytes": 1804630820,
       "download_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
@@ -147,7 +147,7 @@
     },
     {
       "file_name": "wikivoyage-en-2026-09-v2.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/wikivoyage-en-2026-09-v2.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/wikivoyage-en-2026-09-v2.blobs",
       "download_format": "blobs",
       "download_bytes": 295139283,
       "download_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
@@ -174,24 +174,24 @@
       }
     },
     {
-      "file_name": "nps-outdoor-safety-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/nps-outdoor-safety-2026-10-v1.blobs",
+      "file_name": "nps-outdoor-safety-2026-10-v2.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/nps-outdoor-safety-2026-10-v2.blobs",
       "download_format": "blobs",
-      "download_bytes": 36588,
-      "download_sha256": "25fef55cab7a4fdbcca31db9d5ee8c5cd85194313ec7f3a77386aa4f1ae1043d",
+      "download_bytes": 39256,
+      "download_sha256": "e0bc383811ad95c5079b931292f33320a9477d0fb77846ef0e91de869e71fcd8",
       "manifest": {
+        "bytes": 151552,
         "format": 1,
         "id": "nps-outdoor-safety",
-        "version": "2026-10.1",
         "kind": "library",
-        "title": "Outdoor safety · U.S. national parks",
-        "bytes": 131072,
-        "sha256": "be7583a3c330317e63cc81e0c3290db4b42f834bb5290d426f05e6758cf34cfa",
         "license": "U.S. Government work · National Park Service (public domain unless marked)",
-        "origin": "https://www.nps.gov/aboutus/disclaimer.htm"
+        "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+        "sha256": "c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f",
+        "title": "Outdoor safety · U.S. national parks",
+        "version": "2026-10.2"
       },
       "role": "optional",
-      "description": "U.S. national-park hiking and emergency guides. Conditions differ by place; follow current park and emergency guidance. Blobs is not affiliated with or endorsed by NPS. No claim to original U.S. Government works.",
+      "description": "Five U.S. national-park guides for hiking, outdoor emergencies, water treatment, natural-water hazards, and winter hiking. Conditions differ by place; follow current park and emergency guidance. Blobs is not affiliated with or endorsed by NPS.",
       "language": "English",
       "publisher": "National Park Service",
       "compatibility": {
@@ -203,7 +203,7 @@
     },
     {
       "file_name": "ready-emergency-preparedness-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/ready-emergency-preparedness-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/ready-emergency-preparedness-2026-10-v1.blobs",
       "download_format": "blobs",
       "download_bytes": 25054,
       "download_sha256": "5e39ee9eb713ae790b426d9e7088ffdd5ab55edc29705cb62503159f207e9d0d",
@@ -231,7 +231,7 @@
     },
     {
       "file_name": "camping-safety-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/camping-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/camping-safety-2026-10-v1.blobs",
       "download_format": "blobs",
       "download_bytes": 25535,
       "download_sha256": "8613b763c0935aaca7871f0184271ee11f2f74b693c7c5f2dc9e840f505c512e",
@@ -259,7 +259,7 @@
     },
     {
       "file_name": "backcountry-basics-2026-10-v3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/27a56193546771c2799d73f72c56572acd8f62e0/packages/backcountry-basics-2026-10-v3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/0519a53e6dcaee08acefbe7b0c8290291059f492/packages/backcountry-basics-2026-10-v3.blobs",
       "download_format": "blobs",
       "download_bytes": 29597,
       "download_sha256": "e8b66c6a4ba1ca797ed3f03ff4aeb6bf647a007d9cde904b1aecd0e2468d711d",

@@ -1,7 +1,7 @@
 {
   "format": 1,
   "id": "nps-outdoor-safety",
-  "edition": "2026-10.1",
+  "edition": "2026-10.2",
   "title": "Outdoor safety · U.S. national parks",
   "publisher": "National Park Service · U.S. Department of the Interior",
   "license": "National Park Service text; no claim to original U.S. Government works. NPS content is generally public domain unless otherwise marked. Source: https://www.nps.gov/aboutus/disclaimer.htm",
@@ -35,6 +35,15 @@
       "updated": "2022-08-24",
       "selector": "#CS_Element_contentcontainer",
       "body_sha256": "b450b5ce821dd6ab6c8c5e7170b32b5bf93703c04f7c32d9bdfcbd92bd78269a"
+    },
+    {
+      "id": "water-hazards",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/subjects/healthandsafety/water-hazards.htm",
+      "title": "Water Hazards",
+      "updated": "2024-05-03",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "d071d232ef9100ac4d783f2266b2b60b8f2f7c2ec282fd7b70c4ebbc61b55393"
     },
     {
       "id": "winter-hiking",
