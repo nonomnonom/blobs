@@ -212,7 +212,7 @@ class LaunchTest {
         val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded }
         compose.runOnUiThread { model.navigate(Page.WELCOME) }
-        compose.onAllNodesWithText(compose.activity.getString(R.string.add_package))
+        compose.onAllNodesWithText(compose.activity.getString(R.string.import_library_title))
             .assertCountEquals(0)
         compose.onAllNodesWithText(compose.activity.getString(R.string.progress_percent, 0))
             .assertCountEquals(0)
@@ -270,7 +270,7 @@ class LaunchTest {
                 .assertIsDisplayed()
             compose.onAllNodesWithText(compose.activity.getString(R.string.download_library))
                 .assertCountEquals(0)
-            compose.onAllNodesWithText(compose.activity.getString(R.string.add_package))
+            compose.onAllNodesWithText(compose.activity.getString(R.string.import_library_title))
                 .assertCountEquals(0)
         } else if (model.packages.value.none {
                 it.packageId == catalog.starterLibrary.manifest.id &&
@@ -279,7 +279,7 @@ class LaunchTest {
         ) {
             compose.onNodeWithText(compose.activity.getString(R.string.download_starter))
                 .assertIsDisplayed()
-            compose.onAllNodesWithText(compose.activity.getString(R.string.add_package))
+            compose.onAllNodesWithText(compose.activity.getString(R.string.import_library_title))
                 .assertCountEquals(0)
         }
     }

@@ -62,12 +62,14 @@ class OnboardingJourneyTest {
                 compose.runOnUiThread { model.navigate(Page.WELCOME) }
             }
             if (compose.onAllNodesWithText(
-                    text(R.string.diagnosis_title)
+                    text(R.string.welcome_headline)
                 ).fetchSemanticsNodes().isNotEmpty()
             ) {
                 capture("01-welcome")
-                compose.onAllNodesWithText(text(R.string.add_package)).assertCountEquals(0)
-                compose.onNodeWithText(text(R.string.choose_model)).performScrollTo().performClick()
+                compose.onAllNodesWithText(text(R.string.import_library_title)).assertCountEquals(0)
+                compose.onNodeWithText(
+                    text(R.string.welcome_start)
+                ).performScrollTo().performClick()
             } else {
                 compose.runOnUiThread { model.welcome() }
             }
@@ -75,7 +77,7 @@ class OnboardingJourneyTest {
             compose.onNodeWithText(text(R.string.download_selected_model))
                 .performScrollTo().assertIsDisplayed()
             compose.onAllNodesWithText(text(R.string.download_library)).assertCountEquals(0)
-            compose.onAllNodesWithText(text(R.string.add_package)).assertCountEquals(0)
+            compose.onAllNodesWithText(text(R.string.import_library_title)).assertCountEquals(0)
             capture("03-setup")
             for ((name, key) in listOf("model" to "modelPackage", "library" to "libraryPackage")) {
                 val path = requireNotNull(args.getString(key))
@@ -114,7 +116,7 @@ class OnboardingJourneyTest {
                 }
             }
             capture("07-ready")
-            compose.onNodeWithText(text(R.string.continue_without_extras))
+            compose.onNodeWithText(text(R.string.setup_first_question))
                 .performScrollTo().performClick()
             capture("08-home")
             compose.onNodeWithContentDescription(text(R.string.question_hint))

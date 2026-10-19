@@ -4,14 +4,11 @@
     <string name="download_library">Download library</string>
     <string name="download_selected_model">Download model</string>
     <string name="download_starter">Download starter library</string>
-    <string name="choose_model">See model options</string>
-    <string name="diagnosis_title">Let’s find a good fit.</string>
     <string name="model_smallest_option">Smallest option</string>
     <string name="model_space_to_free">Free up %1$s to download and set this up.</string>
     <string name="model_download_size">%1$s download</string>
     <string name="download_progress_action">See download progress</string>
     <string name="downloading_package">Getting it ready · %1$d%%</string>
-    <string name="continue_without_extras">Continue to Blobs</string>
     <string name="setup_ready_title">A world of ideas.\nNow in your pocket.</string>
     <string name="import_title">Adding it to Blobs</string>
     <string name="import_body">Keep the file on this phone until it is ready. You can switch apps while Blobs adds it.</string>
@@ -32,7 +29,6 @@
     <string name="setup_model_title">Make room for curiosity.</string>
     <string name="recommended">Recommended</string>
     <string name="setup_library_title">Something to get\nyou wondering.</string>
-    <string name="add_package">Add a library file</string>
     <string name="import_documents_title">Your files</string>
     <string name="preparing_documents">Reading your files and saving them on this phone.</string>
     <string name="collection_added">Your collection is ready offline.</string>
