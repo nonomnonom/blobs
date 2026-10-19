@@ -42,6 +42,17 @@ class AndroidChatPerformanceTests(unittest.TestCase):
                         "wall_elapsed_ms": elapsed,
                         "first_visible_state_ms": elapsed - 5000,
                         "evidence_ready_state_ms": elapsed - 10000,
+                        "performance": {
+                            "retrieval_elapsed_ms": 5,
+                            "native_generation": {
+                                "total_us": 2_500_000,
+                                "first_token_callback_us": 700_000,
+                                "generation_loop_us": 2_000_000,
+                                "prefill_us": 400_000,
+                                "prompt_tokens": 500,
+                                "output_tokens": 60,
+                            },
+                        },
                         "evidence_count": 2,
                         "evidence_sources": [
                             {
@@ -69,6 +80,7 @@ class AndroidChatPerformanceTests(unittest.TestCase):
         self.assertEqual(report["summary"]["elapsed_ms_p95_nearest_rank"], 23000)
         self.assertEqual(report["summary"]["evidence_ready_state_ms_median"], 12000)
         self.assertEqual(report["runs"][0]["expected_source_rank"], 1)
+        self.assertEqual(report["summary"]["native_first_callback_ms_median"], 700)
 
     def test_requires_three_repeats_and_airplane_mode(self):
         with self.assertRaises(ValueError):

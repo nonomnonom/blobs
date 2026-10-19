@@ -69,6 +69,29 @@ def summarize(
             raise ValueError(f"Invalid first-visible latency: {path}")
         if not isinstance(evidence_ready, int) or not 0 < evidence_ready <= first_visible:
             raise ValueError(f"Invalid evidence-ready latency: {path}")
+        performance = report.get("performance")
+        if not isinstance(performance, dict):
+            raise ValueError(f"Missing inference-stage timings: {path}")
+        retrieval_elapsed = performance.get("retrieval_elapsed_ms")
+        native = performance.get("native_generation")
+        if not isinstance(retrieval_elapsed, int) or not 0 <= retrieval_elapsed <= elapsed:
+            raise ValueError(f"Invalid retrieval timing: {path}")
+        if not isinstance(native, dict):
+            raise ValueError(f"Missing native-generation timing: {path}")
+        native_total = native.get("total_us")
+        first_callback = native.get("first_token_callback_us")
+        output_tokens = native.get("output_tokens")
+        decode_us = native.get("generation_loop_us")
+        if not (
+            isinstance(native_total, int)
+            and isinstance(first_callback, int)
+            and isinstance(output_tokens, int)
+            and isinstance(decode_us, int)
+            and 0 < first_callback <= native_total
+            and output_tokens > 0
+            and decode_us > 0
+        ):
+            raise ValueError(f"Invalid native-generation metrics: {path}")
 
         sources = report.get("evidence_sources")
         if not isinstance(sources, list):
@@ -93,6 +116,13 @@ def summarize(
                 "first_visible_state_ms": first_visible,
                 "evidence_ready_state_ms": evidence_ready,
                 "visible_after_evidence_ms": first_visible - evidence_ready,
+                "retrieval_elapsed_ms": retrieval_elapsed,
+                "native_total_ms": native_total / 1000,
+                "native_first_callback_ms": first_callback / 1000,
+                "native_prefill_ms": native.get("prefill_us", -1) / 1000,
+                "native_prompt_tokens": native.get("prompt_tokens"),
+                "native_output_tokens": output_tokens,
+                "native_decode_tokens_per_second": output_tokens * 1_000_000 / decode_us,
                 "app_status": report["status"],
                 "evidence_count": report.get("evidence_count"),
                 "expected_source_rank": matching[0],
@@ -116,6 +146,10 @@ def summarize(
     visible_values = [run["first_visible_state_ms"] for run in runs]
     evidence_values = [run["evidence_ready_state_ms"] for run in runs]
     post_evidence_values = [run["visible_after_evidence_ms"] for run in runs]
+    retrieval_values = [run["retrieval_elapsed_ms"] for run in runs]
+    native_total_values = [run["native_total_ms"] for run in runs]
+    native_first_values = [run["native_first_callback_ms"] for run in runs]
+    native_decode_values = [run["native_decode_tokens_per_second"] for run in runs]
     return {
         "format": 1,
         "scope": "Offline Android chat-path latency and retrieved-source identity; generated answer text is not stored or evaluated.",
@@ -144,6 +178,13 @@ def summarize(
             "visible_after_evidence_ms_p95_nearest_rank": percentile(
                 post_evidence_values, 0.95
             ),
+            "retrieval_elapsed_ms_median": statistics.median(retrieval_values),
+            "retrieval_elapsed_ms_p95_nearest_rank": percentile(retrieval_values, 0.95),
+            "native_total_ms_median": statistics.median(native_total_values),
+            "native_total_ms_p95_nearest_rank": percentile(native_total_values, 0.95),
+            "native_first_callback_ms_median": statistics.median(native_first_values),
+            "native_first_callback_ms_p95_nearest_rank": percentile(native_first_values, 0.95),
+            "native_decode_tokens_per_second_median": statistics.median(native_decode_values),
         },
     }
 

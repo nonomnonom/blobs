@@ -17,6 +17,7 @@ import dev.blobs.app.data.packages.PackageManifest
 import dev.blobs.app.data.packages.PendingImport
 import dev.blobs.app.inference.AnswerGrounding
 import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.inference.GenerationMetrics
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.TokenSink
 import java.io.ByteArrayOutputStream
@@ -82,6 +83,11 @@ data class WorkState(
     }
 }
 
+internal data class WorkPerformanceSnapshot(
+    val retrievalElapsedMs: Long,
+    val generation: GenerationMetrics
+)
+
 class WorkController(
     private val db: BlobsDatabase,
     private val library: LibraryStore,
@@ -94,6 +100,9 @@ class WorkController(
     private val bridgeDelegate = lazy { NativeBridge() }
     private val bridge get() = bridgeDelegate.value
     private var job: Job? = null
+    @Volatile
+    internal var lastPerformanceSnapshot: WorkPerformanceSnapshot? = null
+        private set
 
     @Volatile private var stopped = false
 
@@ -126,6 +135,7 @@ class WorkController(
         if (question.isBlank() || allowed?.isEmpty() == true) return false
         val id = UUID.randomUUID().toString()
         if (!reserveAnswer(id, thread)) return false
+        lastPerformanceSnapshot = null
         val accepted = CompletableDeferred<Boolean>()
         job = scope.launch {
             val start = SystemClock.elapsedRealtime()
@@ -144,7 +154,10 @@ class WorkController(
                 begun = true
                 accepted.complete(true)
                 val query = RetrievalQuery.resolve(question, history.lastOrNull()?.question)
+                val retrievalStarted = SystemClock.elapsedRealtime()
                 val sources = library.retrieve(packages, query, allowed)
+                    .take(MAX_ANSWER_SOURCES)
+                val retrievalElapsedMs = SystemClock.elapsedRealtime() - retrievalStarted
                 evidence = Evidence.encode(sources)
                 mutable.value = mutable.value.copy(evidence = evidence)
                 if (stopped) {
@@ -198,6 +211,7 @@ class WorkController(
                     append("\nQuestion: $question\n/no_think")
                 }
                 val bytes = ByteArrayOutputStream()
+                val generationMetrics = GenerationMetrics()
                 var lastSave = 0L
                 val result = bridge.generate(
                     model.path.toByteArray(),
@@ -226,7 +240,12 @@ class WorkController(
                             }
                             lastSave = now
                         }
-                    }
+                    },
+                    generationMetrics
+                )
+                lastPerformanceSnapshot = WorkPerformanceSnapshot(
+                    retrievalElapsedMs,
+                    generationMetrics
                 )
                 val unverified = !interrupted &&
                     !stopped &&
@@ -498,6 +517,10 @@ class WorkController(
 
     fun clearNotice() {
         mutable.value = mutable.value.copy(notice = null)
+    }
+
+    companion object {
+        internal const val MAX_ANSWER_SOURCES = 4
     }
 
     suspend fun mutate(block: suspend () -> Unit): Boolean {

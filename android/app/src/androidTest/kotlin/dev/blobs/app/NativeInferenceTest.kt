@@ -16,6 +16,7 @@ import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.GgufValidator
 import dev.blobs.app.data.packages.PackageManifest
+import dev.blobs.app.data.WorkController
 import dev.blobs.app.inference.GenerationMetrics
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.TokenSink
@@ -475,6 +476,15 @@ class NativeInferenceTest {
             })
             report.put("saved_elapsed_ms", turn?.elapsedMs ?: JSONObject.NULL)
             report.put("error", turn?.error ?: JSONObject.NULL)
+            val performance = container.work.lastPerformanceSnapshot
+            report.put(
+                "performance",
+                performance?.let {
+                    JSONObject()
+                        .put("retrieval_elapsed_ms", it.retrievalElapsedMs)
+                        .put("native_generation", it.generation.json())
+                } ?: JSONObject.NULL
+            )
             save()
             println("Inference evidence: ${output.absolutePath}")
         }
@@ -489,9 +499,17 @@ class NativeInferenceTest {
         )
         val evidence = Evidence.decode(turn.evidence)
         assertTrue(
+            "Chat context exceeded its evidence source budget",
+            evidence.size <= WorkController.MAX_ANSWER_SOURCES
+        )
+        assertTrue(
             "Expected evidence from $expectedPublisher, got ${turn.evidence}",
             evidence.any { it.publisher == expectedPublisher }
         )
+        val performance = requireNotNull(container.work.lastPerformanceSnapshot)
+        assertTrue(performance.retrievalElapsedMs >= 0)
+        assertTrue(performance.generation.totalUs > 0)
+        assertTrue(performance.generation.outputTokens > 0)
         expectedEvidenceTitle?.let { title ->
             assertTrue(
                 "Expected retrieved source $title, got ${evidence.map(Evidence::title)}",

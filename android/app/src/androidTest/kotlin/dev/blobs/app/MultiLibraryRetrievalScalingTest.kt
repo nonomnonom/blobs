@@ -9,6 +9,7 @@ import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.LibraryStore.Companion.multiLibraryCandidateLimit
 import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.WorkController
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -97,6 +98,11 @@ class MultiLibraryRetrievalScalingTest {
                         assertTrue(
                             "${case.id} expected ${case.expectedTitle} at rank $rank with $count libraries",
                             rank > 0
+                        )
+                        assertTrue(
+                            "${case.id} must keep its expected source inside the " +
+                                "${WorkController.MAX_ANSWER_SOURCES}-source chat context; got rank $rank",
+                            rank <= WorkController.MAX_ANSWER_SOURCES
                         )
                         case.maxExpectedTitleRank?.let { maxRank ->
                             assertTrue(
