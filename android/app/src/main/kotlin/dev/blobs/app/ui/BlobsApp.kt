@@ -204,12 +204,7 @@ fun BlobsApp(container: AppContainer) {
                                             R.string.app_wordmark
                                         } else if (state.page == Page.SETUP &&
                                             packages.any { it.kind == "model" } &&
-                                            packages.any {
-                                                it.packageId ==
-                                                    model.catalog.starterLibrary.manifest.id &&
-                                                    it.version ==
-                                                    model.catalog.starterLibrary.manifest.version
-                                            }
+                                            model.catalog.hasStarterLibrary(packages)
                                         ) {
                                             R.string.all_set
                                         } else {

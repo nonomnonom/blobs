@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.AtomicFile
 import android.util.Log
+import dev.blobs.app.data.local.PackageEntity
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -60,6 +61,9 @@ class PackageCatalog internal constructor(
         )
     )
 
+    private val bundledStarterId = parseCatalog(fallbackCatalog)
+        .single { it.role == PackageRole.STARTER }.manifest.id
+
     private val trustedPublicKeys = listOf(publicKey) + additionalPublicKeys
 
     private val cacheFile = AtomicFile(File(cacheDirectory, CACHED_CATALOG_FILE))
@@ -75,6 +79,11 @@ class PackageCatalog internal constructor(
         get() = requireNotNull(state.value.packages.singleOrNull { it.role == PackageRole.STARTER })
     val additionalLibraries: List<DownloadablePackage>
         get() = state.value.packages.filter { it.role == PackageRole.OPTIONAL }
+
+    fun hasStarterLibrary(installed: List<PackageEntity>): Boolean = installed.any {
+        it.kind == "library" &&
+            (it.packageId == bundledStarterId || it.packageId == starterLibrary.manifest.id)
+    }
 
     fun recommendedModel(totalMemoryBytes: Long, freeStorageBytes: Long): DownloadablePackage {
         val availableModels = models

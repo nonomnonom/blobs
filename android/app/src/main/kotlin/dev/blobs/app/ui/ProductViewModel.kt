@@ -136,10 +136,7 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         goHome()
     }
 
-    private fun hasStarterLibrary(): Boolean = packages.value.any {
-        it.packageId == catalog.starterLibrary.manifest.id &&
-            it.version == catalog.starterLibrary.manifest.version
-    }
+    private fun hasStarterLibrary(): Boolean = catalog.hasStarterLibrary(packages.value)
 
     fun finishImport() {
         container.work.clearNotice()

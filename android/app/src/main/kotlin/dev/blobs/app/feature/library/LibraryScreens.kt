@@ -80,10 +80,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
         profile = DeviceProfile.inspect(context, model.catalog)
     }
     val hasModel = packages.any { it.kind == "model" }
-    val hasStarter = packages.any {
-        it.packageId == model.catalog.starterLibrary.manifest.id &&
-            it.version == model.catalog.starterLibrary.manifest.version
-    }
+    val hasStarter = model.catalog.hasStarterLibrary(packages)
     val installedIds = packages.map { it.packageId to it.version }.toSet()
     val remainingLibraries = catalog.packages.filter { it.role == PackageRole.OPTIONAL }.filter {
         (it.manifest.id to it.manifest.version) !in installedIds

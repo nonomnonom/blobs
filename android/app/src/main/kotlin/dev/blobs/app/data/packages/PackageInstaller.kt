@@ -124,19 +124,17 @@ class PackageInstaller(
             try {
                 val digest = MessageDigest.getInstance("SHA-256")
                 var count = 0L
-                val archive = if (rawModel) null else stream(uri)
                 val input = if (rawModel) {
                     File(requireNotNull(uri.path)).inputStream()
                 } else {
-                    require(readManifest(requireNotNull(archive)) == expected) {
-                        "MANIFEST_CHANGED"
-                    }
-                    requireNotNull(archive).also {
-                        val entry = it.nextEntry ?: error("MISSING_PAYLOAD")
-                        require(entry.name == expected.fileName && !entry.isDirectory)
-                    }
+                    stream(uri)
                 }
                 input.use { source ->
+                    if (source is ZipInputStream) {
+                        require(readManifest(source) == expected) { "MANIFEST_CHANGED" }
+                        val entry = source.nextEntry ?: error("MISSING_PAYLOAD")
+                        require(entry.name == expected.fileName && !entry.isDirectory)
+                    }
                     java.io.FileOutputStream(staging, resumeBytes > 0).use { output ->
                         val buffer = ByteArray(256 * 1024)
                         while (true) {
@@ -155,7 +153,9 @@ class PackageInstaller(
                         }
                         output.fd.sync()
                     }
-                    if (!rawModel) require(archive?.nextEntry == null) { "EXTRA_FILES" }
+                    if (source is ZipInputStream) {
+                        require(source.nextEntry == null) { "EXTRA_FILES" }
+                    }
                 }
                 require(
                     count == expected.bytes &&
@@ -232,6 +232,7 @@ class PackageInstaller(
 
     suspend fun recover() = withContext(Dispatchers.IO) {
         mutations.withLock {
+            dao.reconcileActiveEditions()
             val installed = dao.all().map { it.key }.toSet()
             var pending = try {
                 pending()

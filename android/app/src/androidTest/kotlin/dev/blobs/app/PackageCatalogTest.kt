@@ -2,6 +2,7 @@ package dev.blobs.app.data.packages
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.blobs.app.data.local.PackageEntity
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
@@ -162,6 +163,45 @@ class PackageCatalogTest {
             assertEquals("Research model", offline.models.single().manifest.title)
         } finally {
             cacheDirectory.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun starterUpdateKeepsInstalledEditionReadyOffline() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val cache = File(context.cacheDir, "catalog-update-${UUID.randomUUID()}")
+        val pair = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.generateKeyPair()
+        val updated = catalogPayload().replace("\"version\":\"1\"", "\"version\":\"2\"")
+        try {
+            val catalog = PackageCatalog(
+                catalogPayload(),
+                cache,
+                pair.public,
+                URL("https://huggingface.co/catalog.json"),
+                { Response(it, 200, signedEnvelope(updated, pair).toByteArray(), emptyMap()) }
+            )
+            val manifest = catalog.starterLibrary.manifest
+            val installed = PackageEntity(
+                manifest.key, manifest.id, manifest.version, "library", manifest.title,
+                "installed.sqlite", manifest.bytes, manifest.sha256, manifest.license,
+                manifest.origin, 1L
+            )
+            assertEquals(true, catalog.hasStarterLibrary(listOf(installed)))
+            assertEquals(CatalogRefreshOutcome.UPDATED, catalog.refreshNow())
+            assertEquals("2", catalog.starterLibrary.manifest.version)
+            assertEquals(true, catalog.hasStarterLibrary(listOf(installed)))
+            assertEquals(false, catalog.hasStarterLibrary(emptyList()))
+            assertEquals(false, catalog.hasStarterLibrary(listOf(installed.copy(kind = "model"))))
+            val offline = PackageCatalog(
+                catalogPayload(),
+                cache,
+                pair.public,
+                URL("https://huggingface.co/catalog.json"),
+                { throw AssertionError("Offline readiness must not use the network") }
+            )
+            assertEquals(true, offline.hasStarterLibrary(listOf(installed)))
+        } finally {
+            cache.deleteRecursively()
         }
     }
 
