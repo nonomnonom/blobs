@@ -54,11 +54,11 @@ fun WelcomeScreen(
     }
     Column(
         modifier =
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .safeDrawingPadding()
-            .verticalScroll(rememberScrollState())
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .safeDrawingPadding()
+                .verticalScroll(rememberScrollState())
     ) {
         Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer)) {
             Image(

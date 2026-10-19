@@ -71,7 +71,11 @@ def safe_relative(name: str) -> PurePosixPath:
     if "\\" in name:
         raise ValueError(f"Backslashes are not allowed in release paths: {name}")
     relative = PurePosixPath(name)
-    if relative.is_absolute() or not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
+    if (
+        relative.is_absolute()
+        or not relative.parts
+        or any(part in {"", ".", ".."} for part in relative.parts)
+    ):
         raise ValueError(f"Unsafe release path: {name}")
     return relative
 
@@ -81,7 +85,9 @@ def files_in(root: Path) -> dict[str, Path]:
     folded = {}
     for path in root.rglob("*"):
         if path.is_symlink():
-            raise ValueError(f"Release kits cannot contain symbolic links: {path.relative_to(root)}")
+            raise ValueError(
+                f"Release kits cannot contain symbolic links: {path.relative_to(root)}"
+            )
         if not path.is_file():
             continue
         relative = path.relative_to(root).as_posix()
@@ -140,7 +146,8 @@ def verify_source_archive(path: Path) -> int:
     forbidden = [
         name
         for name in names
-        if name.startswith(SOURCE_FORBIDDEN_PREFIXES) or name.casefold().endswith(SOURCE_FORBIDDEN_SUFFIXES)
+        if name.startswith(SOURCE_FORBIDDEN_PREFIXES)
+        or name.casefold().endswith(SOURCE_FORBIDDEN_SUFFIXES)
     ]
     if forbidden:
         raise ValueError(f"Source archive contains generated or private artifacts: {forbidden[0]}")
@@ -197,8 +204,13 @@ def verify_kit(directory: Path) -> dict:
         raise ValueError("APK byte count differs from its report")
     if apk_report.get("sha256") != digest(apk_path):
         raise ValueError("APK hash differs from its report")
-    if apk_report.get("internet_permission") is not True or apk_report.get("zip_alignment_16kb") is not True:
-        raise ValueError("APK report does not prove package-download permission and 16 KB packaging")
+    if (
+        apk_report.get("internet_permission") is not True
+        or apk_report.get("zip_alignment_16kb") is not True
+    ):
+        raise ValueError(
+            "APK report does not prove package-download permission and 16 KB packaging"
+        )
     libraries = apk_report.get("native_libraries")
     if not isinstance(libraries, list):
         raise ValueError("APK report does not list native libraries")
@@ -244,13 +256,16 @@ def verify_kit(directory: Path) -> dict:
     source_files = verify_source_archive(files[source_name])
     with zipfile.ZipFile(files[source_name]) as archive:
         try:
-            catalog = json.loads(archive.read("blobs/android/app/src/main/assets/package-catalog.json"))
+            catalog = json.loads(
+                archive.read("blobs/android/app/src/main/assets/package-catalog.json")
+            )
         except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
             raise ValueError("Source archive has no valid in-app package catalog") from error
     if catalog.get("format") != 1 or catalog.get("release_tag") != f"v{version}":
         raise ValueError("In-app catalog release tag differs from the verified APK")
     catalog_packages = {
-        item.get("file_name"): item for item in catalog.get("packages", [])
+        item.get("file_name"): item
+        for item in catalog.get("packages", [])
         if item.get("download_format") == "blobs"
     }
     if not catalog_packages:
@@ -259,16 +274,21 @@ def verify_kit(directory: Path) -> dict:
         name = package["file"]
         item = catalog_packages.get(name)
         url = item.get("url", "") if item else ""
-        github_release_url = f"https://github.com/nonomnonom/blobs/releases/download/v{version}/{name}"
+        github_release_url = (
+            f"https://github.com/nonomnonom/blobs/releases/download/v{version}/{name}"
+        )
         hf_package_url = re.fullmatch(
             rf"https://huggingface\.co/datasets/nonomnonom/blobs-catalog/resolve/[a-f0-9]{{40}}/packages/{re.escape(name)}",
             url,
         )
-        if (item is None or item.get("manifest", {}).get("kind") != package["kind"] or
-                item.get("download_bytes") != package["package_bytes"] or
-                item.get("download_sha256") != package["package_sha256"] or
-                (url != github_release_url and hf_package_url is None) or
-                item.get("manifest") != recorded_packages[name]):
+        if (
+            item is None
+            or item.get("manifest", {}).get("kind") != package["kind"]
+            or item.get("download_bytes") != package["package_bytes"]
+            or item.get("download_sha256") != package["package_sha256"]
+            or (url != github_release_url and hf_package_url is None)
+            or item.get("manifest") != recorded_packages[name]
+        ):
             raise ValueError(f"In-app catalog differs from the delivered {package['kind']} package")
 
     footprint = read_json(files["FOOTPRINT.json"])
@@ -276,27 +296,40 @@ def verify_kit(directory: Path) -> dict:
     with zipfile.ZipFile(files[source_name]) as archive:
         policy_source = archive.read(f"blobs/{policy_path}")
         catalog_source = archive.read("blobs/android/app/src/main/assets/package-catalog.json")
-    policy = installer_policy_text(policy_source.decode("utf-8"), hashlib.sha256(policy_source).hexdigest())
+    policy = installer_policy_text(
+        policy_source.decode("utf-8"), hashlib.sha256(policy_source).hexdigest()
+    )
     expected_policy = dict(file=policy_path, **policy)
     footprint_format = footprint.get("format")
     if footprint_format not in {1, 2} or footprint.get("complete") is not True:
         raise ValueError("FOOTPRINT.json is incomplete or unsupported")
-    if footprint.get("apk_report") != dict(file="APK-VERIFICATION.json", sha256=digest(files["APK-VERIFICATION.json"]), value=apk_report):
+    if footprint.get("apk_report") != dict(
+        file="APK-VERIFICATION.json",
+        sha256=digest(files["APK-VERIFICATION.json"]),
+        value=apk_report,
+    ):
         raise ValueError("FOOTPRINT.json does not identify this APK report")
     if footprint.get("installer_policy") != expected_policy:
         raise ValueError("FOOTPRINT.json does not match the delivered installer policy")
     import_order = footprint.get("import_order")
-    if (not isinstance(import_order, list) or len(import_order) != len(package_names) or
-            len(set(import_order)) != len(import_order) or set(import_order) != set(package_names)):
+    if (
+        not isinstance(import_order, list)
+        or len(import_order) != len(package_names)
+        or len(set(import_order)) != len(import_order)
+        or set(import_order) != set(package_names)
+    ):
         raise ValueError("FOOTPRINT.json has an invalid package import order")
     by_name = {item["file"]: item for item in packages}
     ordered_packages = [
-        dict(manifest={"bytes": by_name[name]["payload_bytes"]},
-             package={"file": name, "bytes": by_name[name]["package_bytes"]})
+        dict(
+            manifest={"bytes": by_name[name]["payload_bytes"]},
+            package={"file": name, "bytes": by_name[name]["package_bytes"]},
+        )
         for name in import_order
     ]
-    expected_storage = storage_values(ordered_packages, apk_path.stat().st_size,
-                                      policy["import_headroom_bytes"])
+    expected_storage = storage_values(
+        ordered_packages, apk_path.stat().st_size, policy["import_headroom_bytes"]
+    )
     if footprint.get("storage") != expected_storage:
         raise ValueError("FOOTPRINT.json storage values differ from delivered APK and packages")
     expected_catalog_storage = None
@@ -309,14 +342,17 @@ def verify_kit(directory: Path) -> dict:
             raise ValueError("FOOTPRINT.json does not account for all in-app catalog assets")
     checks = footprint.get("checks", {})
     steady = apk_path.stat().st_size + expected_storage["installed_payload_bytes"]
-    if (checks.get("storage_limit", {}).get("limit_bytes") != STORAGE_LIMIT_BYTES or
-            checks.get("storage_limit", {}).get("known_steady_bytes") != steady or
-            checks.get("storage_limit", {}).get("passes") is not (steady <= STORAGE_LIMIT_BYTES) or
-            checks.get("android_installed_payload_cap", {}).get("selected_bytes") != expected_storage["installed_payload_bytes"] or
-            checks.get("android_installed_payload_cap", {}).get("limit_bytes") != policy["installed_payload_cap_bytes"] or
-            checks.get("android_installed_payload_cap", {}).get("passes") is not (
-                expected_storage["installed_payload_bytes"] < policy["installed_payload_cap_bytes"]
-            )):
+    if (
+        checks.get("storage_limit", {}).get("limit_bytes") != STORAGE_LIMIT_BYTES
+        or checks.get("storage_limit", {}).get("known_steady_bytes") != steady
+        or checks.get("storage_limit", {}).get("passes") is not (steady <= STORAGE_LIMIT_BYTES)
+        or checks.get("android_installed_payload_cap", {}).get("selected_bytes")
+        != expected_storage["installed_payload_bytes"]
+        or checks.get("android_installed_payload_cap", {}).get("limit_bytes")
+        != policy["installed_payload_cap_bytes"]
+        or checks.get("android_installed_payload_cap", {}).get("passes")
+        is not (expected_storage["installed_payload_bytes"] < policy["installed_payload_cap_bytes"])
+    ):
         raise ValueError("FOOTPRINT.json does not prove the storage limits for this edition")
 
     install = files["INSTALL.md"].read_text(encoding="utf-8")
@@ -363,14 +399,18 @@ def verify_kit(directory: Path) -> dict:
     }
     if expected_catalog_storage is not None:
         result["footprint"].update(
-            all_catalog_installed_payload_bytes=expected_catalog_storage[
-                "all_catalog_options"]["installed_payload_bytes"],
-            all_catalog_known_steady_bytes=expected_catalog_storage[
-                "all_catalog_options"]["known_steady_bytes"],
-            all_catalog_storage_limit_passes=expected_catalog_storage[
-                "all_catalog_options"]["storage_limit_passes"],
+            all_catalog_installed_payload_bytes=expected_catalog_storage["all_catalog_options"][
+                "installed_payload_bytes"
+            ],
+            all_catalog_known_steady_bytes=expected_catalog_storage["all_catalog_options"][
+                "known_steady_bytes"
+            ],
+            all_catalog_storage_limit_passes=expected_catalog_storage["all_catalog_options"][
+                "storage_limit_passes"
+            ],
             all_catalog_peak_retained_download_bytes=expected_catalog_storage[
-                "all_catalog_options"]["peak_if_every_download_is_retained_bytes"],
+                "all_catalog_options"
+            ]["peak_if_every_download_is_retained_bytes"],
         )
     return result
 

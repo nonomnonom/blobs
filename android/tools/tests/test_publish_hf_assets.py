@@ -50,7 +50,9 @@ class PublishHfAssetsTest(unittest.TestCase):
                 },
                 {
                     "file_name": "frontier.gguf",
-                    "url": "https://huggingface.co/google/model/resolve/" + "b" * 40 + "/frontier.gguf",
+                    "url": "https://huggingface.co/google/model/resolve/"
+                    + "b" * 40
+                    + "/frontier.gguf",
                     "download_bytes": 10,
                     "download_sha256": "c" * 64,
                 },
@@ -64,24 +66,35 @@ class PublishHfAssetsTest(unittest.TestCase):
 
         self.assertEqual(
             published["packages"][0]["url"],
-            "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/" +
-            f"{revision}/packages/starter.blobs",
+            "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/"
+            + f"{revision}/packages/starter.blobs",
         )
         self.assertIn("google/model/resolve/", published["packages"][1]["url"])
 
     def test_rejects_manifest_drift_even_when_archive_digest_matches(self):
         payload = b"test database payload"
-        manifest = dict(format=1, id="test-library", version="1", kind="library",
-                        title="Travel \u00b7 English", bytes=len(payload),
-                        sha256=hashlib.sha256(payload).hexdigest(), license="Test", origin="local:test")
+        manifest = dict(
+            format=1,
+            id="test-library",
+            version="1",
+            kind="library",
+            title="Travel \u00b7 English",
+            bytes=len(payload),
+            sha256=hashlib.sha256(payload).hexdigest(),
+            license="Test",
+            origin="local:test",
+        )
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.blobs"
             with zipfile.ZipFile(path, "w") as archive:
                 archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))
                 archive.writestr("library.sqlite", payload)
-            item = dict(download_format="blobs", manifest=manifest,
-                        download_bytes=path.stat().st_size,
-                        download_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+            item = dict(
+                download_format="blobs",
+                manifest=manifest,
+                download_bytes=path.stat().st_size,
+                download_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+            )
             verify_staged_package(path, item)
             item["manifest"] = dict(manifest, title="Changed title")
             with self.assertRaisesRegex(ValueError, "manifest differs"):

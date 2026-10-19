@@ -68,8 +68,12 @@ class AndroidChatResourceTests(unittest.TestCase):
 
         self.assertEqual(
             [
-                "-e", "installedModel", "gemma4-e2b-q4-675cff42-fa401b55b07ee70a",
-                "-e", "installedLibrary", "nps-outdoor-safety-2026-10.2-c5ee800abfdd9c49",
+                "-e",
+                "installedModel",
+                "gemma4-e2b-q4-675cff42-fa401b55b07ee70a",
+                "-e",
+                "installedLibrary",
+                "nps-outdoor-safety-2026-10.2-c5ee800abfdd9c49",
             ],
             source_args,
         )
@@ -77,7 +81,9 @@ class AndroidChatResourceTests(unittest.TestCase):
     def test_decodes_unicode_publisher_from_ascii_safe_cli_value(self):
         self.assertEqual(
             "National Park Service · U.S. Department of the Interior",
-            decode_base64_text("TmF0aW9uYWwgUGFyayBTZXJ2aWNlIMK3IFUuUy4gRGVwYXJ0bWVudCBvZiB0aGUgSW50ZXJpb3I"),
+            decode_base64_text(
+                "TmF0aW9uYWwgUGFyayBTZXJ2aWNlIMK3IFUuUy4gRGVwYXJ0bWVudCBvZiB0aGUgSW50ZXJpb3I"
+            ),
         )
         with self.assertRaises(ValueError):
             decode_base64_text("%%%")

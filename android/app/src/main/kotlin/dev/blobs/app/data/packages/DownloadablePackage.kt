@@ -29,8 +29,10 @@ data class DownloadablePackage(
         require(
             if (format == DownloadFormat.BLOBS) {
                 url.startsWith("https://github.com/nonomnonom/blobs/releases/download/") ||
-                    url.startsWith("https://huggingface.co/") &&
-                    url.contains(Regex("/resolve/[a-f0-9]{40}/"))
+                    (
+                        url.startsWith("https://huggingface.co/") &&
+                            url.contains(Regex("/resolve/[a-f0-9]{40}/"))
+                        )
             } else {
                 url.startsWith("https://huggingface.co/") &&
                     url.contains(Regex("/resolve/[a-f0-9]{40}/"))

@@ -107,7 +107,10 @@ def stage(packages: list[dict[str, object]], output_dir: Path) -> list[Path]:
         digest = hashlib.sha256()
         size = 0
         try:
-            with urllib.request.urlopen(request, timeout=90) as response, partial.open("wb") as output:
+            with (
+                urllib.request.urlopen(request, timeout=90) as response,
+                partial.open("wb") as output,
+            ):
                 while chunk := response.read(1024 * 1024):
                     size += len(chunk)
                     if size > package["bytes"]:
@@ -134,7 +137,14 @@ def main() -> int:
     args = parser.parse_args()
     try:
         stage(read_inputs(args.cases, args.catalog), args.output_dir)
-    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError, urllib.error.URLError) as error:
+    except (
+        OSError,
+        KeyError,
+        TypeError,
+        ValueError,
+        json.JSONDecodeError,
+        urllib.error.URLError,
+    ) as error:
         print(f"benchmark package staging failed: {error}", file=sys.stderr)
         return 1
     return 0

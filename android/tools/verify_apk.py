@@ -43,7 +43,11 @@ def verify(apk):
     if not internet_permission:
         raise RuntimeError("The first-run package downloader requires INTERNET permission.")
     badging = run_tool(build_tools / ("aapt2" + suffix), "dump", "badging", apk)
-    identity = re.search(r"^package: name='([^']+)' versionCode='([0-9]+)' versionName='([^']+)'", badging, re.MULTILINE)
+    identity = re.search(
+        r"^package: name='([^']+)' versionCode='([0-9]+)' versionName='([^']+)'",
+        badging,
+        re.MULTILINE,
+    )
     if identity is None:
         raise RuntimeError("Cannot read the APK identity and version")
 
@@ -102,7 +106,9 @@ if __name__ == "__main__":
         destination = ROOT / "app/build/reports/apk" / (args.apk.stem + ".json")
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        print(f"PASS: {report['apk']}; package-download INTERNET permission; 16 KB ZIP/ELF alignment; {len(report['native_libraries'])} native libraries.")
+        print(
+            f"PASS: {report['apk']}; package-download INTERNET permission; 16 KB ZIP/ELF alignment; {len(report['native_libraries'])} native libraries."
+        )
         print(f"Report: {destination}")
     except (RuntimeError, OSError, ValueError, struct.error, zipfile.BadZipFile) as error:
         parser.exit(1, f"FAIL: {error}\n")

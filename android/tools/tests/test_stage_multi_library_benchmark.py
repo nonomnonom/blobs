@@ -10,7 +10,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from stage_multi_library_benchmark import read_inputs, stage
 
 
-def fixture_inputs(url="https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/" + "a" * 40 + "/packages/guide.blobs"):
+def fixture_inputs(
+    url="https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/"
+    + "a" * 40
+    + "/packages/guide.blobs",
+):
     payload = b"pinned package"
     digest = hashlib.sha256(payload).hexdigest()
     catalog = {
@@ -48,13 +52,13 @@ def fixture_inputs(url="https://huggingface.co/datasets/nonomnonom/blobs-catalog
 class StageMultiLibraryBenchmarkTest(unittest.TestCase):
     def test_workflow_case_sets_resolve_against_the_bundled_catalog(self):
         root = Path(__file__).resolve().parents[3]
-        workflow = (root / '.github/workflows/android.yml').read_text(encoding='utf-8')
-        names = set(re.findall(r'multi-library-retrieval-scaling-v\d+\.json', workflow))
+        workflow = (root / ".github/workflows/android.yml").read_text(encoding="utf-8")
+        names = set(re.findall(r"multi-library-retrieval-scaling-v\d+\.json", workflow))
         self.assertTrue(names)
         for name in names:
             packages = read_inputs(
-                root / 'corpus/evaluation/cases' / name,
-                root / 'android/app/src/main/assets/package-catalog.json',
+                root / "corpus/evaluation/cases" / name,
+                root / "android/app/src/main/assets/package-catalog.json",
             )
             self.assertTrue(packages)
 
@@ -68,7 +72,9 @@ class StageMultiLibraryBenchmarkTest(unittest.TestCase):
 
             packages = read_inputs(case_path, catalog_path)
 
-        self.assertEqual([(row["id"], row["filename"]) for row in packages], [("guide", "guide.blobs")])
+        self.assertEqual(
+            [(row["id"], row["filename"]) for row in packages], [("guide", "guide.blobs")]
+        )
 
     def test_rejects_unpinned_or_non_catalog_urls(self):
         case, catalog, _ = fixture_inputs("https://example.com/guide.blobs")

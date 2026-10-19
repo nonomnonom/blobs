@@ -112,12 +112,27 @@ def run_case(
         else "verifiedModelFileCompletesOfflineChatFlow"
     )
     args = [
-        "shell", "am", "instrument", "--user", "0", "-w",
-        "-e", "class", f"dev.blobs.app.NativeInferenceTest#{test_method}",
-        "-e", "runId", run_id,
-        "-e", "questionBase64", encode(question),
-        "-e", "timeoutSeconds", "240",
-        "-e", "requireAirplaneMode", "true",
+        "shell",
+        "am",
+        "instrument",
+        "--user",
+        "0",
+        "-w",
+        "-e",
+        "class",
+        f"dev.blobs.app.NativeInferenceTest#{test_method}",
+        "-e",
+        "runId",
+        run_id,
+        "-e",
+        "questionBase64",
+        encode(question),
+        "-e",
+        "timeoutSeconds",
+        "240",
+        "-e",
+        "requireAirplaneMode",
+        "true",
     ]
     args.extend(
         package_source_arguments(
@@ -164,8 +179,7 @@ def run_case(
         if numbers:
             per_process[name] = {"peak_pss_kib": max(numbers), "sample_count": len(numbers)}
     combined_values = [
-        sum(value for name, value in sample.items() if name != "elapsed_ms")
-        for sample in samples
+        sum(value for name, value in sample.items() if name != "elapsed_ms") for sample in samples
     ]
     return {
         "run_id": run_id,
@@ -189,7 +203,9 @@ def run(args: argparse.Namespace) -> dict:
         raise ValueError("Provide at least three unique run IDs")
     if args.sample_interval < 0.1 or args.sample_interval > 5:
         raise ValueError("Sample interval must be between 0.1 and 5 seconds")
-    if len(args.model_sha256) != 64 or any(char not in "0123456789abcdef" for char in args.model_sha256):
+    if len(args.model_sha256) != 64 or any(
+        char not in "0123456789abcdef" for char in args.model_sha256
+    ):
         raise ValueError("Invalid model SHA-256")
     for key in (args.installed_model_key, args.installed_library_key):
         if key is not None and not re.fullmatch(r"[a-zA-Z0-9.-]{1,200}", key):

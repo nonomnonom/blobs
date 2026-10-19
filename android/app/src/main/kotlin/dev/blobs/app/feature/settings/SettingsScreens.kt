@@ -207,7 +207,7 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
             },
             onValueChangeFinished = { model.textScale(scale) },
             valueRange =
-            1f..2f,
+                1f..2f,
             steps = 3
         )
         Surface(

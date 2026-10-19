@@ -109,10 +109,12 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
                     Heading(R.string.setup_ready_title)
                     Body(R.string.ready_body)
                 }
+
                 work.pendingImport != null || (work.busy && work.total > 0) -> {
                     Heading(R.string.download_in_progress)
                     Body(R.string.download_in_progress_body)
                 }
+
                 needsModel -> {
                     Heading(R.string.setup_model_title)
                     Body(
@@ -132,6 +134,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
                         )
                     }
                 }
+
                 needsStarter -> {
                     Heading(R.string.setup_library_title)
                     Body(R.string.setup_library_body)
@@ -144,6 +147,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
                 remainingLibraries.isNotEmpty() -> {
                     Heading(R.string.setup_extras_title)
                     Body(R.string.setup_extras_body)
@@ -165,10 +169,12 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
             ) {
                 when {
                     ready -> PrimaryAction(R.string.start_chat) { model.finishSetup() }
+
                     work.pendingImport != null || (work.busy && work.total > 0) ->
                         PrimaryAction(R.string.download_progress_action) {
                             model.navigate(Page.IMPORT)
                         }
+
                     needsModel -> {
                         Text(
                             if (selectedModelFitsStorage) {
@@ -196,10 +202,12 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel) {
                             !work.busy && selectedModelFitsStorage
                         ) { model.downloadPackage(selectedModel) }
                     }
+
                     needsStarter -> PrimaryAction(
                         R.string.download_starter,
                         !work.busy
                     ) { model.downloadPackage(starterLibrary) }
+
                     else -> PrimaryAction(R.string.continue_without_extras, !work.busy) {
                         model.finishSetup()
                     }

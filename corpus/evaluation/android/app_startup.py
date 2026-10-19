@@ -21,7 +21,9 @@ def percentile(values: list[int], fraction: float) -> int:
 
 
 def parse_launch(output: str) -> dict[str, int | str]:
-    fields = dict(re.findall(r"^(Status|LaunchState|TotalTime|WaitTime):\s*(\S+)", output, re.MULTILINE))
+    fields = dict(
+        re.findall(r"^(Status|LaunchState|TotalTime|WaitTime):\s*(\S+)", output, re.MULTILINE)
+    )
     if fields.get("Status") != "ok" or fields.get("LaunchState") != "COLD":
         raise ValueError(f"Expected a successful process-cold launch, got: {fields}")
     if "TotalTime" not in fields or "WaitTime" not in fields:
@@ -48,15 +50,17 @@ class Adb:
 
     def text(self, *args: str) -> str:
         result = subprocess.run(
-            [*self.prefix, *args], capture_output=True, text=True, encoding="utf-8",
-            check=True, timeout=120
+            [*self.prefix, *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=True,
+            timeout=120,
         )
         return result.stdout.strip()
 
     def bytes(self, *args: str) -> bytes:
-        result = subprocess.run(
-            [*self.prefix, *args], capture_output=True, check=True, timeout=120
-        )
+        result = subprocess.run([*self.prefix, *args], capture_output=True, check=True, timeout=120)
         return result.stdout
 
 

@@ -76,13 +76,17 @@ def main() -> None:
     parser.add_argument(
         "--private-key",
         type=Path,
-        default=Path(os.environ.get(
-            "BLOBS_CATALOG_SIGNING_KEY",
-            str(ROOT / ".local" / "catalog-signing-key.pem"),
-        )),
+        default=Path(
+            os.environ.get(
+                "BLOBS_CATALOG_SIGNING_KEY",
+                str(ROOT / ".local" / "catalog-signing-key.pem"),
+            )
+        ),
     )
     parser.add_argument(
-        "--revision", type=int, required=True,
+        "--revision",
+        type=int,
+        required=True,
         help="New catalog revision; must exceed every previously published revision.",
     )
     args = parser.parse_args()

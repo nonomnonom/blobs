@@ -13,25 +13,32 @@ class PinnedWebPageTests(unittest.TestCase):
     def test_source_lock_rejects_external_hosts(self):
         with tempfile.TemporaryDirectory() as folder:
             lock_path = Path(folder) / "lock.json"
-            lock_path.write_text(json.dumps({
-                "format": 1,
-                "id": "nps-outdoor-safety",
-                "edition": "1",
-                "sources": [{
-                    "id": "test-page",
-                    "host": "www.nps.gov",
-                    "url": "https://example.com/page.html",
-                    "title": "Test Page",
-                    "updated": "2026-01-01",
-                    "selector": "#article",
-                    "body_sha256": "a" * 64,
-                }],
-                "publisher": "National Park Service",
-                "license": "Public domain federal work",
-                "saved": "2026-01-01",
-                "collection": "Outdoor safety",
-                "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
-            }), encoding="utf-8")
+            lock_path.write_text(
+                json.dumps(
+                    {
+                        "format": 1,
+                        "id": "nps-outdoor-safety",
+                        "edition": "1",
+                        "sources": [
+                            {
+                                "id": "test-page",
+                                "host": "www.nps.gov",
+                                "url": "https://example.com/page.html",
+                                "title": "Test Page",
+                                "updated": "2026-01-01",
+                                "selector": "#article",
+                                "body_sha256": "a" * 64,
+                            }
+                        ],
+                        "publisher": "National Park Service",
+                        "license": "Public domain federal work",
+                        "saved": "2026-01-01",
+                        "collection": "Outdoor safety",
+                        "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+                    }
+                ),
+                encoding="utf-8",
+            )
 
             with self.assertRaisesRegex(ValueError, "Unapproved source origin"):
                 read_lock(lock_path)

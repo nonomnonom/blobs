@@ -195,7 +195,8 @@ fun BlobsApp(container: AppContainer) {
                                     stringResource(
                                         if (reviewingImport) {
                                             R.string.review_package
-                                        } else if (state.page == Page.IMPORT && work.inAppDownload
+                                        } else if (state.page == Page.IMPORT &&
+                                            work.inAppDownload
                                         ) {
                                             R.string.download_progress_title
                                         } else if (state.page == Page.CHAT &&
@@ -300,14 +301,19 @@ fun BlobsApp(container: AppContainer) {
                                     } else {
                                         when (page) {
                                             Page.CHAT -> ChatScreen(state, turns, work, model)
+
                                             Page.WELCOME -> Unit
+
                                             Page.SETUP -> SetupScreen(packages, model)
+
                                             Page.IMPORT -> ImportScreen(state, work, model)
+
                                             Page.HISTORY -> HistoryScreen(
                                                 conversations,
                                                 work.busy,
                                                 model
                                             )
+
                                             Page.LIBRARY -> LibraryScreen(
                                                 packages,
                                                 model,
@@ -315,37 +321,47 @@ fun BlobsApp(container: AppContainer) {
                                                 pickDocuments,
                                                 exportCollection
                                             )
+
                                             Page.MODELS -> ModelsScreen(
                                                 packages,
                                                 work,
                                                 model,
                                                 pickFile
                                             )
+
                                             Page.BROWSE, Page.SOURCES -> BrowseScreen(state, model)
+
                                             Page.READER -> ReaderScreen(state.reader, model)
+
                                             Page.STORAGE -> StorageScreen(
                                                 packages,
                                                 work,
                                                 model,
                                                 pickFile
                                             )
+
                                             Page.SETTINGS -> SettingsScreen(model, theme.themeMode)
+
                                             Page.APPEARANCE -> AppearanceScreen(
                                                 state,
                                                 theme.themeMode,
                                                 model
                                             )
+
                                             Page.DATA -> DataScreen(work.busy, model) {
                                                 exporter.launch("blobs-conversations.md")
                                             }
+
                                             Page.PRIVACY -> ScrollPage {
                                                 Heading(R.string.privacy)
                                                 Body(R.string.privacy_body)
                                             }
+
                                             Page.HELP -> ScrollPage {
                                                 Heading(R.string.help)
                                                 Body(R.string.help_body)
                                             }
+
                                             Page.ABOUT -> AboutScreen()
                                         }
                                     }

@@ -85,7 +85,7 @@ fun BrowseScreen(state: ProductState, model: ProductViewModel) {
                         if (selecting) {
                             Checkbox(
                                 checked =
-                                model.selectedScope()?.contains(source.id) == true,
+                                    model.selectedScope()?.contains(source.id) == true,
                                 onCheckedChange = null
                             )
                         }

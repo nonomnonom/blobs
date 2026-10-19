@@ -1,4 +1,5 @@
 """Build the small fictional library used by native answer-contract tests."""
+
 import argparse
 import json
 from pathlib import Path

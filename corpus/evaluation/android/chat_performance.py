@@ -116,13 +116,9 @@ def summarize(
 
     if len(fingerprints) != 1 or None in fingerprints:
         raise ValueError("Device fingerprint differs across runs")
-    if len(model_digests) != 1 or not all(
-        _SHA256.fullmatch(x or "") for x in model_digests
-    ):
+    if len(model_digests) != 1 or not all(_SHA256.fullmatch(x or "") for x in model_digests):
         raise ValueError("Model identity differs across runs")
-    if len(library_digests) != 1 or not all(
-        _SHA256.fullmatch(x or "") for x in library_digests
-    ):
+    if len(library_digests) != 1 or not all(_SHA256.fullmatch(x or "") for x in library_digests):
         raise ValueError("Library identity differs across runs")
     if app_ids != {installed.get("package")}:
         raise ValueError("Installed package identity differs from run reports")
@@ -156,9 +152,7 @@ def summarize(
             "evidence_ready_state_ms_median": statistics.median(evidence_values),
             "evidence_ready_state_ms_p95_nearest_rank": percentile(evidence_values, 0.95),
             "visible_after_evidence_ms_median": statistics.median(post_evidence_values),
-            "visible_after_evidence_ms_p95_nearest_rank": percentile(
-                post_evidence_values, 0.95
-            ),
+            "visible_after_evidence_ms_p95_nearest_rank": percentile(post_evidence_values, 0.95),
             "retrieval_elapsed_ms_median": statistics.median(retrieval_values),
             "retrieval_elapsed_ms_p95_nearest_rank": percentile(retrieval_values, 0.95),
             "native_total_ms_median": statistics.median(native_total_values),

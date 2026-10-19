@@ -252,6 +252,7 @@ class PackageInstaller(
                         file.name.removeSuffix(".removed") in installed -> {
                         file.renameTo(File(root, file.name.removeSuffix(".removed")))
                     }
+
                     file.name !in installed &&
                         file.name != "${pending?.manifest?.key}.partial" -> file.delete()
                 }

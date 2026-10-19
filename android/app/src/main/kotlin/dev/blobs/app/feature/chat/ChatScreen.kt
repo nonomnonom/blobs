@@ -282,20 +282,27 @@ private fun TurnCard(turn: TurnEntity, answer: String, busy: Boolean, model: Pro
         }
         val label = when (turn.status) {
             "RUNNING" -> R.string.working
+
             "COMPLETE" -> R.string.status_complete
+
             "STOPPED" -> if (answer.isBlank()) {
                 R.string.status_stopped_empty
             } else {
                 R.string.status_stopped
             }
+
             "INTERRUPTED" -> if (answer.isBlank()) {
                 R.string.status_interrupted_empty
             } else {
                 R.string.status_interrupted
             }
+
             "LIMITED" -> R.string.status_limited
+
             "UNVERIFIED" -> R.string.status_unverified
+
             "NO_SOURCES" -> R.string.status_no_sources
+
             else -> R.string.status_error
         }
         if (turn.status != "COMPLETE") {

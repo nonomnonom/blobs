@@ -93,11 +93,13 @@ internal fun CatalogStatus(snapshot: CatalogSnapshot, busy: Boolean, refresh: ()
     ) {
         val message = when {
             snapshot.refreshing -> stringResource(R.string.library_update_checking)
+
             snapshot.lastCheckedAt != null -> stringResource(
                 R.string.library_update_checked,
                 DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
                     .format(Date(snapshot.lastCheckedAt))
             )
+
             else -> stringResource(R.string.library_update_offline_hint)
         }
         Text(

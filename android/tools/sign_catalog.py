@@ -58,17 +58,25 @@ def validate_catalog(parsed: object) -> None:
         )
         if not isinstance(file_name, str) or not re.fullmatch(file_name_pattern, file_name):
             raise SystemExit("Package filename does not match its download format.")
-        if not isinstance(item.get("download_bytes"), int) or not 1 <= item["download_bytes"] <= 40_000_000_000:
+        if (
+            not isinstance(item.get("download_bytes"), int)
+            or not 1 <= item["download_bytes"] <= 40_000_000_000
+        ):
             raise SystemExit("Package download size is invalid.")
         digest = item.get("download_sha256")
         manifest_digest = manifest.get("sha256")
         if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
             raise SystemExit("Package download SHA-256 is invalid.")
-        if not isinstance(manifest_digest, str) or not re.fullmatch(r"[a-f0-9]{64}", manifest_digest):
+        if not isinstance(manifest_digest, str) or not re.fullmatch(
+            r"[a-f0-9]{64}", manifest_digest
+        ):
             raise SystemExit("Package manifest SHA-256 is invalid.")
         if manifest.get("format") != 1:
             raise SystemExit("Package manifest format is not supported.")
-        if not isinstance(manifest.get("bytes"), int) or not 1 <= manifest["bytes"] <= 40_000_000_000:
+        if (
+            not isinstance(manifest.get("bytes"), int)
+            or not 1 <= manifest["bytes"] <= 40_000_000_000
+        ):
             raise SystemExit("Package manifest size is invalid.")
         for field, limit in (("title", 160), ("license", 4000), ("origin", 2000)):
             value = manifest.get(field)
@@ -78,10 +86,16 @@ def validate_catalog(parsed: object) -> None:
         if not isinstance(url, str):
             raise SystemExit("Package URL is invalid.")
         parsed_url = urlparse(url)
-        pinned_hf = parsed_url.scheme == "https" and parsed_url.hostname == "huggingface.co" and re.search(r"/resolve/[a-f0-9]{40}/", parsed_url.path)
+        pinned_hf = (
+            parsed_url.scheme == "https"
+            and parsed_url.hostname == "huggingface.co"
+            and re.search(r"/resolve/[a-f0-9]{40}/", parsed_url.path)
+        )
         pinned_release = url == f"{RELEASE_ROOT}/{release_tag}/{file_name}"
         if not (pinned_hf or pinned_release):
-            raise SystemExit("Package URL must be a pinned Hugging Face revision or matching release asset.")
+            raise SystemExit(
+                "Package URL must be a pinned Hugging Face revision or matching release asset."
+            )
         package_id, version = manifest.get("id"), manifest.get("version")
         if not isinstance(package_id, str) or not re.fullmatch(r"[a-z0-9-]{1,64}", package_id):
             raise SystemExit("Package manifest ID is invalid.")
@@ -109,7 +123,11 @@ def validate_catalog(parsed: object) -> None:
                 or item["recommended_up_to_memory_mb"] < compatibility["minimum_ram_mb"]
             ):
                 raise SystemExit("Model compatibility metadata is invalid.")
-        elif compatibility.get("format") != "Blobs library archive" or compatibility.get("corpus_schema") != 3 or compatibility.get("retrieval_format") != "SQLite FTS5":
+        elif (
+            compatibility.get("format") != "Blobs library archive"
+            or compatibility.get("corpus_schema") != 3
+            or compatibility.get("retrieval_format") != "SQLite FTS5"
+        ):
             raise SystemExit("Library compatibility metadata is invalid.")
         roles.append(role)
     if not has_model or roles.count("starter") != 1:
@@ -149,9 +167,7 @@ def sign_catalog(catalog_path: Path, output_path: Path, private_key_path: Path) 
     validate_catalog(parsed)
 
     key = serialization.load_pem_private_key(private_key_path.read_bytes(), password=None)
-    if not isinstance(key, ec.EllipticCurvePrivateKey) or not isinstance(
-        key.curve, ec.SECP256R1
-    ):
+    if not isinstance(key, ec.EllipticCurvePrivateKey) or not isinstance(key.curve, ec.SECP256R1):
         raise SystemExit("Catalog signing key must be an unencrypted P-256 EC private key.")
     signature = key.sign(payload, ec.ECDSA(hashes.SHA256()))
     envelope = {

@@ -11,7 +11,7 @@ class AnswerGroundingTest {
         val checksum = evidence(
             title = "Checksum",
             text =
-            "A checksum detects errors in data transmission or storage and verifies data integrity."
+                "A checksum detects errors in data transmission or storage and verifies data integrity."
         )
         val glassTube = evidence(
             title = "Glass tube",

@@ -1,4 +1,5 @@
 """Acquire and normalize a small, pinned set of official web reference pages."""
+
 import argparse
 from datetime import date, datetime
 import hashlib
@@ -42,7 +43,11 @@ def read_lock(path: Path) -> dict:
         if not isinstance(source, dict):
             raise ValueError("Invalid web source entry")
         source_id = source.get("id")
-        if not isinstance(source_id, str) or not re.fullmatch(r"[a-z0-9-]{1,64}", source_id) or source_id in ids:
+        if (
+            not isinstance(source_id, str)
+            or not re.fullmatch(r"[a-z0-9-]{1,64}", source_id)
+            or source_id in ids
+        ):
             raise ValueError("Invalid or duplicate web source ID")
         ids.add(source_id)
         url = checked_url(source.get("url", ""), [source.get("host", "")])
@@ -236,7 +241,10 @@ def main():
         for path in acquire(args.lock, args.directory):
             print(f"Verified {path}", flush=True)
     else:
-        print(f"Normalized records written to {extract(args.lock, args.snapshots, args.output)}", flush=True)
+        print(
+            f"Normalized records written to {extract(args.lock, args.snapshots, args.output)}",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":
