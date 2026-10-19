@@ -140,6 +140,33 @@ uv run --locked python -m blobs_corpus.package library `
 
 FEMA's [website information and reuse policy](https://www.fema.gov/about/website-information) says most FEMA.gov material may be copied and distributed, but warns that some material is licensed or restricted. FEMA lists Ready.gov among the .gov domains it owns and manages. The source lock pins each Ready.gov page's title, update date, canonical URL, and normalized text digest; the text-only extraction omits visual assets. The user-facing listing must identify the U.S. scope, show that the snapshot can become outdated, and advise users to follow current emergency officials. Blobs is independent and not endorsed by FEMA.
 
+### Build the camping-safety library
+
+This edition packages the NPS four-step camping-safety series: preparation, arrival checks, safe practices during a stay, and closing out a trip. It is a U.S. national-park reference, not live park guidance or a survival manual. Its source pages were last updated in 2017–2019, so users should check current park rules, alerts, and ranger instructions before traveling. The source lock pins article titles, dates, normalized text hashes, URLs, and the exact article selector; extraction omits images and external linked content.
+
+```powershell
+uv run --locked python -m blobs_corpus.web_pages acquire `
+  sources/camping-safely-2026-10.json work/sources/camping-safely-2026-10
+
+uv run --locked python -m blobs_corpus.web_pages extract `
+  sources/camping-safely-2026-10.json `
+  work/sources/camping-safely-2026-10 `
+  artifacts/records/camping-safely-2026-10/documents.jsonl.gz
+
+uv run --locked python -m blobs_corpus.package library `
+  artifacts/records/camping-safely-2026-10/documents.jsonl.gz `
+  work/packages/camping-safely-2026-10-v1.blobs `
+  --schema 3 `
+  --id camping-safety `
+  --version 2026-10.1 `
+  --title "Camping safely · U.S. national parks" `
+  --license "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm" `
+  --origin "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039" `
+  --work-directory work/build/camping-safely-2026-10
+```
+
+The source is the NPS [Four Major Steps to Camping Safely](https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039) series. Follow its links for park-specific instructions and current conditions. The package is independent and not endorsed by NPS.
+
 Extraction checkpoints are safe to resume after a normal interrupt. If the process is forcibly terminated, it can leave `work/extract/EDITION/.extract.lock`; confirm no extractor is still running before removing that stale file and resuming. Never remove the lock while an extraction process is active.
 
 Example package build from normalized records:
@@ -160,7 +187,7 @@ Inspect the module help for the current schema and required metadata. Generated 
 
 ### Add topic libraries
 
-Keep the starter, travel, outdoor-safety, emergency-preparedness, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, curation snapshot, package receipt, retrieval cases, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
+Keep the starter, travel, outdoor-safety, emergency-preparedness, camping-safety, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, package receipt, retrieval cases, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
 
 ## Data integrity
 

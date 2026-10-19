@@ -1,0 +1,51 @@
+{
+  "format": 1,
+  "id": "camping-safety-retrieval-v1",
+  "library": {
+    "id": "camping-safety",
+    "version": "2026-10.1",
+    "payload_sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743"
+  },
+  "cases": [
+    {
+      "id": "camping-trip-planning",
+      "question": "How should I plan a camping trip in a national park?",
+      "expected_document_titles": ["Camping Safely Step 1 - Before the Trip"]
+    },
+    {
+      "id": "camping-rules-and-permits",
+      "question": "What permits, fire rules, and food storage requirements should I check before camping?",
+      "expected_document_titles": ["Camping Safely Step 1 - Before the Trip"]
+    },
+    {
+      "id": "camping-arrival-ranger",
+      "question": "What should I ask a ranger when I arrive at a campsite?",
+      "expected_document_titles": ["Camping Safely Step 2 - Upon Arrival"]
+    },
+    {
+      "id": "camping-current-conditions",
+      "question": "Who can tell me about current weather, hazards, alerts, and park rules?",
+      "expected_document_titles": ["Camping Safely Step 2 - Upon Arrival"]
+    },
+    {
+      "id": "camping-wildlife-food-storage",
+      "question": "How should I store food and behave around wildlife at a campsite?",
+      "expected_document_titles": ["Camping Safely Step 3 - During Your Stay"]
+    },
+    {
+      "id": "camping-campfire-safety",
+      "question": "What should I know about campfire safety during my stay?",
+      "expected_document_titles": ["Camping Safely Step 3 - During Your Stay"]
+    },
+    {
+      "id": "camping-end-trip-checkin",
+      "question": "What should I do after a camping trip to check in with my contact?",
+      "expected_document_titles": ["Camping Safely Step 4 - After the Trip"]
+    },
+    {
+      "id": "camping-leave-no-trace",
+      "question": "How do I clean the campsite and leave no trace when I go home?",
+      "expected_document_titles": ["Camping Safely Step 4 - After the Trip"]
+    }
+  ]
+}

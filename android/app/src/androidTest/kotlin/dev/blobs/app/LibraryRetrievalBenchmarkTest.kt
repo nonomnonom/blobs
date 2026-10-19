@@ -159,8 +159,12 @@ class LibraryRetrievalBenchmarkTest {
             )
             .put("cases", resultRows)
 
-        File(context.filesDir, "library-retrieval-benchmark.json").writeText(report.toString(2))
-        Log.i(TAG, report.toString())
+        val serialized = report.toString()
+        val parts = serialized.chunked(LOG_PART_CHARACTERS)
+        parts.forEachIndexed { index, part ->
+            Log.i(TAG, "REPORT_PART:${index + 1}/${parts.size}:$part")
+        }
+        Log.i(TAG, "SUMMARY:${report.getJSONObject("summary")}")
         database.delete()
     }
 
@@ -239,6 +243,7 @@ class LibraryRetrievalBenchmarkTest {
     companion object {
         private const val TAG = "BlobsRetrievalBench"
         private const val REPEATS = 5
+        private const val LOG_PART_CHARACTERS = 3000
         private const val COPY_BUFFER_BYTES = 1024 * 1024
         private const val MAX_DATABASE_BYTES = 1_000_000_000L
     }

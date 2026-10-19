@@ -228,6 +228,34 @@
         "retrieval_format": "SQLite FTS5",
         "minimum_app_version": "0.3.1"
       }
+    },
+    {
+      "file_name": "camping-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/66691e607423db2b2257e340c4f7f7833fecee5c/packages/camping-safety-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 25535,
+      "download_sha256": "8613b763c0935aaca7871f0184271ee11f2f74b693c7c5f2dc9e840f505c512e",
+      "manifest": {
+        "format": 1,
+        "id": "camping-safety",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Camping safely · U.S. national parks",
+        "bytes": 110592,
+        "sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743",
+        "license": "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+        "origin": "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039"
+      },
+      "role": "optional",
+      "description": "A four-step U.S. National Park Service camping-safety guide: prepare, check conditions on arrival, camp safely, and close out your trip. Pages last updated in 2017–2019; check current park rules and alerts. Blobs is independent and not endorsed by NPS.",
+      "language": "English",
+      "publisher": "National Park Service",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
     }
   ]
 }

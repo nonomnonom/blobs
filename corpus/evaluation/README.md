@@ -80,6 +80,18 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
 
 The initial fixed set has eight questions and ten expected source-title matches. The recorded host run found all ten expected sources, with seven at rank 1 (reciprocal rank 0.817). This small set is a source-routing smoke test, not a broad relevance study or answer evaluation.
 
+The camping-safety library has a separate eight-question retrieval smoke set across all four steps of the NPS camping-safety series:
+
+```powershell
+uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
+  --library-package work/packages/camping-safely-2026-10-v1.blobs `
+  --cases evaluation/cases/camping-safety-retrieval-v1.json `
+  --work-directory work/reports/camping-safety-retrieval-v1 `
+  --output evaluation/baselines/camping-safety-2026-10.1-retrieval-v1-host.json
+```
+
+The recorded host smoke found all eight expected source titles, with seven at rank 1 (MRR 0.938); median host retrieval time was 1.332 ms. This measures source routing for this package and case set only, not generated answers or phone latency.
+
 For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
 
 ## Measure retrieval on an Android emulator
@@ -101,6 +113,8 @@ Pop-Location
 & $adb logcat -d -s BlobsRetrievalBench:I
 ```
 
-The structured report is emitted under the `BlobsRetrievalBench` log tag. The recorded Ready.gov package run is in [`evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json`](evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json): eight queries, five repetitions, ten of ten expected sources found, median per-case median 3 ms, and p95 6 ms on that emulator. These timings describe only that emulator; use the same package and case set for before-and-after comparisons. Host smoke timings are not device-performance proxies.
+The complete report is emitted as ordered `REPORT_PART:i/n:` chunks under the `BlobsRetrievalBench` log tag, followed by a concise summary. Concatenate the chunk contents in order to reconstruct the JSON before recording evidence; Android's log buffer truncates a single long message. The recorded Ready.gov package run is in [`evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json`](evidence/android-retrieval-ready-emergency-preparedness-x86_64-android16-2026-10-19.json): eight queries, five repetitions, ten of ten expected sources found, median per-case median 3 ms, and p95 6 ms on that emulator. These timings describe only that emulator; use the same package and case set for before-and-after comparisons. Host smoke timings are not device-performance proxies.
 
 The pinned travel package was also compared before and after stable title-overlap ranking on the same Android 16 x86_64 emulator, using three runs per build and the same six-query case set. [`The comparison evidence`](evidence/android-retrieval-travel-title-ranking-x86_64-android16-2026-10-19.json) records 6/6 expected sources at rank 1 in all candidate runs, up from 4/6 at baseline; mean reciprocal rank rose from 0.783 to 1.0. The median of run medians increased from 70 ms to 78 ms, and the median run p95 from 247 ms to 261 ms. That is a small absolute latency cost on this emulator in exchange for better source ordering; it is not a device-wide performance claim.
+
+The new camping-safety package was exercised through the same Android 16 x86_64 production retrieval path. [`Its report`](evidence/android-retrieval-camping-safety-x86_64-android16-2026-10-19.json) records five repeats for each of eight queries: all eight expected sources were found, seven at rank 1, with a 3 ms median of case medians and a 6 ms p95 on this emulator. The report identifies the exact package, app APK, test APK, and case-set hashes. It evaluates retrieval only.
