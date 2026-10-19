@@ -99,10 +99,10 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/backcountry-basics-2026-10-v3.blobs `
   --cases evaluation/cases/backcountry-basics-retrieval-v3.json `
   --work-directory work/reports/backcountry-basics-retrieval-v3 `
-  --output evaluation/baselines/backcountry-basics-2026-10.3-retrieval-v1-host.json
+  --output evaluation/baselines/backcountry-basics-2026-10.3-retrieval-v2-host.json
 ```
 
-The Android 16 x86_64 emulator report is [`backcountry-basics retrieval evidence`](evidence/android-retrieval-backcountry-basics-v2-x86_64-android16-2026-10-19.json). It exercises the production SQLite retrieval path five times per case, records source ranks and elapsed time, and does not evaluate generated answers.
+The Android 16 x86_64 emulator report for package v3 is [`backcountry-basics retrieval evidence`](evidence/android-retrieval-backcountry-basics-v3-x86_64-android16-2026-10-19.json). It exercises the production SQLite retrieval path five times per case: all eight expected sources were found, seven ranked first, with a 4 ms median of case medians and a 9 ms p95 on this emulator. Its case-set hash matches the host report. It records source ranks and elapsed time and does not evaluate generated answers.
 
 For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
 
