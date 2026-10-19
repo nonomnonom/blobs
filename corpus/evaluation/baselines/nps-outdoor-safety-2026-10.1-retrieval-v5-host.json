@@ -1,0 +1,151 @@
+{
+  "format": 1,
+  "complete": true,
+  "scope": "Fixed document-retrieval smoke cases on the exact packaged library and host runtime. Measures host retrieval only; it does not score generated answers or predict Android latency.",
+  "case_set": {
+    "id": "nps-outdoor-safety-retrieval-v1",
+    "sha256": "4436485659058b41e2df018ca75295856a3b90a10fa891466bf9175dc2d0956f"
+  },
+  "package": {
+    "file": "nps-outdoor-safety-2026-10-v1.blobs",
+    "sha256": "25fef55cab7a4fdbcca31db9d5ee8c5cd85194313ec7f3a77386aa4f1ae1043d",
+    "manifest": {
+      "bytes": 131072,
+      "format": 1,
+      "id": "nps-outdoor-safety",
+      "kind": "library",
+      "license": "U.S. Government work · National Park Service (public domain unless marked)",
+      "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+      "sha256": "be7583a3c330317e63cc81e0c3290db4b42f834bb5290d426f05e6758cf34cfa",
+      "title": "Outdoor safety · U.S. national parks",
+      "version": "2026-10.1"
+    }
+  },
+  "runtime": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
+    "python": "3.13.12",
+    "sqlite": "3.50.4"
+  },
+  "retrieval_sources": {
+    "library_store": "4262032e1679e6f3d38e6e15acc1a6d82fd995f3f900db3574db3272082a4bcb",
+    "query": "fb9a8ef4a876f5f5a773bb965c4bc6b21884962585b632998c5f1eea0f79e678"
+  },
+  "host_runtime": {
+    "retrieval_smoke_sha256": "3b288ed9d45df9b5654a8f50635511d95f1c8f2effe1c277e05356c1394aa7de",
+    "host_replay_sha256": "c3063e5ac9c8892a091a19d051d5940740ce70691297fef3f9261aeadb0cc669"
+  },
+  "summary": {
+    "case_count": 5,
+    "expected_titles": 5,
+    "expected_titles_found": 5,
+    "expected_title_recall": 1.0,
+    "expected_titles_at_rank_1": 5,
+    "expected_title_mean_reciprocal_rank": 1.0,
+    "host_elapsed_ms_median": 1.9454,
+    "host_elapsed_ms_p95": 2.4325
+  },
+  "results": [
+    {
+      "case_id": "lost-outdoors",
+      "elapsed_host_ms": 2.4325,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Outdoor Emergency Plan",
+        "Hike Smart",
+        "Two Ways to Purify Water"
+      ],
+      "expected_document_titles": [
+        "Outdoor Emergency Plan"
+      ],
+      "expected_titles_found": [
+        "Outdoor Emergency Plan"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "signal-search-and-rescue",
+      "elapsed_host_ms": 1.5075,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Outdoor Emergency Plan",
+        "Hike Smart",
+        "Winter Hiking Tips"
+      ],
+      "expected_document_titles": [
+        "Outdoor Emergency Plan"
+      ],
+      "expected_titles_found": [
+        "Outdoor Emergency Plan"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "water-treatment",
+      "elapsed_host_ms": 2.0727,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Two Ways to Purify Water",
+        "Hike Smart",
+        "Outdoor Emergency Plan"
+      ],
+      "expected_document_titles": [
+        "Two Ways to Purify Water"
+      ],
+      "expected_titles_found": [
+        "Two Ways to Purify Water"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "hike-preparation",
+      "elapsed_host_ms": 1.9454,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Hike Smart",
+        "Outdoor Emergency Plan",
+        "Two Ways to Purify Water",
+        "Winter Hiking Tips"
+      ],
+      "expected_document_titles": [
+        "Hike Smart"
+      ],
+      "expected_titles_found": [
+        "Hike Smart"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    },
+    {
+      "case_id": "winter-hiking",
+      "elapsed_host_ms": 1.54,
+      "exact_title_priority_count": 0,
+      "selected_document_titles": [
+        "Winter Hiking Tips",
+        "Hike Smart",
+        "Two Ways to Purify Water"
+      ],
+      "expected_document_titles": [
+        "Winter Hiking Tips"
+      ],
+      "expected_titles_found": [
+        "Winter Hiking Tips"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "first_expected_title_rank": 1
+    }
+  ]
+}

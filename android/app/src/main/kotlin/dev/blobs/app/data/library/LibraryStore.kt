@@ -193,7 +193,8 @@ class LibraryStore {
                     ""
                 }
                 val directTitleIds = titleMatches.filter {
-                    it.key == RetrievalQuery.nameKey(it.title)
+                    it.key == RetrievalQuery.nameKey(it.title) &&
+                        RetrievalQuery.isDirectTitleMatch(question, it.title)
                 }.map { it.id }.distinct()
                 val titlePriorityIds = titleMatches.filter {
                     it.id in directTitleIds &&
@@ -283,11 +284,12 @@ class LibraryStore {
                         }
                     )
                     .map { it.value }
-                ordered.withIndex().toList()
+                ordered
             }
         }.let { matched ->
+            val indexed = matched.withIndex()
             val ranked = if (enabledLibraries.size > 1) {
-                matched.sortedWith(
+                indexed.sortedWith(
                     compareByDescending<IndexedValue<RetrievalCandidate>> {
                         it.value.titlePriority
                     }.thenByDescending {
@@ -305,7 +307,7 @@ class LibraryStore {
                     }
                 )
             } else {
-                matched.sortedBy { it.index }
+                indexed
             }
             ranked.map { it.value }
         }.let { candidates ->
@@ -477,6 +479,9 @@ class LibraryStore {
     companion object {
         private const val MULTI_LIBRARY_CANDIDATE_LIMIT = 8
         private const val SINGLE_LIBRARY_CANDIDATE_LIMIT = 48
+
+        internal val multiLibraryCandidateLimit: Int
+            get() = MULTI_LIBRARY_CANDIDATE_LIMIT
 
         fun searchTerms(question: String): String = RetrievalQuery.match(question)
     }

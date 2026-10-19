@@ -82,6 +82,20 @@ class RetrievalQueryTest {
     }
 
     @Test
+    fun directTitleMatchDoesNotPromoteOneGenericWordOverMoreSpecificSources() {
+        val question = "How should I store food and behave around wildlife at a campsite?"
+        assertTrue(!RetrievalQuery.isDirectTitleMatch(question, "Wildlife"))
+        assertTrue(RetrievalQuery.isDirectTitleMatch(question, "Pian Upe Wildlife Reserve"))
+        assertTrue(
+            RetrievalQuery.isDirectTitleMatch(
+                "How can I get from the airport to Bangkok city?",
+                "Bangkok"
+            )
+        )
+        assertTrue(RetrievalQuery.isDirectTitleMatch("What is wildlife?", "Wildlife"))
+    }
+
+    @Test
     fun titleOverlapRecognizesReorderedTopicWordsAndKeepsSpecificTitlesDistinct() {
         val travelTerms = RetrievalQuery.titleTerms("What are the basics of travel?")
         assertEquals(2, RetrievalQuery.titleOverlap(travelTerms, "Travel basics"))

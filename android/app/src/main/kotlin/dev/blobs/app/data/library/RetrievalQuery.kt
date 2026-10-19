@@ -55,6 +55,18 @@ object RetrievalQuery {
         return questionTerms.isNotEmpty() && questionTerms.all { it in titleWords }
     }
 
+    fun isDirectTitleMatch(question: String, title: String): Boolean {
+        if (isBroadTitleQuestion(question, title)) return true
+        val titleWords = nameKey(title).split(' ')
+        if (titleWords.size > 1) return true
+        val titleWord = titleWords.singleOrNull() ?: return false
+        return wordPattern.findAll(question).any { match ->
+            match.range.first > 0 &&
+                match.value.first().isUpperCase() &&
+                nameKey(match.value) == titleWord
+        }
+    }
+
     fun titleTerms(question: String): Set<String> = nameKey(question).split(' ')
         .filter { it.length >= 2 && it !in stopWords && it !in titleNoiseWords }
         .toSet()

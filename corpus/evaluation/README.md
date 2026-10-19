@@ -93,11 +93,11 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/wikivoyage-en-2026-09-v2.blobs `
   --cases evaluation/cases/travel-retrieval-smoke-v1.json `
   --work-directory work/reports/travel-retrieval-smoke-v3 `
-  --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v4-host.json
+  --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v6-host.json
 ```
 
 The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Reports include expected-source recall, first expected-source rank, mean reciprocal rank, and host elapsed time; these measure source retrieval and do not score generated answers. In the October 19 policy update, the same six travel cases retained 6/6 expected-source recall, moved top-1 coverage from 3/6 to 4/6, and raised mean reciprocal rank from 0.700 to 0.783. Host median retrieval time moved from 170.2 ms to 72.8 ms; p95 moved from 400.8 ms to 226.5 ms on the recorded Windows host. The follow-up title-overlap result is [`v3`](baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v3-host.json): 6/6 expected sources at rank 1, MRR 1.0, host median 99.8 ms and p95 251.8 ms. A matched Android 16 x86_64 emulator comparison is recorded in [`the title-ranking evidence`](evidence/android-retrieval-travel-title-ranking-x86_64-android16-2026-10-19.json): all three candidate runs reached 6/6 at rank 1 versus 4/6 baseline; the median of run medians rose from 70 ms to 77 ms and median run p95 from 247 ms to 262 ms. This modest absolute latency cost buys a clear source-ordering improvement on the measured cases. These timings describe only their named host/emulator; additional topic libraries should use their own package identity and retrieval cases while sharing the same schema and retrieval implementation.
-The same six travel cases still find all expected sources under the current query policy; the current host report is [`v4`](baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v4-host.json), with all six at rank 1. Host timings are diagnostic and not an Android latency estimate.
+The same six travel cases still find all expected sources under the current query policy; the latest host report is [`v5`](baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v5-host.json), with all six at rank 1 (MRR 1.0). Host median was 83.3 ms and p95 was 234.9 ms on the recorded Windows machine; these timings are diagnostic, not an Android latency estimate.
 
 The U.S. outdoor-safety package uses the same retrieval-only check:
 
@@ -106,8 +106,10 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/nps-outdoor-safety-2026-10-v1.blobs `
   --cases evaluation/cases/nps-outdoor-safety-retrieval-v1.json `
   --work-directory work/reports/nps-outdoor-safety-retrieval-v1 `
-  --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v4-host.json
+  --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v6-host.json
 ```
+
+The latest NPS outdoor-safety report is [`v5`](baselines/nps-outdoor-safety-2026-10.1-retrieval-v5-host.json): all five expected documents ranked first (MRR 1.0), with a 1.95 ms host median and 2.43 ms p95. This small retrieval smoke is about source selection, not field-safety validation.
 
 The U.S. household emergency-preparedness package uses its own versioned case set and the same retrieval-only check:
 
@@ -116,10 +118,12 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/ready-emergency-preparedness-2026-10-v1.blobs `
   --cases evaluation/cases/ready-emergency-preparedness-retrieval-v1.json `
   --work-directory work/reports/ready-emergency-preparedness-retrieval-v1 `
-  --output evaluation/baselines/ready-emergency-preparedness-2026-10.1-retrieval-v3-host.json
+  --output evaluation/baselines/ready-emergency-preparedness-2026-10.1-retrieval-v5-host.json
 ```
 
 The initial fixed set has eight questions and ten expected source-title matches. The recorded host run found all ten expected sources, with seven at rank 1 (reciprocal rank 0.817). This small set is a source-routing smoke test, not a broad relevance study or answer evaluation.
+
+The latest host report is [`v4`](baselines/ready-emergency-preparedness-2026-10.1-retrieval-v4-host.json), with 10/10 expected sources found and seven ranked first (MRR 0.817). Median host retrieval was 1.57 ms and p95 2.03 ms.
 
 The camping-safety library has a separate eight-question retrieval smoke set across all four steps of the NPS camping-safety series:
 
@@ -128,10 +132,10 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/camping-safely-2026-10-v1.blobs `
   --cases evaluation/cases/camping-safety-retrieval-v1.json `
   --work-directory work/reports/camping-safety-retrieval-v1 `
-  --output evaluation/baselines/camping-safety-2026-10.1-retrieval-v2-host.json
+  --output evaluation/baselines/camping-safety-2026-10.1-retrieval-v4-host.json
 ```
 
-The recorded host smoke found all eight expected source titles, with seven at rank 1 (MRR 0.938); median host retrieval time was 1.332 ms. This measures source routing for this package and case set only, not generated answers or phone latency.
+The latest host smoke report is [`v3`](baselines/camping-safety-2026-10.1-retrieval-v3-host.json): all eight expected source titles found, seven at rank 1 (MRR 0.938), with 1.71 ms median and 2.44 ms p95. This measures source routing for this package and case set only, not generated answers or phone latency.
 
 The backcountry-planning package has an eight-question set across its Ten Essentials, Trip Planning Guide, and Wilderness & Backcountry Camping sources:
 
@@ -140,12 +144,12 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/backcountry-basics-2026-10-v3.blobs `
   --cases evaluation/cases/backcountry-basics-retrieval-v3.json `
   --work-directory work/reports/backcountry-basics-retrieval-v3 `
-  --output evaluation/baselines/backcountry-basics-2026-10.3-retrieval-v3-host.json
+  --output evaluation/baselines/backcountry-basics-2026-10.3-retrieval-v5-host.json
 ```
 
 The Android 16 x86_64 emulator report for package v3 before the query cleanup is [`the prior retrieval run`](evidence/android-retrieval-backcountry-basics-v3-x86_64-android16-2026-10-19.json). After treating generic “guide” and “list” wording as stop words, [`the candidate run`](evidence/android-retrieval-backcountry-basics-v3-query-stopwords-x86_64-android16-2026-10-19.json) found all eight expected sources and ranked all eight first, up from seven at rank 1. Median of case medians remained 4 ms; p95 moved from 9 ms to 8 ms on this emulator. Both reports use identical case-set and package hashes, exercise the production SQLite retrieval path five times per query, and do not evaluate generated answers.
 
-The current host replay reports for backcountry, Wikivoyage, outdoor safety, emergency preparedness, and camping are recorded in the corresponding `retrieval-v3` or later baseline files above. Expected-source recall remained 100% in every fixed case set; first-rank coverage was 8/8, 6/6, 5/5, 7/10, and 7/8 respectively. Only the backcountry smoke set gained a first-rank result; the other sets did not lose first-rank sources.
+The latest host replay reports for backcountry, Wikivoyage, outdoor safety, emergency preparedness, and camping are [`backcountry v4`](baselines/backcountry-basics-2026-10.3-retrieval-v4-host.json), [`travel v5`](baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v5-host.json), [`outdoor safety v5`](baselines/nps-outdoor-safety-2026-10.1-retrieval-v5-host.json), [`emergency preparedness v4`](baselines/ready-emergency-preparedness-2026-10.1-retrieval-v4-host.json), and [`camping v3`](baselines/camping-safety-2026-10.1-retrieval-v3-host.json). Expected-source recall is 100% in each fixed case set; rank-1 coverage is 8/8, 6/6, 5/5, 7/10, and 7/8 respectively. These reports measure source retrieval only.
 
 For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
 
@@ -153,11 +157,13 @@ For repeatable Android model-load, prefill, first-token, and decode measurements
 
 ### Measure retrieval as libraries accumulate
 
-`MultiLibraryRetrievalScalingTest` exercises production retrieval against the starter library, four optional outdoor and emergency libraries, and the full Wikivoyage travel package. It verifies every pinned payload, then runs six fixed queries against progressively larger enabled-library sets (one through six), warming each query and taking five timed samples. It records source-title rank and local retrieval latency only; it does not run or grade a model. The package list and expected source identities are pinned in [`multi-library-retrieval-scaling-v2.json`](cases/multi-library-retrieval-scaling-v2.json). The travel package's SQLite payload is about 628 MiB, so this benchmark also exercises a materially larger library than the compact safety packages.
+`MultiLibraryRetrievalScalingTest` exercises production retrieval against the starter library, four optional outdoor and emergency libraries, and the full Wikivoyage travel package. It verifies every pinned payload, then runs six fixed queries against progressively larger enabled-library sets (one through six), warming each query and taking five timed samples. It records source-title rank and local retrieval latency only; it does not run or grade a model. The package list and expected source identities are pinned in [`multi-library-retrieval-scaling-v3.json`](cases/multi-library-retrieval-scaling-v3.json). The travel package's SQLite payload is about 628 MiB, so this benchmark also exercises a materially larger library than the compact safety packages.
 
 Matched Android 16 x86_64 runs compare a 48-candidate per-library rerank pool with a 12-candidate pool using the same emulator, v2 case-set hash, test APK hash, and package payloads. With all six libraries enabled, the 48-candidate control measured 945 ms median and 1,246 ms p95 across query medians. The 12-candidate run measured 426 ms median and 564 ms p95: 55% lower on both measures. All six expected sources were found, and each source kept the same rank between the runs (four of six at rank 1). This is an emulator-specific retrieval result, not a phone-latency prediction. Full, hash-identified reports are [`the 48-candidate control`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-baseline48-v2-no-cache.json) and [`the 12-candidate run`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-candidate12-v2-no-cache.json). The earlier five-library comparison is recorded in [its 48-candidate control](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-baseline48-no-cache.json) and [12-candidate run](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-candidate12-no-cache.json).
 
-A matched v0.3.7 comparison then reduced the production multi-library candidate limit from 12 to 8. Both reports use the same Android 16 x86_64 emulator, six pinned package payloads, v2 case-set hash, and instrumentation APK. For six enabled libraries, the median across case medians fell from 437 ms to 313 ms (-28%), and p95 fell from 569 ms to 424 ms (-26%); all six expected sources stayed at exactly the same ranks. The same rank preservation held for each enabled-library count from one through six. This is one repeated five-sample run per build on this emulator, so it supports the smaller limit for this measured workload but does not predict other hardware. See [`the v0.3.7 limit-12 control`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-baseline12-v3.json) and [`the v0.3.7 limit-8 candidate`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-candidate8-v2.json).
+A matched v0.3.7 comparison then reduced the production multi-library candidate limit from 12 to 8. Both reports use the same Android 16 x86_64 emulator, six pinned package payloads, v3 case-set hash, and instrumentation APK; the limit is read from the running app at runtime. For six enabled libraries, the median across case medians fell from 385 ms to 292 ms (-24%), and p95 fell from 528 ms to 426 ms (-19%). All expected sources kept their ranks at every enabled-library count. This is one repeated five-sample run per build on this emulator, so it supports the smaller limit for this workload but does not predict other hardware. See [`the v0.3.7 limit-12 control`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-baseline12-v5.json) and [`the v0.3.7 limit-8 candidate`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-candidate8-v7.json).
+
+The v3 case set adds a maximum rank of 4 for the specific camping wildlife and food-storage source. The Android test enforces the bound whenever the expected library is enabled. The candidate meets it at library counts four, five, and six. Its reports include the selected library and document IDs, sections, and lexical overlap counts, but omit passage text and model output. Generic one-word titles no longer outrank more specific evidence solely for an exact one-word match, and cross-library ties preserve the caller's package and per-library candidate order.
 
 To reproduce, first stage the six exact `.blobs` files named in the case set under `android/.local/hf-publish/packages/`, then install the debug app and instrumentation APK. Push the fixture and packages *after* installation because reinstalling the test target clears its app-specific external files:
 
@@ -169,7 +175,7 @@ Pop-Location
 
 $stage = '/sdcard/Android/data/dev.blobs.app.debug/files'
 & $adb shell mkdir -p $stage
-& $adb push corpus/evaluation/cases/multi-library-retrieval-scaling-v2.json `
+& $adb push corpus/evaluation/cases/multi-library-retrieval-scaling-v3.json `
   "$stage/retrieval-benchmark-multi-library.json"
 Get-ChildItem android/.local/hf-publish/packages -Filter '*.blobs' |
   Where-Object Name -In @(

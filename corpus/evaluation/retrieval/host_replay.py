@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sqlite3
 import tempfile
@@ -16,8 +17,8 @@ from blobs_corpus.names import name_key
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = '688e3610a21638ff8e5e680770978133b7d37775871b6a9a2d40203bc87320b3'
-QUERY_SHA256 = 'acee75cef2a8b7845ed1817d3e81143bb4daf730661b83d7f7c864f81c4f8ab5'
+LIBRARY_STORE_SHA256 = '4262032e1679e6f3d38e6e15acc1a6d82fd995f3f900db3574db3272082a4bcb'
+QUERY_SHA256 = 'fb9a8ef4a876f5f5a773bb965c4bc6b21884962585b632998c5f1eea0f79e678'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
     'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',
@@ -209,9 +210,15 @@ def direct_title_ids(database, question, titles, *, broad_only=False):
                 if len(word) >= 2 and word not in TITLE_INTENT_STOP_WORDS
             ]
             title_terms = set(name_key(title).split())
-            if not broad_only or (
-                question_terms and all(word in title_terms for word in question_terms)
-            ):
+            broad = bool(question_terms) and all(word in title_terms for word in question_terms)
+            question_words = re.finditer(r'[\w]+', question, re.UNICODE)
+            explicit_proper = any(
+                match.start() > 0 and match.group()[0].isupper()
+                and name_key(match.group()) in title_terms
+                for match in question_words
+            )
+            direct = broad or len(name_key(title).split()) > 1 or explicit_proper
+            if (broad if broad_only else direct):
                 ids.append(match[1])
     return ids
 

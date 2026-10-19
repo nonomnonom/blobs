@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.library.LibraryStore
+import dev.blobs.app.data.library.LibraryStore.Companion.multiLibraryCandidateLimit
+import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.PackageEntity
 import java.io.File
 import java.io.FileOutputStream
@@ -57,7 +59,9 @@ class MultiLibraryRetrievalScalingTest {
                     id = row.getString("id"),
                     question = row.getString("question"),
                     expectedLibraryId = row.getString("expected_library_id"),
-                    expectedTitle = row.getString("expected_document_title")
+                    expectedTitle = row.getString("expected_document_title"),
+                    maxExpectedTitleRank = row.optInt("max_expected_title_rank")
+                        .takeIf { it > 0 }
                 )
             }
             assertTrue(
@@ -72,6 +76,7 @@ class MultiLibraryRetrievalScalingTest {
                 val caseMedians = mutableListOf<Double>()
                 for (case in cases) {
                     store.retrieve(active, case.question, null)
+                    val queryTitleTerms = RetrievalQuery.titleTerms(case.question)
                     val samplesMs = mutableListOf<Double>()
                     var selectedEvidence = emptyList<Evidence>()
                     repeat(REPEATS) {
@@ -93,6 +98,13 @@ class MultiLibraryRetrievalScalingTest {
                             "${case.id} expected ${case.expectedTitle} at rank $rank with $count libraries",
                             rank > 0
                         )
+                        case.maxExpectedTitleRank?.let { maxRank ->
+                            assertTrue(
+                                "${case.id} expected ${case.expectedTitle} at or before rank " +
+                                    "$maxRank with $count libraries; got $rank",
+                                rank <= maxRank
+                            )
+                        }
                     }
                     val medianMs = median(samplesMs)
                     caseMedians += medianMs
@@ -102,7 +114,36 @@ class MultiLibraryRetrievalScalingTest {
                             .put("expected_source_enabled", expectedSourceEnabled)
                             .put("expected_document_title", case.expectedTitle)
                             .put("expected_title_rank", rank)
+                            .put("max_expected_title_rank", case.maxExpectedTitleRank)
                             .put("selected_titles", JSONArray(titles))
+                            .put(
+                                "selected_sources",
+                                JSONArray(
+                                    selectedEvidence.map { evidence ->
+                                        JSONObject()
+                                            .put("library_id", evidence.id.substringBefore('/'))
+                                            .put("document_id", evidence.id.substringAfter('/'))
+                                            .put("title", evidence.title)
+                                            .put("section", evidence.section)
+                                            .put(
+                                                "title_overlap",
+                                                RetrievalQuery.titleOverlap(
+                                                    queryTitleTerms,
+                                                    evidence.title
+                                                )
+                                            )
+                                            .put(
+                                                "evidence_overlap",
+                                                RetrievalQuery.evidenceOverlap(
+                                                    queryTitleTerms,
+                                                    evidence.title,
+                                                    evidence.section,
+                                                    evidence.text
+                                                )
+                                            )
+                                    }
+                                )
+                            )
                             .put("elapsed_ms_samples", JSONArray(samplesMs))
                             .put("median_elapsed_ms", medianMs)
                     )
@@ -163,6 +204,7 @@ class MultiLibraryRetrievalScalingTest {
                         )
                 )
                 .put("repeat_count", REPEATS)
+                .put("multi_library_candidate_limit", multiLibraryCandidateLimit)
                 .put("libraries", JSONArray(importedLibraries.map { it.identity }))
                 .put("scenarios", scenarios)
 
@@ -264,7 +306,8 @@ class MultiLibraryRetrievalScalingTest {
         val id: String,
         val question: String,
         val expectedLibraryId: String,
-        val expectedTitle: String
+        val expectedTitle: String,
+        val maxExpectedTitleRank: Int?
     )
 
     private data class ImportedLibrary(val entity: PackageEntity, val identity: JSONObject)
