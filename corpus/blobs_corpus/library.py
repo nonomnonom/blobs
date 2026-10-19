@@ -73,9 +73,7 @@ def build_library(source: Path, target: Path, schema: int = 3):
             CREATE TABLE documents(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,publisher TEXT NOT NULL,
               url TEXT NOT NULL,license TEXT NOT NULL,updated TEXT NOT NULL,saved TEXT NOT NULL,
               body TEXT NOT NULL,collection TEXT NOT NULL);
-            CREATE INDEX documents_title ON documents(title,id);
             CREATE TABLE document_provenance(doc_id TEXT PRIMARY KEY NOT NULL,body_sha256 TEXT NOT NULL,details TEXT NOT NULL);
-            CREATE INDEX provenance_body_hash ON document_provenance(body_sha256);
             CREATE TABLE passage_spans(passage_id INTEGER PRIMARY KEY,start INTEGER NOT NULL,end INTEGER NOT NULL,section_path TEXT NOT NULL);
             CREATE TABLE build_metadata(key TEXT PRIMARY KEY NOT NULL,value TEXT NOT NULL);
             """)
@@ -91,7 +89,6 @@ def build_library(source: Path, target: Path, schema: int = 3):
                 db.execute("CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT NOT NULL,section TEXT NOT NULL,title TEXT NOT NULL)")
                 db.execute("CREATE VIRTUAL TABLE passages_fts USING fts5(body,title,section,content='',tokenize='unicode61')")
                 db.execute("INSERT INTO passages_fts(passages_fts,rank) VALUES ('rank','bm25(1.0,6.0,2.0)')")
-            db.execute("CREATE INDEX passages_document ON passages(doc_id)")
             db.execute("PRAGMA temp_store_directory='" + folder.replace("'", "''") + "'")
             for item in documents(source):
                 fields = ['id','title','publisher','url','license','updated','saved','body','collection']
@@ -132,6 +129,9 @@ def build_library(source: Path, target: Path, schema: int = 3):
                         raise OSError('Stopped build before consuming the final 1 GiB of free space')
             if count == 0 or passage_count == 0:
                 raise ValueError('Empty library')
+            db.execute("CREATE INDEX documents_title ON documents(title,id)")
+            db.execute("CREATE INDEX provenance_body_hash ON document_provenance(body_sha256)")
+            db.execute("CREATE INDEX passages_document ON passages(doc_id)")
             names = build_names(db, source) if schema >= 2 else None
             duplicate_count = db.execute('SELECT count(*)-count(DISTINCT body_sha256) FROM document_provenance').fetchone()[0]
             report = dict(format=1, schema=schema, audit_schema=1, documents=count, passages=passage_count,
