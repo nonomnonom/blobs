@@ -273,9 +273,12 @@ class NativeInferenceTest {
     private fun recordAnswer(verifiedFile: Boolean) = runBlocking {
         val foreground = ActivityScenario.launch(MainActivity::class.java)
         val args = InstrumentationRegistry.getArguments()
-        val modelPath = requireNotNull(
-            args.getString(if (verifiedFile) "modelFile" else "modelPackage")
-        )
+        val installedModelKey = args.getString("installedModel")
+        val modelPath = args.getString(if (verifiedFile) "modelFile" else "modelPackage")
+        require(
+            if (verifiedFile) modelPath != null && installedModelKey == null
+            else (modelPath != null) xor (installedModelKey != null)
+        ) { "Provide exactly one of modelFile, modelPackage, or installedModel" }
         val libraryPath = args.getString("libraryPackage")
         val installedLibraryKey = args.getString("installedLibrary")
         require((libraryPath != null) xor (installedLibraryKey != null)) {
@@ -322,6 +325,8 @@ class NativeInferenceTest {
                 "model_preparation",
                 if (verifiedFile) {
                     "Verified GGUF file: checksum and native importer validator, without model installation. Library import and WorkController persistence/generation are exercised; normal model-package import is not proved."
+                } else if (installedModelKey != null) {
+                    "Catalog-installed model package; package identity and GGUF are verified before the offline chat path."
                 } else {
                     "Normal model-package import"
                 }
@@ -335,7 +340,7 @@ class NativeInferenceTest {
         fun save() = saveReport(output, report)
         save()
         val installed = try {
-            listOf(modelPath, libraryPath.orEmpty()).mapIndexed { index, path ->
+            listOf(modelPath.orEmpty(), libraryPath.orEmpty()).mapIndexed { index, path ->
                 val kind = if (index == 0) "model" else "library"
                 if (index == 0 && verifiedFile) {
                     val expected = requireNotNull(args.getString("modelSha256"))
@@ -360,6 +365,44 @@ class NativeInferenceTest {
                         "Evaluation fixture; see its pinned model license",
                         "local:verified-fixture", 0
                     )
+                }
+                if (index == 0 && installedModelKey != null) {
+                    val pack = container.database.packages().all().single {
+                        it.key == installedModelKey
+                    }
+                    require(pack.kind == "model")
+                    val packageRoot = File(context.filesDir, "packages").canonicalFile
+                    val file = File(pack.path).canonicalFile
+                    check(file.path.startsWith(packageRoot.path + File.separator))
+                    check(file.isFile && file.length() == pack.bytes)
+                    val digest = MessageDigest.getInstance("SHA-256")
+                    file.inputStream().use { input ->
+                        val buffer = ByteArray(256 * 1024)
+                        while (true) {
+                            val length = input.read(buffer)
+                            if (length < 0) break
+                            digest.update(buffer, 0, length)
+                        }
+                    }
+                    check(digest.digest().joinToString("") { "%02x".format(it) } == pack.sha256)
+                    GgufValidator.validate(file)
+                    report.put(
+                        "model_manifest",
+                        JSONObject(
+                            PackageManifest(
+                                pack.packageId,
+                                pack.version,
+                                pack.kind,
+                                pack.title,
+                                pack.bytes,
+                                pack.sha256,
+                                pack.license,
+                                pack.origin
+                            ).json()
+                        )
+                    )
+                    save()
+                    return@mapIndexed pack
                 }
                 if (index == 1 && installedLibraryKey != null) {
                     val pack = container.database.packages().all().single {
