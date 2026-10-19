@@ -17,14 +17,15 @@ from blobs_corpus.names import name_key
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
 LIBRARY_STORE_SHA256 = '3d951f9f85d13f282431018206dc5a12a8a26367273a99f879c29a44e0e100f8'
-QUERY_SHA256 = '900078fd97096f3f7b2950d5c84286c605b8b4158a86fb5fcf298f68e3d452f2'
+QUERY_SHA256 = '3fb8f2aabd9c6392d580362891748db37b8fe526096c09b27c3c2e8de3b0a414'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
     'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',
     'they', 'its', 'these', 'those', 'compare', 'explain', 'between', 'difference',
     'versus', 'could', 'do', 'did', 'be', 'it', 'into', 'also', 'tell', 'please', 'me',
     'more', 'than', 'when', 'where', 'who', 'was', 'were', 'has', 'had', 'is', 'of',
-    'to', 'by', 'on', 'in', 'an', 'as', 'at', 'if', 'we', 'us', 'our', 'describe'
+    'to', 'by', 'on', 'in', 'an', 'as', 'at', 'if', 'we', 'us', 'our', 'describe',
+    'guide', 'list'
 }
 TITLE_INTENT_STOP_WORDS = STOP_WORDS | {
     'i', 'should', 'know', 'before', 'visiting', 'visit', 'around'

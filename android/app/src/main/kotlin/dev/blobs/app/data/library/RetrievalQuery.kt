@@ -10,7 +10,8 @@ object RetrievalQuery {
         "they", "its", "these", "those", "compare", "explain", "between", "difference",
         "versus", "could", "do", "did", "be", "it", "into", "also", "tell", "please", "me",
         "more", "than", "when", "where", "who", "was", "were", "has", "had", "is", "of",
-        "to", "by", "on", "in", "an", "as", "at", "if", "we", "us", "our", "describe"
+        "to", "by", "on", "in", "an", "as", "at", "if", "we", "us", "our", "describe",
+        "guide", "list"
     )
     private val broadTitleIntentWords = stopWords + setOf(
         "i",

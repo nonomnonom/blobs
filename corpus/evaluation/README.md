@@ -53,10 +53,11 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/wikivoyage-en-2026-09-v2.blobs `
   --cases evaluation/cases/travel-retrieval-smoke-v1.json `
   --work-directory work/reports/travel-retrieval-smoke-v3 `
-  --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v3-host.json
+  --output evaluation/baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v4-host.json
 ```
 
 The output path is write-once. Give a new run a new output filename so the checked-in result remains reproducible evidence for its exact source and case-set hashes. Reports include expected-source recall, first expected-source rank, mean reciprocal rank, and host elapsed time; these measure source retrieval and do not score generated answers. In the October 19 policy update, the same six travel cases retained 6/6 expected-source recall, moved top-1 coverage from 3/6 to 4/6, and raised mean reciprocal rank from 0.700 to 0.783. Host median retrieval time moved from 170.2 ms to 72.8 ms; p95 moved from 400.8 ms to 226.5 ms on the recorded Windows host. The follow-up title-overlap result is [`v3`](baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v3-host.json): 6/6 expected sources at rank 1, MRR 1.0, host median 99.8 ms and p95 251.8 ms. A matched Android 16 x86_64 emulator comparison is recorded in [`the title-ranking evidence`](evidence/android-retrieval-travel-title-ranking-x86_64-android16-2026-10-19.json): all three candidate runs reached 6/6 at rank 1 versus 4/6 baseline; the median of run medians rose from 70 ms to 77 ms and median run p95 from 247 ms to 262 ms. This modest absolute latency cost buys a clear source-ordering improvement on the measured cases. These timings describe only their named host/emulator; additional topic libraries should use their own package identity and retrieval cases while sharing the same schema and retrieval implementation.
+The same six travel cases still find all expected sources under the current query policy; the current host report is [`v4`](baselines/wikivoyage-en-2026-09.2-retrieval-smoke-v4-host.json), with all six at rank 1. Host timings are diagnostic and not an Android latency estimate.
 
 The U.S. outdoor-safety package uses the same retrieval-only check:
 
@@ -65,7 +66,7 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/nps-outdoor-safety-2026-10-v1.blobs `
   --cases evaluation/cases/nps-outdoor-safety-retrieval-v1.json `
   --work-directory work/reports/nps-outdoor-safety-retrieval-v1 `
-  --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v3-host.json
+  --output evaluation/baselines/nps-outdoor-safety-2026-10.1-retrieval-v4-host.json
 ```
 
 The U.S. household emergency-preparedness package uses its own versioned case set and the same retrieval-only check:
@@ -75,7 +76,7 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/ready-emergency-preparedness-2026-10-v1.blobs `
   --cases evaluation/cases/ready-emergency-preparedness-retrieval-v1.json `
   --work-directory work/reports/ready-emergency-preparedness-retrieval-v1 `
-  --output evaluation/baselines/ready-emergency-preparedness-2026-10.1-retrieval-v2-host.json
+  --output evaluation/baselines/ready-emergency-preparedness-2026-10.1-retrieval-v3-host.json
 ```
 
 The initial fixed set has eight questions and ten expected source-title matches. The recorded host run found all ten expected sources, with seven at rank 1 (reciprocal rank 0.817). This small set is a source-routing smoke test, not a broad relevance study or answer evaluation.
@@ -87,7 +88,7 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/camping-safely-2026-10-v1.blobs `
   --cases evaluation/cases/camping-safety-retrieval-v1.json `
   --work-directory work/reports/camping-safety-retrieval-v1 `
-  --output evaluation/baselines/camping-safety-2026-10.1-retrieval-v1-host.json
+  --output evaluation/baselines/camping-safety-2026-10.1-retrieval-v2-host.json
 ```
 
 The recorded host smoke found all eight expected source titles, with seven at rank 1 (MRR 0.938); median host retrieval time was 1.332 ms. This measures source routing for this package and case set only, not generated answers or phone latency.
@@ -99,10 +100,12 @@ uv run --locked --project . python -m evaluation.retrieval.retrieval_smoke `
   --library-package work/packages/backcountry-basics-2026-10-v3.blobs `
   --cases evaluation/cases/backcountry-basics-retrieval-v3.json `
   --work-directory work/reports/backcountry-basics-retrieval-v3 `
-  --output evaluation/baselines/backcountry-basics-2026-10.3-retrieval-v2-host.json
+  --output evaluation/baselines/backcountry-basics-2026-10.3-retrieval-v3-host.json
 ```
 
-The Android 16 x86_64 emulator report for package v3 is [`backcountry-basics retrieval evidence`](evidence/android-retrieval-backcountry-basics-v3-x86_64-android16-2026-10-19.json). It exercises the production SQLite retrieval path five times per case: all eight expected sources were found, seven ranked first, with a 4 ms median of case medians and a 9 ms p95 on this emulator. Its case-set hash matches the host report. It records source ranks and elapsed time and does not evaluate generated answers.
+The Android 16 x86_64 emulator report for package v3 before the query cleanup is [`the prior retrieval run`](evidence/android-retrieval-backcountry-basics-v3-x86_64-android16-2026-10-19.json). After treating generic “guide” and “list” wording as stop words, [`the candidate run`](evidence/android-retrieval-backcountry-basics-v3-query-stopwords-x86_64-android16-2026-10-19.json) found all eight expected sources and ranked all eight first, up from seven at rank 1. Median of case medians remained 4 ms; p95 moved from 9 ms to 8 ms on this emulator. Both reports use identical case-set and package hashes, exercise the production SQLite retrieval path five times per query, and do not evaluate generated answers.
+
+The current host replay reports for backcountry, Wikivoyage, outdoor safety, emergency preparedness, and camping are recorded in the corresponding `retrieval-v3` or later baseline files above. Expected-source recall remained 100% in every fixed case set; first-rank coverage was 8/8, 6/6, 5/5, 7/10, and 7/8 respectively. Only the backcountry smoke set gained a first-rank result; the other sets did not lose first-rank sources.
 
 For repeatable Android model-load, prefill, first-token, and decode measurements, use the [native inference smoke guide](native/README.md). It records device-specific performance only and never scores generated answers.
 

@@ -41,6 +41,17 @@ class RetrievalQueryTest {
     }
 
     @Test
+    fun genericGuideAndListWordingDoesNotBecomeRetrievalContent() {
+        assertEquals(
+            "\"lightweight\" OR \"emergency\" OR \"shelter\" OR \"options\" OR " +
+                "\"lightweight emergency\" OR \"emergency shelter\" OR \"shelter options\"",
+            RetrievalQuery.match(
+                "What lightweight emergency shelter options does the guide list?"
+            )
+        )
+    }
+
+    @Test
     fun anInstructionVerbDoesNotCreateUnrelatedEvidenceForAnUnknownSubject() {
         assertEquals(
             "\"zqxvblobsunobtainium\"",

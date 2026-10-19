@@ -208,6 +208,24 @@ class EvaluationInputTests(unittest.TestCase):
                 'OR title:"litre" OR title:"monotonic function"',
             )
 
+    def test_host_replay_omits_generic_guide_and_list_terms(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / 'backcountry.sqlite'
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript('''
+                    CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT);
+                    CREATE TABLE document_names(name TEXT,doc_id TEXT);
+                ''')
+                db.commit()
+            self.assertEqual(
+                retrieval_query(
+                    database,
+                    'What lightweight emergency shelter options does the guide list?'
+                ),
+                '"lightweight" OR "emergency" OR "shelter" OR "options" '
+                'OR "lightweight emergency" OR "emergency shelter" OR "shelter options"',
+            )
+
     def test_host_replay_prioritizes_a_unique_exact_title_before_the_evidence_limit(self):
         with tempfile.TemporaryDirectory() as folder:
             database = Path(folder) / 'travel.sqlite'
