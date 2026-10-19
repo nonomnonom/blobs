@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { HomeLayout } from 'fumadocs-ui/layouts/home';
 import { baseOptions } from '@/lib/layout.shared';
-import { basePath } from '@/lib/base-path';
 import { HomeContainer } from '@/components/home-container';
 import day from '@/public/media/welcome.webp';
 import night from '@/public/media/welcome-night.webp';
@@ -81,36 +80,6 @@ export default function Home() {
                             />
                         </div>
                     </div>
-                </section>
-                <section
-                    className="app-preview"
-                    aria-labelledby="preview-title"
-                >
-                    <div>
-                        <p className="eyebrow">A familiar place to begin</p>
-                        <h2 id="preview-title">
-                            A little tour, before you dive in.
-                        </h2>
-                        <p>
-                            See how setup, your library, and source reading fit
-                            together.
-                        </p>
-                        <Link href="/docs/tour" className="text-link">
-                            Look around Blobs <span aria-hidden="true">→</span>
-                        </Link>
-                    </div>
-                    <Link
-                        href="/docs/tour"
-                        className="preview-phone"
-                        aria-label="Explore the Blobs app screens"
-                    >
-                        <Image
-                            src={`${basePath}/screens/home.webp`}
-                            alt="Blobs home with a question box, model choice, and source selector."
-                            width={912}
-                            height={2048}
-                        />
-                    </Link>
                 </section>
                 <section
                     className="guide-section"

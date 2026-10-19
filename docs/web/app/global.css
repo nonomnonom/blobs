@@ -236,49 +236,6 @@ button {
     bottom: -3%;
     left: 15%;
 }
-.app-preview {
-    display: grid;
-    grid-template-columns: 1fr 240px;
-    align-items: center;
-    gap: 3rem;
-    margin-top: 4rem;
-    background: var(--color-fd-muted);
-    border-radius: 28px;
-    padding: 2.5rem;
-}
-.app-preview h2 {
-    font-size: 2.1rem;
-    line-height: 1.15;
-    letter-spacing: -0.035em;
-    max-width: 22rem;
-}
-.app-preview p:not(.eyebrow) {
-    color: var(--color-fd-muted-foreground);
-    line-height: 1.7;
-    margin-top: 1rem;
-    max-width: 23rem;
-}
-.text-link {
-    color: var(--color-fd-primary);
-    display: inline-flex;
-    align-items: center;
-    gap: 1rem;
-    min-height: 44px;
-    margin-top: 1rem;
-    font-weight: 500;
-}
-.preview-phone {
-    display: block;
-    border: 1px solid var(--color-fd-border);
-    border-radius: 24px;
-    overflow: hidden;
-    max-height: 380px;
-}
-.preview-phone img {
-    display: block;
-    width: 100%;
-    height: auto;
-}
 .screen-gallery {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -496,16 +453,6 @@ button {
         padding: 1rem 1.5rem 1.5rem;
         flex-direction: column;
         gap: 0.75rem;
-    }
-    .app-preview {
-        grid-template-columns: 1fr;
-        padding: 1.5rem;
-        gap: 1.5rem;
-    }
-    .preview-phone {
-        max-width: 220px;
-        max-height: 330px;
-        justify-self: center;
     }
     .screen-gallery {
         gap: 1rem;
