@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "id": "travel-retrieval-smoke-v2",
+  "library": {
+    "id": "wikivoyage-en",
+    "version": "2026-09.3",
+    "payload_sha256": "da61f4c387b8fc439c081841b78526368e4639534292362d072f8ee20b85d773"
+  },
+  "cases": [
+    {
+      "id": "jakarta-city",
+      "question": "What should I know before visiting Jakarta?",
+      "expected_document_titles": [
+        "Jakarta"
+      ]
+    },
+    {
+      "id": "japan-rail",
+      "question": "How can I travel around Japan by rail?",
+      "expected_document_titles": [
+        "Rail travel in Japan"
+      ]
+    },
+    {
+      "id": "beach-packing",
+      "question": "What should I pack for a beach trip?",
+      "expected_document_titles": [
+        "Packing for beach travel"
+      ]
+    },
+    {
+      "id": "china-visas",
+      "question": "How do visa requirements for China work?",
+      "expected_document_titles": [
+        "Visa requirements for China"
+      ]
+    },
+    {
+      "id": "travel-basics",
+      "question": "What are the basics of travel?",
+      "expected_document_titles": [
+        "Travel basics"
+      ]
+    },
+    {
+      "id": "bangkok-airport",
+      "question": "How do I get from the airport to Bangkok city?",
+      "expected_document_titles": [
+        "Bangkok"
+      ]
+    }
+  ]
+}

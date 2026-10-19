@@ -19,6 +19,18 @@ uv run --locked --project . python -m evaluation.android.app_startup `
 
 The v0.3.8 release APK measured on Android 16 x86_64 had 682 ms median activity launch time (753 ms nearest-rank p95) and 31,680 KiB median process PSS (33,753 KiB p95) across seven process-cold launches. The v0.3.7 run on the same emulator measured 684 ms median (739 ms p95) and 31,955 KiB median PSS (33,107 KiB p95). These small repeated emulator samples show similar startup and memory use across the two releases; they are not device-wide estimates. The installed APK digests and raw samples are in [`the v0.3.8 report`](baselines/android-startup-v0.3.8-x86_64-android16-2026-10-19.json) and [`the v0.3.7 report`](baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json).
 
+## Published travel retrieval check
+
+The [2026-09.3 travel report](baselines/wikivoyage-en-2026-09.3-retrieval-smoke-v1-host.json) uses the exact archive downloaded from its immutable public HF revision and the [v2 case lock](cases/travel-retrieval-smoke-v2.json). The six questions and expected source identities are unchanged from v1; only the package identity is updated. All six expected source documents appeared at rank 1. Host median retrieval was 78.3 ms and nearest-rank p95 was 235.5 ms in this single run. This verifies the fixed source-retrieval cases, not general relevance, phone latency, or generated-answer correctness.
+
+```powershell
+uv run --locked python -m evaluation.retrieval.retrieval_smoke `
+  --library-package PATH_TO/wikivoyage-en-2026-09-v3.blobs `
+  --cases evaluation/cases/travel-retrieval-smoke-v2.json `
+  --work-directory work/travel-retrieval `
+  --output reports/travel-retrieval.json
+```
+
 ## Measure in-app model and library downloads
 
 `PackageLifecyclePerformanceTest` starts the normal `ProductViewModel` download action, then records catalog refresh, download plus archive verification/inspection, and package install/validation/activation separately. It downloads only from the signature-verified app package list, checks the final database entry and SHA-256, and records APK/package/device identities. This is a manual Android instrumentation test because it needs network access and a package that is not already installed in the debug app. Use a fresh debug app install or a package ID that has not been installed; it does not clear app data.
