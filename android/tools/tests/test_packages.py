@@ -86,13 +86,13 @@ class PackageTests(unittest.TestCase):
                     {"file": "lib/x86_64/libblobs.so"},
                 ],
             )
-            catalog = {"format": 1, "release_tag": "v0.2.0", "packages": []}
+            catalog = {"format": 1, "release_tag": "v0.1.0", "packages": []}
             for item in inputs:
                 manifest = package_release.check_package(item)
                 catalog["packages"].append(
                     {
                         "file_name": item.name,
-                        "url": f"https://github.com/nonomnonom/blobs/releases/download/v0.2.0/{item.name}",
+                        "url": f"https://github.com/nonomnonom/blobs/releases/download/v0.1.0/{item.name}",
                         "download_format": "blobs",
                         "download_bytes": item.stat().st_size,
                         "download_sha256": package_release.digest(item),
@@ -297,15 +297,44 @@ class PackageTests(unittest.TestCase):
                 package_release.main()
 
     def test_release_package_names_must_match_the_in_app_catalog(self):
-        catalog_path = package_release.ROOT / "app/src/main/assets/package-catalog.json"
-        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-        version = catalog["release_tag"].removeprefix("v")
         with self.assertRaisesRegex(
             ValueError, "filename differs from the in-app download catalog"
         ):
             package_release.verify_catalog_packages(
-                Path("selected-model.blobs"), Path("selected-library.blobs"), version
+                Path("selected-model.blobs"), Path("selected-library.blobs")
             )
+
+    def test_asset_editions_can_be_reused_without_weakening_package_checks(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            catalog_path = root / "app/src/main/assets/package-catalog.json"
+            catalog_path.parent.mkdir(parents=True)
+            catalog = {"format": 1, "release_tag": "v0.1.0", "packages": []}
+            paths, manifests = [], {}
+            for kind in ("model", "library"):
+                path = root / f"{kind}.blobs"
+                path.write_bytes(f"verified {kind} archive".encode())
+                manifest = {"kind": kind}
+                paths.append(path)
+                manifests[path] = manifest
+                catalog["packages"].append(
+                    {
+                        "file_name": path.name,
+                        "download_format": "blobs",
+                        "download_bytes": path.stat().st_size,
+                        "download_sha256": package_release.digest(path),
+                        "manifest": manifest,
+                    }
+                )
+            catalog_path.write_text(json.dumps(catalog), encoding="utf-8")
+            with (
+                patch.object(package_release, "ROOT", root),
+                patch.object(package_release, "check_package", side_effect=manifests.__getitem__),
+            ):
+                package_release.verify_catalog_packages(*paths)
+                paths[0].write_bytes(b"modified model archive")
+                with self.assertRaisesRegex(ValueError, "differs from the in-app download catalog"):
+                    package_release.verify_catalog_packages(*paths)
 
     def test_package_names_cannot_collide_on_a_case_insensitive_filesystem(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -26,7 +26,9 @@ uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs
 uv run --locked --project ../corpus python tools/package_release.py --model .\packages\qwen3-integration.blobs --library .\packages\wikipedia-starter-schema3.blobs
 ```
 
-The release assembler checks APK identity and signature, exact package metadata, source archive contents, footprint, and a complete SHA-256 inventory. It creates an immutable `android/release/<version>/` folder. Verify that folder before publication:
+The release assembler checks APK identity and signature, exact package metadata, source archive contents, footprint, and a complete SHA-256 inventory. It creates an immutable `android/release/<version>/` folder.
+
+The APK version and download-list edition advance independently. An application update can reuse an unchanged model/library edition; the assembler still requires the exact catalog filenames, archive sizes, SHA-256 hashes, and manifests. Do not change or republish the signed download list solely to match an APK version. Verify the folder before publication:
 
 ```powershell
 uv run --locked --project ../corpus python tools/verify_release.py .\release\<version>

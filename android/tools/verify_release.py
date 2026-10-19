@@ -49,6 +49,17 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def catalog_edition(catalog: dict) -> str:
+    tag = catalog.get("release_tag", "")
+    if (
+        catalog.get("format") != 1
+        or not isinstance(tag, str)
+        or not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", tag)
+    ):
+        raise ValueError("Invalid pinned download catalog edition")
+    return tag
+
+
 def read_json(path: Path):
     def reject_duplicates(pairs):
         result = {}
@@ -261,8 +272,7 @@ def verify_kit(directory: Path) -> dict:
             )
         except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
             raise ValueError("Source archive has no valid in-app package catalog") from error
-    if catalog.get("format") != 1 or catalog.get("release_tag") != f"v{version}":
-        raise ValueError("In-app catalog release tag differs from the verified APK")
+    asset_edition = catalog_edition(catalog)
     catalog_packages = {
         item.get("file_name"): item
         for item in catalog.get("packages", [])
@@ -275,7 +285,7 @@ def verify_kit(directory: Path) -> dict:
         item = catalog_packages.get(name)
         url = item.get("url", "") if item else ""
         github_release_url = (
-            f"https://github.com/nonomnonom/blobs/releases/download/v{version}/{name}"
+            f"https://github.com/nonomnonom/blobs/releases/download/{asset_edition}/{name}"
         )
         hf_package_url = re.fullmatch(
             rf"https://huggingface\.co/datasets/nonomnonom/blobs-catalog/resolve/[a-f0-9]{{40}}/packages/{re.escape(name)}",

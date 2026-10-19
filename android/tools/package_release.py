@@ -13,7 +13,7 @@ import tempfile
 import zipfile
 from verify_apk import verify, sdk_directory
 from build_package import verify_package
-from verify_release import verify_kit
+from verify_release import catalog_edition, verify_kit
 from blobs_corpus.footprint import release_report as build_footprint_report
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -122,11 +122,10 @@ def write_source_archive(output):
             archive.write(path, "blobs/" + relative.as_posix())
 
 
-def verify_catalog_packages(model, library, version):
+def verify_catalog_packages(model, library):
     catalog_path = ROOT / "app/src/main/assets/package-catalog.json"
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-    if catalog.get("release_tag") != f"v{version}" or catalog.get("format") != 1:
-        raise ValueError("APK version differs from the pinned download catalog")
+    catalog_edition(catalog)
     expected = {
         item["file_name"]: item
         for item in catalog.get("packages", [])
@@ -197,7 +196,7 @@ def main():
         raise ValueError("Release packages must use .blobs filenames")
     if args.model.name.casefold() == args.library.name.casefold():
         raise ValueError("Model and library package filenames must differ")
-    verify_catalog_packages(args.model, args.library, version)
+    verify_catalog_packages(args.model, args.library)
     manifests = {name: check_package(source) for source, name in packages}
     if (
         manifests[args.model.name]["kind"] != "model"
