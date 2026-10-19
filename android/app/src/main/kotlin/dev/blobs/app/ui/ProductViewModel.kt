@@ -11,8 +11,6 @@ import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.DownloadablePackage
-import dev.blobs.app.data.packages.PackageManifest
-import dev.blobs.app.data.preferences.PreferencesStore
 import dev.blobs.app.data.preferences.ThemeMode
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
@@ -27,44 +25,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-
-enum class Page {
-    CHAT,
-    WELCOME,
-    SETUP,
-    IMPORT,
-    HISTORY,
-    LIBRARY,
-    BROWSE,
-    SOURCES,
-    READER,
-    MODELS,
-    SETTINGS,
-    APPEARANCE,
-    STORAGE,
-    DATA,
-    PRIVACY,
-    HELP,
-    ABOUT
-}
-
-data class ProductState(
-    val page: Page = Page.CHAT,
-    val draft: String = "",
-    val options: PreferencesStore.Options = PreferencesStore.Options(),
-    val loaded: Boolean = false,
-    val notice: Int? = null,
-    val sources: List<Evidence> = emptyList(),
-    val query: String = "",
-    val offset: Int = 0,
-    val hasMore: Boolean = false,
-    val searching: Boolean = false,
-    val reader: Evidence? = null,
-    val readerIsFull: Boolean = false,
-    val importOrigin: Page = Page.SETUP,
-    val importUri: Uri? = null,
-    val manifest: PackageManifest? = null
-)
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ProductViewModel(private val container: AppContainer) : ViewModel() {

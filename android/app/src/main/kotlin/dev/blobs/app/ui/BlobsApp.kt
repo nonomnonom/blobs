@@ -51,12 +51,12 @@ import dev.blobs.app.feature.library.ImportScreen
 import dev.blobs.app.feature.library.LibraryScreen
 import dev.blobs.app.feature.library.ModelsScreen
 import dev.blobs.app.feature.library.ReaderScreen
-import dev.blobs.app.feature.library.SetupScreen
-import dev.blobs.app.feature.library.StorageScreen
 import dev.blobs.app.feature.settings.AboutScreen
 import dev.blobs.app.feature.settings.AppearanceScreen
 import dev.blobs.app.feature.settings.DataScreen
 import dev.blobs.app.feature.settings.SettingsScreen
+import dev.blobs.app.feature.settings.StorageScreen
+import dev.blobs.app.feature.setup.SetupScreen
 import dev.blobs.app.feature.welcome.WelcomeScreen
 import dev.blobs.app.ui.theme.BlobsTheme
 
