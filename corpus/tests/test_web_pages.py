@@ -102,6 +102,14 @@ class PinnedWebPageTests(unittest.TestCase):
         changed_date = html.replace(b"January 1, 2026", b"January 2, 2026", 1)
         with self.assertRaisesRegex(ValueError, "Page update date changed"):
             _source_text(changed_date, source)
+        malformed_utf8 = html.replace(b"outdoor preparation", b"outdoor prep\xffration", 1)
+        with self.assertRaisesRegex(ValueError, "not valid UTF-8"):
+            _source_text(malformed_utf8, source)
+        replacement_character = html.replace(
+            b"outdoor preparation", "outdoor prep\ufffdration".encode("utf-8"), 1
+        )
+        with self.assertRaisesRegex(ValueError, "replacement character"):
+            _source_text(replacement_character, source)
 
     def test_source_accepts_ready_gov_numeric_update_date(self):
         article_text = "An official emergency preparedness instruction. " * 8

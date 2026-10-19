@@ -218,6 +218,7 @@ Keep the starter, travel, outdoor-safety, emergency-preparedness, camping-safety
 
 ## Data integrity
 
+- HTML sources are decoded as strict UTF-8, and source pages and normalized records containing a Unicode replacement character are rejected instead of silently publishing damaged text.
 - Inputs are pinned by origin, revision, byte length, and SHA-256.
 - Normalized records retain canonical URL, contributor/history URL, source archive identity, and available revision identity.
 - Extraction and passage lengths are bounded.

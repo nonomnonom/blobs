@@ -13,6 +13,8 @@ def validate_document(item: dict):
         value = item[field]
         if not isinstance(value, str) or not value.strip() or len(value) > limit or '\x00' in value:
             raise ValueError(f'Invalid {field}: must be nonempty text of at most {limit} characters')
+        if '\ufffd' in value:
+            raise ValueError(f'Invalid {field}: contains a Unicode replacement character')
     if not re.fullmatch(r'[a-zA-Z0-9_-]{1,100}', item['id']):
         raise ValueError('Invalid source ID')
 

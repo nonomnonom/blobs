@@ -20,7 +20,7 @@ from .records import validate_document
 
 MAX_SOURCE_BYTES = 5_000_000
 MAX_SOURCES = 40
-EXTRACTOR_VERSION = "1"
+EXTRACTOR_VERSION = "2"
 
 
 def read_lock(path: Path) -> dict:
@@ -137,7 +137,11 @@ def _remove_furniture(root):
 def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
     if len(raw) > MAX_SOURCE_BYTES:
         raise ValueError(f"Source page exceeds the size limit: {source['id']}")
-    tree = LexborHTMLParser(raw.decode("utf-8"))
+    try:
+        html = raw.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as error:
+        raise ValueError(f"Source page is not valid UTF-8: {source['id']}") from error
+    tree = LexborHTMLParser(html)
     title_node = tree.css_first("h1")
     title = clean(title_node.text()) if title_node else ""
     if title != source["title"]:
@@ -162,6 +166,8 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
     body = "\n\n".join(block for block in _blocks(root) if block.strip())
     if len(body) < 300:
         raise ValueError(f"Normalized source is unexpectedly short: {source['id']}")
+    if "\ufffd" in title or "\ufffd" in body:
+        raise ValueError(f"Source text contains a Unicode replacement character: {source['id']}")
     body_sha256 = hashlib.sha256(body.encode("utf-8")).hexdigest()
     if body_sha256 != source["body_sha256"]:
         raise ValueError(f"Reviewed source text changed: {source['id']}")
