@@ -1,6 +1,23 @@
 # Evaluation tools
 
-These optional Python tools measure package retrieval and pinned host inference. They are not part of the Android runtime. Host latency is a reproducible implementation diagnostic, not an estimate of phone speed.
+These optional Python tools measure Blobs app/runtime performance and corpus retrieval behavior. They are not part of the Android runtime and do not grade model-generated answers. Host latency is a reproducible implementation diagnostic, not an estimate of phone speed.
+
+## Measure installed-app launch and memory
+
+`evaluation.android.app_startup` drives the installed Android app through `adb`, recording process-cold activity launch timing, process PSS, device fingerprint, installed APK SHA-256, and version. Each run force-stops the app before launch; the OS page cache remains warm, so this is not a first-install or device-cold measurement. The report contains raw samples and median/nearest-rank p95, and refuses to overwrite existing evidence.
+
+Run from `corpus/` with the app installed on the selected emulator or phone:
+
+```powershell
+uv run --locked --project . python -m evaluation.android.app_startup `
+  --adb "$env:ANDROID_HOME/platform-tools/adb.exe" `
+  --serial emulator-5554 `
+  --package dev.blobs.app `
+  --runs 7 `
+  --output evaluation/baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json
+```
+
+The v0.3.7 release APK measured on Android 16 x86_64 had 684 ms median activity launch time (739 ms nearest-rank p95) and 31,955 KiB median process PSS (33,107 KiB p95) across seven process-cold launches. Individual launch times ranged from 488 to 739 ms, so this is a small emulator diagnostic rather than a device-wide claim. The installed base APK digest and every sample are in [`the launch report`](baselines/android-startup-v0.3.7-x86_64-android16-2026-10-19.json).
 
 Install the locked evaluation dependencies and run the corpus tests from this directory's parent:
 
