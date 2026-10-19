@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "release_tag": "v0.3.6",
+  "release_tag": "v0.3.7",
   "packages": [
     {
       "file_name": "qwen3-integration.blobs",
