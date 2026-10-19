@@ -12,6 +12,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import dev.blobs.app.data.packages.CatalogRefreshOutcome
 import dev.blobs.app.data.packages.CatalogSource
@@ -35,16 +37,28 @@ class LaunchTest {
     @Test
     fun appRendersAfterActivityRecreation() {
         val wordmark = compose.activity.getString(R.string.app_wordmark)
-        val history = compose.activity.getString(R.string.history)
+        val history = compose.activity.getString(R.string.open_navigation)
         fun rendered() = compose.onAllNodesWithText(wordmark).fetchSemanticsNodes().isNotEmpty() ||
-            compose.onAllNodesWithContentDescription(history).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithContentDescription(history).fetchSemanticsNodes().isNotEmpty() ||
+            compose.onAllNodesWithText(
+                compose.activity.getString(R.string.setup_header)
+            ).fetchSemanticsNodes().isNotEmpty()
         compose.waitUntil(10_000) {
             rendered()
         }
         if (compose.onAllNodesWithText(wordmark).fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText(wordmark).assertIsDisplayed()
         } else {
-            compose.onNodeWithContentDescription(history).assertIsDisplayed()
+            if (compose.onAllNodesWithContentDescription(
+                    history
+                ).fetchSemanticsNodes().isNotEmpty()
+            ) {
+                compose.onNodeWithContentDescription(history).assertIsDisplayed()
+            } else {
+                compose.onNodeWithText(
+                    compose.activity.getString(R.string.setup_header)
+                ).assertIsDisplayed()
+            }
         }
         compose.activityRule.scenario.recreate()
         compose.waitUntil(10_000) {
@@ -53,7 +67,16 @@ class LaunchTest {
         if (compose.onAllNodesWithText(wordmark).fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText(wordmark).assertIsDisplayed()
         } else {
-            compose.onNodeWithContentDescription(history).assertIsDisplayed()
+            if (compose.onAllNodesWithContentDescription(
+                    history
+                ).fetchSemanticsNodes().isNotEmpty()
+            ) {
+                compose.onNodeWithContentDescription(history).assertIsDisplayed()
+            } else {
+                compose.onNodeWithText(
+                    compose.activity.getString(R.string.setup_header)
+                ).assertIsDisplayed()
+            }
         }
     }
 
@@ -66,16 +89,26 @@ class LaunchTest {
             app.container.preferences.setThemeMode(ThemeMode.SYSTEM)
             app.container.preferences.welcome()
         }
+        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        compose.waitUntil(10_000) { model.state.value.loaded }
+        val previous = model.conversationId.value
+        compose.runOnUiThread { model.newConversation() }
+        compose.waitUntil(10_000) { model.conversationId.value != previous }
         compose.waitUntil(10_000) {
-            compose.onAllNodesWithContentDescription(text(R.string.history))
+            compose.onAllNodesWithContentDescription(text(R.string.open_navigation))
                 .fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithContentDescription(text(R.string.history)).performClick()
-        compose.onNodeWithContentDescription(text(R.string.new_chat)).performClick()
+        compose.onNodeWithContentDescription(text(R.string.open_navigation)).performClick()
+        compose.onNodeWithText(text(R.string.new_chat)).performClick()
         compose.onNodeWithText(
             text(R.string.question_hint)
         ).performTextInput("Remember my question")
-        compose.onNodeWithContentDescription(text(R.string.history)).performClick()
+        compose.onNodeWithContentDescription(text(R.string.open_navigation)).performClick()
+        compose.waitUntil(10_000) {
+            ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
+                ?.isVisible(WindowInsetsCompat.Type.ime()) == false
+        }
+        compose.onNodeWithText(text(R.string.search_conversations)).performClick()
         compose.onNodeWithText(text(R.string.search_history)).assertIsDisplayed()
         compose.onNodeWithContentDescription(text(R.string.back)).performClick()
         compose.onNodeWithText("Remember my question").assertIsDisplayed()
@@ -83,14 +116,18 @@ class LaunchTest {
         compose.waitUntil(10_000) {
             compose.onAllNodesWithText("Remember my question").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithContentDescription(text(R.string.library)).performClick()
-        compose.onNodeWithText(text(R.string.settings)).performScrollTo().performClick()
+        compose.onNodeWithContentDescription(text(R.string.open_navigation)).performClick()
+        compose.onNodeWithText(text(R.string.library)).performClick()
+        compose.onNodeWithText(text(R.string.your_collections)).assertIsDisplayed()
+        compose.onNodeWithContentDescription(text(R.string.back)).performClick()
+        compose.onNodeWithContentDescription(text(R.string.open_navigation)).performClick()
+        compose.onNodeWithText(text(R.string.settings)).performClick()
         compose.onNodeWithText(text(R.string.appearance)).performClick()
         compose.onNodeWithText(text(R.string.theme_dark)).performClick()
         compose.onNodeWithText(text(R.string.theme_system)).performClick()
         compose.onNodeWithContentDescription(text(R.string.back)).performClick()
         compose.onNodeWithText(text(R.string.privacy)).performScrollTo().performClick()
-        compose.onNodeWithText(text(R.string.privacy_body)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.privacy_local)).assertIsDisplayed()
     }
 
     @Test
@@ -179,9 +216,9 @@ class LaunchTest {
             .assertCountEquals(0)
         compose.onAllNodesWithText(compose.activity.getString(R.string.progress_percent, 0))
             .assertCountEquals(0)
-        compose.onNodeWithText(compose.activity.getString(R.string.diagnosis_title))
+        compose.onNodeWithText(compose.activity.getString(R.string.welcome_headline))
             .assertIsDisplayed()
-        compose.onNodeWithText(compose.activity.getString(R.string.choose_model))
+        compose.onNodeWithText(compose.activity.getString(R.string.welcome_start))
             .performScrollTo().assertIsDisplayed().performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.SETUP }
         if (model.packages.value.none { it.kind == "model" }) {
@@ -222,7 +259,10 @@ class LaunchTest {
                     compose.activity.getString(R.string.download_selected_model)
                 ).assertIsNotEnabled()
             }
-            compose.onNodeWithText(catalog.models[1].manifest.title)
+            compose.onNodeWithText(
+                compose.activity.getString(R.string.compare_models)
+            ).performScrollTo().performClick()
+            compose.onAllNodesWithText(catalog.models[1].manifest.title)[0]
                 .performScrollTo().assertIsDisplayed()
             compose.onNodeWithText(catalog.models[2].manifest.title)
                 .performScrollTo().assertIsDisplayed()

@@ -139,26 +139,39 @@ class UiParityTest {
                 compose.onAllNodesWithText(text(R.string.follow_up))
                     .fetchSemanticsNodes().isNotEmpty()
             }
-            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
             compose.onNodeWithContentDescription(text(R.string.follow_up_hint))
                 .performTextInput("Keep this follow-up")
-            compose.onNodeWithText(text(R.string.reading)).performClick()
-            compose.onNodeWithText(text(R.string.follow_up)).assertIsDisplayed().performClick()
+            compose.activityRule.scenario.onActivity { activity ->
+                androidx.core.view.WindowCompat.getInsetsController(
+                    activity.window,
+                    activity.window.decorView
+                )
+                    .hide(WindowInsetsCompat.Type.ime())
+            }
+            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             val selectedTitle = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
                 .selectedModel()?.title ?: text(R.string.model_missing)
             compose.onNodeWithContentDescription(
                 compose.activity.getString(R.string.model_choice, selectedTitle)
-            ).performClick()
+            ).performScrollTo().performClick()
             compose.onNodeWithText(text(R.string.manage_models)).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.done)).performClick()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
-            compose.onNodeWithText(text(R.string.reading)).performClick()
+            compose.activityRule.scenario.onActivity { activity ->
+                androidx.core.view.WindowCompat.getInsetsController(
+                    activity.window,
+                    activity.window.decorView
+                )
+                    .hide(WindowInsetsCompat.Type.ime())
+            }
             val label = compose.activity.getString(R.string.read_source, 1, source.title)
             compose.onAllNodesWithContentDescription(label)[0].performScrollTo().performClick()
             compose.onNodeWithText(source.text).assertIsDisplayed()
             compose.onNodeWithContentDescription(text(R.string.back)).performClick()
-            compose.onNodeWithContentDescription(text(R.string.history)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.open_navigation)).performClick()
+            compose.onNodeWithText(text(R.string.search_conversations)).performClick()
             compose.onNodeWithContentDescription(text(R.string.search_history))
                 .performTextInput("no-match-for-this-ui-test")
             compose.onNodeWithText(text(R.string.history_no_match)).performScrollTo()
@@ -171,14 +184,14 @@ class UiParityTest {
                 ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
                     ?.isVisible(WindowInsetsCompat.Type.ime()) == false
             }
-            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             compose.activityRule.scenario.recreate()
             compose.waitUntil(10_000) {
                 compose.onAllNodesWithText(text(R.string.follow_up))
                     .fetchSemanticsNodes().isNotEmpty()
             }
-            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             runBlocking {
                 assertEquals(

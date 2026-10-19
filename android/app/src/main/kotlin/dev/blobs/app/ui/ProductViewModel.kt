@@ -10,6 +10,7 @@ import dev.blobs.app.data.RecoveryExport
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.local.TurnEntity
 import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.data.preferences.ThemeMode
 import java.util.UUID
@@ -68,20 +69,31 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
 
     fun navigate(page: Page) {
         if (page == mutable.value.page) return
+        if (page == Page.SOURCES) mutable.value = mutable.value.copy(browseCollection = null)
         backStack.addLast(mutable.value.page)
         mutable.value = mutable.value.copy(page = page)
         if (page in setOf(Page.BROWSE, Page.SOURCES)) search("")
     }
 
     fun back(): Boolean {
+        if (mutable.value.page == Page.SETUP) {
+            when (setupStep()) {
+                SetupStep.MODEL -> mutable.value = mutable.value.copy(page = Page.WELCOME)
+                SetupStep.LIBRARY -> mutable.value = mutable.value.copy(setupStep = SetupStep.MODEL)
+                SetupStep.READY -> mutable.value = mutable.value.copy(setupStep = SetupStep.LIBRARY)
+            }
+            return true
+        }
         if (backStack.isEmpty()) return false
         mutable.value = mutable.value.copy(page = backStack.removeLast())
         return true
     }
 
     fun welcome(): Job {
+        backStack.clear()
         mutable.value = mutable.value.copy(
             page = Page.WELCOME,
+            setupStep = null,
             options = mutable.value.options.copy(welcomed = true)
         )
         navigate(Page.SETUP)
@@ -98,7 +110,28 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
 
     private fun hasStarterLibrary(): Boolean = catalog.hasStarterLibrary(packages.value)
 
+    fun setupStep(requested: SetupStep? = mutable.value.setupStep): SetupStep = when {
+        requested == SetupStep.MODEL -> SetupStep.MODEL
+        packages.value.none { it.kind == "model" } -> SetupStep.MODEL
+        requested == SetupStep.LIBRARY || !hasStarterLibrary() -> SetupStep.LIBRARY
+        else -> SetupStep.READY
+    }
+
+    fun continueSetup() {
+        if (selectedModel() == null) return
+        mutable.value = mutable.value.copy(
+            setupStep = when (setupStep()) {
+                SetupStep.MODEL -> if (hasStarterLibrary()) SetupStep.READY else SetupStep.LIBRARY
+                SetupStep.LIBRARY -> if (hasStarterLibrary()) SetupStep.READY else SetupStep.LIBRARY
+                SetupStep.READY -> SetupStep.READY
+            }
+        )
+    }
+
     fun finishImport() {
+        if (work.value.importComplete && mutable.value.importOrigin == Page.SETUP) {
+            mutable.value = mutable.value.copy(setupStep = null)
+        }
         container.work.clearNotice()
         val origin = mutable.value.importOrigin
         if (mutable.value.page == Page.IMPORT && backStack.lastOrNull() == origin) {
@@ -145,35 +178,57 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
         mutable.value = mutable.value.copy(page = Page.CHAT)
     }
 
-    fun send(question: String = mutable.value.draft, widen: Boolean = false) = action {
-        if (work.value.busy || question.isBlank()) return@action
-        if (!hasStarterLibrary()) {
-            navigate(Page.SETUP)
-            return@action
-        }
-        val model = selectedModel() ?: run {
-            navigate(Page.MODELS)
-            return@action
-        }
-        val chosen = if (widen) null else selectedScope()
-        if (chosen?.isEmpty() == true) {
-            fail(R.string.empty_scope)
-            return@action
-        }
-        draftLock.withLock {
-            if (widen) container.preferences.selectScope("*")
-            if (container.work.answer(
-                    conversation.value,
-                    question.trim(),
-                    model,
-                    packages.value.toList(),
-                    chosen
-                )
-            ) {
-                mutable.value = mutable.value.copy(draft = "")
+    fun send(question: String = mutable.value.draft) = submit(question)
+
+    fun retry(turn: TurnEntity, widen: Boolean = false) = submit(turn.question, turn, widen)
+
+    private fun submit(question: String, retry: TurnEntity? = null, widen: Boolean = false) =
+        action {
+            if (work.value.busy || question.isBlank()) return@action
+            if (!hasStarterLibrary()) {
+                navigate(Page.SETUP)
+                return@action
+            }
+            val model = (
+                if (retry == null) {
+                    selectedModel()
+                } else {
+                    packages.value.find {
+                        it.kind == "model" && it.sha256 == retry.model.substringAfterLast(" · ")
+                    }
+                }
+                ) ?: run {
+                navigate(Page.MODELS)
+                return@action
+            }
+            val chosen = when {
+                widen -> null
+
+                retry != null -> retry.scope.takeUnless {
+                    it == "*"
+                }?.split('\n')?.filter(String::isNotBlank)?.toSet()
+
+                else -> selectedScope()
+            }
+            if (chosen?.isEmpty() == true) {
+                fail(R.string.empty_scope)
+                return@action
+            }
+            draftLock.withLock {
+                if (widen) container.preferences.selectScope("*")
+                if (container.work.answer(
+                        conversation.value,
+                        question.trim(),
+                        model,
+                        packages.value.toList(),
+                        chosen,
+                        retry?.id
+                    )
+                ) {
+                    if (retry == null) mutable.value = mutable.value.copy(draft = "")
+                }
             }
         }
-    }
 
     fun selectedModel(): PackageEntity? =
         packages.value.find { it.kind == "model" && it.key == mutable.value.options.model }
@@ -231,10 +286,16 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
     fun search(query: String, offset: Int = 0) {
         searchJob?.cancel()
         mutable.value = mutable.value.copy(query = query, searching = true, offset = offset)
+        val browseKey = mutable.value.browseCollection.takeIf { mutable.value.page == Page.BROWSE }
+        val searchPackages = if (browseKey != null) {
+            packages.value.filter { it.key == browseKey }.map { it.copy(enabled = true) }
+        } else {
+            packages.value
+        }
         searchJob = action {
             val result =
                 withContext(Dispatchers.IO) {
-                    container.library.browse(packages.value, query, offset)
+                    container.library.browse(searchPackages, query, offset)
                 }
             mutable.value =
                 mutable.value.copy(
@@ -243,6 +304,11 @@ class ProductViewModel(private val container: AppContainer) : ViewModel() {
                     searching = false
                 )
         }
+    }
+
+    fun browseCollection(pack: PackageEntity) {
+        mutable.value = mutable.value.copy(browseCollection = pack.key)
+        navigate(Page.BROWSE)
     }
 
     fun inspect(uri: Uri) {

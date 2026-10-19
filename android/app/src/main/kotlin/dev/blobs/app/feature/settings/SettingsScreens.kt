@@ -69,17 +69,6 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
         }
     )
     ScrollPage {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Heading(R.string.settings_title)
-                Text(
-                    stringResource(R.string.settings_body),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Image(painterResource(R.drawable.blob_wave), null, Modifier.size(76.dp))
-        }
         Column {
             SectionLabel(R.string.settings_experience)
             MenuRow(
@@ -111,7 +100,7 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
                 )
             ) { model.navigate(Page.STORAGE) }
             MenuRow(
-                R.string.history,
+                R.string.conversation_data,
                 pluralStringResource(R.plurals.conversations_summary, count, count)
             ) {
                 model.navigate(Page.DATA)
@@ -133,8 +122,7 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
 @Composable
 fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewModel) {
     ScrollPage {
-        Heading(R.string.appearance_title)
-        if (LocalDensity.current.fontScale < 1.5f) Body(R.string.appearance_body)
+        Body(R.string.appearance_body)
         val themes = listOf(
             ThemeMode.SYSTEM to R.string.theme_system,
             ThemeMode.LIGHT to R.string.theme_light,
@@ -217,7 +205,14 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
             Text(
                 stringResource(R.string.reading_preview),
                 Modifier.fillMaxWidth().padding(20.dp),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize =
+                        MaterialTheme.typography.bodyLarge.fontSize *
+                            (scale / state.options.textScale),
+                    lineHeight =
+                        MaterialTheme.typography.bodyLarge.lineHeight *
+                            (scale / state.options.textScale)
+                )
             )
         }
         Row(
@@ -237,38 +232,22 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
 }
 
 @Composable
-fun AboutScreen() {
-    val context = LocalContext.current
-    val notices by produceState("") {
-        value = withContext(Dispatchers.IO) {
-            context.assets.list("licenses").orEmpty().sorted().joinToString("\n\n") { file ->
-                "$file\n\n" +
-                    context.assets.open("licenses/$file").bufferedReader().use { it.readText() }
-            }
-        }
-    }
-    androidx.compose.foundation.lazy.LazyColumn(
-        modifier = Modifier.fillMaxWidth().padding(24.dp),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(20.dp)
-    ) {
-        item { Heading(R.string.about) }
-        item { Body(R.string.about_body) }
-        item { Heading(R.string.licenses) }
-        val chunks = notices.chunked(2400)
-        items(chunks.size) { index -> Text(chunks[index]) }
-    }
-}
-
-@Composable
 fun DataScreen(busy: Boolean, model: ProductViewModel, export: () -> Unit) {
     var deleting by remember { mutableStateOf(false) }
     ScrollPage {
-        Heading(R.string.history)
+        Heading(R.string.data_heading)
         Body(R.string.export_body)
-        PrimaryAction(R.string.export, onClick = export)
+        val conversations by model.conversations.collectAsStateWithLifecycle()
+        val count = conversations.count { it.title.isNotBlank() || it.draft.isNotBlank() }
+        Text(
+            pluralStringResource(R.plurals.conversation_count, count, count),
+            style = MaterialTheme.typography.titleLarge
+        )
+        if (busy) Body(R.string.busy_help)
+        PrimaryAction(R.string.export, count > 0, onClick = export)
         TextButton(onClick = {
             deleting = true
-        }, enabled = !busy) { Text(stringResource(R.string.delete_all)) }
+        }, enabled = !busy && count > 0) { Text(stringResource(R.string.delete_all)) }
     }
     if (deleting) {
         AlertDialog(

@@ -26,6 +26,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,6 +61,8 @@ class WorkController(
 
     @Volatile private var interrupted = false
 
+    @Volatile private var discardTransfer = false
+
     init {
         scope.launch {
             try {
@@ -82,10 +85,11 @@ class WorkController(
         question: String,
         model: PackageEntity,
         packages: List<PackageEntity>,
-        allowed: Set<String>?
+        allowed: Set<String>?,
+        retryTurnId: String? = null
     ): Boolean {
         if (question.isBlank() || allowed?.isEmpty() == true) return false
-        val id = UUID.randomUUID().toString()
+        val id = retryTurnId ?: UUID.randomUUID().toString()
         if (!reserveAnswer(id, thread)) return false
         lastPerformanceSnapshot = null
         val accepted = CompletableDeferred<Boolean>()
@@ -96,13 +100,21 @@ class WorkController(
             var begun = false
             try {
                 val dao = db.conversations()
-                val history = dao.turns(thread).takeLast(2)
+                val previous = dao.turns(thread)
+                val retry = retryTurnId?.let { retryId ->
+                    previous.lastOrNull()?.takeIf {
+                        it.id == retryId && it.question == question &&
+                            it.status !in setOf("COMPLETE", "RUNNING")
+                    } ?: return@launch
+                }
+                val history = previous.filterNot { it.id == retryTurnId }.takeLast(2)
                 val turn = TurnEntity(
                     id, thread, question, "", "RUNNING",
                     "${model.title} · ${model.version} · ${model.sha256}",
-                    allowed?.joinToString("\n") ?: "*", "[]", System.currentTimeMillis()
+                    allowed?.joinToString("\n") ?: "*", "[]",
+                    retry?.createdAt ?: System.currentTimeMillis()
                 )
-                dao.beginTurn(turn)
+                dao.beginTurn(turn, clearDraft = retry == null)
                 begun = true
                 accepted.complete(true)
                 val query = RetrievalQuery.resolve(question, history.lastOrNull()?.question)
@@ -249,7 +261,19 @@ class WorkController(
                 mutable.update { it.copy(notice = notice) }
             } finally {
                 accepted.complete(false)
-                mutable.update { it.copy(busy = false) }
+                mutable.update {
+                    if (begun) {
+                        it.copy(busy = false)
+                    } else {
+                        it.copy(
+                            busy = false,
+                            turnId = "",
+                            threadId = "",
+                            text = "",
+                            evidence = "[]"
+                        )
+                    }
+                }
             }
         }
         return accepted.await()
@@ -262,13 +286,15 @@ class WorkController(
         stopped = false
         interrupted = false
         mutable.value =
-            WorkState(
-                ready = true,
+            mutable.value.copy(
                 busy = true,
                 turnId = id,
                 threadId = thread,
+                text = "",
+                evidence = "[]",
                 startedAt = SystemClock.elapsedRealtime(),
-                pendingImport = mutable.value.pendingImport
+                transferActive = false,
+                notice = null
             )
         return true
     }
@@ -277,48 +303,50 @@ class WorkController(
     fun install(uri: Uri, manifest: PackageManifest): Boolean {
         if (!mutable.value.ready || mutable.value.busy) return false
         val pending = mutable.value.pendingImport
-        if (pending != null && pending.manifest.key != manifest.key) {
+        if ((pending != null && pending.manifest.key != manifest.key) ||
+            (mutable.value.download != null && mutable.value.download?.manifest != manifest)
+        ) {
             mutable.update { it.copy(notice = R.string.finish_pending_import) }
             return false
         }
-        mutable.value =
-            WorkState(
-                ready = true,
-                busy = true,
-                total = manifest.bytes,
-                importTitle = manifest.title
-            )
+        discardTransfer = false
+        val asset = mutable.value.download?.takeIf { it.manifest == manifest }
+        mutable.value = WorkState(
+            ready = true, busy = true, total = manifest.bytes,
+            importTitle = manifest.title, packageKind = manifest.kind,
+            transferActive = true, download = asset, inAppDownload = asset != null,
+            downloadTotal = asset?.downloadBytes ?: 0, installTotal = manifest.bytes
+        )
         job = scope.launch {
             try {
                 installer.install(uri, manifest) { bytes ->
                     mutable.update { it.copy(progress = bytes) }
                 }
                 downloader.removeInstalledArchive(uri)
-                mutable.value =
-                    WorkState(
-                        ready = true,
+                mutable.update {
+                    it.copy(
+                        busy = false,
+                        transferActive = false,
                         notice = R.string.package_added,
-                        importTitle = manifest.title,
-                        importComplete = true
+                        importComplete = true,
+                        download = null,
+                        pendingImport = null,
+                        progress = manifest.bytes,
+                        total = manifest.bytes
                     )
+                }
             } catch (_: CancellationException) {
-                mutable.value = WorkState(
-                    ready = true,
-                    pendingImport = runCatching { installer.pending() }.getOrNull()
-                )
+                pauseTransfer(R.string.download_paused)
             } catch (error: Exception) {
-                mutable.value =
-                    WorkState(
-                        ready = true,
-                        pendingImport = runCatching { installer.pending() }.getOrNull(),
-                        notice = if (error.message ==
-                            "STORAGE"
-                        ) {
-                            R.string.storage_failed
-                        } else {
-                            R.string.import_failed
-                        }
-                    )
+                pauseTransfer(
+                    if (error.message ==
+                        "STORAGE"
+                    ) {
+                        R.string.storage_failed
+                    } else {
+                        R.string.import_failed
+                    }
+                )
             }
         }
         return true
@@ -327,16 +355,18 @@ class WorkController(
     @Synchronized
     fun importDocuments(uris: List<Uri>, title: String): Boolean {
         if (!mutable.value.ready || mutable.value.busy) return false
-        if (mutable.value.pendingImport != null) {
+        if (mutable.value.hasPendingTransfer) {
             mutable.update { it.copy(notice = R.string.finish_pending_import) }
             return false
         }
         require(uris.isNotEmpty())
+        discardTransfer = false
         mutable.value = WorkState(
             ready = true,
             busy = true,
             importTitle = title,
-            packageKind = "library"
+            packageKind = "library",
+            transferActive = true
         )
         job = scope.launch {
             try {
@@ -351,11 +381,7 @@ class WorkController(
                     packageKind = "library"
                 )
             } catch (_: CancellationException) {
-                mutable.value = WorkState(
-                    ready = true,
-                    pendingImport = runCatching { installer.pending() }.getOrNull(),
-                    notice = R.string.download_paused
-                )
+                pauseTransfer(R.string.download_paused)
             } catch (error: Exception) {
                 mutable.value = WorkState(
                     ready = true,
@@ -388,13 +414,18 @@ class WorkController(
     fun downloadAndInstall(asset: DownloadablePackage): Boolean {
         if (!mutable.value.ready || mutable.value.busy) return false
         val pending = mutable.value.pendingImport
-        if (pending != null && pending.manifest.key != asset.manifest.key) {
+        if ((pending != null && pending.manifest.key != asset.manifest.key) ||
+            (mutable.value.download != null && mutable.value.download != asset)
+        ) {
             mutable.update { it.copy(notice = R.string.finish_pending_import) }
             return false
         }
+        discardTransfer = false
         mutable.value = WorkState(
             ready = true,
             busy = true,
+            transferActive = true,
+            download = asset,
             total = asset.downloadBytes,
             importTitle = asset.manifest.title,
             downloading = true,
@@ -428,16 +459,10 @@ class WorkController(
                     packageKind = asset.manifest.kind
                 )
             } catch (_: CancellationException) {
-                mutable.value = WorkState(
-                    ready = true,
-                    notice = R.string.download_paused,
-                    pendingImport = runCatching { installer.pending() }.getOrNull()
-                )
+                pauseTransfer(R.string.download_paused)
             } catch (error: Exception) {
-                mutable.value = WorkState(
-                    ready = true,
-                    pendingImport = runCatching { installer.pending() }.getOrNull(),
-                    notice = when (error.message) {
+                pauseTransfer(
+                    when (error.message) {
                         "STORAGE" -> R.string.storage_failed
                         "DOWNLOAD_HOST", "DOWNLOAD_REDIRECT" -> R.string.download_source_failed
                         else -> R.string.download_failed
@@ -494,22 +519,65 @@ class WorkController(
     }
 
     fun resumeImport() {
-        state.value.pendingImport?.let { install(it.uri, it.manifest) }
+        val pending = state.value.pendingImport
+        if (pending != null) {
+            install(pending.uri, pending.manifest)
+        } else {
+            state.value.download?.let(::downloadAndInstall)
+        }
     }
 
+    @Synchronized
     fun discardImport() {
-        if (state.value.busy) return
+        if (state.value.busy) {
+            if (!state.value.transferActive) return
+            discardTransfer = true
+            job?.cancel()
+            return
+        }
+        mutable.update { it.copy(busy = true, turnId = "", threadId = "") }
+        job = null
         scope.launch {
             try {
-                mutate {
-                    installer.discardPending()
-                    mutable.update {
-                        it.copy(pendingImport = null, notice = R.string.import_cancelled)
-                    }
+                installer.discardPending()
+                mutable.value.download?.let(downloader::discard)
+                mutable.update {
+                    it.copy(
+                        pendingImport = null,
+                        download = null,
+                        notice = R.string.import_cancelled
+                    )
                 }
             } catch (_: Exception) {
                 mutable.update { it.copy(notice = R.string.save_failed) }
+            } finally {
+                mutable.update { it.copy(busy = false) }
             }
+        }
+    }
+
+    private suspend fun pauseTransfer(notice: Int) = withContext(NonCancellable) {
+        val transfer = mutable.value
+        val pending = runCatching { installer.pending() }.getOrNull()
+        if (discardTransfer) {
+            val discarded = runCatching {
+                installer.discardPending()
+                transfer.download?.let(downloader::discard)
+            }.isSuccess
+            mutable.value = transfer.copy(
+                busy = false,
+                transferActive = false,
+                download = if (discarded) null else transfer.download,
+                pendingImport = if (discarded) null else pending,
+                notice = if (discarded) R.string.import_cancelled else R.string.save_failed
+            )
+        } else {
+            mutable.value = transfer.copy(
+                busy = false,
+                transferActive = false,
+                pendingImport = pending,
+                notice = notice
+            )
         }
     }
 }

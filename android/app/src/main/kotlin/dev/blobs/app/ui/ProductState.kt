@@ -25,14 +25,18 @@ enum class Page {
     ABOUT
 }
 
+enum class SetupStep { MODEL, LIBRARY, READY }
+
 data class ProductState(
     val page: Page = Page.CHAT,
     val draft: String = "",
     val options: PreferencesStore.Options = PreferencesStore.Options(),
     val loaded: Boolean = false,
+    val setupStep: SetupStep? = null,
     val notice: Int? = null,
     val sources: List<Evidence> = emptyList(),
     val query: String = "",
+    val browseCollection: String? = null,
     val offset: Int = 0,
     val hasMore: Boolean = false,
     val searching: Boolean = false,

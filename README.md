@@ -6,7 +6,7 @@ The active implementation is in [`android/`](android/README.md). Reproducible co
 
 ## What is implemented
 
-- First-run setup for downloading and verifying a model and knowledge library in the app. Local package import is available later in Settings.
+- First-run setup for downloading and verifying a model and knowledge library in the app. Add documents or import a library from Library; manage models in Settings.
 - Native CPU inference through a pinned llama.cpp revision.
 - SQLite FTS5 retrieval with immutable source evidence.
 - Streamed answers with `[S1]` source references and in-app article reading.
@@ -41,7 +41,7 @@ uv run --locked --project ../corpus python tools/fetch_runtime.py
 .\gradlew.bat verify
 ```
 
-The first preparation/build needs network access on the development computer. During first-run setup, users choose when to download the model and library in the app; once both are installed, chat and research work offline. Local package installation in Settings supports air-gapped setup.
+The first preparation/build needs network access on the development computer. During first-run setup, users choose when to download the model and library in the app; once both are installed, chat and research work offline. Local package installation in Library and Settings → Models supports air-gapped setup.
 
 See the [Android build and import guide](android/README.md) and [corpus preparation guide](corpus/README.md).
 For code ownership, naming, checks and source delivery, see [Contributing](CONTRIBUTING.md).

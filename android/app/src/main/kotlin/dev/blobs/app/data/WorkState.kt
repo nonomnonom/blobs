@@ -1,5 +1,6 @@
 package dev.blobs.app.data
 
+import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.data.packages.PendingImport
 
 data class WorkState(
@@ -20,8 +21,13 @@ data class WorkState(
     val inAppDownload: Boolean = false,
     val packageKind: String = "",
     val downloadTotal: Long = 0,
-    val installTotal: Long = 0
+    val installTotal: Long = 0,
+    val download: DownloadablePackage? = null,
+    val transferActive: Boolean = false
 ) {
+    val hasPendingTransfer: Boolean
+        get() = pendingImport != null || (download != null && !importComplete)
+
     val phaseProgress: Float
         get() {
             val denominator = downloadTotal + installTotal
@@ -43,10 +49,10 @@ data class WorkState(
         if (inAppDownload && packageKind in kinds && packageKind !in ready) {
             progress += when {
                 importComplete -> 1f
-                busy -> phaseProgress
-                else -> 0f
+                else -> phaseProgress
             }
         }
-        return (progress / kinds.size).coerceIn(0f, 1f)
+        val fraction = (progress / kinds.size).coerceIn(0f, 1f)
+        return if (inAppDownload && !importComplete) fraction.coerceAtMost(.99f) else fraction
     }
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -57,6 +58,8 @@ import dev.blobs.app.feature.library.ReaderScreen
 import dev.blobs.app.feature.settings.AboutScreen
 import dev.blobs.app.feature.settings.AppearanceScreen
 import dev.blobs.app.feature.settings.DataScreen
+import dev.blobs.app.feature.settings.HelpScreen
+import dev.blobs.app.feature.settings.PrivacyScreen
 import dev.blobs.app.feature.settings.SettingsScreen
 import dev.blobs.app.feature.settings.StorageScreen
 import dev.blobs.app.feature.setup.SetupScreen
@@ -151,227 +154,185 @@ fun BlobsApp(container: AppContainer) {
     ) {
         if (reviewingImport) model.dismissImport() else model.back()
     }
+    val lessMotion = state.options.reducedMotion || systemLessMotion()
+    val welcomeScroll = rememberScrollState()
+    val readyScroll = rememberScrollState()
     BlobsTheme(mode = theme.themeMode) {
         CompositionLocalProvider(
+            LocalLessMotion provides lessMotion,
             LocalDensity provides
                 Density(density.density, density.fontScale * state.options.textScale)
         ) {
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                    if (!state.loaded) {
-                        Column(
-                            Modifier.padding(32.dp),
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
-                        ) {
-                            if (state.notice == null && work.notice == null) {
-                                CircularProgressIndicator()
-                                Text(stringResource(R.string.loading))
-                            }
-                            (state.notice ?: work.notice)?.let { Notice(it, model::dismissNotice) }
-                            if (state.notice != null || work.notice != null) {
-                                Body(R.string.recovery_copy_body)
-                                PrimaryAction(R.string.recovery_copy) {
-                                    recoveryExporter.launch("blobs-recovery.zip")
-                                }
-                            }
-                        }
-                    } else if (!state.options.welcomed || state.page == Page.WELCOME) {
-                        WelcomeScreen(
-                            model.catalog,
-                            theme.preferencesUnavailable,
-                            prepare = model::welcome
-                        )
-                    } else {
-                        Column(
-                            Modifier.widthIn(
-                                max = 720.dp
-                            ).fillMaxSize().safeDrawingPadding().imePadding()
-                        ) {
-                            Row(
-                                Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (!reviewingImport && state.page == Page.CHAT) {
-                                    GlyphButton(R.drawable.ic_history, R.string.history) {
-                                        model.navigate(Page.HISTORY)
+                ExperienceCanvas(
+                    world = !state.options.welcomed || state.page == Page.WELCOME ||
+                        (
+                            state.page == Page.SETUP &&
+                                model.setupStep(state.setupStep) == SetupStep.READY
+                            ),
+                    chat = state.page == Page.CHAT,
+                    home = turns.isEmpty(),
+                    worldScroll = if (state.page == Page.SETUP) readyScroll else welcomeScroll
+                ) {
+                    AppNavigation(state, conversations, thread, model) { openNavigation ->
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                            if (!state.loaded) {
+                                Column(
+                                    Modifier.padding(32.dp),
+                                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                                ) {
+                                    if (state.notice == null && work.notice == null) {
+                                        CircularProgressIndicator()
+                                        Text(stringResource(R.string.loading))
                                     }
-                                } else {
-                                    GlyphButton(R.drawable.ic_arrow_back, R.string.back) {
-                                        if (reviewingImport) model.dismissImport() else model.back()
+                                    (state.notice ?: work.notice)?.let {
+                                        Notice(it, model::dismissNotice)
                                     }
-                                }
-                                Text(
-                                    stringResource(
-                                        if (reviewingImport) {
-                                            R.string.review_package
-                                        } else if (state.page == Page.IMPORT &&
-                                            work.inAppDownload
-                                        ) {
-                                            R.string.download_progress_title
-                                        } else if (state.page == Page.CHAT &&
-                                            turns.isEmpty()
-                                        ) {
-                                            R.string.app_wordmark
-                                        } else if (state.page == Page.SETUP &&
-                                            packages.any { it.kind == "model" } &&
-                                            model.catalog.hasStarterLibrary(packages)
-                                        ) {
-                                            R.string.all_set
-                                        } else {
-                                            pageTitle(state.page)
+                                    if (state.notice != null || work.notice != null) {
+                                        Body(R.string.recovery_copy_body)
+                                        PrimaryAction(R.string.recovery_copy) {
+                                            recoveryExporter.launch("blobs-recovery.zip")
                                         }
-                                    ),
-                                    Modifier.weight(1f),
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = if (!reviewingImport &&
-                                        state.page == Page.CHAT &&
-                                        turns.isEmpty()
-                                    ) {
-                                        MaterialTheme.typography.headlineLarge
-                                    } else {
-                                        MaterialTheme.typography.titleMedium
                                     }
+                                }
+                            } else if (!state.options.welcomed || state.page == Page.WELCOME) {
+                                WelcomeScreen(
+                                    theme.preferencesUnavailable,
+                                    scroll = welcomeScroll,
+                                    prepare = model::welcome
                                 )
-                                if (reviewingImport) {
-                                    androidx.compose.foundation.layout.Spacer(
-                                        Modifier.widthIn(min = 52.dp)
-                                    )
-                                } else if (state.page == Page.CHAT) {
-                                    GlyphButton(R.drawable.ic_auto_stories, R.string.library) {
-                                        model.navigate(Page.LIBRARY)
-                                    }
-                                } else if (state.page == Page.LIBRARY) {
-                                    GlyphButton(R.drawable.ic_settings, R.string.settings) {
-                                        model.navigate(Page.SETTINGS)
-                                    }
-                                } else if (state.page == Page.SETUP &&
-                                    (
-                                        packages.none { it.kind == "model" } ||
-                                            packages.none { it.kind == "library" }
-                                        )
+                            } else {
+                                Column(
+                                    Modifier.widthIn(
+                                        max = 720.dp
+                                    ).fillMaxSize().safeDrawingPadding().imePadding()
                                 ) {
-                                    androidx.compose.foundation.layout.Spacer(
-                                        Modifier.widthIn(min = 52.dp)
-                                    )
-                                } else {
-                                    GlyphButton(R.drawable.ic_edit_square, R.string.new_chat) {
-                                        model.newConversation()
-                                    }
-                                }
-                            }
-                            if (!reviewingImport && state.page != Page.IMPORT) {
-                                (state.notice ?: work.notice)?.let {
-                                    Notice(it, model::dismissNotice)
-                                }
-                                if ((work.busy && work.total > 0) || work.pendingImport != null) {
-                                    androidx.compose.material3.TextButton(onClick = {
-                                        model.navigate(Page.IMPORT)
-                                    }, modifier = Modifier.fillMaxWidth()) {
-                                        Text(
-                                            if (work.busy) {
-                                                stringResource(
-                                                    R.string.downloading_package,
-                                                    work.importTitle,
-                                                    (work.phaseProgress * 100).toInt()
+                                    AppHeader(state, turns.isEmpty(), model, openNavigation)
+                                    if (!reviewingImport && state.page != Page.IMPORT) {
+                                        (state.notice ?: work.notice)?.let {
+                                            Notice(it, model::dismissNotice)
+                                        }
+                                        if (work.transferActive || work.hasPendingTransfer) {
+                                            androidx.compose.material3.TextButton(onClick = {
+                                                model.navigate(Page.IMPORT)
+                                            }, modifier = Modifier.fillMaxWidth()) {
+                                                Text(
+                                                    if (work.transferActive) {
+                                                        stringResource(
+                                                            R.string.downloading_package,
+                                                            work.importTitle,
+                                                            (work.phaseProgress * 100).toInt()
+                                                        )
+                                                    } else {
+                                                        stringResource(R.string.paused_import)
+                                                    }
                                                 )
+                                            }
+                                        }
+                                    }
+                                    val holder = rememberSaveableStateHolder()
+                                    Crossfade(
+                                        state.page to reviewingImport,
+                                        animationSpec = tween(
+                                            if (lessMotion) 0 else 220
+                                        ),
+                                        label = "page",
+                                        modifier = Modifier.weight(1f)
+                                    ) { (page, reviewing) ->
+                                        holder.SaveableStateProvider(
+                                            if (reviewing) {
+                                                "import-review"
+                                            } else if (page ==
+                                                Page.CHAT
+                                            ) {
+                                                "chat-$thread"
+                                            } else if (page ==
+                                                Page.READER
+                                            ) {
+                                                "reader-${state.reader?.id}-" +
+                                                    state.reader?.text.hashCode()
                                             } else {
-                                                stringResource(R.string.paused_import)
+                                                page.name
                                             }
-                                        )
-                                    }
-                                }
-                            }
-                            val holder = rememberSaveableStateHolder()
-                            Crossfade(
-                                state.page to reviewingImport,
-                                animationSpec = tween(if (state.options.reducedMotion) 0 else 220),
-                                label = "page",
-                                modifier = Modifier.weight(1f)
-                            ) { (page, reviewing) ->
-                                holder.SaveableStateProvider(
-                                    if (reviewing) {
-                                        "import-review"
-                                    } else if (page ==
-                                        Page.CHAT
-                                    ) {
-                                        "chat-$thread"
-                                    } else if (page ==
-                                        Page.READER
-                                    ) {
-                                        "reader-${state.reader?.id}-${state.reader?.text.hashCode()}"
-                                    } else {
-                                        page.name
-                                    }
-                                ) {
-                                    if (reviewing) {
-                                        ImportReviewScreen(state, packages, model)
-                                    } else {
-                                        when (page) {
-                                            Page.CHAT -> ChatScreen(state, turns, work, model)
+                                        ) {
+                                            if (reviewing) {
+                                                ImportReviewScreen(state, packages, model)
+                                            } else {
+                                                when (page) {
+                                                    Page.CHAT -> ChatScreen(
+                                                        state,
+                                                        turns,
+                                                        work,
+                                                        model
+                                                    )
 
-                                            Page.WELCOME -> Unit
+                                                    Page.WELCOME -> Unit
 
-                                            Page.SETUP -> SetupScreen(packages, model)
+                                                    Page.SETUP -> SetupScreen(
+                                                        packages,
+                                                        model,
+                                                        readyScroll
+                                                    )
 
-                                            Page.IMPORT -> ImportScreen(state, work, model)
+                                                    Page.IMPORT -> ImportScreen(state, work, model)
 
-                                            Page.HISTORY -> HistoryScreen(
-                                                conversations,
-                                                work.busy,
-                                                model
-                                            )
+                                                    Page.HISTORY -> HistoryScreen(
+                                                        conversations,
+                                                        work.busy,
+                                                        model
+                                                    )
 
-                                            Page.LIBRARY -> LibraryScreen(
-                                                packages,
-                                                model,
-                                                pickFile,
-                                                pickDocuments,
-                                                exportCollection
-                                            )
+                                                    Page.LIBRARY -> LibraryScreen(
+                                                        packages,
+                                                        model,
+                                                        pickFile,
+                                                        pickDocuments,
+                                                        exportCollection
+                                                    )
 
-                                            Page.MODELS -> ModelsScreen(
-                                                packages,
-                                                work,
-                                                model,
-                                                pickFile
-                                            )
+                                                    Page.MODELS -> ModelsScreen(
+                                                        packages,
+                                                        work,
+                                                        model,
+                                                        pickFile
+                                                    )
 
-                                            Page.BROWSE, Page.SOURCES -> BrowseScreen(state, model)
+                                                    Page.BROWSE, Page.SOURCES -> BrowseScreen(
+                                                        state,
+                                                        model
+                                                    )
 
-                                            Page.READER -> ReaderScreen(state.reader, model)
+                                                    Page.READER -> ReaderScreen(state.reader, model)
 
-                                            Page.STORAGE -> StorageScreen(
-                                                packages,
-                                                work,
-                                                model,
-                                                pickFile
-                                            )
+                                                    Page.STORAGE -> StorageScreen(
+                                                        packages,
+                                                        work,
+                                                        model,
+                                                        pickFile
+                                                    )
 
-                                            Page.SETTINGS -> SettingsScreen(model, theme.themeMode)
+                                                    Page.SETTINGS -> SettingsScreen(
+                                                        model,
+                                                        theme.themeMode
+                                                    )
 
-                                            Page.APPEARANCE -> AppearanceScreen(
-                                                state,
-                                                theme.themeMode,
-                                                model
-                                            )
+                                                    Page.APPEARANCE -> AppearanceScreen(
+                                                        state,
+                                                        theme.themeMode,
+                                                        model
+                                                    )
 
-                                            Page.DATA -> DataScreen(work.busy, model) {
-                                                exporter.launch("blobs-conversations.md")
+                                                    Page.DATA -> DataScreen(work.busy, model) {
+                                                        exporter.launch("blobs-conversations.md")
+                                                    }
+
+                                                    Page.PRIVACY -> PrivacyScreen()
+
+                                                    Page.HELP -> HelpScreen(lessMotion)
+
+                                                    Page.ABOUT -> AboutScreen()
+                                                }
                                             }
-
-                                            Page.PRIVACY -> ScrollPage {
-                                                Heading(R.string.privacy)
-                                                Body(R.string.privacy_body)
-                                            }
-
-                                            Page.HELP -> ScrollPage {
-                                                Heading(R.string.help)
-                                                Body(R.string.help_body)
-                                            }
-
-                                            Page.ABOUT -> AboutScreen()
                                         }
                                     }
                                 }
@@ -384,12 +345,13 @@ fun BlobsApp(container: AppContainer) {
     }
 }
 
-private fun pageTitle(page: Page): Int = when (page) {
+internal fun pageTitle(page: Page): Int = when (page) {
     Page.CHAT -> R.string.chat_title
     Page.WELCOME -> R.string.app_wordmark
     Page.SETUP -> R.string.setup_progress_title
     Page.IMPORT -> R.string.import_header
-    Page.HISTORY, Page.DATA -> R.string.history
+    Page.HISTORY -> R.string.history
+    Page.DATA -> R.string.conversation_data
     Page.LIBRARY -> R.string.library
     Page.BROWSE -> R.string.browse
     Page.SOURCES -> R.string.sources

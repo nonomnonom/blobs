@@ -42,14 +42,15 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-internal fun OptionalLibraryOption(
+internal fun LibraryDownloadCard(
     library: DownloadablePackage,
     enabled: Boolean,
     onDownload: () -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Column(
             Modifier.fillMaxWidth().padding(20.dp),
@@ -57,190 +58,80 @@ internal fun OptionalLibraryOption(
         ) {
             Text(library.manifest.title, style = MaterialTheme.typography.titleLarge)
             if (library.description.isNotBlank()) {
-                Text(library.description, style = MaterialTheme.typography.bodyLarge)
+                Text(library.description, style = MaterialTheme.typography.bodyMedium)
             }
-            Text(
-                stringResource(R.string.optional_library_size, fileSize(library.downloadBytes)),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (library.language.isNotBlank() || library.publisher.isNotBlank()) {
+            androidx.compose.foundation.layout.FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
-                    stringResource(
-                        R.string.library_asset_details,
-                        library.language.ifBlank { "Reference" },
-                        library.publisher.ifBlank { "Blobs" }
-                    ),
+                    fileSize(library.downloadBytes),
+                    Modifier,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                TextButton(onClick = onDownload, enabled = enabled) {
+                    Text(stringResource(R.string.download_library))
+                }
             }
-            Text(
-                stringResource(R.string.library_asset_license, library.manifest.license),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            PrimaryAction(R.string.download_library, enabled, onDownload)
+            var details by remember { mutableStateOf(false) }
+            TextButton(onClick = {
+                details = !details
+            }) { Text(stringResource(R.string.source_details)) }
+            if (details) {
+                Text(
+                    listOf(
+                        library.publisher,
+                        library.language,
+                        library.manifest.license
+                    ).filter(String::isNotBlank).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }
 
 @Composable
 internal fun CatalogStatus(snapshot: CatalogSnapshot, busy: Boolean, refresh: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        val message = when {
-            snapshot.refreshing -> stringResource(R.string.library_update_checking)
+    val message = when {
+        snapshot.refreshing -> stringResource(R.string.library_update_checking)
 
-            snapshot.lastCheckedAt != null -> stringResource(
-                R.string.library_update_checked,
-                DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
-                    .format(Date(snapshot.lastCheckedAt))
-            )
+        snapshot.lastCheckedAt != null -> stringResource(
+            R.string.library_update_checked,
+            DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
+                .format(Date(snapshot.lastCheckedAt))
+        )
 
-            else -> stringResource(R.string.library_update_offline_hint)
-        }
+        else -> stringResource(R.string.library_update_offline_hint)
+    }
+    val status: @Composable (Modifier) -> Unit = { modifier ->
         Text(
             message,
-            modifier = Modifier.weight(1f).padding(top = 12.dp),
+            modifier,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+    val action: @Composable () -> Unit = {
         TextButton(onClick = refresh, enabled = !snapshot.refreshing && !busy) {
             Text(stringResource(R.string.library_update_action))
         }
     }
-}
-
-@Composable
-internal fun PackageCard(
-    pack: PackageEntity,
-    busy: Boolean,
-    model: ProductViewModel,
-    artwork: Boolean = false,
-    onExport: () -> Unit = {}
-) {
-    var removing by remember { mutableStateOf(false) }
-    val packages by model.packages.collectAsStateWithLifecycle()
-    val lastModel = pack.kind == "model" && packages.count { it.kind == "model" } <= 1
-    val fallback = packages.firstOrNull { it.kind == "model" && it.key != pack.key }
-    val large = LocalDensity.current.fontScale >= 1.5f
-    Surface(
-        color = if (artwork) {
-            MaterialTheme.colorScheme.secondaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        },
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Column {
-            if (artwork && !large) {
-                Image(
-                    painterResource(R.drawable.library_world),
-                    null,
-                    Modifier.fillMaxWidth().height(136.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            Column(
-                Modifier.fillMaxWidth().padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(pack.title, style = MaterialTheme.typography.titleLarge)
-                Text(
-                    "${pack.version} · ${fileSize(pack.bytes)}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(pack.license, style = MaterialTheme.typography.bodyMedium)
-                if (pack.kind == "library") {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.collection_toggle))
-                            Text(
-                                stringResource(R.string.collection_toggle_help),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = pack.enabled,
-                            onCheckedChange = { model.setLibraryEnabled(pack, it) },
-                            enabled = !busy
-                        )
-                    }
-                }
-                FlowRow(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (pack.kind == "library") {
-                        TextButton(onClick = { model.navigate(Page.BROWSE) }) {
-                            Text(stringResource(R.string.take_look))
-                        }
-                        TextButton(onClick = onExport, enabled = !busy) {
-                            Text(stringResource(R.string.export_collection))
-                        }
-                    }
-                    if (pack.kind == "model") {
-                        val selected = model.selectedModel()?.key == pack.key
-                        Button(onClick = {
-                            model.selectModel(pack)
-                        }, enabled = !busy && !selected) {
-                            Text(
-                                stringResource(
-                                    if (selected) R.string.model_selected else R.string.use_model
-                                )
-                            )
-                        }
-                    }
-                    TextButton(
-                        onClick = {
-                            removing = true
-                        },
-                        enabled = !busy && !lastModel,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) { Text(stringResource(R.string.remove)) }
-                }
-                if (lastModel) {
-                    Text(
-                        stringResource(R.string.keep_model),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+    if (LocalDensity.current.fontScale >= 1.5f) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            status(Modifier.fillMaxWidth())
+            action()
         }
-    }
-    if (removing) {
-        AlertDialog(
-            onDismissRequest = {
-                removing = false
-            },
-            title = { Text(stringResource(R.string.remove_package, pack.title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.remove_package_body, fileSize(pack.bytes)))
-                    if (model.selectedModel()?.key == pack.key && fallback != null) {
-                        Text(stringResource(R.string.fallback_model, fallback.title))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    model.remove(pack)
-                    removing = false
-                }) { Text(stringResource(R.string.remove)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { removing = false }) { Text(stringResource(R.string.cancel)) }
-            }
-        )
+    } else {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            status(Modifier.weight(1f))
+            action()
+        }
     }
 }

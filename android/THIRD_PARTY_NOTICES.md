@@ -7,6 +7,8 @@ Bundled notices are readable offline in Settings → About Blobs and under app/s
 | Component | Recorded license/provenance |
 | --- | --- |
 | Nunito and DM Sans | SIL Open Font License, separate bundled texts |
+| Gemma and Qwen model marks | Local publisher marks; original sources and usage notes in Model-marks.txt |
+| Original Blobs illustration variants | Local transparent poses and day/night environments; provenance in Blobs-illustrations.txt; artwork remains excluded from the source-code license |
 | Phosphor icons | MIT, bundled copyright/license |
 | llama.cpp and ggml | MIT, upstream license from the pinned commit in third_party/llama.lock.json |
 | Arm KleidiAI | Apache 2.0 and BSD 3-Clause components; upstream texts and copyright in KleidiAI.txt; pinned in third_party/kleidiai.lock.json |

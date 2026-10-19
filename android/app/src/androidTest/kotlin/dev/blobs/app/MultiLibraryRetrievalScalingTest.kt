@@ -22,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MultiLibraryRetrievalScalingTest {
+    @ManualCheck
     @Test
     fun retrievalAcrossGrowingInstalledLibrarySet() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()

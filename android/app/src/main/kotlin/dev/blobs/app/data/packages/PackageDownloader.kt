@@ -174,6 +174,15 @@ class PackageDownloader(
             }
         }
 
+    fun discard(asset: DownloadablePackage) {
+        val directory = root.canonicalFile
+        listOf("", ".part", ".resume", ".previous").forEach { suffix ->
+            val file = File(directory, asset.fileName + suffix).canonicalFile
+            require(file.parentFile == directory) { "DOWNLOAD_PATH" }
+            if (file.exists() && !file.delete()) throw IOException("DOWNLOAD_DELETE")
+        }
+    }
+
     fun removeInstalledArchive(uri: Uri) {
         if (uri.scheme != "file") return
         val source = File(requireNotNull(uri.path)).canonicalFile

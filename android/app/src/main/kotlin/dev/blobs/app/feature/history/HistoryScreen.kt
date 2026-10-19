@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -29,10 +30,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.data.local.ConversationEntity
-import dev.blobs.app.ui.Art
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.GlyphButton
 import dev.blobs.app.ui.Heading
+import dev.blobs.app.ui.Mascot
 import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.SearchField
@@ -63,7 +64,7 @@ fun HistoryScreen(conversations: List<ConversationEntity>, busy: Boolean, model:
                         Modifier.padding(vertical = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Art(R.drawable.blob_pause, 110)
+                        Mascot(R.drawable.mascot_reading, Modifier.size(110.dp))
                         Heading(
                             if (query.isBlank()) {
                                 R.string.empty_history

@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
@@ -32,11 +33,15 @@ import dev.blobs.app.ui.SearchField
 @Composable
 fun BrowseScreen(state: ProductState, model: ProductViewModel) {
     val selecting = state.page == Page.SOURCES
+    val packages by model.packages.collectAsStateWithLifecycle()
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Heading(if (selecting) R.string.sources else R.string.browse)
+        val collection = packages.find { it.key == state.browseCollection }
+        if (!selecting && collection != null) {
+            Text(collection.title, style = MaterialTheme.typography.titleLarge)
+        }
         SearchField(state.query, R.string.search_sources, onValueChange = {
             model.search(it)
         })

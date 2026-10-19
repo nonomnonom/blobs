@@ -115,7 +115,13 @@ class WorkStateTest {
         }
 
         assertEquals(0f, setupProgress.first(), 0.0001f)
-        assertEquals(1f, setupProgress.last(), 0.0001f)
+        assertEquals(.99f, setupProgress.last(), 0.0001f)
+        assertEquals(
+            1f,
+            WorkState(inAppDownload = true, importComplete = true, packageKind = "library")
+                .setupProgress(setOf("model")),
+            .0001f
+        )
         assertTrue(setupProgress.zipWithNext().all { (before, after) -> after >= before })
     }
 }

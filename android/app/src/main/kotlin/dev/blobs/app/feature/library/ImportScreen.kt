@@ -1,5 +1,6 @@
 package dev.blobs.app.feature.library
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
@@ -33,13 +34,19 @@ import dev.blobs.app.ui.fileSize
 fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) {
     var cancelling by rememberSaveable { mutableStateOf(false) }
     val packages by model.packages.collectAsStateWithLifecycle()
-    val readyKinds = packages.map { it.kind }.toSet()
-    val preparingDocuments = work.busy &&
+    val readyKinds = buildSet {
+        if (packages.any { it.kind == "model" }) add("model")
+        if (model.catalog.hasStarterLibrary(packages)) add("library")
+    }
+    val preparingDocuments = work.transferActive &&
         work.packageKind == "library" &&
         !work.inAppDownload &&
         work.total == 0L
-    val running = work.busy && (work.total > 0 || preparingDocuments)
-    val checking = running && work.progress == work.total
+    val running = work.transferActive
+    val checking = running && work.total > 0 && work.progress == work.total
+    BackHandler {
+        if (running || work.hasPendingTransfer) cancelling = true else model.finishImport()
+    }
     val failed = work.notice in setOf(
         R.string.import_failed,
         R.string.storage_failed,
@@ -47,27 +54,14 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
         R.string.download_source_failed
     )
     ScrollPage {
-        Text(
-            stringResource(
-                if (work.inAppDownload) R.string.download_boundary else R.string.import_boundary
-            ),
-            style = MaterialTheme.typography.bodySmall
-        )
-        Scene(
-            when {
-                work.importComplete -> R.drawable.ready_world
-                running -> R.drawable.library_world
-                else -> R.drawable.pause_world
-            },
-            220
-        )
         Heading(
             when {
                 work.importComplete -> R.string.import_ready_title
                 failed -> R.string.import_error_title
+                !running && work.hasPendingTransfer -> R.string.import_paused_title
+                checking -> R.string.import_checking_title
                 work.downloading -> R.string.download_title
                 work.inAppDownload && running -> R.string.download_install_title
-                checking -> R.string.import_checking_title
                 running -> R.string.import_title
                 work.pendingImport != null -> R.string.import_paused_title
                 else -> R.string.import_cancelled
@@ -75,7 +69,7 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
         )
         val title = work.importTitle.ifBlank { work.pendingImport?.manifest?.title.orEmpty() }
         if (title.isNotEmpty()) Text(title, style = MaterialTheme.typography.titleMedium)
-        if (work.inAppDownload) {
+        if (work.inAppDownload && state.importOrigin == Page.SETUP) {
             SetupProgressBlock(
                 work.setupProgress(readyKinds),
                 if (work.packageKind == "model") {
@@ -88,6 +82,7 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
         if (running) {
             Body(
                 when {
+                    checking -> R.string.checking_file
                     work.downloading -> R.string.download_body
                     work.inAppDownload -> R.string.download_install_body
                     else -> R.string.import_body
@@ -97,7 +92,11 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                 CircularProgressIndicator()
                 Body(R.string.preparing_documents)
             } else {
-                if (!work.inAppDownload) SetupProgress(work.phaseProgress)
+                if (state.importOrigin != Page.SETUP ||
+                    !work.inAppDownload
+                ) {
+                    SetupProgress(work.phaseProgress)
+                }
                 Text(
                     stringResource(
                         if (work.downloading) {
@@ -109,12 +108,21 @@ fun ImportScreen(state: ProductState, work: WorkState, model: ProductViewModel) 
                         fileSize(work.total)
                     )
                 )
-                if (checking) Body(R.string.checking_file)
             }
-            PrimaryAction(R.string.pause_import, onClick = model::stop)
-        } else if (work.pendingImport != null) {
+            if (!preparingDocuments) PrimaryAction(R.string.pause_import, onClick = model::stop)
+            TextButton(onClick = {
+                cancelling = true
+            }) { Text(stringResource(R.string.import_cancel_action)) }
+        } else if (work.hasPendingTransfer) {
             Body(if (failed) work.notice ?: R.string.import_failed else R.string.paused_import)
-            PrimaryAction(R.string.resume_import, !work.busy, model::resumeImport)
+            PrimaryAction(
+                if (failed) R.string.retry else R.string.resume_import,
+                !work.busy,
+                model::resumeImport
+            )
+            TextButton(onClick = model::finishImport) {
+                Text(stringResource(R.string.continue_later))
+            }
             TextButton(onClick = {
                 cancelling = true
             }, enabled = !work.busy) { Text(stringResource(R.string.import_cancel_action)) }
