@@ -111,6 +111,41 @@ For repeatable Android model-load, prefill, first-token, and decode measurements
 
 ## Measure retrieval on an Android emulator
 
+### Measure retrieval as libraries accumulate
+
+`MultiLibraryRetrievalScalingTest` exercises production retrieval against the starter library, four optional outdoor and emergency libraries, and the full Wikivoyage travel package. It verifies every pinned payload, then runs six fixed queries against progressively larger enabled-library sets (one through six), warming each query and taking five timed samples. It records source-title rank and local retrieval latency only; it does not run or grade a model. The package list and expected source identities are pinned in [`multi-library-retrieval-scaling-v2.json`](cases/multi-library-retrieval-scaling-v2.json). The travel package's SQLite payload is about 628 MiB, so this benchmark also exercises a materially larger library than the compact safety packages.
+
+Matched Android 16 x86_64 runs compare a 48-candidate per-library rerank pool with a 12-candidate pool using the same emulator, v2 case-set hash, test APK hash, and package payloads. With all six libraries enabled, the 48-candidate control measured 945 ms median and 1,246 ms p95 across query medians. The 12-candidate run measured 426 ms median and 564 ms p95: 55% lower on both measures. All six expected sources were found, and each source kept the same rank between the runs (four of six at rank 1). This is an emulator-specific retrieval result, not a phone-latency prediction. Full, hash-identified reports are [`the 48-candidate control`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-baseline48-v2-no-cache.json) and [`the 12-candidate run`](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-candidate12-v2-no-cache.json). The earlier five-library comparison is recorded in [its 48-candidate control](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-baseline48-no-cache.json) and [12-candidate run](evidence/android-multi-library-retrieval-scaling-x86_64-android16-2026-10-19-candidate12-no-cache.json).
+
+To reproduce, first stage the six exact `.blobs` files named in the case set under `android/.local/hf-publish/packages/`, then install the debug app and instrumentation APK. Push the fixture and packages *after* installation because reinstalling the test target clears its app-specific external files:
+
+```powershell
+$adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
+Push-Location android
+.\gradlew.bat :app:installDebug :app:installDebugAndroidTest --offline --console=plain
+Pop-Location
+
+$stage = '/sdcard/Android/data/dev.blobs.app.debug/files'
+& $adb shell mkdir -p $stage
+& $adb push corpus/evaluation/cases/multi-library-retrieval-scaling-v2.json `
+  "$stage/retrieval-benchmark-multi-library.json"
+Get-ChildItem android/.local/hf-publish/packages -Filter '*.blobs' |
+  Where-Object Name -In @(
+    'wikipedia-starter-schema3.blobs',
+    'nps-outdoor-safety-2026-10-v1.blobs',
+    'ready-emergency-preparedness-2026-10-v1.blobs',
+    'camping-safety-2026-10-v1.blobs',
+    'backcountry-basics-2026-10-v3.blobs',
+    'wikivoyage-en-2026-09-v2.blobs'
+  ) | ForEach-Object { & $adb push $_.FullName "$stage/$($_.Name)" }
+& $adb shell am instrument -w `
+  -e class dev.blobs.app.MultiLibraryRetrievalScalingTest `
+  dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner
+& $adb logcat -d -s BlobsCorpusScaleBench:I
+```
+
+The report is emitted in ordered `REPORT_PART:i/n:` chunks. Join those chunks to recover its JSON. It includes the APK and test-APK digests, device fingerprint, package identities, and per-query samples. Keep each run in a new evidence file.
+
 `LibraryRetrievalBenchmarkTest` imports the exact pinned package and versioned case set on-device, verifies their identities, then runs every query five times through the production `LibraryStore`. It reports source-title ranks and elapsed time for each query, together with case-set hash, emulator, app APK, test APK, and package identities. It never runs a model or records answer text. From the repository root with an Android emulator connected, stage whichever package and case set you want to measure:
 
 ```powershell

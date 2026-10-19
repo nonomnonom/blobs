@@ -94,4 +94,22 @@ class RetrievalQueryTest {
         assertEquals(2, RetrievalQuery.titleOverlap(packingTerms, "Packing for beach travel"))
         assertEquals(1, RetrievalQuery.titleOverlap(packingTerms, "Beach"))
     }
+
+    @Test
+    fun evidenceOverlapRanksSpecificContentAcrossSeparateLibraries() {
+        val question = "How should I store food and behave around wildlife at a campsite?"
+        val duringStay = RetrievalQuery.evidenceOverlap(
+            RetrievalQuery.titleTerms(question),
+            "Camping safely",
+            "Food and wildlife",
+            "Store food safely and never approach or feed wildlife at your campsite."
+        )
+        val beforeTrip = RetrievalQuery.evidenceOverlap(
+            RetrievalQuery.titleTerms(question),
+            "Camping safely",
+            "Before the trip",
+            "Check campground rules, campsite conditions, and weather before leaving."
+        )
+        assertTrue(duringStay > beforeTrip)
+    }
 }

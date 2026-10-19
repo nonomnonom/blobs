@@ -16,8 +16,8 @@ from blobs_corpus.names import name_key
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-LIBRARY_STORE_SHA256 = '3d951f9f85d13f282431018206dc5a12a8a26367273a99f879c29a44e0e100f8'
-QUERY_SHA256 = '3fb8f2aabd9c6392d580362891748db37b8fe526096c09b27c3c2e8de3b0a414'
+LIBRARY_STORE_SHA256 = '3ba109923c22281a29282e693777845972a3d2445b0c0e44b097476f200390c5'
+QUERY_SHA256 = 'acee75cef2a8b7845ed1817d3e81143bb4daf730661b83d7f7c864f81c4f8ab5'
 STOP_WORDS = {
     'the', 'and', 'or', 'not', 'for', 'with', 'that', 'this', 'what', 'how', 'why',
     'are', 'does', 'can', 'you', 'about', 'from', 'which', 'have', 'would', 'their',

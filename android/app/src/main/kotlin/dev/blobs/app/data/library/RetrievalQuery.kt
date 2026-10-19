@@ -4,6 +4,7 @@ import java.text.Normalizer
 import java.util.Locale
 
 object RetrievalQuery {
+    private val wordPattern = Regex("[\\p{L}\\p{N}]+")
     private val stopWords = setOf(
         "the", "and", "or", "not", "for", "with", "that", "this", "what", "how", "why",
         "are", "does", "can", "you", "about", "from", "which", "have", "would", "their",
@@ -44,7 +45,7 @@ object RetrievalQuery {
         Normalizer.normalize(text, Normalizer.Form.NFKC).lowercase(Locale.ROOT)
 
     fun nameKey(text: String): String =
-        Regex("[\\p{L}\\p{N}]+").findAll(normalized(text)).joinToString(" ") { it.value }
+        wordPattern.findAll(normalized(text)).joinToString(" ") { it.value }
 
     fun isBroadTitleQuestion(question: String, title: String): Boolean {
         val titleWords = nameKey(title).split(' ').toSet()
@@ -67,13 +68,26 @@ object RetrievalQuery {
         }
     }
 
+    fun evidenceOverlap(
+        questionTerms: Set<String>,
+        title: String,
+        section: String,
+        text: String
+    ): Int {
+        val terms = questionTerms - broadTitleIntentWords - titleNoiseWords
+        if (terms.isEmpty()) return 0
+        val words = wordPattern.findAll("$title $section $text".lowercase(Locale.ROOT))
+            .mapTo(mutableSetOf()) { it.value }
+        return terms.count(words::contains)
+    }
+
     private fun isShortTitleExpansion(term: String, word: String): Boolean =
         term.length >= 3 && word.startsWith(term) && word.length - term.length <= 3
 
     data class NameCandidate(val key: String, val words: IntRange)
 
     fun names(question: String): List<NameCandidate> {
-        val words = Regex("[\\p{L}\\p{N}]+").findAll(normalized(question))
+        val words = wordPattern.findAll(normalized(question))
             .map { it.value }.take(40).toList()
         return (minOf(6, words.size) downTo 1).flatMap { length ->
             (0..words.size - length).mapNotNull { start ->
@@ -89,8 +103,8 @@ object RetrievalQuery {
     }
 
     fun match(question: String, titles: List<String> = emptyList()): String {
-        val words = Regex("[\\p{L}\\p{N}]{2,}").findAll(normalized(question))
-            .map { it.value }.toList()
+        val words = wordPattern.findAll(normalized(question))
+            .map { it.value }.filter { it.length >= 2 }.toList()
         val terms = words.filter { it !in stopWords }.distinct().take(20)
             .map { "\"$it\"" }
         val phraseTerms = words.zipWithNext { left, right ->

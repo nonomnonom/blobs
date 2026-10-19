@@ -12,8 +12,8 @@ from blobs_corpus.names import name_key
 from .host_replay import direct_title_ids, retrieve, sha, unpack
 
 
-LIBRARY_STORE_SHA256 = '3d951f9f85d13f282431018206dc5a12a8a26367273a99f879c29a44e0e100f8'
-QUERY_SHA256 = '900078fd97096f3f7b2950d5c84286c605b8b4158a86fb5fcf298f68e3d452f2'
+LIBRARY_STORE_SHA256 = '3ba109923c22281a29282e693777845972a3d2445b0c0e44b097476f200390c5'
+QUERY_SHA256 = 'acee75cef2a8b7845ed1817d3e81143bb4daf730661b83d7f7c864f81c4f8ab5'
 
 
 def expanded_query(database, question, base_query, stop_words):

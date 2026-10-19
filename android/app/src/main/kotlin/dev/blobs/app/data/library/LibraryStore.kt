@@ -156,7 +156,8 @@ class LibraryStore {
         val terms = searchTerms(question)
         if (terms.isEmpty()) return emptyList()
         val titleTerms = RetrievalQuery.titleTerms(question)
-        return packages.filter { it.kind == "library" && it.enabled }.flatMap { pack ->
+        val enabledLibraries = packages.filter { it.kind == "library" && it.enabled }
+        return enabledLibraries.flatMap { pack ->
             val ids = scope?.filter {
                 it.startsWith(pack.key + "/")
             }?.map { it.substringAfter('/') }
@@ -199,12 +200,18 @@ class LibraryStore {
                         RetrievalQuery.isBroadTitleQuestion(question, it.title)
                 }.map { it.id }.toSet()
                 val titleFlag = if (current) "CASE WHEN p.title!='' THEN 1 ELSE 0 END" else "0"
+                val candidateLimit = if (enabledLibraries.size > 1) {
+                    MULTI_LIBRARY_CANDIDATE_LIMIT
+                } else {
+                    SINGLE_LIBRARY_CANDIDATE_LIMIT
+                }
                 val ranked = db.prepare(
-                    "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt,$titleFlag,p.id FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?$filter$contentFilter ORDER BY $ranking LIMIT 48"
+                    "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt,$titleFlag,p.id FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?$filter$contentFilter ORDER BY $ranking LIMIT ?"
                 ).use { statement ->
                     statement.bindText(1, query)
                     var parameter = 2
                     ids?.forEach { id -> statement.bindText(parameter++, id) }
+                    statement.bindLong(parameter, candidateLimit.toLong())
                     buildList {
                         while (statement.step()) {
                             add(
@@ -276,20 +283,54 @@ class LibraryStore {
                         }
                     )
                     .map { it.value }
-                ordered.map { it.evidence }.withIndex().toList()
+                ordered.withIndex().toList()
             }
-        }.sortedBy { it.index }.map { it.value }.let { candidates ->
+        }.let { matched ->
+            val ranked = if (enabledLibraries.size > 1) {
+                matched.sortedWith(
+                    compareByDescending<IndexedValue<RetrievalCandidate>> {
+                        it.value.titlePriority
+                    }.thenByDescending {
+                        it.value.directTitleMatch
+                    }.thenByDescending {
+                        val evidence = it.value.evidence
+                        RetrievalQuery.evidenceOverlap(
+                            titleTerms,
+                            evidence.title,
+                            evidence.section,
+                            evidence.text
+                        )
+                    }.thenBy {
+                        it.index
+                    }
+                )
+            } else {
+                matched.sortedBy { it.index }
+            }
+            ranked.map { it.value }
+        }.let { candidates ->
+            val diverse = candidates.distinctBy { it.evidence.id }
+            val selected = mutableListOf<Evidence>()
+            val selectedPassages = mutableSetOf<Pair<String, Long>>()
             val perDocument = mutableMapOf<String, Int>()
             var characters = 0
-            candidates.filter {
-                val count = perDocument.getOrDefault(it.id, 0)
-                val accepted = count < 2 && characters + it.text.length <= 6000
-                if (accepted) {
-                    perDocument[it.id] = count + 1
-                    characters += it.text.length
+            fun append(candidate: RetrievalCandidate) {
+                val evidence = candidate.evidence
+                val passageKey = evidence.id to candidate.passageId
+                if (
+                    selected.size < 6 &&
+                    perDocument.getOrDefault(evidence.id, 0) < 2 &&
+                    characters + evidence.text.length <= 6000 &&
+                    selectedPassages.add(passageKey)
+                ) {
+                    selected += evidence
+                    perDocument[evidence.id] = perDocument.getOrDefault(evidence.id, 0) + 1
+                    characters += evidence.text.length
                 }
-                accepted
-            }.take(6)
+            }
+            diverse.forEach(::append)
+            candidates.forEach(::append)
+            selected
         }
     }
 
@@ -434,6 +475,9 @@ class LibraryStore {
         }
 
     companion object {
+        private const val MULTI_LIBRARY_CANDIDATE_LIMIT = 12
+        private const val SINGLE_LIBRARY_CANDIDATE_LIMIT = 48
+
         fun searchTerms(question: String): String = RetrievalQuery.match(question)
     }
 }
