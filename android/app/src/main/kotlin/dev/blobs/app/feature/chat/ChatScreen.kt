@@ -230,7 +230,17 @@ private fun TurnCard(
                 modifier = Modifier.semantics { heading() }
             )
         }
-        Text(appName, style = MaterialTheme.typography.labelMedium)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Image(
+                painterResource(R.drawable.mascot_curious),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
+            )
+            Text(appName, style = MaterialTheme.typography.labelMedium)
+        }
         if (answer.isNotEmpty()) {
             val markerSize = if (large) 32.dp else 24.dp
             val markerSp = (markerSize.value / LocalDensity.current.fontScale).sp
