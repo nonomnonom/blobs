@@ -12,6 +12,16 @@ uv run --locked python -m unittest discover -s tests
 
 Python and dependency versions are pinned by `pyproject.toml` and `uv.lock`.
 
+## Fetch reviewed records
+
+App builds and corpus unit tests do not need the full reviewed-record collection. Use the source-only clone instructions in the [repository README](../README.md#build) to leave large Git LFS objects as pointers. If you need an existing edition for a package rebuild, fetch only that edition from the repository root:
+
+```powershell
+git lfs pull --include="corpus/artifacts/records/wikivoyage-en-all-nopic-2026-09/**" --exclude=""
+```
+
+Replace the edition path for another collection. Package builders need the hydrated record files, not LFS pointers. Alternatively, rebuild the edition from its pinned source using the pipeline below. Installable `.blobs` packages and model weights are delivered separately through Hugging Face.
+
 ## Pipeline
 
 The pipeline acquires a pinned source archive, extracts bounded records, normalizes article text and attribution, validates quality constraints, exports immutable record shards, builds a SQLite FTS5 payload, and packages that payload with an exact manifest.
@@ -226,7 +236,7 @@ Keep the starter, travel, outdoor-safety, emergency-preparedness, camping-safety
 - Package verification streams the complete payload and checks declared length, CRC, and SHA-256.
 - Redirect and alternate-name resolution retains unresolved and ambiguous counts instead of guessing.
 
-Large reviewed record shards under `artifacts/records/` use Git LFS. Model weights, raw downloads, extracted databases, generated packages, caches, and reports stay outside Git.
+Large reviewed record shards under `artifacts/records/` use Git LFS. Model weights, raw downloads, extracted databases, generated packages, caches, and raw run logs stay outside Git. Selected compact benchmark reports under `evaluation/` are versioned as reproducible evidence.
 
 Optional host-side retrieval replay and inference-performance measurements are documented in [`evaluation/README.md`](evaluation/README.md). They do not score generated-answer quality and are not part of the Android runtime or required to build the app.
 

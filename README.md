@@ -14,11 +14,22 @@ The active implementation is in [`android/`](android/README.md). Reproducible co
 - Bounded package validation, resumable import, atomic activation, and rollback-safe failure handling.
 - Android, JVM, Python, package, APK, and release-kit verification.
 
-Model weights, generated `.blobs` packages, APKs, signing keys, local caches, and evaluation reports are intentionally excluded from Git. The repository contains the tools and lock files needed to reproduce and verify them.
+Model weights, generated `.blobs` packages, APKs, signing keys, and local caches are excluded from Git. Reviewed corpus record shards are tracked with Git LFS; selected benchmark evidence is versioned alongside the tools and lock files needed to reproduce it. App users download installable assets from Hugging Face through Blobs.
 
 ## Build
 
 Requirements: JDK 17, uv 0.12.19, Android SDK platform 37, build tools 36.0.0, NDK 27.1.12297006, and CMake 3.22.1.
+
+For an app build, clone the source without downloading corpus record shards. With Git LFS installed, these commands configure only the new checkout:
+
+```powershell
+git clone --no-checkout https://github.com/nonomnonom/blobs.git
+git -C blobs lfs install --local --skip-smudge
+git -C blobs checkout
+cd blobs
+```
+
+The LFS pointers can remain in place for app builds and unit tests. Corpus maintainers can fetch a selected edition using the [corpus guide](corpus/README.md#fetch-reviewed-records).
 
 ```powershell
 cd corpus
