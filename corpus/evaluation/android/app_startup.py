@@ -48,7 +48,8 @@ class Adb:
 
     def text(self, *args: str) -> str:
         result = subprocess.run(
-            [*self.prefix, *args], capture_output=True, text=True, check=True, timeout=120
+            [*self.prefix, *args], capture_output=True, text=True, encoding="utf-8",
+            check=True, timeout=120
         )
         return result.stdout.strip()
 

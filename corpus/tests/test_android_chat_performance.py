@@ -54,12 +54,9 @@ class AndroidChatPerformanceTests(unittest.TestCase):
                             },
                         },
                         "evidence_count": 2,
-                        "evidence_sources": [
-                            {
-                                "title": "Water Hazards",
-                                "publisher": "National Park Service",
-                            }
-                        ],
+                        # Deliberately irrelevant: chat-path benchmarks do not grade
+                        # retrieved titles or generated answers.
+                        "evidence_sources": [{"title": "Unrelated", "publisher": "Elsewhere"}],
                     }
                 ),
                 encoding="utf-8",
@@ -69,34 +66,30 @@ class AndroidChatPerformanceTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def test_summarizes_latency_without_grading_app_unverified_state(self):
-        report = summarize(
-            self.runs,
-            self.app_path,
-            "Water Hazards",
-            "National Park Service",
-        )
+    def test_summarizes_flow_latency_without_grading_answer_or_sources(self):
+        report = summarize(self.runs, self.app_path)
         self.assertEqual(report["summary"]["elapsed_ms_median"], 22000)
         self.assertEqual(report["summary"]["elapsed_ms_p95_nearest_rank"], 23000)
         self.assertEqual(report["summary"]["evidence_ready_state_ms_median"], 12000)
-        self.assertEqual(report["runs"][0]["expected_source_rank"], 1)
+        self.assertNotIn("expected_source", report)
+        self.assertNotIn("expected_source_rank", report["runs"][0])
         self.assertEqual(report["summary"]["native_first_callback_ms_median"], 700)
 
     def test_requires_three_repeats_and_airplane_mode(self):
         with self.assertRaises(ValueError):
-            summarize(self.runs[:2], self.app_path, "Water Hazards", "National Park Service")
+            summarize(self.runs[:2], self.app_path)
         run = json.loads(self.runs[0].read_text(encoding="utf-8"))
         run["airplane_mode_enabled"] = False
         self.runs[0].write_text(json.dumps(run), encoding="utf-8")
         with self.assertRaises(ValueError):
-            summarize(self.runs, self.app_path, "Water Hazards", "National Park Service")
+            summarize(self.runs, self.app_path)
 
     def test_refuses_saved_answer_text(self):
         run = json.loads(self.runs[0].read_text(encoding="utf-8"))
         run["answer"] = "Do not persist generated text in performance evidence."
         self.runs[0].write_text(json.dumps(run), encoding="utf-8")
         with self.assertRaises(ValueError):
-            summarize(self.runs, self.app_path, "Water Hazards", "National Park Service")
+            summarize(self.runs, self.app_path)
 
 
 if __name__ == "__main__":

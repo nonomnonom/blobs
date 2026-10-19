@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
-import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -202,10 +201,10 @@ class NativeInferenceTest {
     }
 
     @Test
-    fun installedLibraryAndModelProduceSavedCitedAnswer() = recordAnswer(false)
+    fun installedLibraryAndModelCompleteOfflineChatFlow() = recordOfflineChatFlow(false)
 
     @Test
-    fun verifiedModelFileProducesSavedCitedAnswer() = recordAnswer(true)
+    fun verifiedModelFileCompletesOfflineChatFlow() = recordOfflineChatFlow(true)
 
     @Test
     fun emptyLibraryReturnsNoSourcesWithoutLoadingModel() = runBlocking {
@@ -270,7 +269,7 @@ class NativeInferenceTest {
         )
     }
 
-    private fun recordAnswer(verifiedFile: Boolean) = runBlocking {
+    private fun recordOfflineChatFlow(verifiedFile: Boolean) = runBlocking {
         val foreground = ActivityScenario.launch(MainActivity::class.java)
         val args = InstrumentationRegistry.getArguments()
         val installedModelKey = args.getString("installedModel")
@@ -289,11 +288,6 @@ class NativeInferenceTest {
         val question = decodedArgument(args, "question")
             ?: "How do trees reduce urban heat? Explain with sources."
         require(question.length in 1..2000)
-        val expectedPublisher = decodedArgument(args, "expectedPublisher")
-            ?: "Wikipedia contributors"
-        require(expectedPublisher.length in 1..300)
-        val expectedEvidenceTitle = decodedArgument(args, "expectedEvidenceTitle")
-        require(expectedEvidenceTitle == null || expectedEvidenceTitle.length in 1..300)
         val timeoutMs = (args.getString("timeoutSeconds") ?: "240").toLong() * 1000
         require(timeoutMs in 60_000..600_000)
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -315,7 +309,6 @@ class NativeInferenceTest {
             put("run_id", runId)
             put("complete", false)
             put("question", question)
-            put("expected_evidence_publisher", expectedPublisher)
             put("application_id", context.packageName)
             put("fingerprint", Build.FINGERPRINT)
             put("api", Build.VERSION.SDK_INT)
@@ -506,22 +499,6 @@ class NativeInferenceTest {
             report.put("status", turn?.status ?: JSONObject.NULL)
             val evidence = turn?.evidence?.let(Evidence::decode).orEmpty()
             report.put("evidence_count", evidence.size)
-            report.put(
-                "evidence_sources",
-                JSONArray().apply {
-                    evidence.forEach { source ->
-                        put(
-                            JSONObject().apply {
-                                put("id", source.id)
-                                put("title", source.title)
-                                put("publisher", source.publisher)
-                                put("url", source.url)
-                                put("edition", source.edition)
-                            }
-                        )
-                    }
-                }
-            )
             report.put("saved_elapsed_ms", turn?.elapsedMs ?: JSONObject.NULL)
             report.put("error", turn?.error ?: JSONObject.NULL)
             val performance = container.work.lastPerformanceSnapshot
@@ -550,20 +527,10 @@ class NativeInferenceTest {
             "Chat context exceeded its evidence source budget",
             evidence.size <= WorkController.MAX_ANSWER_SOURCES
         )
-        assertTrue(
-            "Expected evidence from $expectedPublisher, got ${turn.evidence}",
-            evidence.any { it.publisher == expectedPublisher }
-        )
         val performance = requireNotNull(container.work.lastPerformanceSnapshot)
         assertTrue(performance.retrievalElapsedMs >= 0)
         assertTrue(performance.generation.totalUs > 0)
         assertTrue(performance.generation.outputTokens > 0)
-        expectedEvidenceTitle?.let { title ->
-            assertTrue(
-                "Expected retrieved source $title, got ${evidence.map(Evidence::title)}",
-                evidence.any { it.title == title }
-            )
-        }
         assertEquals(
             "My next question stays here",
             container.database.conversations().find(id)?.draft

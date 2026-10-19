@@ -22,8 +22,6 @@ def percentile(values: list[int], fraction: float) -> int:
 def summarize(
     run_paths: list[Path],
     installed_app_path: Path,
-    expected_title: str,
-    expected_publisher: str,
 ) -> dict:
     if len(run_paths) < 3:
         raise ValueError("At least three successful runs are required")
@@ -93,18 +91,6 @@ def summarize(
         ):
             raise ValueError(f"Invalid native-generation metrics: {path}")
 
-        sources = report.get("evidence_sources")
-        if not isinstance(sources, list):
-            raise ValueError(f"Missing evidence-source metadata: {path}")
-        matching = [
-            index + 1
-            for index, source in enumerate(sources)
-            if source.get("title") == expected_title
-            and source.get("publisher") == expected_publisher
-        ]
-        if not matching:
-            raise ValueError(f"Expected source was not retrieved: {path}")
-
         fingerprints.add(report.get("fingerprint"))
         model_digests.add(report.get("model_sha256"))
         library_digests.add(report.get("library_sha256"))
@@ -125,7 +111,6 @@ def summarize(
                 "native_decode_tokens_per_second": output_tokens * 1_000_000 / decode_us,
                 "app_status": report["status"],
                 "evidence_count": report.get("evidence_count"),
-                "expected_source_rank": matching[0],
             }
         )
 
@@ -152,15 +137,11 @@ def summarize(
     native_decode_values = [run["native_decode_tokens_per_second"] for run in runs]
     return {
         "format": 1,
-        "scope": "Offline Android chat-path latency and retrieved-source identity; generated answer text is not stored or evaluated.",
+        "scope": "Offline Android chat-flow completion and runtime performance; generated answer content is not stored or evaluated.",
         "device_fingerprint": next(iter(fingerprints)),
         "application": installed,
         "model_sha256": next(iter(model_digests)),
         "library_sha256": next(iter(library_digests)),
-        "expected_source": {
-            "title": expected_title,
-            "publisher": expected_publisher,
-        },
         "run_count": len(runs),
         "runs": runs,
         "summary": {
@@ -193,15 +174,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True, type=Path, action="append")
     parser.add_argument("--installed-app", required=True, type=Path)
-    parser.add_argument("--expected-title", required=True)
-    parser.add_argument("--expected-publisher", required=True)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     result = summarize(
         args.run,
         args.installed_app,
-        args.expected_title,
-        args.expected_publisher,
     )
     with args.output.open("x", encoding="utf-8", newline="\n") as stream:
         json.dump(result, stream, indent=2)

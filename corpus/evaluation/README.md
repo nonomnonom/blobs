@@ -225,19 +225,19 @@ The new camping-safety package was exercised through the same Android 16 x86_64 
 
 ## Measure the offline chat path
 
-`NativeInferenceTest#verifiedModelFileProducesSavedCitedAnswer` measures the full app path after local assets are staged: model-file validation, normal library-package installation, retrieval, `WorkController`, generation, and saved-turn completion. It asserts airplane mode from inside the test, measures end-to-end and first-visible-state latency, and records only model/library identity plus retrieved source metadata. Generated answer text is neither stored nor evaluated. The app may report `UNVERIFIED`; that is recorded as app state and is not treated as a test failure.
+`NativeInferenceTest#verifiedModelFileCompletesOfflineChatFlow` measures the app flow after local assets are staged: model-file validation, library-package installation, retrieval, generation, and saved-turn completion. The test checks offline mode, package integrity, a completed persisted turn, draft persistence, and runtime measurements. It does not assert retrieved titles, publishers, or generated-answer correctness. Generated answer text is neither stored nor evaluated. `UNVERIFIED` is a valid app state and is recorded without grading answer content.
 
-The [`three-run Android 16 x86_64 report`](evidence/android-offline-chat-performance-v2-x86_64-android16-2026-10-19/summary.json) uses the same Qwen3 0.6B Q8 file, NPS outdoor-safety package, question, and APKs in every run. Median end-to-end time was 21.915 s (nearest-rank p95 22.264 s). Retrieved evidence was ready in 19 ms median (32 ms p95); first-visible-state time was 17.218 s median (17.396 s p95), so the measured delay follows retrieval and sits in the generation/stream path. `Water Hazards` was first in the evidence list in all three runs. This is one debug emulator profile and a verified model-file fixture; it does not measure the in-app model-download step or predict phone performance. The raw reports and APK identities are retained in the same evidence folder.
+The [`three-run Android 16 x86_64 report`](evidence/android-offline-chat-performance-v2-x86_64-android16-2026-10-19/summary.json) is a historical timing profile of the Qwen3 0.6B Q8 file and NPS outdoor-safety package. Median end-to-end time was 21.915 s (nearest-rank p95 22.264 s); first-visible-state time was 17.218 s median (17.396 s p95). It predates the flow-only acceptance criteria below, so its source-title checks are not used to judge app behavior. This verified-file fixture does not measure in-app model download or predict phone performance.
 
 Profiling showed that prompt prefill, rather than retrieval, dominated this workload. `WorkController` now sends the four highest-ranked sources to generation and presents that same evidence set with the turn. The six-library retrieval scaling case set keeps its expected sources within those first four ranks. In three same-device offline runs with the same model, library, and question, the profiled baseline's median end-to-end time fell from 22.618 s to 16.631 s (26.5%); median first-visible-state time fell from 17.752 s to 13.130 s (26.0%), and prompt tokens fell from 1,550 to 1,156 (25.4%). Retrieval stayed negligible at 22 ms versus 11 ms median, while decode throughput remained about 10.7–10.8 tokens/s. See the [before-change profile](evidence/android-offline-generation-profile-x86_64-android16-2026-10-19/baseline-summary.json) and [four-source result](evidence/android-offline-generation-sourcecap-x86_64-android16-2026-10-19/summary.json). This measures one Android 16 x86_64 emulator with one small quantized model; it does not predict latency on other devices. Answer text is not retained or evaluated.
 
 Catalog refreshes now start only when the user taps **Check for updates**; opening the app or Library/Models does not initiate a request. The latest build was run through the same three airplane-mode chat cases: median end-to-end was 15.982 s, first visible state 12.289 s, retrieval 13 ms, and decode 11.4 tokens/s. The [three-run report](evidence/android-offline-explicit-catalog-x86_64-android16-2026-10-19/summary.json) records the new APK hashes and source identity without answer text. Seven process-cold launches on the same emulator measured 1.092 s median and 91,609 KiB median PSS before a model was loaded; the [startup report](evidence/android-startup-explicit-catalog-x86_64-android16-2026-10-19/report.json) is an idle debug-app measure, not inference peak memory or a 12 GB device certification.
 
-The v0.3.9 debug build was measured in three airplane-mode runs on an Android 16 x86_64 emulator configured with a 12 GB data partition. With the same Qwen3 0.6B Q8 file, NPS safety package, and `Water Hazards` question, median end-to-end time was 17.563 s, first visible state 13.626 s, retrieval 21 ms, and decode throughput 12.24 tokens/s. `Water Hazards` ranked first in all three runs. The report records app/test APK hashes and source identity, contains no generated answer text, and does not predict phone performance. See the [v0.3.9 three-run report](evidence/android-offline-chat-performance-v0.3.9-12gb-data-retry-x86_64-android36-2026-10-19/summary.json).
+The v0.3.9 debug build was measured in three airplane-mode runs on an Android 16 x86_64 emulator configured with a 12 GB data partition. That historical profile measured 17.563 s median end-to-end, 13.626 s first-visible-state, 21 ms retrieval, and 12.24 decoded tokens/s. Its old source-identity gate is not part of the current flow benchmark. See the [v0.3.9 report](evidence/android-offline-chat-performance-v0.3.9-12gb-data-retry-x86_64-android36-2026-10-19/summary.json).
 
 ### Profile chat memory
 
-`evaluation.android.chat_resources` reruns the offline chat instrumentation while sampling PSS from both the app and instrumentation processes with `adb shell dumpsys meminfo`. It validates the model and library digests, airplane-mode state, completion, and expected source identity. The instrumentation report omits generated answer text; the profiler does not inspect or grade answers. Sampled PSS is a useful device-specific measure, not a guarantee of the process's instantaneous allocation peak.
+`evaluation.android.chat_resources` reruns the offline chat instrumentation while sampling PSS from both the app and instrumentation processes with `adb shell dumpsys meminfo`. It validates model and library digests, airplane-mode state, completion, and app state, without requiring any particular retrieved source or answer. The instrumentation report omits generated answer text. Sampled PSS is a useful device-specific measure, not a guarantee of the process's instantaneous allocation peak.
 
 The [three-run profile](evidence/android-chat-resources-qwen3-06b-x86_64-android16-2026-10-19/profile.json) used the Qwen3 0.6B Q8 fixture and the NPS outdoor-safety library on the Android 16 x86_64 emulator. Combined peak sampled PSS for the app and test process was 1,045,278 KiB median and 1,045,564 KiB maximum. That small-model emulator run is far below 12 GiB, but it does not establish peak usage for the larger Gemma models or on other devices.
 
@@ -254,8 +254,6 @@ uv run --locked python -m evaluation.android.chat_resources `
   --library-local ../android/.local/hf-publish/packages/nps-outdoor-safety-2026-10-v2.blobs `
   --library-path /data/user/0/dev.blobs.app.debug/files/nps-outdoor-safety.blobs `
   --question 'What hazards are present in natural water?' `
-  --expected-title 'Water Hazards' `
-  --expected-publisher 'National Park Service · U.S. Department of the Interior' `
   --run-id memory-01 --run-id memory-02 --run-id memory-03 `
   --output evaluation/evidence/android-chat-resources-local/profile.json
 ```
@@ -273,22 +271,19 @@ Pop-Location
 & $adb shell run-as dev.blobs.app.debug cp /data/local/tmp/nps-outdoor-safety.blobs files/nps-outdoor-safety.blobs
 ```
 
-Use a unique run ID each time. URL-safe Base64 keeps question and publisher arguments intact through `adb shell`; the instrumentation decodes them locally. Save each report from the app-private directory. Preserve the previous airplane-mode value and restore it in a `finally` block when scripting repeated runs.
+Use a unique run ID each time. URL-safe Base64 keeps the question intact through `adb shell`; the instrumentation decodes it locally. Save each report from the app-private directory. Preserve the previous airplane-mode value and restore it in a `finally` block when scripting repeated runs.
 
 ```powershell
 $question = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('What hazards are present in natural water?')).TrimEnd('=').Replace('+','-').Replace('/','_')
-$publisher = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('National Park Service · U.S. Department of the Interior')).TrimEnd('=').Replace('+','-').Replace('/','_')
-$title = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('Water Hazards')).TrimEnd('=').Replace('+','-').Replace('/','_')
 $previousAirplaneMode = (& $adb shell settings get global airplane_mode_on).Trim()
 try {
   & $adb shell cmd connectivity airplane-mode enable
   & $adb shell am instrument --user 0 -w `
-    -e class 'dev.blobs.app.NativeInferenceTest#verifiedModelFileProducesSavedCitedAnswer' `
+    -e class 'dev.blobs.app.NativeInferenceTest#verifiedModelFileCompletesOfflineChatFlow' `
     -e modelFile '/data/user/0/dev.blobs.app.debug/files/qwen3-smoke.gguf' `
     -e modelSha256 9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031 `
     -e libraryPackage '/data/user/0/dev.blobs.app.debug/files/nps-outdoor-safety.blobs' `
     -e runId offline-chat-01 -e questionBase64 $question `
-    -e expectedPublisherBase64 $publisher -e expectedEvidenceTitleBase64 $title `
     -e timeoutSeconds 180 -e requireAirplaneMode true `
     dev.blobs.app.debug.test/androidx.test.runner.AndroidJUnitRunner
   $report = & $adb exec-out run-as dev.blobs.app.debug cat files/answer-offline-chat-01.json
@@ -310,11 +305,9 @@ uv run --locked --project . python -m evaluation.android.chat_performance `
   --run evaluation/evidence/chat-run-02.json `
   --run evaluation/evidence/chat-run-03.json `
   --installed-app evaluation/evidence/installed-app.json `
-  --expected-title 'Water Hazards' `
-  --expected-publisher 'National Park Service · U.S. Department of the Interior' `
   --output evaluation/baselines/android-offline-chat-local.json
 ```
 
-The summarizer requires matching device, app, model, and library identities; verified airplane mode; successful saved turns; and the expected source metadata. It rejects reports containing generated answer text and reports latency distributions without scoring the model.
+The summarizer requires matching device, app, model, and library identities; verified airplane mode; and successful saved turns. It rejects reports containing generated answer text to keep performance evidence free of conversation content. It never checks answer text or scores retrieved titles.
 
-Gemma 4 E2B Q4 was downloaded from the signed in-app catalog and installed through the normal package flow on an Android 16 x86_64 emulator configured with 8 GiB RAM and a 12 GiB data partition. The 3.35 GB model download, hash validation, GGUF validation, and activation completed in 407.2 s on this emulator's network. Three airplane-mode chat runs with the installed model and NPS outdoor-safety library measured 51.3 s median end-to-end, 46.0 s median first-visible state, 9 ms median retrieval, and 6.24 decoded tokens/s. The [three-run report and package-install receipts](evidence/android-offline-chat-performance-gemma4-e2b-q4-x86_64-android16-2026-10-19/summary.json) retain app/model/library identities and omit generated answer text. These are emulator-specific implementation measurements, not a phone performance estimate.
+Gemma 4 E2B Q4 was downloaded from the signed in-app library and installed through the normal package flow on an Android 16 x86_64 emulator with about 8 GiB RAM and a 12 GiB data partition. The 3.35 GB download, hash and GGUF validation, and activation completed in 407.2 s on that emulator's network. The latest three airplane-mode chat-flow runs used the installed Gemma model and NPS library. All three completed and saved a turn without checking retrieved titles, publishers, or answer text. Median app-observed end-to-end time was 65.7 s (p95 66.3 s), first visible state was 45.7 s (p95 46.8 s), retrieval was 12 ms median, and decode throughput was 4.96 tokens/s median. Sampled app-plus-instrumentation PSS was 3,559,557 KiB median and 3,565,943 KiB maximum; `/data` had 12,223,704 KiB total capacity. See the [flow-only latency report](evidence/android-offline-chat-performance-gemma4-e2b-q4-x86_64-android16-2026-10-19/summary-flow-only.json), [flow-only PSS report](evidence/android-offline-chat-performance-gemma4-e2b-q4-x86_64-android16-2026-10-19/resources-flow-only.json), [app identity](evidence/android-offline-chat-performance-gemma4-e2b-q4-x86_64-android16-2026-10-19/installed-app-flow-only.json), and the [download/install receipts](evidence/android-offline-chat-performance-gemma4-e2b-q4-x86_64-android16-2026-10-19/installed-model-package.json). These are measurements of one emulator profile; they do not predict phone performance.
