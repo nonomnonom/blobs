@@ -6,17 +6,17 @@ import android.os.ParcelFileDescriptor
 import android.os.StatFs
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Base64
 import android.util.AtomicFile
+import android.util.Base64
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.blobs.app.data.WorkController
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.GgufValidator
 import dev.blobs.app.data.packages.PackageManifest
-import dev.blobs.app.data.WorkController
 import dev.blobs.app.inference.GenerationMetrics
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.TokenSink
@@ -463,17 +463,22 @@ class NativeInferenceTest {
             report.put("status", turn?.status ?: JSONObject.NULL)
             val evidence = turn?.evidence?.let(Evidence::decode).orEmpty()
             report.put("evidence_count", evidence.size)
-            report.put("evidence_sources", JSONArray().apply {
-                evidence.forEach { source ->
-                    put(JSONObject().apply {
-                        put("id", source.id)
-                        put("title", source.title)
-                        put("publisher", source.publisher)
-                        put("url", source.url)
-                        put("edition", source.edition)
-                    })
+            report.put(
+                "evidence_sources",
+                JSONArray().apply {
+                    evidence.forEach { source ->
+                        put(
+                            JSONObject().apply {
+                                put("id", source.id)
+                                put("title", source.title)
+                                put("publisher", source.publisher)
+                                put("url", source.url)
+                                put("edition", source.edition)
+                            }
+                        )
+                    }
                 }
-            })
+            )
             report.put("saved_elapsed_ms", turn?.elapsedMs ?: JSONObject.NULL)
             report.put("error", turn?.error ?: JSONObject.NULL)
             val performance = container.work.lastPerformanceSnapshot

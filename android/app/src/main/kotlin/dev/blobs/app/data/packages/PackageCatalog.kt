@@ -95,29 +95,28 @@ class PackageCatalog internal constructor(
 
     suspend fun refreshNow(): CatalogRefreshOutcome = refresh()
 
-    private suspend fun refresh(): CatalogRefreshOutcome =
-        withContext(Dispatchers.IO) {
-            updates.withLock {
-                val now = System.currentTimeMillis()
-                mutableSnapshot.value = mutableSnapshot.value.copy(refreshing = true)
-                if (!hasInternet()) {
-                    mutableSnapshot.value = mutableSnapshot.value.copy(refreshing = false)
-                    return@withLock CatalogRefreshOutcome.UNAVAILABLE
-                }
-                cacheDirectory.mkdirs()
-                runCatching { writeAtomically(checkedFile, now.toString().toByteArray()) }
-                val result = runCatching { fetchCatalog() }
-                val outcome = result.getOrElse {
-                    Log.w(TAG, "Unable to refresh the download list", it)
-                    CatalogRefreshOutcome.UNAVAILABLE
-                }
-                mutableSnapshot.value = mutableSnapshot.value.copy(
-                    lastCheckedAt = now,
-                    refreshing = false
-                )
-                outcome
+    private suspend fun refresh(): CatalogRefreshOutcome = withContext(Dispatchers.IO) {
+        updates.withLock {
+            val now = System.currentTimeMillis()
+            mutableSnapshot.value = mutableSnapshot.value.copy(refreshing = true)
+            if (!hasInternet()) {
+                mutableSnapshot.value = mutableSnapshot.value.copy(refreshing = false)
+                return@withLock CatalogRefreshOutcome.UNAVAILABLE
             }
+            cacheDirectory.mkdirs()
+            runCatching { writeAtomically(checkedFile, now.toString().toByteArray()) }
+            val result = runCatching { fetchCatalog() }
+            val outcome = result.getOrElse {
+                Log.w(TAG, "Unable to refresh the download list", it)
+                CatalogRefreshOutcome.UNAVAILABLE
+            }
+            mutableSnapshot.value = mutableSnapshot.value.copy(
+                lastCheckedAt = now,
+                refreshing = false
+            )
+            outcome
         }
+    }
 
     private fun fetchCatalog(): CatalogRefreshOutcome {
         var current = endpoint

@@ -100,6 +100,7 @@ class WorkController(
     private val bridgeDelegate = lazy { NativeBridge() }
     private val bridge get() = bridgeDelegate.value
     private var job: Job? = null
+
     @Volatile
     internal var lastPerformanceSnapshot: WorkPerformanceSnapshot? = null
         private set
