@@ -115,7 +115,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
-            bash ./gradlew connectedDebugAndroidTest --console=plain
+            bash ./gradlew -Pandroid.testInstrumentationRunnerArguments.notClass=dev.blobs.app.MultiLibraryRetrievalScalingTest connectedDebugAndroidTest --console=plain
             bash ./gradlew :app:installDebug :app:installDebugAndroidTest --console=plain
             stage=/sdcard/Android/data/dev.blobs.app.debug/files
             adb shell mkdir -p "$stage"
