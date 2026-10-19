@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "id": "emergency-food",
+  "edition": "2026-10.1",
+  "title": "Food during power outages · U.S. guidance",
+  "publisher": "Ready.gov · Federal Emergency Management Agency",
+  "license": "FEMA/Ready.gov text; FEMA states most FEMA.gov material may be reused, while page-specific third-party restrictions may apply. Text only; no images, logos or endorsement.",
+  "saved": "2026-10-19",
+  "collection": "U.S. household emergency food preparation",
+  "origin": "https://www.fema.gov/about/website-information",
+  "sources": [
+    {
+      "id": "food",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/food",
+      "title": "Food",
+      "updated": "2026-03-12",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "a637fb11f2f539b5b2be75e3adeb162b3b05e256ce1c5d64b9e7147924f17c14"
+    }
+  ]
+}

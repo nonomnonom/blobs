@@ -1,0 +1,164 @@
+{
+  "format": 1,
+  "complete": true,
+  "scope": "Exact x86_64 emulator model compatibility, native inference timing, adaptive thread selection, cancellation and failure-path evidence. This is not model-package import, ARM execution or phone-performance evidence.",
+  "inputs": {
+    "run": {
+      "file": "evaluation/evidence/native-model-cache-qwen3-06b-x86_64-android16-2026-10-19/run-03.json",
+      "bytes": 3784,
+      "sha256": "834116f1491988a5ccab2b2b014076068b3b8473367062a8eccbe70eee2935cb"
+    },
+    "staging": {
+      "file": "evaluation/evidence/native-model-cache-qwen3-06b-x86_64-android16-2026-10-19/staging.json",
+      "bytes": 1457,
+      "sha256": "6c4678ab0686a6d5509468eac965757a5acbf73d58064512b7a193c852105d54"
+    },
+    "model_lock": {
+      "file": "evaluation/locks/qwen3-0.6b-native-smoke-v1.lock.json",
+      "bytes": 973,
+      "sha256": "6691ceb04fd0d8f55a484284f1645c31d9cd149ab9709a5e83563a49b60b5403"
+    },
+    "installed_app": {
+      "file": "evaluation/evidence/native-model-cache-qwen3-06b-x86_64-android16-2026-10-19/installed-app.json",
+      "bytes": 238,
+      "sha256": "d90c2cc9ef74469da093005fc718ffe012484b875b1172dd6089f101f8fd95aa"
+    }
+  },
+  "application": {
+    "package": "dev.blobs.app.debug",
+    "apk_sha256": "e86b5d1f6c252473fd6d6be8b1f3b899eb82ed91f5756c14a6ca83df6dd2eb96",
+    "test_apk_sha256": "e26ac905eb26070d34503253f678c69f0e280dbbf282c61cebc793d7e0577b74"
+  },
+  "model": {
+    "bytes": 639446688,
+    "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031"
+  },
+  "runtime_commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+  "workload": {
+    "id": "native-inference-smoke-v1",
+    "system_sha256": "6c9d83e4a80a7550bef6f135352efa92b4bc8b06c8f7c5031e73d147b86981f1",
+    "user_sha256": "c423998c131a228c0e9d859b02ac54c1c68f3bb44d06ab4c9f20e9df409a76e6",
+    "max_output_tokens": 96
+  },
+  "thread_mode": "adaptive",
+  "requested_inference_threads": null,
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "device_profile": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "model": "sdk_gphone64_x86_64",
+    "device": "emu64xa",
+    "api": 36,
+    "abi": "x86_64",
+    "available_processors": 4,
+    "max_heap_bytes": 201326592,
+    "serial": "emulator-5554"
+  },
+  "checks": {
+    "inputs_complete": true,
+    "exact_model_identity": true,
+    "device_profile_complete": true,
+    "pinned_runtime": true,
+    "fixed_workload": true,
+    "installed_build_identity": true,
+    "inference_completed": true,
+    "inference_metrics_present": true,
+    "model_cache_lifecycle_valid": true,
+    "context_capacity_sufficient": true,
+    "thread_selection_valid": true,
+    "inference_stage_order": true,
+    "exact_three_token_cancellation": true,
+    "missing_model_stopped_before_prompt": true
+  },
+  "observations": {
+    "inference_metrics": {
+      "total_us": 2489117,
+      "queue_us": 0,
+      "model_load_us": 218488,
+      "template_and_tokenize_us": 308,
+      "context_setup_us": 23819,
+      "prefill_us": 301346,
+      "generation_loop_us": 1941895,
+      "token_callback_us": 1415,
+      "first_token_callback_us": 546466,
+      "prompt_tokens": 29,
+      "output_tokens": 71,
+      "non_thinking_prefix": true,
+      "inference_threads": 4,
+      "context_tokens": 512,
+      "model_cache_hit": false
+    },
+    "warm_inference_metrics": {
+      "total_us": 2192495,
+      "queue_us": 0,
+      "model_load_us": 0,
+      "template_and_tokenize_us": 267,
+      "context_setup_us": 23055,
+      "prefill_us": 270734,
+      "generation_loop_us": 1896830,
+      "token_callback_us": 1411,
+      "first_token_callback_us": 294374,
+      "prompt_tokens": 29,
+      "output_tokens": 71,
+      "non_thinking_prefix": true,
+      "inference_threads": 4,
+      "context_tokens": 512,
+      "model_cache_hit": true
+    },
+    "reload_inference_metrics": {
+      "total_us": 2453923,
+      "queue_us": 0,
+      "model_load_us": 215421,
+      "template_and_tokenize_us": 245,
+      "context_setup_us": 26650,
+      "prefill_us": 266637,
+      "generation_loop_us": 1941835,
+      "token_callback_us": 1465,
+      "first_token_callback_us": 509271,
+      "prompt_tokens": 29,
+      "output_tokens": 71,
+      "non_thinking_prefix": true,
+      "inference_threads": 4,
+      "context_tokens": 512,
+      "model_cache_hit": false
+    },
+    "cancellation_metrics": {
+      "total_us": 449703,
+      "queue_us": 0,
+      "model_load_us": 0,
+      "template_and_tokenize_us": 306,
+      "context_setup_us": 28550,
+      "prefill_us": 369130,
+      "generation_loop_us": 49722,
+      "token_callback_us": 97,
+      "first_token_callback_us": 398269,
+      "prompt_tokens": 36,
+      "output_tokens": 3,
+      "non_thinking_prefix": true,
+      "inference_threads": 4,
+      "context_tokens": 512,
+      "model_cache_hit": true
+    },
+    "failure_metrics": {
+      "total_us": 36414,
+      "queue_us": 0,
+      "model_load_us": 107,
+      "template_and_tokenize_us": -1,
+      "context_setup_us": -1,
+      "prefill_us": -1,
+      "generation_loop_us": -1,
+      "token_callback_us": 0,
+      "first_token_callback_us": -1,
+      "prompt_tokens": -1,
+      "output_tokens": 0,
+      "non_thinking_prefix": false,
+      "inference_threads": 4,
+      "context_tokens": -1,
+      "model_cache_hit": false
+    }
+  },
+  "interpretation": {
+    "timing": "Recorded stage durations describe this emulator run only.",
+    "packaging": "The raw verified GGUF was staged directly; normal .blobs import remains separate."
+  },
+  "script_sha256": "dfafec2ab42687ec70d1d2d48b28aab0dd38332f64ba32ab2851bf7306e017ed"
+}

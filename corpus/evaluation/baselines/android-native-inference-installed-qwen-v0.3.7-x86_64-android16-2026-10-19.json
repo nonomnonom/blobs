@@ -1,0 +1,246 @@
+{
+  "application": {
+    "apk_sha256": "77afe09210b2aedb0c4c968d60cf040291cdea937c855bdeb0fddae6257a2047",
+    "test_apk_sha256": "c590de9612697d3d27c15f8325f0aa857df85c82f8ddb557748fc18d984d1969"
+  },
+  "complete": true,
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "device_profile": {
+    "abi": "x86_64",
+    "api": 36,
+    "available_processors": 4,
+    "device": "emu64xa",
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "max_heap_bytes": 201326592,
+    "model": "sdk_gphone64_x86_64"
+  },
+  "format": 1,
+  "inputs": {
+    "audits": [
+      {
+        "file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/audit-01.json",
+        "sha256": "ab6a0ba9190e747be0c2217df85ca27a9a5a53d19be0e46d35c694a2a665cf21"
+      },
+      {
+        "file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/audit-02.json",
+        "sha256": "48825c83819524b4e20058fc0e5f0529bbeb3144de16a5f5e708f8b665357eba"
+      },
+      {
+        "file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/audit-03.json",
+        "sha256": "4ca72c989354cedafa18555fbd704992329ac6fd25c3ac3627726afd84e1b25e"
+      }
+    ],
+    "runtime_lock": {
+      "file": "../android/third_party/llama.lock.json",
+      "sha256": "d800db62c2036a984d924a3fe193df15cf17bf624aab459045556eb6c5a75003"
+    }
+  },
+  "median": {
+    "context_setup_ms": 24.529,
+    "decode_tokens_per_second": 26.577864157915936,
+    "first_token_ms": 532.065,
+    "inference_threads": 4,
+    "model_load_ms": 230.331,
+    "output_tokens": 71,
+    "prefill_ms": 269.716,
+    "total_ms": 3205.287
+  },
+  "model": {
+    "bytes": 639446688,
+    "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031"
+  },
+  "output_tokens": 71,
+  "prompt_tokens": 29,
+  "range": {
+    "context_setup_ms": [
+      24.207,
+      25.394
+    ],
+    "decode_tokens_per_second": [
+      23.14715953380969,
+      28.91514057849015
+    ],
+    "first_token_ms": [
+      525.68,
+      534.347
+    ],
+    "inference_threads": [
+      4,
+      4
+    ],
+    "model_load_ms": [
+      229.227,
+      237.897
+    ],
+    "output_tokens": [
+      71,
+      71
+    ],
+    "prefill_ms": [
+      268.644,
+      273.298
+    ],
+    "total_ms": [
+      2992.146,
+      3594.43
+    ]
+  },
+  "runs": [
+    {
+      "audit_file": "audit-01.json",
+      "audit_sha256": "ab6a0ba9190e747be0c2217df85ca27a9a5a53d19be0e46d35c694a2a665cf21",
+      "context_setup_ms": 24.529,
+      "decode_tokens_per_second": 23.14715953380969,
+      "first_token_ms": 525.68,
+      "inference_threads": 4,
+      "model_load_ms": 229.227,
+      "output_tokens": 71,
+      "prefill_ms": 268.644,
+      "prompt_tokens": 29,
+      "run_file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/run-01.json",
+      "run_sha256": "dbf8bd732995e20e311f3d1a4a0b0e41d376bb6b9a00f1d42b3a4233cd3ef09c",
+      "thread_mode": "adaptive",
+      "total_ms": 3594.43
+    },
+    {
+      "audit_file": "audit-02.json",
+      "audit_sha256": "48825c83819524b4e20058fc0e5f0529bbeb3144de16a5f5e708f8b665357eba",
+      "context_setup_ms": 24.207,
+      "decode_tokens_per_second": 28.91514057849015,
+      "first_token_ms": 534.347,
+      "inference_threads": 4,
+      "model_load_ms": 237.897,
+      "output_tokens": 71,
+      "prefill_ms": 269.716,
+      "prompt_tokens": 29,
+      "run_file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/run-02.json",
+      "run_sha256": "047490c50cdb40739b6e54a2df451ee6b559fbb32d4f2797dc22c189da607ddc",
+      "thread_mode": "adaptive",
+      "total_ms": 2992.146
+    },
+    {
+      "audit_file": "audit-03.json",
+      "audit_sha256": "4ca72c989354cedafa18555fbd704992329ac6fd25c3ac3627726afd84e1b25e",
+      "context_setup_ms": 25.394,
+      "decode_tokens_per_second": 26.577864157915936,
+      "first_token_ms": 532.065,
+      "inference_threads": 4,
+      "model_load_ms": 230.331,
+      "output_tokens": 71,
+      "prefill_ms": 273.298,
+      "prompt_tokens": 29,
+      "run_file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/run-03.json",
+      "run_sha256": "69c9d312ec873137e7e5df864320d2d059f2a537fc6c053c0ef8235774282190",
+      "thread_mode": "adaptive",
+      "total_ms": 3205.287
+    }
+  ],
+  "runtime": {
+    "commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "lock_sha256": "d800db62c2036a984d924a3fe193df15cf17bf624aab459045556eb6c5a75003"
+  },
+  "scope": "Repeated native inference timing on one identified Android device using one exact model, fixed workload and pinned llama.cpp runtime. This records application latency only; no generated text is retained or graded.",
+  "script_sha256": "f48422571e5d669eb0e61fc87ba67fb08e9f458ad33084ed1bc84173b2047f5f",
+  "warm_turn": {
+    "median": {
+      "context_setup_ms": 25.973,
+      "decode_tokens_per_second": 29.82773433151216,
+      "first_token_ms": 297.4,
+      "inference_threads": 4,
+      "model_load_ms": 0.0,
+      "output_tokens": 71,
+      "prefill_ms": 270.876,
+      "total_ms": 2680.106
+    },
+    "range": {
+      "context_setup_ms": [
+        23.904,
+        26.457
+      ],
+      "decode_tokens_per_second": [
+        29.012749264465512,
+        32.93946700230901
+      ],
+      "first_token_ms": [
+        289.959,
+        310.047
+      ],
+      "inference_threads": [
+        4,
+        4
+      ],
+      "model_load_ms": [
+        0.0,
+        0.0
+      ],
+      "output_tokens": [
+        71,
+        71
+      ],
+      "prefill_ms": [
+        265.493,
+        282.979
+      ],
+      "total_ms": [
+        2447.548,
+        2759.399
+      ]
+    },
+    "runs": [
+      {
+        "audit_file": "audit-01.json",
+        "audit_sha256": "ab6a0ba9190e747be0c2217df85ca27a9a5a53d19be0e46d35c694a2a665cf21",
+        "context_setup_ms": 26.457,
+        "decode_tokens_per_second": 29.012749264465512,
+        "first_token_ms": 310.047,
+        "inference_threads": 4,
+        "model_load_ms": 0.0,
+        "output_tokens": 71,
+        "prefill_ms": 282.979,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/run-01.json",
+        "run_sha256": "dbf8bd732995e20e311f3d1a4a0b0e41d376bb6b9a00f1d42b3a4233cd3ef09c",
+        "thread_mode": "adaptive",
+        "total_ms": 2759.399
+      },
+      {
+        "audit_file": "audit-02.json",
+        "audit_sha256": "48825c83819524b4e20058fc0e5f0529bbeb3144de16a5f5e708f8b665357eba",
+        "context_setup_ms": 23.904,
+        "decode_tokens_per_second": 32.93946700230901,
+        "first_token_ms": 289.959,
+        "inference_threads": 4,
+        "model_load_ms": 0.0,
+        "output_tokens": 71,
+        "prefill_ms": 265.493,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/run-02.json",
+        "run_sha256": "047490c50cdb40739b6e54a2df451ee6b559fbb32d4f2797dc22c189da607ddc",
+        "thread_mode": "adaptive",
+        "total_ms": 2447.548
+      },
+      {
+        "audit_file": "audit-03.json",
+        "audit_sha256": "4ca72c989354cedafa18555fbd704992329ac6fd25c3ac3627726afd84e1b25e",
+        "context_setup_ms": 25.973,
+        "decode_tokens_per_second": 29.82773433151216,
+        "first_token_ms": 297.4,
+        "inference_threads": 4,
+        "model_load_ms": 0.0,
+        "output_tokens": 71,
+        "prefill_ms": 270.876,
+        "prompt_tokens": 29,
+        "run_file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/run-03.json",
+        "run_sha256": "69c9d312ec873137e7e5df864320d2d059f2a537fc6c053c0ef8235774282190",
+        "thread_mode": "adaptive",
+        "total_ms": 2680.106
+      }
+    ]
+  },
+  "workload": {
+    "id": "native-inference-smoke-v1",
+    "max_output_tokens": 96,
+    "system_sha256": "6c9d83e4a80a7550bef6f135352efa92b4bc8b06c8f7c5031e73d147b86981f1",
+    "user_sha256": "c423998c131a228c0e9d859b02ac54c1c68f3bb44d06ab4c9f20e9df409a76e6"
+  }
+}

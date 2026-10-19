@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "catalog_revision": 2026102002,
+  "signed_catalog_revision": "dced2f9ac694f0d908ec962873645025edb40d2f",
+  "package_revision": "8eb5bf7f426dad543d8e3a28e00d35f357b4f5ad",
+  "records_revision": "7f417f7e72f9326aa381278308b255611c0635ad",
+  "anonymous_downloads": true,
+  "catalog_signature": "Verified with the bundled v2 public key; exact payload bytes match bundled UTF-8/LF catalog.",
+  "android": "Android 16/API36 x86_64; normal in-app download, package validation, atomic install and activation. No answer grading.",
+  "libraries": [
+    {
+      "id": "practical-living",
+      "version": "2026-10.1",
+      "documents": 4,
+      "archive_bytes": 81377,
+      "installed_bytes": 229376,
+      "archive_sha256": "b4e59dacbcc9f70a8ffe28130e920a64f6d96bda2c836bebd874f28a633cd1b6",
+      "payload_sha256": "3bd3da23ad4ae106f0875d7669130267f63ae0c7f21e43ec9d417225143b83b1",
+      "records_sha256": "29935e6b5e17762c529debdedf76a6d5b25389632dc25161dd7be2011e57d2a9",
+      "package_url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/8eb5bf7f426dad543d8e3a28e00d35f357b4f5ad/packages/practical-living-2026-10-v1.blobs",
+      "records_url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/7f417f7e72f9326aa381278308b255611c0635ad/records/practical-living-2026-10.1/documents.jsonl.gz",
+      "source_lock": "corpus/sources/practical-living-2026-10.json",
+      "license": "CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/); Appropedia contributors. See each article for its source and contributor history.",
+      "download_and_inspect_ms": 652,
+      "install_validate_activate_ms": 282,
+      "apk_sha256": "d78717720886d704ddc0e4f4ce97a61ced378a6280aa0f6d1d9cd06948e11e02"
+    },
+    {
+      "id": "bali-travel",
+      "version": "2026-09.1",
+      "documents": 30,
+      "archive_bytes": 673641,
+      "installed_bytes": 1499136,
+      "archive_sha256": "fae6783ac8b72040fbb13f2a6b00417c5032b5817b5da08f8c0e49d7381a6dc8",
+      "payload_sha256": "24dcc4b2747064de96a4898af0c51c96515119ee4505581e97178a8e0ad16cf1",
+      "records_sha256": "e2b6d130b6b79dc7b756a1c09e7a99006ba8d7b8a59714f5700317f57b2e55f1",
+      "package_url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/8eb5bf7f426dad543d8e3a28e00d35f357b4f5ad/packages/bali-travel-2026-09-v1.blobs",
+      "records_url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/7f417f7e72f9326aa381278308b255611c0635ad/records/bali-travel-2026-09.1/documents.jsonl.gz",
+      "source_lock": "corpus/sources/bali-travel-2026-09.json",
+      "license": "CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); Wikivoyage contributors. See each guide for its source and contributor history.",
+      "download_and_inspect_ms": 1232,
+      "install_validate_activate_ms": 175,
+      "apk_sha256": "d78717720886d704ddc0e4f4ce97a61ced378a6280aa0f6d1d9cd06948e11e02"
+    }
+  ]
+}

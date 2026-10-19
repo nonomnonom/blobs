@@ -1,0 +1,13 @@
+{
+  "package": "dev.blobs.app.debug",
+  "complete": true,
+  "version_name": "0.3.9",
+  "app_apk_sha256": "c228da21769fdd732fe49a16c6e7fa8ec794d22e8ba85a8c9bb2837c95f40f84",
+  "test_apk_sha256": "4d6ebf5cd10d52a9aa7cf48fdcf1afcbab47e4ad3b8ccf8c7f73cb1f4af8df6f",
+  "instrumentation_test": "dev.blobs.app.NativeInferenceTest#installedLibraryAndModelProduceSavedCitedAnswer",
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "device_model": "sdk_gphone64_x86_64",
+  "api": 36,
+  "model_sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+  "library_sha256": "c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f"
+}

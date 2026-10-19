@@ -4,11 +4,14 @@ import android.text.format.Formatter
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -37,12 +40,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
+import kotlin.math.roundToInt
 
 @Composable
 fun GlyphButton(
@@ -58,14 +64,57 @@ fun GlyphButton(
 
 @Composable
 fun PrimaryAction(@StringRes label: Int, enabled: Boolean = true, onClick: () -> Unit) {
+    PrimaryAction(stringResource(label), enabled, onClick)
+}
+
+@Composable
+fun PrimaryAction(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         enabled = enabled,
         modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
         shape = RoundedCornerShape(28.dp)
     ) {
-        Text(stringResource(label), modifier = Modifier.padding(vertical = 6.dp))
+        Text(label, modifier = Modifier.padding(vertical = 6.dp))
     }
+}
+
+@Composable
+fun SetupProgress(progress: Float) {
+    val fraction = progress.coerceIn(0f, 1f)
+    Box(
+        Modifier.fillMaxWidth()
+            .heightIn(min = 8.dp, max = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .semantics { progressBarRangeInfo = ProgressBarRangeInfo(fraction, 0f..1f) }
+    ) {
+        Box(
+            Modifier.fillMaxWidth(fraction)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.primary)
+        )
+    }
+}
+
+@Composable
+fun SetupProgressBlock(progress: Float, @StringRes label: Int) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(
+            stringResource(label),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            stringResource(
+                R.string.progress_percent,
+                (progress.coerceIn(0f, 1f) * 100).roundToInt()
+            ),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    SetupProgress(progress)
 }
 
 @Composable
@@ -118,6 +167,7 @@ fun MenuRow(
     @StringRes title: Int,
     detail: String = "",
     enabled: Boolean = true,
+    @DrawableRes icon: Int? = null,
     onClick: () -> Unit
 ) {
     Surface(
@@ -130,6 +180,7 @@ fun MenuRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            icon?.let { Icon(painterResource(it), null, Modifier.size(24.dp)) }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(title), style = MaterialTheme.typography.labelLarge)
                 if (detail.isNotBlank()) {

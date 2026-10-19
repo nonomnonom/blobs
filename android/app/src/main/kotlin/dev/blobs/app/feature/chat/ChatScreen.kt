@@ -18,10 +18,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,6 +48,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
@@ -62,6 +66,9 @@ import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.TurnEntity
 import dev.blobs.app.inference.AnswerText
 import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.Mascot
+import dev.blobs.app.ui.MascotMotion
+import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.ProductState
 import dev.blobs.app.ui.ProductViewModel
@@ -78,19 +85,14 @@ fun ChatScreen(
     model: ProductViewModel
 ) {
     val currentThread by model.conversationId.collectAsStateWithLifecycle()
+    val packages by model.packages.collectAsStateWithLifecycle()
+    val ready = model.selectedModel() != null && model.catalog.hasStarterLibrary(packages)
+    val large = LocalDensity.current.fontScale >= 1.5f
     val list = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val focus = LocalFocusManager.current
-    val packages by model.packages.collectAsStateWithLifecycle()
-    val ready = model.selectedModel() != null && packages.any { it.kind == "library" }
-    val showLatest by remember(turns.isNotEmpty()) {
-        derivedStateOf {
-            list.canScrollForward &&
-                turns.isNotEmpty()
-        }
-    }
-    val large = LocalDensity.current.fontScale >= 1.5f
-    var composing by rememberSaveable { mutableStateOf(true) }
+    var observedTurns by rememberSaveable(currentThread) { mutableIntStateOf(0) }
+    val showLatest by remember { derivedStateOf { list.canScrollForward && turns.isNotEmpty() } }
     var slow by rememberSaveable(work.turnId) { mutableStateOf(false) }
     LaunchedEffect(work.turnId, work.busy) {
         slow = false
@@ -99,12 +101,18 @@ fun ChatScreen(
             slow = true
         }
     }
-    LaunchedEffect(turns.size, large) {
-        if (turns.isNotEmpty()) {
+    LaunchedEffect(turns.size) {
+        if (turns.size > observedTurns) {
             list.scrollToItem(turns.lastIndex)
             focus.clearFocus()
         }
-        if (large && turns.isNotEmpty()) composing = false
+        observedTurns = turns.size
+    }
+    if (turns.isEmpty()) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            HomeContent(state, work, ready, model)
+        }
+        return
     }
     Column(Modifier.fillMaxSize()) {
         if (work.busy &&
@@ -123,11 +131,6 @@ fun ChatScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                if (turns.isEmpty()) {
-                    item {
-                        HomeContent(ready, work.busy, model)
-                    }
-                }
                 items(turns, key = { it.id }) { turn ->
                     TurnCard(
                         if (work.turnId == turn.id) turn.copy(evidence = work.evidence) else turn,
@@ -139,8 +142,23 @@ fun ChatScreen(
                             turn.answer
                         },
                         work.busy,
-                        model
+                        model,
+                        latest = turn.id == turns.lastOrNull()?.id
                     )
+                }
+                if (large) {
+                    item(key = "follow-up-composer") {
+                        Column(
+                            Modifier.padding(horizontal = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                stringResource(R.string.follow_up),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Composer(state, work, true, model)
+                        }
+                    }
                 }
             }
             if (showLatest) {
@@ -171,60 +189,57 @@ fun ChatScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            if (!composing && turns.isNotEmpty()) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    if (work.busy && work.turnId.isNotEmpty()) {
-                        PrimaryAction(R.string.stop_answer) { model.stop() }
-                    } else {
-                        PrimaryAction(R.string.follow_up, !work.busy) { composing = true }
-                    }
-                }
-            } else {
-                if (large &&
-                    turns.isNotEmpty()
-                ) {
-                    TextButton(onClick = {
-                        composing = false
-                    }) { Text(stringResource(R.string.reading)) }
-                }
-                Composer(state, work, turns.isNotEmpty(), model)
+            if (!large) {
+                Composer(
+                    state,
+                    work,
+                    true,
+                    model,
+                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TurnCard(turn: TurnEntity, answer: String, busy: Boolean, model: ProductViewModel) {
+private fun TurnCard(
+    turn: TurnEntity,
+    answer: String,
+    busy: Boolean,
+    model: ProductViewModel,
+    latest: Boolean
+) {
     val context = LocalContext.current
     val appName = stringResource(R.string.app_name)
     val evidence = Evidence.decodeOrNull(turn.evidence)
     val large = LocalDensity.current.fontScale >= 1.5f
-    var showQuestion by rememberSaveable(turn.id) { mutableStateOf(false) }
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (large) {
-            TextButton(onClick = {
-                showQuestion = !showQuestion
-            }) { Text(stringResource(R.string.your_question)) }
+        SelectionContainer {
+            Text(
+                turn.question,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = if (large) 21.sp else 26.sp,
+                    lineHeight = if (large) 27.sp else 34.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = (-.5).sp
+                ),
+                modifier = Modifier.semantics { heading() }
+            )
         }
-        if (!large || showQuestion) {
-            SelectionContainer {
-                Text(
-                    turn.question,
-                    style = MaterialTheme.typography.headlineMedium
-                )
-            }
-        }
-        if (!large) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Image(painterResource(R.drawable.blob_wave), null, Modifier.size(36.dp))
-                Text(appName, style = MaterialTheme.typography.labelMedium)
-            }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Image(
+                painterResource(R.drawable.mascot_curious),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
+            )
+            Text(appName, style = MaterialTheme.typography.labelMedium)
         }
         if (answer.isNotEmpty()) {
             val markerSize = if (large) 32.dp else 24.dp
@@ -271,29 +286,46 @@ private fun TurnCard(turn: TurnEntity, answer: String, busy: Boolean, model: Pro
         }
         val label = when (turn.status) {
             "RUNNING" -> R.string.working
+
             "COMPLETE" -> R.string.status_complete
+
             "STOPPED" -> if (answer.isBlank()) {
                 R.string.status_stopped_empty
             } else {
                 R.string.status_stopped
             }
+
             "INTERRUPTED" -> if (answer.isBlank()) {
                 R.string.status_interrupted_empty
             } else {
                 R.string.status_interrupted
             }
+
             "LIMITED" -> R.string.status_limited
+
+            "UNVERIFIED" -> R.string.status_unverified
+
             "NO_SOURCES" -> R.string.status_no_sources
+
             else -> R.string.status_error
         }
         if (turn.status != "COMPLETE") {
-            Text(
-                stringResource(label),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (turn.status ==
+                    "RUNNING"
+                ) {
+                    Mascot(R.drawable.mascot_reading, Modifier.size(64.dp), MascotMotion.SEARCH)
+                }
+                Text(
+                    stringResource(label),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
-        if (turn.status == "RUNNING") LinearProgressIndicator(Modifier.fillMaxWidth())
         if (evidence == null) Body(R.string.sources_unavailable)
         if (!evidence.isNullOrEmpty()) {
             SectionLabel(R.string.sources_used)
@@ -331,13 +363,18 @@ private fun TurnCard(turn: TurnEntity, answer: String, busy: Boolean, model: Pro
                     Text(stringResource(R.string.copy_answer))
                 }
             }
-            if (turn.status != "COMPLETE") {
+            if (latest && turn.status != "COMPLETE") {
+                if (turn.status == "NO_SOURCES") {
+                    TextButton(onClick = { model.navigate(Page.SOURCES) }) {
+                        Text(stringResource(R.string.choose_sources))
+                    }
+                }
                 Button(onClick = {
-                    model.send(turn.question)
+                    model.retry(turn)
                 }, enabled = !busy) { Text(stringResource(R.string.retry)) }
                 if (turn.scope != "*" && turn.status == "NO_SOURCES") {
                     TextButton(onClick = {
-                        model.send(turn.question, widen = true)
+                        model.retry(turn, widen = true)
                     }, enabled = !busy) { Text(stringResource(R.string.search_all)) }
                 }
             }

@@ -1,0 +1,692 @@
+{
+  "format": 1,
+  "scope": "Production Android retrieval across enabled local libraries; no model or generated answers",
+  "created_at_epoch_ms": 1792373405214,
+  "case_set": {
+    "id": "multi-library-retrieval-scaling-v1",
+    "sha256": "68901899815aca5d32e824e14fcd27bc49cdaa819c449414355e1340ab406a03"
+  },
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "model": "sdk_gphone64_x86_64",
+    "abi": "x86_64",
+    "sdk": 36
+  },
+  "application": {
+    "package": "dev.blobs.app.debug",
+    "version": "0.3.6",
+    "apk_sha256": "0e8736ac2e7e09d5577c21bcbea5f48bbc07252ebb5c6b978d113442efe7b545",
+    "test_apk_sha256": "480659341912e7f9b9ea5183c30798bb4895d54a80406eda1c90db7a88d618e0"
+  },
+  "repeat_count": 5,
+  "libraries": [
+    {
+      "bytes": 8757248,
+      "format": 1,
+      "id": "wikipedia-starter",
+      "kind": "library",
+      "license": "CC BY-SA 4.0; adapted plain text; individual article attribution included",
+      "origin": "https://en.wikipedia.org/wiki/Wikipedia:Copyrights",
+      "sha256": "141b449c10fc5a76428f616c413f7066633b5fe426f84a9d5d2f45612b989a54",
+      "title": "Science and everyday questions",
+      "version": "2026-10-17.5"
+    },
+    {
+      "bytes": 131072,
+      "format": 1,
+      "id": "nps-outdoor-safety",
+      "kind": "library",
+      "license": "U.S. Government work · National Park Service (public domain unless marked)",
+      "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+      "sha256": "be7583a3c330317e63cc81e0c3290db4b42f834bb5290d426f05e6758cf34cfa",
+      "title": "Outdoor safety · U.S. national parks",
+      "version": "2026-10.1"
+    },
+    {
+      "bytes": 106496,
+      "format": 1,
+      "id": "ready-emergency-preparedness",
+      "kind": "library",
+      "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+      "origin": "https://www.fema.gov/about/website-information",
+      "sha256": "aaa6315c84831b62c25458541513c3e9e0b3c9f25e0558d525596a27d6b5304c",
+      "title": "Emergency preparedness · U.S. households",
+      "version": "2026-10.1"
+    },
+    {
+      "bytes": 110592,
+      "format": 1,
+      "id": "camping-safety",
+      "kind": "library",
+      "license": "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+      "origin": "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039",
+      "sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743",
+      "title": "Camping safely · U.S. national parks",
+      "version": "2026-10.1"
+    },
+    {
+      "bytes": 118784,
+      "format": 1,
+      "id": "backcountry-basics",
+      "kind": "library",
+      "license": "National Park Service text; public-domain status may vary by page; source credits The Mountaineers for the Ten Essentials system",
+      "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+      "sha256": "c2d3f6bc7ce50bcaca70a0d4ca54666aebb4d6d3243c805dfc9b3a25da66021f",
+      "title": "Backcountry trip planning · U.S. national parks",
+      "version": "2026-10.3"
+    }
+  ],
+  "scenarios": [
+    {
+      "enabled_library_count": 1,
+      "enabled_library_ids": [
+        "wikipedia-starter"
+      ],
+      "query_median_elapsed_ms_median": 6.037343,
+      "query_median_elapsed_ms_p95": 8.109903,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Ecosystem",
+            "Renewable energy",
+            "Cell (biology)",
+            "Circadian rhythm",
+            "Solar energy"
+          ],
+          "elapsed_ms_samples": [
+            8.282404,
+            9.988319,
+            7.219116,
+            8.109903,
+            5.720769
+          ],
+          "median_elapsed_ms": 8.109903
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": false,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Exercise",
+            "Cryptography",
+            "Ecosystem",
+            "Heat pump",
+            "Antimicrobial resistance",
+            "Evolution"
+          ],
+          "elapsed_ms_samples": [
+            5.98216,
+            5.184004,
+            6.292124,
+            5.914642,
+            6.975523
+          ],
+          "median_elapsed_ms": 5.98216
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": false,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Supply and demand",
+            "Renewable energy",
+            "Human rights",
+            "Antibiotic",
+            "Public health",
+            "Computer security"
+          ],
+          "elapsed_ms_samples": [
+            5.244711,
+            6.415071,
+            4.779644,
+            6.037343,
+            6.130926
+          ],
+          "median_elapsed_ms": 6.037343
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": false,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Urban forestry",
+            "Climate change",
+            "Sustainable agriculture",
+            "Biodiversity",
+            "Computer security",
+            "Agriculture"
+          ],
+          "elapsed_ms_samples": [
+            6.733999,
+            8.406993,
+            8.333704,
+            7.260153,
+            7.234059
+          ],
+          "median_elapsed_ms": 7.260153
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Cryptography",
+            "Urban forestry",
+            "Human rights",
+            "Lithium-ion battery",
+            "Antibiotic",
+            "Public health"
+          ],
+          "elapsed_ms_samples": [
+            6.570101,
+            5.889889,
+            5.432927,
+            5.83205,
+            5.554845
+          ],
+          "median_elapsed_ms": 5.83205
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 2,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety"
+      ],
+      "query_median_elapsed_ms_median": 379.013552,
+      "query_median_elapsed_ms_p95": 398.485133,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Cell (biology)",
+            "Ecosystem",
+            "Two Ways to Purify Water",
+            "Renewable energy",
+            "Circadian rhythm"
+          ],
+          "elapsed_ms_samples": [
+            157.574344,
+            191.304671,
+            186.464146,
+            173.063816,
+            181.989407
+          ],
+          "median_elapsed_ms": 181.989407
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution",
+            "Cryptography"
+          ],
+          "elapsed_ms_samples": [
+            374.042987,
+            409.830324,
+            385.846758,
+            398.485133,
+            407.576025
+          ],
+          "median_elapsed_ms": 398.485133
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": false,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Hike Smart",
+            "Winter Hiking Tips",
+            "Renewable energy",
+            "Inflation",
+            "Nuclear power"
+          ],
+          "elapsed_ms_samples": [
+            269.150169,
+            259.220062,
+            274.02273,
+            282.576978,
+            280.140161
+          ],
+          "median_elapsed_ms": 274.02273
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": false,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Urban forestry",
+            "Climate change",
+            "Industrial Revolution",
+            "Winter Hiking Tips",
+            "Sustainable agriculture"
+          ],
+          "elapsed_ms_samples": [
+            429.485174,
+            370.969179,
+            382.479814,
+            379.013552,
+            372.465252
+          ],
+          "median_elapsed_ms": 379.013552
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Outdoor Emergency Plan",
+            "Winter Hiking Tips",
+            "Cryptography",
+            "Urban forestry",
+            "Human rights"
+          ],
+          "elapsed_ms_samples": [
+            379.358674,
+            412.349177,
+            376.735288,
+            402.442903,
+            398.118378
+          ],
+          "median_elapsed_ms": 398.118378
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 3,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety",
+        "ready-emergency-preparedness"
+      ],
+      "query_median_elapsed_ms_median": 412.544653,
+      "query_median_elapsed_ms_p95": 503.822202,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Cell (biology)",
+            "Ecosystem",
+            "Two Ways to Purify Water",
+            "Build A Kit",
+            "Power Outages"
+          ],
+          "elapsed_ms_samples": [
+            215.719848,
+            190.987534,
+            216.508092,
+            193.177193,
+            200.893038
+          ],
+          "median_elapsed_ms": 200.893038
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution",
+            "Power Outages"
+          ],
+          "elapsed_ms_samples": [
+            413.781662,
+            412.544653,
+            393.533325,
+            470.440716,
+            411.381916
+          ],
+          "median_elapsed_ms": 412.544653
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": true,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Build A Kit",
+            "Evacuation",
+            "Outdoor Emergency Plan",
+            "Hike Smart",
+            "Winter Hiking Tips",
+            "Make A Plan"
+          ],
+          "elapsed_ms_samples": [
+            380.765002,
+            357.929056,
+            358.525656,
+            350.680435,
+            364.440669
+          ],
+          "median_elapsed_ms": 358.525656
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": false,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Urban forestry",
+            "Build A Kit",
+            "Climate change",
+            "Industrial Revolution",
+            "Power Outages"
+          ],
+          "elapsed_ms_samples": [
+            430.871683,
+            413.106013,
+            442.525135,
+            415.54039,
+            416.904549
+          ],
+          "median_elapsed_ms": 416.904549
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Build A Kit",
+            "Outdoor Emergency Plan",
+            "Make A Plan",
+            "Evacuation",
+            "Winter Hiking Tips"
+          ],
+          "elapsed_ms_samples": [
+            489.643751,
+            508.271563,
+            491.709018,
+            504.808655,
+            503.822202
+          ],
+          "median_elapsed_ms": 503.822202
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 4,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety",
+        "ready-emergency-preparedness",
+        "camping-safety"
+      ],
+      "query_median_elapsed_ms_median": 464.645109,
+      "query_median_elapsed_ms_p95": 597.077078,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Cell (biology)",
+            "Ecosystem",
+            "Two Ways to Purify Water",
+            "Build A Kit",
+            "Power Outages"
+          ],
+          "elapsed_ms_samples": [
+            184.837614,
+            183.659521,
+            194.16686,
+            180.936343,
+            182.561253
+          ],
+          "median_elapsed_ms": 183.659521
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Outdoor Emergency Plan",
+            "Ecosystem",
+            "Exercise",
+            "Antimicrobial resistance",
+            "Evolution",
+            "Power Outages"
+          ],
+          "elapsed_ms_samples": [
+            451.74182,
+            440.644558,
+            477.755635,
+            449.660632,
+            470.241331
+          ],
+          "median_elapsed_ms": 451.74182
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": true,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Build A Kit",
+            "Camping Safely Step 1 - Before the Trip",
+            "Evacuation",
+            "Outdoor Emergency Plan",
+            "Winter Hiking Tips",
+            "Make A Plan"
+          ],
+          "elapsed_ms_samples": [
+            428.13402,
+            442.467995,
+            493.492067,
+            464.645109,
+            469.00666
+          ],
+          "median_elapsed_ms": 464.645109
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": true,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 3,
+          "selected_titles": [
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Camping Safely Step 3 - During Your Stay",
+            "Camping Safely Step 2 - Upon Arrival",
+            "Camping Safely Step 4 - After the Trip",
+            "Build A Kit"
+          ],
+          "elapsed_ms_samples": [
+            597.077078,
+            584.765524,
+            692.003062,
+            666.635797,
+            589.423268
+          ],
+          "median_elapsed_ms": 597.077078
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": false,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 0,
+          "selected_titles": [
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Build A Kit",
+            "Outdoor Emergency Plan",
+            "Make A Plan",
+            "Evacuation"
+          ],
+          "elapsed_ms_samples": [
+            580.54022,
+            563.040531,
+            581.264598,
+            585.989924,
+            594.39312
+          ],
+          "median_elapsed_ms": 581.264598
+        }
+      ]
+    },
+    {
+      "enabled_library_count": 5,
+      "enabled_library_ids": [
+        "wikipedia-starter",
+        "nps-outdoor-safety",
+        "ready-emergency-preparedness",
+        "camping-safety",
+        "backcountry-basics"
+      ],
+      "query_median_elapsed_ms_median": 620.234417,
+      "query_median_elapsed_ms_p95": 745.584985,
+      "cases": [
+        {
+          "case_id": "starter-photosynthesis",
+          "expected_source_enabled": true,
+          "expected_document_title": "Photosynthesis",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Photosynthesis",
+            "Cell (biology)",
+            "Ecosystem",
+            "Two Ways to Purify Water",
+            "Build A Kit",
+            "Power Outages"
+          ],
+          "elapsed_ms_samples": [
+            198.587339,
+            216.301593,
+            209.829193,
+            207.837765,
+            209.711625
+          ],
+          "median_elapsed_ms": 209.711625
+        },
+        {
+          "case_id": "lost-outdoors",
+          "expected_source_enabled": true,
+          "expected_document_title": "Outdoor Emergency Plan",
+          "expected_title_rank": 2,
+          "selected_titles": [
+            "Trip Planning Guide",
+            "Outdoor Emergency Plan",
+            "Ten Essentials",
+            "Ecosystem",
+            "Wilderness & Backcountry Camping",
+            "Exercise"
+          ],
+          "elapsed_ms_samples": [
+            620.234417,
+            617.387237,
+            649.59714,
+            606.112104,
+            623.879559
+          ],
+          "median_elapsed_ms": 620.234417
+        },
+        {
+          "case_id": "emergency-supply-kit",
+          "expected_source_enabled": true,
+          "expected_document_title": "Build A Kit",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Build A Kit",
+            "Ten Essentials",
+            "Camping Safely Step 1 - Before the Trip",
+            "Evacuation",
+            "Outdoor Emergency Plan",
+            "Retrieval-augmented generation"
+          ],
+          "elapsed_ms_samples": [
+            538.778235,
+            566.146987,
+            561.594497,
+            591.371585,
+            555.978385
+          ],
+          "median_elapsed_ms": 561.594497
+        },
+        {
+          "case_id": "camping-wildlife-food-storage",
+          "expected_source_enabled": true,
+          "expected_document_title": "Camping Safely Step 3 - During Your Stay",
+          "expected_title_rank": 4,
+          "selected_titles": [
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Wilderness & Backcountry Camping",
+            "Camping Safely Step 3 - During Your Stay",
+            "Camping Safely Step 2 - Upon Arrival",
+            "Urban forestry"
+          ],
+          "elapsed_ms_samples": [
+            798.265945,
+            715.48621,
+            772.157089,
+            739.571087,
+            736.141817
+          ],
+          "median_elapsed_ms": 739.571087
+        },
+        {
+          "case_id": "backcountry-emergency-shelter",
+          "expected_source_enabled": true,
+          "expected_document_title": "Ten Essentials",
+          "expected_title_rank": 1,
+          "selected_titles": [
+            "Ten Essentials",
+            "Hike Smart",
+            "Camping Safely Step 1 - Before the Trip",
+            "Build A Kit",
+            "Wilderness & Backcountry Camping",
+            "Outdoor Emergency Plan"
+          ],
+          "elapsed_ms_samples": [
+            739.320157,
+            756.090089,
+            764.356356,
+            738.133924,
+            745.584985
+          ],
+          "median_elapsed_ms": 745.584985
+        }
+      ]
+    }
+  ],
+  "test_result": "passed"
+}

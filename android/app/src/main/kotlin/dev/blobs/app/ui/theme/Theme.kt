@@ -35,7 +35,7 @@ private val LightColors =
         onSecondary = Color.White,
         secondaryContainer = Lavender,
         onSecondaryContainer = Ink,
-        tertiaryContainer = Color(0xFFC5E8FF),
+        tertiaryContainer = Lavender,
         onTertiaryContainer = Ink,
         error = Color(0xFFB13636)
     )

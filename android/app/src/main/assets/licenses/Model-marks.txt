@@ -1,0 +1,8 @@
+# Model marks
+
+Downloaded unchanged on 19 October 2026 from official GitHub organization avatars:
+
+- Gemma: https://github.com/google-gemma — https://avatars.githubusercontent.com/u/271369873?v=4
+- Qwen: https://github.com/QwenLM — https://avatars.githubusercontent.com/u/141221163?v=4
+
+These are brand identifiers, not Blobs artwork. Original colors and proportions are preserved on a white backing, including in dark mode. Trademarks remain with their respective owners; upstream repository software licenses do not transfer trademark rights. Used to identify the installed/available model family, without implying endorsement. No remote image requests at runtime.

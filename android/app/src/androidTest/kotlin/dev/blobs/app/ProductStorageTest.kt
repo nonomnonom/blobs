@@ -9,6 +9,7 @@ import dev.blobs.app.data.local.BlobsDatabase
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.TurnEntity
 import dev.blobs.app.data.packages.PackageInstaller
+import dev.blobs.app.data.packages.PackageManifest
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File
@@ -204,6 +205,52 @@ class ProductStorageTest {
             assertTrue(File(installed.path).readBytes().contentEquals(bytes))
             assertEquals(null, recreated.pending())
             assertFalse(File(folder, "packages/${manifest.key}.partial").exists())
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun rawCatalogGgufInstallsAndResumesFromAppOwnedDownload() = runBlocking {
+        val name = "raw-installer-${UUID.randomUUID()}.db"
+        val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
+        val isolated = object : ContextWrapper(context) {
+            override fun getFilesDir(): File = folder
+        }
+        val db = BlobsDatabase.open(context, name)
+        try {
+            val bytes = structuralGgufFixture()
+            val checksum = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {
+                "%02x".format(it)
+            }
+            val manifest = PackageManifest(
+                id = "frontier-test",
+                version = "fixture1",
+                kind = "model",
+                title = "Frontier test model",
+                bytes = bytes.size.toLong(),
+                sha256 = checksum,
+                license = "Test fixture",
+                origin = "instrumentation"
+            )
+            val source = File(folder, "package-downloads/frontier-test.gguf").apply {
+                parentFile?.mkdirs()
+                writeBytes(bytes)
+            }
+            val installer = PackageInstaller(isolated, db.packages(), LibraryStore())
+            try {
+                installer.install(Uri.fromFile(source), manifest) {
+                    throw CancellationException("pause")
+                }
+            } catch (_: CancellationException) { }
+            assertTrue(File(folder, "packages/${manifest.key}.partial").exists())
+            val resumed = PackageInstaller(isolated, db.packages(), LibraryStore())
+            assertEquals(manifest.key, resumed.recover()?.manifest?.key)
+            val installed = resumed.install(Uri.fromFile(source), manifest) {}
+            assertTrue(File(installed.path).readBytes().contentEquals(bytes))
+            assertEquals(null, resumed.pending())
         } finally {
             db.close()
             context.deleteDatabase(name)

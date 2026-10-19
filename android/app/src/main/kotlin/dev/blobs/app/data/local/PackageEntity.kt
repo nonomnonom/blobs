@@ -1,5 +1,6 @@
 package dev.blobs.app.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,5 +16,6 @@ data class PackageEntity(
     val sha256: String,
     val license: String,
     val origin: String,
-    val installedAt: Long
+    val installedAt: Long,
+    @ColumnInfo(defaultValue = "1") val enabled: Boolean = true
 )

@@ -1,0 +1,13 @@
+# Blobs illustration asset provenance
+
+Created19 October2026 with the built-in image generation tool. Original project-owned artwork is preserved in the parent directory; generated variants do not overwrite it. Reference Headspace screenshots informed composition only and are not embedded in delivered assets.
+
+| Asset | References | Generation output |
+| --- | --- | --- |
+| curious.png | discovery_world.png, ready_world.png | exec-88798d7f-6a01-4a68-82d9-0e0b75c27136.png |
+| reading.png | welcome_world.png, curious.png | exec-b9c21373-2f2e-4b78-aa17-5c94e5416dbb.png |
+| ready.png | ready_world.png, curious.png | exec-3f4be47f-dea0-43ca-8d9f-5688471c3f2b.png |
+| garden.png | discovery_world.png, library_world.png | Tool data URL saved unchanged; default output file was empty |
+| garden-night.png | garden.png | exec-773785f1-4089-44bf-8322-69d575a39dcb.png |
+
+Transparent poses retain generated alpha. Backgrounds are opaque day/night environments with open center/upper space for real UI. No pixel retouching or background removal outside the image tool. CSS places/scales layers and animates finite transforms. No remote asset request at runtime. Prompt constraints and motion behavior are recorded in ../../../ILLUSTRATION-SYSTEM.md.

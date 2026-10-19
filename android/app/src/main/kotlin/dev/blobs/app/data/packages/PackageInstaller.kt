@@ -5,11 +5,13 @@ import android.net.Uri
 import android.os.storage.StorageManager
 import android.util.AtomicFile
 import dev.blobs.app.data.library.LibraryStore
+import dev.blobs.app.data.library.UserLibraryPackage
 import dev.blobs.app.data.local.PackageDao
 import dev.blobs.app.data.local.PackageEntity
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.io.OutputStream
 import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 import kotlinx.coroutines.CancellationException
@@ -31,6 +33,8 @@ class PackageInstaller(
 ) {
     private val mutations = Mutex()
     private val root = File(context.filesDir, "packages").apply { mkdirs() }
+    private val userLibraries = UserLibraryPackage(context)
+    private val downloadRoot = File(context.filesDir, "package-downloads").canonicalFile
     private val journal = AtomicFile(File(context.filesDir, "pending-import.json"))
 
     fun pending(): PendingImport? {
@@ -60,7 +64,10 @@ class PackageInstaller(
 
     suspend fun discardPending() = withContext(Dispatchers.IO) {
         mutations.withLock {
-            pending()?.let { File(root, "${it.manifest.key}.partial").delete() }
+            pending()?.let {
+                File(root, "${it.manifest.key}.partial").delete()
+                userLibraries.discardGeneratedArchive(it.uri)
+            }
             journal.delete()
         }
     }
@@ -69,13 +76,40 @@ class PackageInstaller(
         stream(uri).use { readManifest(it) }
     }
 
+    suspend fun importDocuments(uris: List<Uri>, progress: (Long, Long) -> Unit): PackageEntity =
+        withContext(Dispatchers.IO) {
+            val archive = userLibraries.prepare(uris)
+            val uri = Uri.fromFile(archive)
+            try {
+                val manifest = inspect(uri)
+                install(uri, manifest) { bytes -> progress(bytes, manifest.bytes) }
+            } finally {
+                val retainedForResume = runCatching { pending()?.uri == uri }.getOrDefault(true)
+                if (!retainedForResume) userLibraries.discardGeneratedArchive(uri)
+            }
+        }
+
+    suspend fun exportCollection(pack: PackageEntity, output: OutputStream) =
+        withContext(Dispatchers.IO) {
+            userLibraries.export(pack, library, output)
+        }
+
     suspend fun install(
         uri: Uri,
         expected: PackageManifest,
+        catalogDigestPinned: Boolean = false,
         progress: (Long) -> Unit
     ): PackageEntity = withContext(Dispatchers.IO) {
         mutations.withLock {
             dao.all().find { it.key == expected.key }?.let { return@withContext it }
+            val rawModel =
+                uri.scheme == "file" && File(requireNotNull(uri.path)).extension == "gguf"
+            if (rawModel) {
+                val source = File(requireNotNull(uri.path)).canonicalFile
+                require(source.parentFile == downloadRoot && expected.kind == "model") {
+                    "MODEL_SOURCE"
+                }
+            }
             val storage = context.getSystemService(StorageManager::class.java)
             val volume = storage.getUuidForPath(root)
             check(dao.all().sumOf { it.bytes } + expected.bytes < 48_000_000_000L) { "FOOTPRINT" }
@@ -92,17 +126,24 @@ class PackageInstaller(
             storage.allocateBytes(volume, required)
             record(uri, expected)
             try {
-                stream(uri).use { archive ->
-                    require(readManifest(archive) == expected) { "MANIFEST_CHANGED" }
-                    val entry = archive.nextEntry ?: error("MISSING_PAYLOAD")
-                    require(entry.name == expected.fileName && !entry.isDirectory)
-                    val digest = MessageDigest.getInstance("SHA-256")
-                    var count = 0L
+                val digest = MessageDigest.getInstance("SHA-256")
+                var count = 0L
+                val input = if (rawModel) {
+                    File(requireNotNull(uri.path)).inputStream()
+                } else {
+                    stream(uri)
+                }
+                input.use { source ->
+                    if (source is ZipInputStream) {
+                        require(readManifest(source) == expected) { "MANIFEST_CHANGED" }
+                        val entry = source.nextEntry ?: error("MISSING_PAYLOAD")
+                        require(entry.name == expected.fileName && !entry.isDirectory)
+                    }
                     java.io.FileOutputStream(staging, resumeBytes > 0).use { output ->
                         val buffer = ByteArray(256 * 1024)
                         while (true) {
                             currentCoroutineContext().ensureActive()
-                            val length = archive.read(buffer)
+                            val length = source.read(buffer)
                             if (length < 0) break
                             count += length
                             require(count <= expected.bytes) { "SIZE" }
@@ -116,14 +157,16 @@ class PackageInstaller(
                         }
                         output.fd.sync()
                     }
-                    require(
-                        count == expected.bytes &&
-                            digest.digest().joinToString("") {
-                                "%02x".format(it)
-                            } == expected.sha256
-                    ) { "CHECKSUM" }
-                    require(archive.nextEntry == null) { "EXTRA_FILES" }
+                    if (source is ZipInputStream) {
+                        require(source.nextEntry == null) { "EXTRA_FILES" }
+                    }
                 }
+                require(
+                    count == expected.bytes &&
+                        digest.digest().joinToString("") {
+                            "%02x".format(it)
+                        } == expected.sha256
+                ) { "CHECKSUM" }
                 if (resumeBytes > 0) {
                     val hash = MessageDigest.getInstance("SHA-256")
                     staging.inputStream().use { input ->
@@ -138,7 +181,7 @@ class PackageInstaller(
                     require(hash.digest().joinToString("") { "%02x".format(it) } == expected.sha256)
                 }
                 if (expected.kind == "library") {
-                    library.validate(staging)
+                    library.validate(staging, catalogDigestPinned)
                 } else {
                     GgufValidator.validate(staging)
                 }
@@ -164,6 +207,7 @@ class PackageInstaller(
                 if (!paused) {
                     staging.delete()
                     journal.delete()
+                    userLibraries.discardGeneratedArchive(uri)
                 }
                 if (!activated) target.delete()
             }
@@ -193,6 +237,7 @@ class PackageInstaller(
 
     suspend fun recover() = withContext(Dispatchers.IO) {
         mutations.withLock {
+            dao.reconcileActiveEditions()
             val installed = dao.all().map { it.key }.toSet()
             var pending = try {
                 pending()
@@ -212,10 +257,12 @@ class PackageInstaller(
                         file.name.removeSuffix(".removed") in installed -> {
                         file.renameTo(File(root, file.name.removeSuffix(".removed")))
                     }
+
                     file.name !in installed &&
                         file.name != "${pending?.manifest?.key}.partial" -> file.delete()
                 }
             }
+            userLibraries.recoverGeneratedArchives(pending?.uri)
             pending
         }
     }

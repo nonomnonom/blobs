@@ -4,15 +4,18 @@ import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithContentDescription
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
@@ -29,8 +32,18 @@ import org.junit.Rule
 import org.junit.Test
 
 class UiParityTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 0)
+    val fontScale = SystemFontScaleRule()
+
+    @get:Rule(order = 1)
+    val compose = createAndroidComposeRule<MainActivity>()
     private fun text(id: Int) = compose.activity.getString(id)
+
+    private fun revealFollowUp() {
+        compose.onNode(hasScrollToIndexAction())
+            .performScrollToNode(hasContentDescription(text(R.string.follow_up_hint)))
+        compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
+    }
 
     @Test
     fun importReviewReturnsToOriginAndRejectsDuplicatesWithoutLosingDraft() {
@@ -41,9 +54,15 @@ class UiParityTest {
             .use { input -> file.outputStream().use { input.copyTo(it) } }
         val uri = Uri.fromFile(file)
         val manifest = runBlocking { container.installer.inspect(uri) }
+        val conversation = ConversationEntity("ui-import-${UUID.randomUUID()}", "", "", 1, 1)
         try {
-            runBlocking { container.preferences.welcome() }
+            runBlocking {
+                container.preferences.welcome()
+                container.database.conversations().save(conversation)
+            }
             compose.waitUntil(10_000) { model.state.value.loaded && model.work.value.ready }
+            compose.runOnUiThread { model.openConversation(conversation) }
+            compose.waitUntil(10_000) { model.conversationId.value == conversation.id }
             compose.runOnUiThread {
                 model.draft("Preserve this import draft")
                 model.navigate(Page.LIBRARY)
@@ -55,15 +74,14 @@ class UiParityTest {
             assertEquals(null, model.state.value.manifest)
             compose.runOnUiThread { model.inspect(uri) }
             compose.waitUntil(10_000) { model.state.value.manifest != null }
-            runBlocking { container.preferences.setTextScale(2f) }
-            compose.waitUntil(10_000) { model.state.value.options.textScale == 2f }
+            fontScale.set(2f)
             compose.onNodeWithText(text(R.string.add)).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.cancel)).assertIsDisplayed()
             compose.onNodeWithContentDescription(text(R.string.back)).performClick()
             assertEquals(null, model.state.value.importUri)
             assertEquals(Page.LIBRARY, model.state.value.page)
             assertEquals("Preserve this import draft", model.state.value.draft)
-            runBlocking { container.preferences.setTextScale(1f) }
+            fontScale.set(1f)
             compose.runOnUiThread { model.inspect(uri) }
             compose.waitUntil(10_000) { model.state.value.manifest != null }
             compose.onNodeWithText(text(R.string.add)).performClick()
@@ -72,14 +90,13 @@ class UiParityTest {
             assertEquals(Page.LIBRARY, model.state.value.page)
             compose.runOnUiThread { model.inspect(uri) }
             compose.waitUntil(10_000) { model.state.value.manifest != null }
-            runBlocking { container.preferences.setTextScale(2f) }
-            compose.waitUntil(10_000) { model.state.value.options.textScale == 2f }
+            fontScale.set(2f)
             compose.onNodeWithText(
                 text(R.string.already_added)
             ).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.add)).assertIsNotEnabled()
             compose.onNodeWithText(text(R.string.cancel)).performClick()
-            runBlocking { container.preferences.setTextScale(1f) }
+            fontScale.set(1f)
             compose.onNodeWithContentDescription(text(R.string.back)).performClick()
             compose.onNodeWithText("Preserve this import draft").assertIsDisplayed()
             val export = File(compose.activity.cacheDir, "ui-conversations.md")
@@ -89,10 +106,11 @@ class UiParityTest {
             export.delete()
         } finally {
             runBlocking {
-                container.preferences.setTextScale(1f)
                 container.database.packages().all().find { it.key == manifest.key }?.let {
                     container.installer.remove(it)
                 }
+                container.preferences.selectConversation("")
+                container.database.conversations().delete(conversation.id)
             }
             file.delete()
         }
@@ -109,7 +127,6 @@ class UiParityTest {
         runBlocking {
             container.preferences.welcome()
             container.preferences.setThemeMode(ThemeMode.LIGHT)
-            container.preferences.setTextScale(2f)
             container.database.conversations().save(
                 ConversationEntity(id, "UI reading test", "", 1, 1)
             )
@@ -122,6 +139,7 @@ class UiParityTest {
             container.preferences.selectConversation(id)
         }
         try {
+            fontScale.set(2f)
             val conversation =
                 runBlocking { requireNotNull(container.database.conversations().find(id)) }
             compose.runOnUiThread {
@@ -134,29 +152,44 @@ class UiParityTest {
             }
             compose.activityRule.scenario.recreate()
             compose.waitUntil(10_000) {
-                compose.onAllNodesWithText(text(R.string.follow_up))
-                    .fetchSemanticsNodes().isNotEmpty()
+                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                    .turns.value.any { it.id == "$id-turn" }
             }
-            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            revealFollowUp()
             compose.onNodeWithContentDescription(text(R.string.follow_up_hint))
                 .performTextInput("Keep this follow-up")
-            compose.onNodeWithText(text(R.string.reading)).performClick()
-            compose.onNodeWithText(text(R.string.follow_up)).assertIsDisplayed().performClick()
+            compose.activityRule.scenario.onActivity { activity ->
+                androidx.core.view.WindowCompat.getInsetsController(
+                    activity.window,
+                    activity.window.decorView
+                )
+                    .hide(WindowInsetsCompat.Type.ime())
+            }
+            revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             val selectedTitle = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
                 .selectedModel()?.title ?: text(R.string.model_missing)
             compose.onNodeWithContentDescription(
                 compose.activity.getString(R.string.model_choice, selectedTitle)
-            ).performClick()
+            ).performScrollTo().performClick()
             compose.onNodeWithText(text(R.string.manage_models)).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.done)).performClick()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
-            compose.onNodeWithText(text(R.string.reading)).performClick()
+            compose.activityRule.scenario.onActivity { activity ->
+                androidx.core.view.WindowCompat.getInsetsController(
+                    activity.window,
+                    activity.window.decorView
+                )
+                    .hide(WindowInsetsCompat.Type.ime())
+            }
             val label = compose.activity.getString(R.string.read_source, 1, source.title)
-            compose.onAllNodesWithContentDescription(label)[0].performScrollTo().performClick()
+            val sourceRow = hasContentDescription(label) and hasText(source.title)
+            compose.onNode(hasScrollToIndexAction()).performScrollToNode(sourceRow)
+            compose.onNode(sourceRow).performScrollTo().performClick()
             compose.onNodeWithText(source.text).assertIsDisplayed()
             compose.onNodeWithContentDescription(text(R.string.back)).performClick()
-            compose.onNodeWithContentDescription(text(R.string.history)).performClick()
+            compose.onNodeWithContentDescription(text(R.string.open_navigation)).performClick()
+            compose.onNodeWithText(text(R.string.search_conversations)).performClick()
             compose.onNodeWithContentDescription(text(R.string.search_history))
                 .performTextInput("no-match-for-this-ui-test")
             compose.onNodeWithText(text(R.string.history_no_match)).performScrollTo()
@@ -165,14 +198,18 @@ class UiParityTest {
             compose.onNodeWithContentDescription(text(R.string.search_history))
                 .performTextInput("UI reading")
             compose.onNode(hasText("UI reading test") and hasClickAction()).performClick()
-            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            compose.waitUntil(10_000) {
+                ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
+                    ?.isVisible(WindowInsetsCompat.Type.ime()) == false
+            }
+            revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             compose.activityRule.scenario.recreate()
             compose.waitUntil(10_000) {
-                compose.onAllNodesWithText(text(R.string.follow_up))
-                    .fetchSemanticsNodes().isNotEmpty()
+                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                    .turns.value.any { it.id == "$id-turn" }
             }
-            compose.onNodeWithText(text(R.string.follow_up)).performClick()
+            revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             runBlocking {
                 assertEquals(
@@ -186,7 +223,6 @@ class UiParityTest {
             }
         } finally {
             runBlocking {
-                container.preferences.setTextScale(1f)
                 container.preferences.setThemeMode(ThemeMode.SYSTEM)
                 container.preferences.selectConversation("")
                 container.database.conversations().delete(id)

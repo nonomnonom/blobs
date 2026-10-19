@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "scope": "Prospective full-corpus evaluation: forty questions, eight per category. Not executed during prompt/model development. Expected titles are routing targets, not relevance or factual-answer labels. Use complete sources and a blinded qualitative review; retain failures and insufficiency. If results guide tuning, this set becomes development evidence. This is not guaranteed absent from model pretraining and is not an official bounty score.",
+  "scope": "Prospective full-corpus evaluation: forty questions, eight per category. Not executed during prompt/model development. Expected titles are routing targets, not relevance or factual-answer labels. Use complete sources and a blinded qualitative review; retain failures and insufficiency. If results guide tuning, this set becomes development evidence. This is not guaranteed absent from model pretraining.",
   "cases": [
     {"id":"v2-checksum","category":"recall","question":"What is a checksum used for?","expected_titles":["Checksum"],"review":"Give a concise definition and limits; do not imply every checksum authenticates a sender."},
     {"id":"v2-isotope","category":"recall","question":"What makes two atoms isotopes of the same element?","expected_titles":["Isotope"],"review":"Preserve the relevant atomic quantities and distinguish element identity from mass."},

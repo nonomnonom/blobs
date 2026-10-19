@@ -1,0 +1,224 @@
+{
+  "format": 1,
+  "scope": "Android retrieval only; no generated answers are evaluated",
+  "created_at_epoch_ms": 1792367883266,
+  "case_set": {
+    "id": "camping-safety-retrieval-v1",
+    "sha256": "809b08633da04219f05fa1958b66394147195cc7f84a0582497cd766c0f2d2fc"
+  },
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "model": "sdk_gphone64_x86_64",
+    "abi": "x86_64",
+    "sdk": 36
+  },
+  "application": {
+    "package": "dev.blobs.app.debug",
+    "version": "0.3.4",
+    "apk_sha256": "c6d2662031cbecea7778006c84b36f166bc9fb7bcc7e4b6c462e7f8725d019bf",
+    "test_apk_sha256": "5fa12e63e9ae606086b826aa11e7d1988e5510a2f274519f2492bb3e88ebf7c4"
+  },
+  "package": {
+    "id": "camping-safety",
+    "version": "2026-10.1",
+    "title": "Camping safely · U.S. national parks",
+    "license": "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm",
+    "origin": "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039",
+    "payload_sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743",
+    "package_sha256": "8613b763c0935aaca7871f0184271ee11f2f74b693c7c5f2dc9e840f505c512e",
+    "payload_bytes": 110592
+  },
+  "repeat_count": 5,
+  "summary": {
+    "case_count": 8,
+    "expected_titles": 8,
+    "expected_titles_found": 8,
+    "expected_title_recall": 1,
+    "expected_titles_at_rank_1": 7,
+    "expected_title_mean_reciprocal_rank": 0.9375,
+    "case_median_elapsed_ms_median": 3,
+    "case_median_elapsed_ms_p95": 6
+  },
+  "cases": [
+    {
+      "case_id": "camping-trip-planning",
+      "expected_document_titles": [
+        "Camping Safely Step 1 - Before the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "elapsed_ms_samples": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "median_elapsed_ms": 5
+    },
+    {
+      "case_id": "camping-rules-and-permits",
+      "expected_document_titles": [
+        "Camping Safely Step 1 - Before the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "elapsed_ms_samples": [
+        5,
+        8,
+        6,
+        6,
+        5
+      ],
+      "median_elapsed_ms": 6
+    },
+    {
+      "case_id": "camping-arrival-ranger",
+      "expected_document_titles": [
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "elapsed_ms_samples": [
+        5,
+        4,
+        5,
+        5,
+        3
+      ],
+      "median_elapsed_ms": 5
+    },
+    {
+      "case_id": "camping-current-conditions",
+      "expected_document_titles": [
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Camping Safely Step 2 - Upon Arrival",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "elapsed_ms_samples": [
+        4,
+        4,
+        3,
+        3,
+        3
+      ],
+      "median_elapsed_ms": 3
+    },
+    {
+      "case_id": "camping-wildlife-food-storage",
+      "expected_document_titles": [
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_title_ranks": [
+        2
+      ],
+      "selected_titles": [
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "elapsed_ms_samples": [
+        3,
+        3,
+        3,
+        3,
+        4
+      ],
+      "median_elapsed_ms": 3
+    },
+    {
+      "case_id": "camping-campfire-safety",
+      "expected_document_titles": [
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Camping Safely Step 3 - During Your Stay",
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 2 - Upon Arrival"
+      ],
+      "elapsed_ms_samples": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "median_elapsed_ms": 3
+    },
+    {
+      "case_id": "camping-end-trip-checkin",
+      "expected_document_titles": [
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "elapsed_ms_samples": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "median_elapsed_ms": 3
+    },
+    {
+      "case_id": "camping-leave-no-trace",
+      "expected_document_titles": [
+        "Camping Safely Step 4 - After the Trip"
+      ],
+      "expected_title_ranks": [
+        1
+      ],
+      "selected_titles": [
+        "Camping Safely Step 4 - After the Trip",
+        "Camping Safely Step 1 - Before the Trip",
+        "Camping Safely Step 3 - During Your Stay"
+      ],
+      "elapsed_ms_samples": [
+        3,
+        3,
+        2,
+        3,
+        3
+      ],
+      "median_elapsed_ms": 3
+    }
+  ]
+}

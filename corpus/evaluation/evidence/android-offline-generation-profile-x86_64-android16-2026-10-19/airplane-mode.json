@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "complete": true,
+  "device_serial": "emulator-5554",
+  "airplane_mode_before": false,
+  "airplane_mode_during_test": true,
+  "asserted_inside_instrumentation": true,
+  "airplane_mode_after_test_before_restore": true,
+  "airplane_mode_restored_after_test": false
+}

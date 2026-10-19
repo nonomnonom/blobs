@@ -110,6 +110,8 @@ class NativePrefillProbeTest {
         put("prompt_tokens", promptTokens)
         put("output_tokens", outputTokens)
         put("non_thinking_prefix", nonThinkingPrefix)
+        put("reused_prompt_tokens", reusedPromptTokens)
+        put("processed_prompt_tokens", processedPromptTokens)
     }
 
     private fun saveReport(output: File, report: JSONObject) {

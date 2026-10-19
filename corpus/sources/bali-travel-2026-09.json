@@ -1,0 +1,190 @@
+{
+  "format": 1,
+  "id": "bali-travel",
+  "edition": "2026-09.1",
+  "collection": "Bali travel: places and getting around",
+  "input_sha256": "cb1a846d0f19dc9797bb53b1440f65bf2a22abea2be88b640dcd3773b554bc2b",
+  "input_records": "Wikivoyage English reviewed edition 2026-09.3",
+  "documents": [
+    {
+      "id": "wiki-423d0f2e2d14ee1f199f4db846b8986f",
+      "title": "Amed",
+      "url": "https://en.wikivoyage.org/wiki/Amed",
+      "body_sha256": "8860a6a33d65770b5387a98088b6c23d6f2ae10f131e6af75c378540112e9ea6"
+    },
+    {
+      "id": "wiki-dbd391c367eafc3b13b54dfcef0ec588",
+      "title": "Bali",
+      "url": "https://en.wikivoyage.org/wiki/Bali",
+      "body_sha256": "0279821452010246f8c4e2df223f07bebfa56fa188e787b2768744a63936d904"
+    },
+    {
+      "id": "wiki-0b7587f8c0365091412da45dc1e0f9af",
+      "title": "Bedugul",
+      "url": "https://en.wikivoyage.org/wiki/Bedugul",
+      "body_sha256": "a9c52b7c9660cc25fb6474e4e8654e283cacbee36c9bcd494a44503104b30538"
+    },
+    {
+      "id": "wiki-8a1d3d1477a3b51f15271865ee75ff0a",
+      "title": "Bukit Peninsula",
+      "url": "https://en.wikivoyage.org/wiki/Bukit_Peninsula",
+      "body_sha256": "3821f6ae08caf66e3db52429ba861f7f878010c94d8df3e5c32ad49b1a3115d6"
+    },
+    {
+      "id": "wiki-8aa14bb34e58f3614c196e9db02b3ff8",
+      "title": "Candidasa",
+      "url": "https://en.wikivoyage.org/wiki/Candidasa",
+      "body_sha256": "465d04149466ac1945d2934e343a4d64f1e64fa9aa033c762c4ccc7483663840"
+    },
+    {
+      "id": "wiki-424c7db703eb45d9dff67a72a10d8b34",
+      "title": "Canggu",
+      "url": "https://en.wikivoyage.org/wiki/Canggu",
+      "body_sha256": "83c54a5bdf8848dee586d8c6d7443ae96ce5f02b71903f22f53bbd4d71193298"
+    },
+    {
+      "id": "wiki-f98e4fee5f4871e4a32bc4c6b6212579",
+      "title": "Central Bali",
+      "url": "https://en.wikivoyage.org/wiki/Central_Bali",
+      "body_sha256": "be8343d6d8d967b60f8446fd0a6ae4c1cae8182af50693281c69c94d86a82137"
+    },
+    {
+      "id": "wiki-0745eb88e5de9f2bdd9577adff1b1cb7",
+      "title": "Denpasar",
+      "url": "https://en.wikivoyage.org/wiki/Denpasar",
+      "body_sha256": "4ba36c4b8fdb4ec5b01da1f5bb762076eae78af90885ac111fc64e7011a04b16"
+    },
+    {
+      "id": "wiki-e3b7876f90692f75dc6ab125c4e98ca3",
+      "title": "East Bali",
+      "url": "https://en.wikivoyage.org/wiki/East_Bali",
+      "body_sha256": "e07ea3b1a97e60e7914c8bce35b5d9a0dd6af4039e3018a66d99f54b9e4d7e67"
+    },
+    {
+      "id": "wiki-c757171eb1694b4414a2080799433925",
+      "title": "Gilimanuk",
+      "url": "https://en.wikivoyage.org/wiki/Gilimanuk",
+      "body_sha256": "3fb969666dd0087038988e5e21e7099e1982d40b9d5783aeace8ed4b0ec4e04b"
+    },
+    {
+      "id": "wiki-b5e0e6fbcc043fd71659627fe63c43d5",
+      "title": "Jimbaran",
+      "url": "https://en.wikivoyage.org/wiki/Jimbaran",
+      "body_sha256": "f5ecc3fab5bb78eee1f503551a132af62f0e9e9d2f01d37f95bc167b4c75268f"
+    },
+    {
+      "id": "wiki-211b52815a454070cc1a5b14552e6351",
+      "title": "Kintamani",
+      "url": "https://en.wikivoyage.org/wiki/Kintamani",
+      "body_sha256": "257851f5046de00bc55a8683ef848a84018a877dc2be208aa62da7ce98e9dfda"
+    },
+    {
+      "id": "wiki-e1893ceec803ffd388434cf71baed8a0",
+      "title": "Kuta",
+      "url": "https://en.wikivoyage.org/wiki/Kuta",
+      "body_sha256": "805261cfcf994962ce4a1c653a5d4971e89473d62b19f12f03c92a7adc17fb97"
+    },
+    {
+      "id": "wiki-dc07938c5acd1a40c5d0e6aa03f8fcdb",
+      "title": "Legian",
+      "url": "https://en.wikivoyage.org/wiki/Legian",
+      "body_sha256": "f16fe59066cbf2e9a43a96f5af4cc558c5a349a798488c3bb788095658a511cd"
+    },
+    {
+      "id": "wiki-dae6e32f8609acf98b9e53ac96562c64",
+      "title": "Lovina",
+      "url": "https://en.wikivoyage.org/wiki/Lovina",
+      "body_sha256": "2083d16832b5915fd7fc30c334b7cab7b9835effaf804e605e58be8a9d079d6a"
+    },
+    {
+      "id": "wiki-165a2215d3921ec34e480c8ebf1017cc",
+      "title": "North Bali",
+      "url": "https://en.wikivoyage.org/wiki/North_Bali",
+      "body_sha256": "09407a0f965e17a97f45b5a595e15ec3b3b94214e1abb46e995090aaef68b504"
+    },
+    {
+      "id": "wiki-b047813e47a2128efe3b32e63541cd98",
+      "title": "Nusa Dua",
+      "url": "https://en.wikivoyage.org/wiki/Nusa_Dua",
+      "body_sha256": "3c86ab88ca8b39adbe41fea9762b52facbc9942784be7ff80bf39b171bb9c78c"
+    },
+    {
+      "id": "wiki-6ca65df6c7dda63be2db469cad3f1134",
+      "title": "Nusa Lembongan",
+      "url": "https://en.wikivoyage.org/wiki/Nusa_Lembongan",
+      "body_sha256": "c474a8bd90e474dbcd750eb35d55b1a6dbfdbddc6a1ff626d99b6137dc8ecea4"
+    },
+    {
+      "id": "wiki-94f3749f8a25db0963eee77eec7b684c",
+      "title": "Nusa Penida",
+      "url": "https://en.wikivoyage.org/wiki/Nusa_Penida",
+      "body_sha256": "f8f89783e25c07cd492b562e378edf3f4d97c77babfe2002cb9e482f82a1db6b"
+    },
+    {
+      "id": "wiki-c4e4db61adb3d991216f083830b397d7",
+      "title": "Padang Bai",
+      "url": "https://en.wikivoyage.org/wiki/Padang_Bai",
+      "body_sha256": "dac1d5a25077ae7655949e80712fdeb57218cdc1611ada0d076a101fe59a82a2"
+    },
+    {
+      "id": "wiki-f28a3190420d1fef0c292d51421642f2",
+      "title": "Pemuteran",
+      "url": "https://en.wikivoyage.org/wiki/Pemuteran",
+      "body_sha256": "8ccd1ab42558ab0f10e3e0cb6e69f9e845a7f84f7e2a7b293a5da7ba9eacc37c"
+    },
+    {
+      "id": "wiki-004f4d3fa7550e16b955bbad0f889312",
+      "title": "Sanur",
+      "url": "https://en.wikivoyage.org/wiki/Sanur",
+      "body_sha256": "5fa0c6565f39385c72c2c445a9ec0c054ad33a31acd3cf57cd8fa7a8111be194"
+    },
+    {
+      "id": "wiki-79be6307355ca8251a8ab2725753264f",
+      "title": "Seminyak",
+      "url": "https://en.wikivoyage.org/wiki/Seminyak",
+      "body_sha256": "aeea17fbcad698338260f492784bb4bd1a1bc3bd2fddb33b7711af647b36f531"
+    },
+    {
+      "id": "wiki-8f9d1d486ae2c0c208174755470bfb1e",
+      "title": "Singaraja",
+      "url": "https://en.wikivoyage.org/wiki/Singaraja",
+      "body_sha256": "3fe03073d52d26e63f59640317040946fb3773cf26a2950de6ca3cbfcc7ca1a1"
+    },
+    {
+      "id": "wiki-d01e0dcf37fe15363c38ff6b27989dc9",
+      "title": "South Bali",
+      "url": "https://en.wikivoyage.org/wiki/South_Bali",
+      "body_sha256": "de7e6bab22f853101bfb83edbebadd693b8975feb630b57ddfb4d5db36ce19c9"
+    },
+    {
+      "id": "wiki-84c57b02f39daf06cce1b90de26fd16c",
+      "title": "Tabanan",
+      "url": "https://en.wikivoyage.org/wiki/Tabanan",
+      "body_sha256": "6a3561dc3ee098d48bda9b724ebb72378205b9779be46a2ec2f473fa444f3ef8"
+    },
+    {
+      "id": "wiki-5d3cdad64847b1500dd39f592c18266f",
+      "title": "Tirta Gangga",
+      "url": "https://en.wikivoyage.org/wiki/Tirta_Gangga",
+      "body_sha256": "c1ac46efb4f69f58a68131163cf0f53ee147c9ee375eb9cf4e085181f3e613c7"
+    },
+    {
+      "id": "wiki-fb9147304282a73b2686e101804a743a",
+      "title": "Ubud",
+      "url": "https://en.wikivoyage.org/wiki/Ubud",
+      "body_sha256": "1df4b3203ab5d96f5ee722a1109ff9a29d1ce0a35bcd0b849859d19eafa44b13"
+    },
+    {
+      "id": "wiki-05a8ed8c15048e4602ff601cdbcd090c",
+      "title": "West Bali",
+      "url": "https://en.wikivoyage.org/wiki/West_Bali",
+      "body_sha256": "472ef4d1ffdfd2d541045034a5bb4d079440d0a144e60dd1393c92d1a0d78399"
+    },
+    {
+      "id": "wiki-03e22a002a093c692b60a6ae512efd5a",
+      "title": "West Bali National Park",
+      "url": "https://en.wikivoyage.org/wiki/West_Bali_National_Park",
+      "body_sha256": "ba2aae9d2324ee424f2a7ae65f3017f0b0719bc8c3cdceaa163669c57d8060f7"
+    }
+  ]
+}

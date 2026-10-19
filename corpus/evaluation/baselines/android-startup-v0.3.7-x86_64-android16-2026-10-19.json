@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "measurement": "process-cold-activity-launch",
+  "scope": "Repeated force-stop launches on a warmed OS page cache; not first-install, device-cold, or model-inference latency.",
+  "measured_at_utc": "2026-10-19T02:04:29.536544+00:00",
+  "package": "dev.blobs.app",
+  "version_name": "0.3.7",
+  "installed_apk_sha256": {
+    "base.apk": "49b2e6bdd72aaf3071a0683ac24c7e6d78657b9e80ab22d81b037738f3448f50"
+  },
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "sdk": 36,
+    "device_model": "sdk_gphone64_x86_64"
+  },
+  "runs": [
+    {
+      "launch_state": "COLD",
+      "total_time_ms": 726,
+      "wait_time_ms": 733,
+      "run": 1,
+      "pss_kib": 31955
+    },
+    {
+      "launch_state": "COLD",
+      "total_time_ms": 739,
+      "wait_time_ms": 794,
+      "run": 2,
+      "pss_kib": 32145
+    },
+    {
+      "launch_state": "COLD",
+      "total_time_ms": 488,
+      "wait_time_ms": 493,
+      "run": 3,
+      "pss_kib": 24555
+    },
+    {
+      "launch_state": "COLD",
+      "total_time_ms": 684,
+      "wait_time_ms": 696,
+      "run": 4,
+      "pss_kib": 33107
+    },
+    {
+      "launch_state": "COLD",
+      "total_time_ms": 637,
+      "wait_time_ms": 673,
+      "run": 5,
+      "pss_kib": 27888
+    },
+    {
+      "launch_state": "COLD",
+      "total_time_ms": 616,
+      "wait_time_ms": 620,
+      "run": 6,
+      "pss_kib": 32151
+    },
+    {
+      "launch_state": "COLD",
+      "total_time_ms": 715,
+      "wait_time_ms": 762,
+      "run": 7,
+      "pss_kib": 28253
+    }
+  ],
+  "summary": {
+    "launch_total_time_ms_median": 684,
+    "launch_total_time_ms_p95_nearest_rank": 739,
+    "pss_kib_median": 31955,
+    "pss_kib_p95_nearest_rank": 33107
+  }
+}

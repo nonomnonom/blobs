@@ -1,0 +1,162 @@
+{
+  "format": 1,
+  "scope": "Android retrieval only; no generated answers are evaluated",
+  "created_at_epoch_ms": 1792361902154,
+  "device": {
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "model": "sdk_gphone64_x86_64",
+    "abi": "x86_64",
+    "sdk": 36
+  },
+  "application": {
+    "package": "dev.blobs.app.debug",
+    "version": "0.3.3",
+    "apk_sha256": "f912ba35c69742cf535cb601a72fe680742e2176b6d98144713e262a567bb9d7",
+    "test_apk_sha256": "49df6207179aba7f758a1248ebf3db05d784b94292649c560ff051187f99dabf"
+  },
+  "package": {
+    "id": "wikivoyage-en",
+    "version": "2026-09.2",
+    "payload_sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+    "package_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+    "payload_bytes": 628436992
+  },
+  "repeat_count": 5,
+  "summary": {
+    "case_count": 6,
+    "expected_titles_found": 6,
+    "expected_title_recall": 1,
+    "expected_titles_at_rank_1": 4,
+    "expected_title_mean_reciprocal_rank": 0.7833333333333333,
+    "case_median_elapsed_ms_median": 72,
+    "case_median_elapsed_ms_p95": 241
+  },
+  "cases": [
+    {
+      "case_id": "jakarta-city",
+      "expected_title": "Jakarta",
+      "expected_title_rank": 1,
+      "selected_titles": [
+        "Jakarta",
+        "Kruger National Park",
+        "Jakarta/South",
+        "Jakarta/East",
+        "Organizing a group trip",
+        "Jakarta/Central"
+      ],
+      "elapsed_ms_samples": [
+        71,
+        70,
+        71,
+        69,
+        69
+      ],
+      "median_elapsed_ms": 70
+    },
+    {
+      "case_id": "japan-rail",
+      "expected_title": "Rail travel in Japan",
+      "expected_title_rank": 1,
+      "selected_titles": [
+        "Rail travel in Japan",
+        "Japan",
+        "Sites of Japan's Meiji Industrial Revolution",
+        "Rail travel in Belgium",
+        "Rail travel in South Korea",
+        "Rail travel in New Zealand"
+      ],
+      "elapsed_ms_samples": [
+        124,
+        132,
+        128,
+        129,
+        125
+      ],
+      "median_elapsed_ms": 128
+    },
+    {
+      "case_id": "beach-packing",
+      "expected_title": "Packing for beach travel",
+      "expected_title_rank": 1,
+      "selected_titles": [
+        "Packing for beach travel",
+        "Beach",
+        "Taking children to the beach",
+        "Bahrain",
+        "Ship Harbour Long Lake Wilderness Area",
+        "Miami Beach/Mid Beach"
+      ],
+      "elapsed_ms_samples": [
+        71,
+        82,
+        75,
+        72,
+        90
+      ],
+      "median_elapsed_ms": 75
+    },
+    {
+      "case_id": "china-visas",
+      "expected_title": "Visa requirements for China",
+      "expected_title_rank": 1,
+      "selected_titles": [
+        "Visa requirements for China",
+        "Czech Republic",
+        "Equatorial Guinea",
+        "Wenzhou",
+        "China",
+        "Mecca"
+      ],
+      "elapsed_ms_samples": [
+        33,
+        33,
+        32,
+        32,
+        31
+      ],
+      "median_elapsed_ms": 32
+    },
+    {
+      "case_id": "travel-basics",
+      "expected_title": "Travel basics",
+      "expected_title_rank": 5,
+      "selected_titles": [
+        "Previous Featured travel topics",
+        "Travel topics",
+        "Travel topics index",
+        "Travel topics/sandbox",
+        "Travel basics",
+        "Concerns"
+      ],
+      "elapsed_ms_samples": [
+        26,
+        24,
+        28,
+        25,
+        26
+      ],
+      "median_elapsed_ms": 26
+    },
+    {
+      "case_id": "bangkok-airport",
+      "expected_title": "Bangkok",
+      "expected_title_rank": 2,
+      "selected_titles": [
+        "Chao Phraya Basin",
+        "Bangkok",
+        "Bangkok to Ho Chi Minh City overland",
+        "Bangkok/Ramkhamhaeng",
+        "Bangkok/Siam Square",
+        "Bangkok Metropolitan Area"
+      ],
+      "elapsed_ms_samples": [
+        241,
+        238,
+        276,
+        237,
+        241
+      ],
+      "median_elapsed_ms": 241
+    }
+  ]
+}

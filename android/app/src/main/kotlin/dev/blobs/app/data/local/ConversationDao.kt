@@ -61,9 +61,9 @@ interface ConversationDao {
     suspend fun recoverInterrupted()
 
     @Transaction
-    suspend fun beginTurn(turn: TurnEntity) {
+    suspend fun beginTurn(turn: TurnEntity, clearDraft: Boolean = true) {
         saveTurn(turn)
-        saveDraft(turn.conversationId, "")
+        if (clearDraft) saveDraft(turn.conversationId, "")
         val conversation = requireNotNull(find(turn.conversationId))
         rename(
             conversation.id,

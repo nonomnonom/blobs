@@ -1,0 +1,39 @@
+---
+title: Build a library
+description: Turn attributed source text into a reproducible offline pack.
+---
+
+The uv-managed `corpus/` workspace acquires pinned source material, normalizes text and attribution, exports reviewed records, builds a SQLite FTS5 database, and packages it into a `.blobs` archive. Android installs that archive through the same verified path as other libraries.
+
+## Work from the existing pipeline
+
+From `corpus/`:
+
+```powershell title="Prepare the corpus workspace"
+uv sync --locked
+uv run --locked python -m unittest discover -s tests
+```
+
+Follow the [corpus preparation guide](https://github.com/nonomnonom/blobs/blob/main/corpus/README.md) for source acquisition, extracting a pinned archive or web revision, fetching reviewed records, and building an installable library. It contains the exact commands and revision identities for current editions.
+
+## Preserve the source contract
+
+Keep article identity, source URL, section, license, and attribution with each record. Source locks pin revisions and hashes; changed source material must become a new edition rather than silently replacing the published text.
+
+Regional subsets use the existing reviewed article records. The Bali subset, for example, selects 30 articles from the English travel edition. It doesn’t need a separate retrieval engine or map format.
+
+## Verify rights before publishing
+
+Confirm redistribution rights for each included work, including article-specific notices. A site-wide footer can differ from an article’s own license. Keep contributor-history links and adaptation notices, and omit media that hasn’t been cleared for redistribution.
+
+Model weights and third-party datasets retain their own licenses. Original source-code licensing doesn’t grant rights to those assets or to Blobs artwork. See the [data notices](https://github.com/nonomnonom/blobs/blob/main/corpus/THIRD_PARTY_NOTICES.md).
+
+## Keep large artifacts separate
+
+GitHub hosts source code and APK releases. Hugging Face hosts installable packages and current reviewed record editions. Some older reviewed editions remain in Git LFS. Models, generated packages, caches, and signing keys stay out of Git.
+
+## Publish an immutable edition
+
+The existing `android/tools/publish_hf_assets.py` publisher validates staged files, uploads only allowed assets, pins immutable repository revisions and hashes, signs the download list, and updates the bundled fallback. Use a new increasing list revision. A corrected payload needs a new package edition.
+
+Read [trust and publishing](/docs/architecture#trust-and-publishing) for signing, anti-rollback behavior, and the current command. Never commit a private signing key or include it in a release archive.

@@ -1,0 +1,68 @@
+{
+  "format": 1,
+  "id": "multi-library-retrieval-scaling-v1",
+  "libraries": [
+    {
+      "file": "wikipedia-starter-schema3.blobs",
+      "id": "wikipedia-starter",
+      "version": "2026-10-17.5",
+      "payload_sha256": "141b449c10fc5a76428f616c413f7066633b5fe426f84a9d5d2f45612b989a54"
+    },
+    {
+      "file": "nps-outdoor-safety-2026-10-v1.blobs",
+      "id": "nps-outdoor-safety",
+      "version": "2026-10.1",
+      "payload_sha256": "be7583a3c330317e63cc81e0c3290db4b42f834bb5290d426f05e6758cf34cfa"
+    },
+    {
+      "file": "ready-emergency-preparedness-2026-10-v1.blobs",
+      "id": "ready-emergency-preparedness",
+      "version": "2026-10.1",
+      "payload_sha256": "aaa6315c84831b62c25458541513c3e9e0b3c9f25e0558d525596a27d6b5304c"
+    },
+    {
+      "file": "camping-safety-2026-10-v1.blobs",
+      "id": "camping-safety",
+      "version": "2026-10.1",
+      "payload_sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743"
+    },
+    {
+      "file": "backcountry-basics-2026-10-v3.blobs",
+      "id": "backcountry-basics",
+      "version": "2026-10.3",
+      "payload_sha256": "c2d3f6bc7ce50bcaca70a0d4ca54666aebb4d6d3243c805dfc9b3a25da66021f"
+    }
+  ],
+  "cases": [
+    {
+      "id": "starter-photosynthesis",
+      "question": "How does photosynthesis work?",
+      "expected_library_id": "wikipedia-starter",
+      "expected_document_title": "Photosynthesis"
+    },
+    {
+      "id": "lost-outdoors",
+      "question": "What should I do if I become lost outdoors?",
+      "expected_library_id": "nps-outdoor-safety",
+      "expected_document_title": "Outdoor Emergency Plan"
+    },
+    {
+      "id": "emergency-supply-kit",
+      "question": "What belongs in a basic emergency supply kit?",
+      "expected_library_id": "ready-emergency-preparedness",
+      "expected_document_title": "Build A Kit"
+    },
+    {
+      "id": "camping-wildlife-food-storage",
+      "question": "How should I store food and behave around wildlife at a campsite?",
+      "expected_library_id": "camping-safety",
+      "expected_document_title": "Camping Safely Step 3 - During Your Stay"
+    },
+    {
+      "id": "backcountry-emergency-shelter",
+      "question": "What lightweight emergency shelter should I pack for a hike?",
+      "expected_library_id": "backcountry-basics",
+      "expected_document_title": "Ten Essentials"
+    }
+  ]
+}

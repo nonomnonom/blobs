@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1200, initial-scale=1" />
+    <title>Blobs repository banner</title>
+    <style>
+      @font-face { font-family: Nunito; src: url('../../android/app/src/main/res/font/nunito.ttf'); }
+      @font-face { font-family: DM Sans; src: url('../../android/app/src/main/res/font/dm_sans_regular.ttf'); }
+      * { box-sizing: border-box; }
+      body { margin: 0; width: 1200px; height: 480px; padding: 54px 58px; display: grid; grid-template-columns: 1fr 500px; align-items: center; gap: 28px; color: #292a32; background: #fffefa; font-family: 'DM Sans', sans-serif; }
+      .brand { font: 900 38px/1 Nunito, sans-serif; letter-spacing: -1.5px; }
+      h1 { margin: 28px 0 16px; font: 900 58px/1.1 Nunito, sans-serif; letter-spacing: -1.8px; }
+      p { margin: 0; font-size: 23px; line-height: 1.45; }
+      .platform { margin-top: 28px; font-size: 17px; color: #525660; }
+      .world { height: 350px; border-radius: 28px; overflow: hidden; position: relative; }
+      img { width: 100%; height: 100%; object-fit: cover; }
+      .night { display: none; }
+      [data-theme='dark'] body { color: #f9f7f0; background: #20232b; }
+      [data-theme='dark'] .platform { color: #bec5d0; }
+      [data-theme='dark'] .day { display: none; }
+      [data-theme='dark'] .night { display: block; }
+      .reader { position: absolute; width: 75%; height: 75%; left: 12.5%; bottom: 0; object-fit: contain; }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div class="brand">blobs</div>
+      <h1>Stay curious.<br />Go anywhere.</h1>
+      <p>Offline research.<br />Right on your phone.</p>
+      <p class="platform">Android · GrapheneOS compatible</p>
+    </div>
+    <div class="world">
+      <img class="day" src="../web/public/media/welcome.webp" alt="Blobs reading in a colorful landscape." />
+      <img class="night" src="../web/public/media/welcome-night.webp" alt="A starry landscape." />
+      <img class="night reader" src="../web/public/media/reading.webp" alt="Blobs reading a book." />
+    </div>
+  </body>
+</html>

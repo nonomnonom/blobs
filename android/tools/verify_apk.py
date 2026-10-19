@@ -1,4 +1,4 @@
-"""Verify the current offline APK boundary and native-library packaging."""
+"""Verify package-download permission and native-library packaging."""
 
 import argparse
 import hashlib
@@ -37,10 +37,17 @@ def verify(apk):
     suffix = ".exe" if os.name == "nt" else ""
     build_tools = sdk_directory() / "build-tools" / "36.0.0"
     permissions = run_tool(build_tools / ("aapt2" + suffix), "dump", "permissions", apk)
-    if re.search(r"uses-permission[^\n]*android\.permission\.INTERNET", permissions):
-        raise RuntimeError("The core APK requests INTERNET. Review the network architecture before changing this gate.")
+    internet_permission = bool(
+        re.search(r"uses-permission[^\n]*android\.permission\.INTERNET", permissions)
+    )
+    if not internet_permission:
+        raise RuntimeError("The first-run package downloader requires INTERNET permission.")
     badging = run_tool(build_tools / ("aapt2" + suffix), "dump", "badging", apk)
-    identity = re.search(r"^package: name='([^']+)' versionCode='([0-9]+)' versionName='([^']+)'", badging, re.MULTILINE)
+    identity = re.search(
+        r"^package: name='([^']+)' versionCode='([0-9]+)' versionName='([^']+)'",
+        badging,
+        re.MULTILINE,
+    )
     if identity is None:
         raise RuntimeError("Cannot read the APK identity and version")
 
@@ -83,10 +90,10 @@ def verify(apk):
         "version_name": identity.group(3),
         "bytes": apk.stat().st_size,
         "sha256": digest,
-        "internet_permission": False,
+        "internet_permission": True,
         "zip_alignment_16kb": True,
         "native_libraries": libraries,
-        "scope": "Packaging and permission proof only; not a network, GrapheneOS or runtime-quality audit.",
+        "scope": "Packaging and permission proof only; source review is required to verify that networking remains limited to explicit package downloads.",
     }
 
 
@@ -99,7 +106,9 @@ if __name__ == "__main__":
         destination = ROOT / "app/build/reports/apk" / (args.apk.stem + ".json")
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        print(f"PASS: {report['apk']}; no INTERNET; 16 KB ZIP/ELF alignment; {len(report['native_libraries'])} native libraries.")
+        print(
+            f"PASS: {report['apk']}; package-download INTERNET permission; 16 KB ZIP/ELF alignment; {len(report['native_libraries'])} native libraries."
+        )
         print(f"Report: {destination}")
     except (RuntimeError, OSError, ValueError, struct.error, zipfile.BadZipFile) as error:
         parser.exit(1, f"FAIL: {error}\n")

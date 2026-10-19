@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/nonomnonom/blobs/security/advisories/new
+    about: Keep vulnerability details out of public issues.
+  - name: Usage and build guides
+    url: https://github.com/nonomnonom/blobs/blob/main/README.md
+    about: Start here for installation, building, corpus preparation and contribution instructions.

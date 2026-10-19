@@ -12,6 +12,37 @@ import org.junit.Test
 
 class LibraryRetrievalTest {
     @Test
+    fun overlappingRegionalLibrariesDoNotRepeatTheSameEvidenceOrEscapeScope() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
+        try {
+            val (full, _) = spanBackedLibrary(folder)
+            val regional = full.copy(key = "regional", packageId = "regional")
+            val store = LibraryStore()
+            val result = store.retrieve(listOf(full, regional), "evaporation", null)
+            assertEquals(1, result.size)
+            assertEquals("span/unicode", result.single().id)
+            assertEquals(
+                "regional/unicode",
+                store.retrieve(
+                    listOf(full, regional),
+                    "evaporation",
+                    setOf("regional/unicode")
+                ).single().id
+            )
+            assertTrue(
+                store.retrieve(
+                    listOf(full, regional.copy(enabled = false)),
+                    "evaporation",
+                    setOf("regional/unicode")
+                ).isEmpty()
+            )
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
     fun spanBackedLibraryReconstructsUnicodeEvidenceAndRejectsInvalidOffsets() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
@@ -22,6 +53,11 @@ class LibraryRetrievalTest {
             assertEquals(expected, store.retrieve(listOf(pack), "evaporation", null).single().text)
             BundledSQLiteDriver().open(pack.path).use { db ->
                 db.prepare("UPDATE passage_spans SET end=end+1").use { it.step() }
+            }
+            assertTrue(runCatching { store.validate(File(pack.path)) }.isFailure)
+            BundledSQLiteDriver().open(pack.path).use { db ->
+                db.prepare("UPDATE passage_spans SET end=end-1").use { it.step() }
+                db.prepare("UPDATE documents SET body=body || char(0)").use { it.step() }
             }
             assertTrue(runCatching { store.validate(File(pack.path)) }.isFailure)
         } finally {
@@ -113,6 +149,11 @@ class LibraryRetrievalTest {
                 store.retrieve(listOf(pack), "What is CO₂?", null).first().id
             )
             assertTrue(store.retrieve(listOf(pack), "What is sharedname?", null).isEmpty())
+            assertEquals(
+                "names/jakarta",
+                store.retrieve(listOf(pack), "What should I know before visiting Jakarta?", null)
+                    .first().id
+            )
             val scoped = store.retrieve(listOf(pack), "What is AI?", setOf("names/phonetic"))
             assertEquals(listOf("names/phonetic"), scoped.map { it.id })
             assertTrue(store.retrieve(listOf(pack), "What is CO₂?", setOf("names/ai")).isEmpty())
@@ -149,8 +190,19 @@ class LibraryRetrievalTest {
                     "Carbon dioxide",
                     "A molecule with one carbon atom and two oxygen atoms."
                 ),
-                Triple("phonetic", "Phonetic table", "The sound ai is listed in this table.")
-            )
+                Triple("phonetic", "Phonetic table", "The sound ai is listed in this table."),
+                Triple(
+                    "jakarta",
+                    "Jakarta",
+                    "Jakarta is a travel destination with airports, routes, neighborhoods and transit."
+                )
+            ) + (1..32).map { index ->
+                Triple(
+                    "noise$index",
+                    "Travel discussion $index",
+                    "What should I know before visiting a place? This discussion explains travel planning and advice."
+                )
+            }
             for ((id, title, body) in docs) {
                 db.prepare(
                     "INSERT INTO documents VALUES (?,?,'Author','local:test','CC0','today','today',?,'Test')"
@@ -171,7 +223,7 @@ class LibraryRetrievalTest {
                 }
             }
             db.prepare(
-                "INSERT INTO document_names VALUES ('ai','ai'),('co2','co2'),('sharedname','ai'),('sharedname','co2')"
+                "INSERT INTO document_names VALUES ('ai','ai'),('co2','co2'),('jakarta','jakarta'),('sharedname','ai'),('sharedname','co2')"
             ).use { it.step() }
             db.prepare("INSERT INTO passages_fts(passages_fts) VALUES ('rebuild')").use {
                 it.step()

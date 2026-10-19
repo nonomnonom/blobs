@@ -1,0 +1,122 @@
+{
+  "application": {
+    "apk_sha256": "4cd235540ba38d84e3a69ec749771ea9d69556e7ee61e325d666827a82153c6d",
+    "package": "dev.blobs.app.debug",
+    "test_apk_sha256": "92002c56778e7707a59676712423e04c8eb6d38c158c254d7307393a50f42f6b"
+  },
+  "checks": {
+    "device_profile_complete": true,
+    "exact_model_identity": true,
+    "exact_three_token_cancellation": true,
+    "fixed_workload": true,
+    "inference_completed": true,
+    "inference_metrics_present": true,
+    "inference_stage_order": true,
+    "inputs_complete": true,
+    "installed_build_identity": true,
+    "missing_model_stopped_before_prompt": true,
+    "pinned_runtime": true,
+    "thread_selection_valid": true
+  },
+  "complete": true,
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "device_profile": {
+    "abi": "x86_64",
+    "api": 36,
+    "available_processors": 4,
+    "device": "emu64xa",
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "max_heap_bytes": 201326592,
+    "model": "sdk_gphone64_x86_64",
+    "serial": "emulator-5554"
+  },
+  "format": 1,
+  "inputs": {
+    "installed_app": {
+      "bytes": 238,
+      "file": "evaluation/evidence/native-thread-sweep-qwen3-06b-2026-10-19/installed-app.json",
+      "sha256": "927e9c333b80b3a13f07ddad58a0711ec11bba8b6775eac186e33aba3ade5cd4"
+    },
+    "model_lock": {
+      "bytes": 973,
+      "file": "evaluation/locks/qwen3-0.6b-native-smoke-v1.lock.json",
+      "sha256": "6691ceb04fd0d8f55a484284f1645c31d9cd149ab9709a5e83563a49b60b5403"
+    },
+    "run": {
+      "bytes": 2552,
+      "file": "evaluation/evidence/native-thread-sweep-qwen3-06b-2026-10-19/fixed-3-1.json",
+      "sha256": "ecbff6eafe5c1dad04a343451eccbea113403b35e8c3195d3ecc280bf5b1f10c"
+    },
+    "staging": {
+      "bytes": 1309,
+      "file": "evaluation/evidence/native-thread-sweep-qwen3-06b-2026-10-19/staging.json",
+      "sha256": "809cb281748a61cebb58b99b004320f8c072464346f92d526813cafdf2bc102e"
+    }
+  },
+  "interpretation": {
+    "packaging": "The raw verified GGUF was staged directly; normal .blobs import remains separate.",
+    "timing": "Recorded stage durations describe this emulator run only."
+  },
+  "model": {
+    "bytes": 639446688,
+    "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031"
+  },
+  "observations": {
+    "cancellation_metrics": {
+      "context_setup_us": 160916,
+      "first_token_callback_us": 722058,
+      "generation_loop_us": 51432,
+      "inference_threads": 4,
+      "model_load_us": 224213,
+      "non_thinking_prefix": true,
+      "output_tokens": 3,
+      "prefill_us": 336372,
+      "prompt_tokens": 36,
+      "queue_us": 0,
+      "template_and_tokenize_us": 270,
+      "token_callback_us": 95,
+      "total_us": 827204
+    },
+    "failure_metrics": {
+      "context_setup_us": -1,
+      "first_token_callback_us": -1,
+      "generation_loop_us": -1,
+      "inference_threads": 4,
+      "model_load_us": 189,
+      "non_thinking_prefix": false,
+      "output_tokens": 0,
+      "prefill_us": -1,
+      "prompt_tokens": -1,
+      "queue_us": 0,
+      "template_and_tokenize_us": -1,
+      "token_callback_us": 0,
+      "total_us": 305
+    },
+    "inference_metrics": {
+      "context_setup_us": 165139,
+      "first_token_callback_us": 755739,
+      "generation_loop_us": 2278137,
+      "inference_threads": 3,
+      "model_load_us": 243880,
+      "non_thinking_prefix": true,
+      "output_tokens": 71,
+      "prefill_us": 343648,
+      "prompt_tokens": 29,
+      "queue_us": 5,
+      "template_and_tokenize_us": 338,
+      "token_callback_us": 1485,
+      "total_us": 3084780
+    }
+  },
+  "requested_inference_threads": 3,
+  "runtime_commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+  "scope": "Exact x86_64 emulator model compatibility, native inference timing, adaptive thread selection, cancellation and failure-path evidence. This is not model-package import, ARM execution or phone-performance evidence.",
+  "script_sha256": "a4107b2357b0706da3a863b3531ffd1512dd30365cab045013a593909c80e66c",
+  "thread_mode": "fixed",
+  "workload": {
+    "id": "native-inference-smoke-v1",
+    "max_output_tokens": 96,
+    "system_sha256": "6c9d83e4a80a7550bef6f135352efa92b4bc8b06c8f7c5031e73d147b86981f1",
+    "user_sha256": "c423998c131a228c0e9d859b02ac54c1c68f3bb44d06ab4c9f20e9df409a76e6"
+  }
+}

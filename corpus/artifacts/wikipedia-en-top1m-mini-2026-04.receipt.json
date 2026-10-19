@@ -1,0 +1,50 @@
+{
+  "build": {
+    "audit_schema": 1,
+    "builder_sources": {
+      "library.py": "de5b2bb596925e3842def921764aaa8c5a83fe700d08d7c148124ff89e236162",
+      "names.py": "67dbdeb6e76c60839285c5498ffef36a3a382fdc08a32bd35d1212f93105eca5",
+      "records.py": "68949a1c65fde9b05cc408ad43733df79dfb4f3cbea1106f753fde427b33f950"
+    },
+    "document_names": {
+      "ambiguous_names": 14403,
+      "format": 1,
+      "maximum_resolution_passes": 32,
+      "name_document_pairs": 5130504,
+      "normalization": "NFKC, lowercase, Unicode letters/numbers separated by spaces",
+      "redirects": 4919306,
+      "resolved_redirects": 4886343,
+      "unresolved_redirects": 32963
+    },
+    "documents": 997761,
+    "exact_duplicate_bodies": 43,
+    "format": 1,
+    "offsets": "Unicode code points, half-open into normalized documents.body",
+    "passage_storage": "document spans + contentless FTS",
+    "passages": 2126824,
+    "records_sha256": "77e11c5b6a1a1e96deaabd8689b66028958288f4c57825ebb68af180491f3748",
+    "schema": 3,
+    "sqlite_version": "3.50.4",
+    "title_index": "opening passage only"
+  },
+  "format": 1,
+  "input_sha256": "648c32e8bf642a854b806061a95f7ebd95f6390c51dd991196b9f642646a123d",
+  "manifest": {
+    "bytes": 5011431424,
+    "format": 1,
+    "id": "wikipedia-top1m-mini",
+    "kind": "library",
+    "license": "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs",
+    "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim",
+    "sha256": "4ae8d2b3315ffab81bef6968ff84934a987d28843d15caa3a2d920756228e395",
+    "title": "Wikipedia Top 1M introductions",
+    "version": "2026-04.1"
+  },
+  "package": {
+    "bytes": 1804630820,
+    "file": "wikipedia-en-top1m-mini-2026-04.blobs",
+    "sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7"
+  },
+  "platform": "Windows",
+  "python": "3.13.12"
+}

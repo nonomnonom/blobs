@@ -1,0 +1,51 @@
+{
+  "format": 1,
+  "id": "ready-emergency-preparedness-retrieval-v1",
+  "library": {
+    "id": "ready-emergency-preparedness",
+    "version": "2026-10.1",
+    "payload_sha256": "aaa6315c84831b62c25458541513c3e9e0b3c9f25e0558d525596a27d6b5304c"
+  },
+  "cases": [
+    {
+      "id": "household-emergency-plan",
+      "question": "How do I make an emergency plan for my family or household?",
+      "expected_document_titles": ["Make A Plan"]
+    },
+    {
+      "id": "emergency-communication",
+      "question": "What should my household include in its emergency communication plan?",
+      "expected_document_titles": ["Make A Plan"]
+    },
+    {
+      "id": "emergency-supply-kit",
+      "question": "What belongs in a basic emergency supply kit?",
+      "expected_document_titles": ["Build A Kit"]
+    },
+    {
+      "id": "medical-household-supplies",
+      "question": "What emergency supplies should I plan for if someone needs medication or medical devices?",
+      "expected_document_titles": ["Build A Kit", "Power Outages"]
+    },
+    {
+      "id": "evacuation-preparation",
+      "question": "How should I prepare before local officials tell me to evacuate?",
+      "expected_document_titles": ["Evacuation"]
+    },
+    {
+      "id": "evacuation-pets",
+      "question": "What should I plan for when evacuating with pets?",
+      "expected_document_titles": ["Evacuation", "Make A Plan"]
+    },
+    {
+      "id": "power-outage-generator",
+      "question": "How can I use a generator safely during a power outage?",
+      "expected_document_titles": ["Power Outages"]
+    },
+    {
+      "id": "power-outage-food",
+      "question": "What should I do with food in the refrigerator and freezer during a power outage?",
+      "expected_document_titles": ["Power Outages"]
+    }
+  ]
+}
