@@ -275,8 +275,11 @@ class NativeInferenceTest {
         val installedModelKey = args.getString("installedModel")
         val modelPath = args.getString(if (verifiedFile) "modelFile" else "modelPackage")
         require(
-            if (verifiedFile) modelPath != null && installedModelKey == null
-            else (modelPath != null) xor (installedModelKey != null)
+            if (verifiedFile) {
+                modelPath != null && installedModelKey == null
+            } else {
+                (modelPath != null) xor (installedModelKey != null)
+            }
         ) { "Provide exactly one of modelFile, modelPackage, or installedModel" }
         val libraryPath = args.getString("libraryPackage")
         val installedLibraryKey = args.getString("installedLibrary")

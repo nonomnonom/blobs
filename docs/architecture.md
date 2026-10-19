@@ -5,7 +5,7 @@ Blobs is an offline-first Android research app with an online, curated asset lib
 ## Where files live
 
 - GitHub hosts the app source, build and verification tools, and Android releases.
-- The public Hugging Face dataset [`nonomnonom/blobs-catalog`](https://huggingface.co/datasets/nonomnonom/blobs-catalog) hosts the signed package list, Blobs-formatted Qwen model package, starter library, and optional library. Files are pinned by repository revision, byte count, and SHA-256.
+- The public Hugging Face dataset [`nonomnonom/blobs-catalog`](https://huggingface.co/datasets/nonomnonom/blobs-catalog) hosts the signed package list, Blobs-formatted Qwen model package, starter library, and optional libraries. Reviewed travel-record shards for corpus rebuilds are hosted there too; see the [corpus guide](../corpus/README.md#download-reviewed-travel-records-from-hugging-face). Files are pinned by repository revision, byte count, and SHA-256.
 - Gemma model weights are downloaded from their upstream Hugging Face repositories at pinned revisions.
 - Installed models, libraries, conversations, and settings remain in app-private storage.
 

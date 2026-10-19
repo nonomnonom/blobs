@@ -14,7 +14,7 @@ The active implementation is in [`android/`](android/README.md). Reproducible co
 - Bounded package validation, resumable import, atomic activation, and rollback-safe failure handling.
 - Android, JVM, Python, package, APK, and release-kit verification.
 
-Model weights, generated `.blobs` packages, APKs, signing keys, and local caches are excluded from Git. Reviewed corpus record shards are tracked with Git LFS; selected benchmark evidence is versioned alongside the tools and lock files needed to reproduce it. App users download installable assets from Hugging Face through Blobs.
+Model weights, generated `.blobs` packages, APKs, signing keys, and local caches are excluded from Git. Existing reviewed corpus editions use Git LFS; the current travel records are also published at a pinned Hugging Face revision. Selected benchmark evidence is versioned alongside the tools and lock files needed to reproduce it. App users download installable assets from Hugging Face through Blobs.
 
 ## Build
 
