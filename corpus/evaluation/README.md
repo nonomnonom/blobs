@@ -229,6 +229,31 @@ Profiling showed that prompt prefill, rather than retrieval, dominated this work
 
 Catalog refreshes now start only when the user taps **Check for updates**; opening the app or Library/Models does not initiate a request. The latest build was run through the same three airplane-mode chat cases: median end-to-end was 15.982 s, first visible state 12.289 s, retrieval 13 ms, and decode 11.4 tokens/s. The [three-run report](evidence/android-offline-explicit-catalog-x86_64-android16-2026-10-19/summary.json) records the new APK hashes and source identity without answer text. Seven process-cold launches on the same emulator measured 1.092 s median and 91,609 KiB median PSS before a model was loaded; the [startup report](evidence/android-startup-explicit-catalog-x86_64-android16-2026-10-19/report.json) is an idle debug-app measure, not inference peak memory or a 12 GB device certification.
 
+### Profile chat memory
+
+`evaluation.android.chat_resources` reruns the offline chat instrumentation while sampling PSS from both the app and instrumentation processes with `adb shell dumpsys meminfo`. It validates the model and library digests, airplane-mode state, completion, and expected source identity. The instrumentation report omits generated answer text; the profiler does not inspect or grade answers. Sampled PSS is a useful device-specific measure, not a guarantee of the process's instantaneous allocation peak.
+
+The [three-run profile](evidence/android-chat-resources-qwen3-06b-x86_64-android16-2026-10-19/profile.json) used the Qwen3 0.6B Q8 fixture and the NPS outdoor-safety library on the Android 16 x86_64 emulator. Combined peak sampled PSS for the app and test process was 1,045,278 KiB median and 1,045,564 KiB maximum. That small-model emulator run is far below 12 GiB, but it does not establish peak usage for the larger Gemma models or on other devices.
+
+After staging the model and library as described above, run at least three unique IDs and write to a new output path:
+
+```powershell
+uv run --locked python -m evaluation.android.chat_resources `
+  --adb "$env:ANDROID_HOME/platform-tools/adb.exe" `
+  --serial emulator-5554 `
+  --version-name 0.3.8 `
+  --model-local ../android/.local/perf/qwen3-integration.gguf `
+  --model-path /data/user/0/dev.blobs.app.debug/files/qwen3-smoke.gguf `
+  --model-sha256 9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031 `
+  --library-local ../android/.local/hf-publish/packages/nps-outdoor-safety-2026-10-v2.blobs `
+  --library-path /data/user/0/dev.blobs.app.debug/files/nps-outdoor-safety.blobs `
+  --question 'What hazards are present in natural water?' `
+  --expected-title 'Water Hazards' `
+  --expected-publisher 'National Park Service · U.S. Department of the Interior' `
+  --run-id memory-01 --run-id memory-02 --run-id memory-03 `
+  --output evaluation/evidence/android-chat-resources-local/profile.json
+```
+
 To repeat, build/install the debug and instrumentation APKs, then copy the locked model fixture and pinned library package to app-private files. This avoids external-storage access differences between Android versions:
 
 ```powershell
