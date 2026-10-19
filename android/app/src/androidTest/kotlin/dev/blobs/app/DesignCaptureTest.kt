@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -178,7 +179,13 @@ class DesignCaptureTest {
         capture("library")
         compose.onNodeWithText(text(R.string.discover_more)).performClick()
         capture("discover")
-        for (id in listOf("wikivoyage-en", "nps-outdoor-safety")) {
+        for (id in listOf(
+            "wikivoyage-en",
+            "nps-outdoor-safety",
+            "weather-safety",
+            "earthquake-tsunami-safety",
+            "emergency-food"
+        )) {
             val asset = model.catalog.additionalLibraries.find { it.manifest.id == id } ?: continue
             val saved = model.packages.value.any { it.key == asset.manifest.key }
             compose.onNodeWithText(
@@ -202,7 +209,8 @@ class DesignCaptureTest {
             capture("$section-$id-credits-later", waitForMarker = false)
         }
         compose.onNodeWithText(text(R.string.your_collections)).performClick()
-        compose.onNodeWithText(text(R.string.browse_collection)).performScrollTo().performClick()
+        compose.onAllNodesWithText(text(R.string.browse_collection))[0]
+            .performScrollTo().performClick()
         compose.waitUntil(10_000) { !model.state.value.searching }
         capture("browse")
         val source = model.state.value.sources.first()
@@ -242,14 +250,21 @@ class DesignCaptureTest {
                 page(destination)
                 capture(destination.name.lowercase())
                 if (destination == Page.SOURCES) {
-                    compose.onNode(hasText(source.title) and hasClickAction())
+                    compose.runOnUiThread { model.search(source.title) }
+                    compose.waitUntil(10_000) {
+                        !model.state.value.searching &&
+                            model.state.value.sources.any { it.id == source.id }
+                    }
+                    compose.onNode(
+                        hasText(source.title) and hasClickAction() and !hasSetTextAction()
+                    )
                         .performScrollTo().performClick()
                     compose.waitUntil(10_000) { model.selectedScope()?.contains(source.id) == true }
-                    capture("sources-selected")
+                    capture("sources-selected", waitForMarker = false)
                     compose.onNodeWithText(text(R.string.all_sources))
                         .performScrollTo().performClick()
                     compose.waitUntil(10_000) { model.selectedScope() == null }
-                    capture("sources-all")
+                    capture("sources-all", waitForMarker = false)
                 }
             }
             page(Page.LIBRARY)

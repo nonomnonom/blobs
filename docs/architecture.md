@@ -54,6 +54,8 @@ The repeatable Hugging Face publisher is `android/tools/publish_hf_assets.py`. I
 
 Signed lists carry a positive increasing `revision`. The app atomically records the highest accepted revision and its payload digest before replacing the cached list. It rejects older revisions and different payloads reusing the same revision. The bundled list supplies a minimum revision for fresh installs. A missing list cache can be restored from the same accepted payload; a damaged revision record blocks online refresh while bundled metadata and installed libraries remain available. Restoring private app data can also restore an older revision boundary; this is not hardware-backed rollback protection.
 
+The publisher writes the payload as UTF-8 with LF line endings before signing and copies those exact bytes into the bundled list. This keeps its digest stable across Windows builds and Git checkouts. Formatting or content changes require a new revision; do not reformat an already signed payload.
+
 Publish with an explicit revision greater than every previously published revision:
 
 ```powershell

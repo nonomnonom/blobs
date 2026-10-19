@@ -45,6 +45,38 @@ Existing editions already in Git LFS remain available there; this new travel edi
 
 The pipeline acquires a pinned source archive, extracts bounded records, normalizes article text and attribution, validates quality constraints, exports immutable record shards, builds a SQLite FTS5 payload, and packages that payload with an exact manifest.
 
+### Focused preparedness libraries
+
+Three small, optional English packs complement the travel, outdoor, camping, and general
+emergency libraries. They contain different source articles from the general emergency pack.
+
+| Pack | Included Ready.gov guides | Download | On phone |
+| --- | --- | --- | --- |
+| Weather & wildfire safety | Floods, thunderstorms/lightning, winter weather, wildfires | 26.8 KB | 114.7 KB |
+| Earthquake & tsunami safety | Earthquakes, tsunamis | 14.8 KB | 90.1 KB |
+| Food during power outages | Emergency food supplies, cooking, refrigeration during outages | 7.7 KB | 73.7 KB |
+
+These are text-only snapshots of U.S. guidance, including U.S. alert systems and emergency
+numbers. Their pages were updated in March–September 2026. They do not provide live alerts,
+forecasts, evacuation maps, or local orders. Follow current local authorities and food-safety
+guidance. Blobs is independent and not endorsed by FEMA. Agency marks, images, and linked
+third-party resources are excluded; source rights remain subject to the
+[FEMA reuse notice](https://www.fema.gov/about/website-information) and page-specific notices.
+
+The acquisition locks are `sources/weather-safety-2026-10.json`,
+`sources/earthquake-tsunami-safety-2026-10.json`, and `sources/emergency-food-2026-10.json`.
+They pin each article's title, date, selector, URL, and normalized text hash. The
+[publication receipt](evaluation/evidence/focused-preparedness-libraries-2026-10-19.json)
+records the immutable package and reviewed-record URLs, sizes, and digests, plus Android
+installation and anonymous download checks. Models and generated answer wording are not
+evaluated by these checks.
+
+To rebuild a pack, download its reviewed `documents.jsonl.gz` from the receipt's pinned HF
+revision and pass it to `python -m blobs_corpus.package library` with schema 3 and the exact
+manifest identity recorded in that receipt. Each record folder also includes `source-lock.json`
+and `receipt.json`. The existing `web_pages acquire` and `web_pages extract` commands can
+instead reproduce the reviewed records while the source pages still match their locks.
+
 Core commands are exposed through `python -m blobs_corpus.<module>`. Use `--help` on a module before running it. Builders refuse existing output editions and publish through a temporary path so a failed run cannot replace verified data.
 
 ### Rebuild the pinned Top 1M library

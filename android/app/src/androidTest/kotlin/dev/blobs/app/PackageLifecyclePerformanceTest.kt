@@ -22,6 +22,34 @@ import org.junit.Test
 @ManualCheck
 class PackageLifecyclePerformanceTest {
     @Test
+    fun refreshesPublishedLibrariesWithoutDownloadingPackages() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val container = (context.applicationContext as BlobsApplication).container
+        withTimeout(15_000) { container.work.state.first { it.ready } }
+        val installed = container.database.packages().all()
+        val downloads = File(context.filesDir, "package-downloads")
+            .listFiles().orEmpty().map { it.name to it.length() }.toSet()
+        val outcome = container.catalog.refreshNow()
+        assertTrue(
+            outcome in setOf(CatalogRefreshOutcome.UPDATED, CatalogRefreshOutcome.UNCHANGED)
+        )
+        assertTrue(
+            container.catalog.state.value.source in setOf(CatalogSource.REMOTE, CatalogSource.CACHE)
+        )
+        val ids = container.catalog.additionalLibraries.map { it.manifest.id }.toSet()
+        assertTrue(
+            ids.containsAll(setOf("weather-safety", "earthquake-tsunami-safety", "emergency-food"))
+        )
+        assertEquals(installed, container.database.packages().all())
+        assertEquals(
+            downloads,
+            File(context.filesDir, "package-downloads")
+                .listFiles().orEmpty().map { it.name to it.length() }.toSet()
+        )
+        assertFalse(container.work.state.value.busy)
+    }
+
+    @Test
     fun downloadsAndInstallsPinnedCatalogPackage() = runBlocking<Unit> {
         val args = InstrumentationRegistry.getArguments()
         val packageId = requireNotNull(args.getString("packageId"))

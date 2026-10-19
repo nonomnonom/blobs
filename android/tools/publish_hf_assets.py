@@ -142,6 +142,7 @@ def main() -> None:
         catalog_candidate.write_text(
             json.dumps(publishable, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
+            newline="\n",
         )
         sign_catalog(catalog_candidate, signed_candidate, args.private_key.resolve())
         run_hf(

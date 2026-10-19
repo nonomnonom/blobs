@@ -1,0 +1,31 @@
+{
+  "format": 1,
+  "id": "earthquake-tsunami-safety",
+  "edition": "2026-10.1",
+  "title": "Earthquake & tsunami safety · U.S. guidance",
+  "publisher": "Ready.gov · Federal Emergency Management Agency",
+  "license": "FEMA/Ready.gov text; FEMA states most FEMA.gov material may be reused, while page-specific third-party restrictions may apply. Text only; no images, logos or endorsement.",
+  "saved": "2026-10-19",
+  "collection": "U.S. earthquake and tsunami preparedness",
+  "origin": "https://www.fema.gov/about/website-information",
+  "sources": [
+    {
+      "id": "earthquakes",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/earthquakes",
+      "title": "Earthquakes",
+      "updated": "2026-09-09",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "b0cd3319639d409cc6765e32c8ca97931cc5f1042121271c41d86e0f9eec1a22"
+    },
+    {
+      "id": "tsunamis",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/tsunamis",
+      "title": "Tsunamis",
+      "updated": "2026-05-11",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "b7090560f1bfbe18ef95d848475a9fc160d2fd8027e62c2c4e1086d2a7ae1add"
+    }
+  ]
+}

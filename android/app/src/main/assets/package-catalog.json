@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "revision": 2026101901,
+  "revision": 2026101903,
   "release_tag": "v0.3.10",
   "packages": [
     {
@@ -279,6 +279,90 @@
       "description": "A compact guide to planning national park trips, packing essentials, and preparing for backcountry conditions. The day and overnight trip guide does not cover multi-day backcountry travel. Rules, permits, weather, closures, and alerts can change; check current park guidance.",
       "language": "English",
       "publisher": "National Park Service",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "weather-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/weather-safety-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 26824,
+      "download_sha256": "739094b1aa407a742f37e636ed24e389c2c1722fef18d89a38589b178a2f45d1",
+      "manifest": {
+        "format": 1,
+        "id": "weather-safety",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Weather & wildfire safety · U.S. guidance",
+        "bytes": 114688,
+        "sha256": "3793f9a274cedf3e36c6160de6742a23d64988cec00027dc6b964335bb15b236",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Prepare for floods, thunderstorms, winter storms, and wildfires with four Ready.gov guides. U.S. guidance from March-August 2026. No live forecasts or alerts; follow current local instructions. Blobs is independent and not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "earthquake-tsunami-safety-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/earthquake-tsunami-safety-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 14750,
+      "download_sha256": "9edabd91404f15033dcac058a5876bc3a4f0b0ce129c2d936617287d88f0674d",
+      "manifest": {
+        "format": 1,
+        "id": "earthquake-tsunami-safety",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Earthquake & tsunami safety · U.S. guidance",
+        "bytes": 90112,
+        "sha256": "2acc2b72ca7ade2ee58d9f05242cf38f28e529b4266a885274c949eae46f08c4",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Two Ready.gov guides for earthquake preparation, protective actions, tsunami evacuation, and hazards after shaking. U.S. guidance from May-September 2026. No live warnings or evacuation maps; follow local authorities. Blobs is independent and not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "emergency-food-2026-10-v1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/emergency-food-2026-10-v1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 7662,
+      "download_sha256": "5552eea8cadb4a86e1f53bbaf7df5b90a5b6aa317a0095c8563393740aa75d24",
+      "manifest": {
+        "format": 1,
+        "id": "emergency-food",
+        "version": "2026-10.1",
+        "kind": "library",
+        "title": "Food during power outages · U.S. guidance",
+        "bytes": 73728,
+        "sha256": "d90ef82573ca930b5123e33ec971beea93dcb5fefc0f4ab265152463a990efec",
+        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+        "origin": "https://www.fema.gov/about/website-information"
+      },
+      "role": "optional",
+      "description": "Plan food supplies, cook safely, and protect refrigerator and freezer food during outages with one Ready.gov guide. U.S. household guidance from March 2026; follow current local food-safety advice. Blobs is independent and not endorsed by FEMA.",
+      "language": "English",
+      "publisher": "Ready.gov · Federal Emergency Management Agency",
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,

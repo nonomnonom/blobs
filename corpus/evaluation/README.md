@@ -63,6 +63,8 @@ uv run --locked python -m evaluation.retrieval.retrieval_smoke `
 
 `PackageLifecyclePerformanceTest` starts the normal `ProductViewModel` download action, then records catalog refresh, download plus archive verification/inspection, and package install/validation/activation separately. It downloads only from the signature-verified app package list, checks the final database entry and SHA-256, and records APK/package/device identities. This is a manual Android instrumentation test because it needs network access and a package that is not already installed in the debug app. Use a fresh debug app install or a package ID that has not been installed; it does not clear app data.
 
+The separate manual method `PackageLifecyclePerformanceTest#refreshesPublishedLibrariesWithoutDownloadingPackages` checks the live signed list using the app's trusted keys and revision boundary. It verifies that the focused preparedness packs are listed while installed packages and download files remain unchanged. It needs a validated internet connection and performs no inference.
+
 From `android/`, build and install the debug app and instrumentation APK, then run a package from the signed list:
 
 ```powershell

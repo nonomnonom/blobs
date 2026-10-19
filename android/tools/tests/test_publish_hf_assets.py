@@ -6,13 +6,57 @@ import tempfile
 import unittest
 import zipfile
 from copy import deepcopy
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from publish_hf_assets import pin_uploaded_assets, verify_staged_package
+from publish_hf_assets import main, pin_uploaded_assets, verify_staged_package
 from sign_catalog import validate_catalog
 
 
 class PublishHfAssetsTest(unittest.TestCase):
+    def test_signed_payload_and_bundled_catalog_keep_git_line_endings(self):
+        source = Path(__file__).resolve().parents[2] / "app/src/main/assets/package-catalog.json"
+        catalog = json.loads(source.read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundled = root / "app/src/main/assets/package-catalog.json"
+            bundled.parent.mkdir(parents=True)
+            bundled.write_text(json.dumps(catalog), encoding="utf-8")
+            assets = root / "upload"
+            (assets / "packages").mkdir(parents=True)
+            (assets / "README.md").write_text("Public package list", encoding="utf-8")
+            key = root / "test-key.pem"
+            key.write_text("signing fixture", encoding="utf-8")
+            signed_payloads = []
+
+            def sign(candidate, envelope, private_key):
+                signed_payloads.append(candidate.read_bytes())
+                envelope.write_text("signed fixture", encoding="utf-8")
+
+            with (
+                patch("publish_hf_assets.ROOT", root),
+                patch("publish_hf_assets.sign_catalog", side_effect=sign),
+                patch("publish_hf_assets.run_hf", return_value=json.dumps({"sha": "a" * 40})),
+                patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "publish_hf_assets.py",
+                        "--assets",
+                        str(assets),
+                        "--private-key",
+                        str(key),
+                        "--revision",
+                        str(catalog["revision"] + 1),
+                    ],
+                ),
+            ):
+                main()
+
+            self.assertEqual([bundled.read_bytes()], signed_payloads)
+            self.assertNotIn(b"\r", bundled.read_bytes())
+            self.assertTrue(bundled.read_bytes().endswith(b"\n"))
+
     def test_catalog_signer_rejects_replacement_characters_in_display_text(self):
         root = Path(__file__).resolve().parents[2]
         catalog = json.loads(

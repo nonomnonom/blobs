@@ -169,7 +169,10 @@ class LaunchTest {
                 "nps-outdoor-safety",
                 "ready-emergency-preparedness",
                 "camping-safety",
-                "backcountry-basics"
+                "backcountry-basics",
+                "weather-safety",
+                "earthquake-tsunami-safety",
+                "emergency-food"
             ),
             catalog.additionalLibraries.map { it.manifest.id }.toSet()
         )
