@@ -29,6 +29,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -110,7 +111,7 @@ class WorkController(
                     .take(MAX_ANSWER_SOURCES)
                 val retrievalElapsedMs = SystemClock.elapsedRealtime() - retrievalStarted
                 evidence = Evidence.encode(sources)
-                mutable.value = mutable.value.copy(evidence = evidence)
+                mutable.update { it.copy(evidence = evidence) }
                 if (stopped) {
                     dao.updateAnswer(
                         id,
@@ -176,7 +177,7 @@ class WorkController(
                                 AnswerText.visible(bytes.toString("UTF-8")),
                                 sources.size
                             )
-                        mutable.value = mutable.value.copy(text = answer)
+                        mutable.update { it.copy(text = answer) }
                         val now = SystemClock.elapsedRealtime()
                         if (now - lastSave > 500) {
                             runBlocking {
@@ -205,7 +206,7 @@ class WorkController(
                     !AnswerGrounding.hasSupportedCitations(answer, sources)
                 if (unverified) {
                     answer = ""
-                    mutable.value = mutable.value.copy(text = "")
+                    mutable.update { it.copy(text = "") }
                 }
                 val status = when {
                     interrupted -> "INTERRUPTED"
@@ -245,10 +246,10 @@ class WorkController(
                 } catch (_: Exception) {
                     notice = R.string.save_failed
                 }
-                mutable.value = mutable.value.copy(notice = notice)
+                mutable.update { it.copy(notice = notice) }
             } finally {
                 accepted.complete(false)
-                mutable.value = mutable.value.copy(busy = false)
+                mutable.update { it.copy(busy = false) }
             }
         }
         return accepted.await()
@@ -277,7 +278,7 @@ class WorkController(
         if (!mutable.value.ready || mutable.value.busy) return false
         val pending = mutable.value.pendingImport
         if (pending != null && pending.manifest.key != manifest.key) {
-            mutable.value = mutable.value.copy(notice = R.string.finish_pending_import)
+            mutable.update { it.copy(notice = R.string.finish_pending_import) }
             return false
         }
         mutable.value =
@@ -290,8 +291,7 @@ class WorkController(
         job = scope.launch {
             try {
                 installer.install(uri, manifest) { bytes ->
-                    mutable.value =
-                        mutable.value.copy(progress = bytes)
+                    mutable.update { it.copy(progress = bytes) }
                 }
                 downloader.removeInstalledArchive(uri)
                 mutable.value =
@@ -328,7 +328,7 @@ class WorkController(
     fun importDocuments(uris: List<Uri>, title: String): Boolean {
         if (!mutable.value.ready || mutable.value.busy) return false
         if (mutable.value.pendingImport != null) {
-            mutable.value = mutable.value.copy(notice = R.string.finish_pending_import)
+            mutable.update { it.copy(notice = R.string.finish_pending_import) }
             return false
         }
         require(uris.isNotEmpty())
@@ -341,7 +341,7 @@ class WorkController(
         job = scope.launch {
             try {
                 val pack = installer.importDocuments(uris) { progress, total ->
-                    mutable.value = mutable.value.copy(progress = progress, total = total)
+                    mutable.update { it.copy(progress = progress, total = total) }
                 }
                 mutable.value = WorkState(
                     ready = true,
@@ -389,7 +389,7 @@ class WorkController(
         if (!mutable.value.ready || mutable.value.busy) return false
         val pending = mutable.value.pendingImport
         if (pending != null && pending.manifest.key != asset.manifest.key) {
-            mutable.value = mutable.value.copy(notice = R.string.finish_pending_import)
+            mutable.update { it.copy(notice = R.string.finish_pending_import) }
             return false
         }
         mutable.value = WorkState(
@@ -406,19 +406,17 @@ class WorkController(
         job = scope.launch {
             try {
                 val file = downloader.download(asset) { bytes, total ->
-                    mutable.value = mutable.value.copy(progress = bytes, total = total)
+                    mutable.update { it.copy(progress = bytes, total = total) }
                 }
                 val uri = Uri.fromFile(file)
                 if (asset.format == DownloadFormat.BLOBS) {
                     require(installer.inspect(uri) == asset.manifest) { "PACKAGE_MANIFEST" }
                 }
-                mutable.value = mutable.value.copy(
-                    progress = 0,
-                    total = asset.manifest.bytes,
-                    downloading = false
-                )
+                mutable.update {
+                    it.copy(progress = 0, total = asset.manifest.bytes, downloading = false)
+                }
                 installer.install(uri, asset.manifest, catalogDigestPinned = true) { bytes ->
-                    mutable.value = mutable.value.copy(progress = bytes)
+                    mutable.update { it.copy(progress = bytes) }
                 }
                 downloader.removeInstalledArchive(uri)
                 mutable.value = WorkState(
@@ -474,7 +472,7 @@ class WorkController(
     }
 
     fun clearNotice() {
-        mutable.value = mutable.value.copy(notice = null)
+        mutable.update { it.copy(notice = null) }
     }
 
     companion object {
@@ -485,12 +483,12 @@ class WorkController(
         synchronized(this) {
             if (!mutable.value.ready || mutable.value.busy) return false
             job = null
-            mutable.value = mutable.value.copy(busy = true, turnId = "", threadId = "")
+            mutable.update { it.copy(busy = true, turnId = "", threadId = "") }
         }
         try {
             block()
         } finally {
-            mutable.value = mutable.value.copy(busy = false)
+            mutable.update { it.copy(busy = false) }
         }
         return true
     }
@@ -505,12 +503,12 @@ class WorkController(
             try {
                 mutate {
                     installer.discardPending()
-                    mutable.value =
-                        mutable.value.copy(pendingImport = null, notice = R.string.import_cancelled)
+                    mutable.update {
+                        it.copy(pendingImport = null, notice = R.string.import_cancelled)
+                    }
                 }
             } catch (_: Exception) {
-                mutable.value =
-                    mutable.value.copy(notice = R.string.save_failed)
+                mutable.update { it.copy(notice = R.string.save_failed) }
             }
         }
     }
