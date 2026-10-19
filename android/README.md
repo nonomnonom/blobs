@@ -1,6 +1,6 @@
 # Blobs Android
 
-Offline Android research chat compatible with GrapheneOS, built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. The app imports local model and library packages, retrieves source passages, streams answers, and opens citations without leaving the app.
+Offline Android research chat compatible with GrapheneOS, built with Kotlin, Jetpack Compose, Room, DataStore, SQLite FTS5, and llama.cpp. First-run setup helps users choose and download a model and starter library. The app searches saved sources, streams answers, and opens citations without leaving the app. To install the APK, follow [Get started](https://nonomnonom.github.io/blobs/docs/get-started/).
 
 The APK has no Google Play Services dependency. First-run setup offers user-started downloads for pinned model weights and a starter knowledge library. It verifies every downloaded byte against the catalog's pinned size and SHA-256. `.blobs` packages also validate their manifest; direct GGUF model downloads pass the GGUF validator before atomic installation. Chat, retrieval, inference, citations, and reading make no network requests. Local `.blobs` import remains available later in Library and Settings → Models for air-gapped setup and alternate packages. Signed catalog refresh, online update checks, cache recovery, and the current Hugging Face publishing status are documented in [`../docs/architecture.md`](../docs/architecture.md).
 

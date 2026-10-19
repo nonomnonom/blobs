@@ -54,9 +54,15 @@ class UiParityTest {
             .use { input -> file.outputStream().use { input.copyTo(it) } }
         val uri = Uri.fromFile(file)
         val manifest = runBlocking { container.installer.inspect(uri) }
+        val conversation = ConversationEntity("ui-import-${UUID.randomUUID()}", "", "", 1, 1)
         try {
-            runBlocking { container.preferences.welcome() }
+            runBlocking {
+                container.preferences.welcome()
+                container.database.conversations().save(conversation)
+            }
             compose.waitUntil(10_000) { model.state.value.loaded && model.work.value.ready }
+            compose.runOnUiThread { model.openConversation(conversation) }
+            compose.waitUntil(10_000) { model.conversationId.value == conversation.id }
             compose.runOnUiThread {
                 model.draft("Preserve this import draft")
                 model.navigate(Page.LIBRARY)
@@ -103,6 +109,8 @@ class UiParityTest {
                 container.database.packages().all().find { it.key == manifest.key }?.let {
                     container.installer.remove(it)
                 }
+                container.preferences.selectConversation("")
+                container.database.conversations().delete(conversation.id)
             }
             file.delete()
         }
