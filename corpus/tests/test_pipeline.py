@@ -294,6 +294,24 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(reviewed['curation']['source_id'], 'wikipedia-en-top1m-mini')
             self.assertEqual([doc['title'] for doc in documents(root / 'reviewed/manifest.json')], ['Article'])
 
+    def test_export_rejects_hash_valid_legacy_records_with_damaged_text(self):
+        item = article(
+            b'<p>This travel guide describes a fictional route and its landmarks in enough detail to form a valid extraction fixture.</p>',
+            'Jakarta', 'A/Jakarta', WIKIVOYAGE_LOCK)
+        item['body'] += '\ufffd'
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            shard = root / 'documents.jsonl.gz'
+            write_lines(shard, [item])
+            info = dict(name=shard.name, bytes=shard.stat().st_size,
+                        sha256=hashlib.sha256(shard.read_bytes()).hexdigest())
+            write_json(root / 'manifest.json', dict(
+                format=1, complete=True, next_entry=1, curation={'policy': 'legacy'},
+                shards=[dict(start=0, end=1, files={'documents': info})]))
+            with self.assertRaisesRegex(ValueError, 'Unicode replacement character'):
+                export_records(root / 'manifest.json', root / 'exported')
+            self.assertFalse((root / 'exported').exists())
+
     def test_review_accepts_pinned_wikivoyage_source(self):
         item = article(
             b'<p>This travel guide explains enough useful local context to satisfy the extraction quality threshold.</p>',

@@ -17,7 +17,7 @@ Python and dependency versions are pinned by `pyproject.toml` and `uv.lock`.
 App builds and corpus unit tests do not need the full reviewed-record collection. Use the source-only clone instructions in the [repository README](../README.md#build) to leave large Git LFS objects as pointers. If you need an existing edition for a package rebuild, fetch only that edition from the repository root:
 
 ```powershell
-git lfs pull --include="corpus/artifacts/records/wikivoyage-en-all-nopic-2026-09/**" --exclude=""
+git lfs pull --include="corpus/artifacts/records/nps-outdoor-safety-2026-10.2/**" --exclude=""
 ```
 
 Replace the edition path for another collection. Package builders need the hydrated record files, not LFS pointers. Alternatively, rebuild the edition from its pinned source using the pipeline below. Installable `.blobs` packages and model weights are delivered separately through Hugging Face.
@@ -64,7 +64,7 @@ The source lock captures snapshot, scope, license, origin, byte count, and diges
 
 ### Build the travel library
 
-The English travel library uses the pinned September 2026 Wikivoyage snapshot. Run from `corpus/`:
+The English travel library uses the pinned September 2026 Wikivoyage snapshot. The recipe below prepares edition `2026-09.3` with the current strict Unicode validator. Earlier reviewed records contain two articles with replacement characters and cannot be rebuilt under that validator; re-extract from the pinned archive into a new directory. Rejected articles remain accounted for in the extraction manifest and rejection shards. Run from `corpus/`:
 
 ```powershell
 uv run --locked python -m blobs_corpus.acquire `
@@ -73,28 +73,42 @@ uv run --locked python -m blobs_corpus.acquire `
 uv run --locked python -m blobs_corpus.extract `
   sources/wikivoyage-en-all-nopic-2026-09.json `
   work/sources/wikivoyage_en_all_nopic_2026-09.zim `
-  work/extract/wikivoyage-en-all-nopic-2026-09
+  work/extract/wikivoyage-en-all-nopic-2026-09-strict-v1
 
 uv run --locked python -m blobs_corpus.curate `
-  work/extract/wikivoyage-en-all-nopic-2026-09/manifest.json `
-  work/reviewed/wikivoyage-en-all-nopic-2026-09
+  work/extract/wikivoyage-en-all-nopic-2026-09-strict-v1/manifest.json `
+  work/reviewed/wikivoyage-en-all-nopic-2026-09.3
 
 uv run --locked python -m blobs_corpus.export `
-  work/reviewed/wikivoyage-en-all-nopic-2026-09/manifest.json `
-  artifacts/records/wikivoyage-en-all-nopic-2026-09
+  work/reviewed/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
+  artifacts/records/wikivoyage-en-all-nopic-2026-09.3
 
 uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/wikivoyage-en-all-nopic-2026-09/manifest.json `
-  work/packages/wikivoyage-en-2026-09-v2.blobs `
+  artifacts/records/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
+  work/packages/wikivoyage-en-2026-09-v3.blobs `
   --schema 3 `
   --id wikivoyage-en `
-  --version 2026-09.2 `
+  --version 2026-09.3 `
   --title "Travel guides · English" `
   --license "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution" `
   --origin "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides"
 ```
 
-The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change.
+The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change. This recipe prepares a local edition; availability in the app is controlled separately by the signed download list.
+
+### Profile a corpus build
+
+Measure the complete build before choosing a language migration or optimization:
+
+```powershell
+uv run --locked python -m evaluation.retrieval.profile_build `
+  work/reviewed/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
+  work/profile-travel-build
+```
+
+Use a new output directory for each run. It contains the SQLite payload, build log, a `build.pstats` trace, and `profile.json` with input/code identities, host details, elapsed time, and per-function CPU attribution. Profiling overhead is included. Cumulative function times overlap and must not be added together; use self times to identify where execution is spent. This measures host-side corpus construction, not Android inference or answer quality.
+
+The [recorded Windows travel build](evaluation/evidence/corpus-build-wikivoyage-2026-09.3-windows-20261019.json) took 50.3 seconds under cProfile. SQLite `execute` and `commit` accounted for 31.1 seconds of self time; passage splitting accounted for 5.9 seconds cumulatively. This single diagnostic run points first to database writes when investigating build cost. It does not measure a Mojo implementation or establish a language speedup.
 
 ### Build the U.S. outdoor-safety library
 

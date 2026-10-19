@@ -6,6 +6,7 @@ import shutil
 import tempfile
 
 from .extract import verified_shards
+from .records import documents
 
 MAX_FILE_BYTES = 512 * 1024**2
 
@@ -19,6 +20,9 @@ def export_records(source: Path, output: Path):
     files = [item for shard in manifest['shards'] for item in shard['files'].values()]
     if any(item['bytes'] > MAX_FILE_BYTES for item in files):
         raise ValueError('A normalized shard exceeds the 512 MiB artifact budget')
+    # Old editions may have valid hashes but predate the current record contract.
+    for _ in documents(source):
+        pass
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.export-', dir=output.parent) as temporary:
         staged = Path(temporary) / 'edition'
