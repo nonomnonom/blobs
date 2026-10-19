@@ -1,6 +1,7 @@
 'use client';
 
 import { useStaticSearch } from 'fumadocs-core/search/client';
+import { basePath } from '@/lib/base-path';
 import {
     SearchDialog,
     SearchDialogClose,
@@ -14,7 +15,7 @@ import {
 } from 'fumadocs-ui/components/dialog/search';
 
 export default function Search(props: SharedProps) {
-    const search = useStaticSearch({ from: '/api/search/' });
+    const search = useStaticSearch({ from: `${basePath}/api/search` });
 
     return (
         <SearchDialog {...search} {...props}>

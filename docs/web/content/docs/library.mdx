@@ -11,6 +11,8 @@ Downloading a library saves its articles on the phone. Enabling it makes those a
 
 Search and open saved articles directly in the app. To keep a conversation focused, select the particular sources you want to use.
 
+<ScreenGallery names={['library', 'discover']} />
+
 ## What can I download?
 
 The bundled list has a starter library and optional collections covering Wikipedia, travel, outdoor safety, emergency preparedness, and practical living. All current packs are in English.
@@ -30,6 +32,19 @@ These are text guides about places and getting around. They don’t contain offl
 When connected, tap **Check for updates**. Blobs fetches and verifies the latest download list. It doesn’t automatically download new packs or replace your saved files.
 
 The bundled or last verified list remains available offline. Each download starts only after you choose it. Existing libraries keep working if a download fails.
+
+<Mermaid
+    title="Check for choices, download what you need, then use it offline"
+    chart="flowchart TD
+    A[Open Library] --> B{Already saved?}
+    B -->|Yes| C[Read or enable for answers]
+    B -->|No| D[Explore Discover more]
+    D --> E[Review contents and size<br/>Check language and source]
+    E --> F[Choose Download]
+    F --> G[Verify and install]
+    G --> C
+    C --> H[Use it offline]"
+/>
 
 ## Sources and editions
 

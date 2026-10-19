@@ -2,8 +2,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { HomeLayout } from 'fumadocs-ui/layouts/home';
 import { baseOptions } from '@/lib/layout.shared';
+import { basePath } from '@/lib/base-path';
 import { HomeContainer } from '@/components/home-container';
-import reading from '../../../android/app/src/main/res/drawable-nodpi/mascot_reading.png';
+import day from '@/public/media/welcome.webp';
+import night from '@/public/media/welcome-night.webp';
+import reading from '@/public/media/reading.webp';
 
 const guides = [
     {
@@ -30,8 +33,12 @@ const guides = [
 ];
 
 export default function Home() {
+    const options = baseOptions();
     return (
-        <HomeLayout {...baseOptions()} slots={{ container: HomeContainer }}>
+        <HomeLayout
+            {...options}
+            slots={{ ...options.slots, container: HomeContainer }}
+        >
             <main id="main-content" className="home-main">
                 <section className="welcome" aria-labelledby="welcome-title">
                     <div className="welcome-copy">
@@ -54,12 +61,56 @@ export default function Home() {
                     </div>
                     <div className="welcome-art">
                         <Image
-                            src={reading}
-                            alt="Blobs, a curious green friend, reading a blue book."
+                            src={day}
+                            alt="Blobs reading among lavender hills, a blue arch, and a little yellow star."
+                            className="scene-day"
                             priority
-                            sizes="(max-width: 700px) 260px, 440px"
+                            sizes="(max-width: 700px) 100vw, 500px"
                         />
+                        <div className="scene-night night-world">
+                            <Image
+                                src={night}
+                                alt=""
+                                sizes="(max-width: 700px) 100vw, 500px"
+                            />
+                            <Image
+                                src={reading}
+                                alt="Blobs reading under a starry night sky."
+                                className="night-reader"
+                                sizes="(max-width: 700px) 70vw, 350px"
+                            />
+                        </div>
                     </div>
+                </section>
+                <section
+                    className="app-preview"
+                    aria-labelledby="preview-title"
+                >
+                    <div>
+                        <p className="eyebrow">A familiar place to begin</p>
+                        <h2 id="preview-title">
+                            A little tour, before you dive in.
+                        </h2>
+                        <p>
+                            See how setup, your library, and source reading fit
+                            together.
+                        </p>
+                        <Link href="/docs/tour" className="text-link">
+                            Look around Blobs <span aria-hidden="true">→</span>
+                        </Link>
+                    </div>
+                    <Link
+                        href="/docs/tour"
+                        className="preview-phone"
+                        aria-label="Explore the Blobs app screens"
+                    >
+                        <Image
+                            src={`${basePath}/screens/home.webp`}
+                            alt="Blobs home with a question box, model choice, and source selector."
+                            width={912}
+                            height={2048}
+                        />
+                    </Link>
                 </section>
                 <section
                     className="guide-section"

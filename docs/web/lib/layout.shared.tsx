@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import { Appearance } from '@/components/appearance';
 
 export function baseOptions(): BaseLayoutProps {
     return {
@@ -10,7 +11,7 @@ export function baseOptions(): BaseLayoutProps {
             ),
         },
         githubUrl: 'https://github.com/nonomnonom/blobs',
-        themeSwitch: { mode: 'light-dark-system' },
+        slots: { themeSwitch: Appearance },
         links: [
             { text: 'Guides', url: '/docs', active: 'url' },
             {

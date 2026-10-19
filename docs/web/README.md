@@ -24,11 +24,17 @@ npm run build
 npm run preview
 ```
 
-The build writes a static website to `out/`, including a client-side search index at `/api/search/`. Preview serves the exported files. Deploy `out/` to a static host at a domain root, with directory-index routing and `404.html` as its error page. No production Next.js server, API keys, external fonts, or analytics are required. `next start` is not used for a static export.
+The build writes a static website to `out/`, including a client-side search index at `/api/search` (an extensionless JSON file, without a trailing slash). Preview serves the exported files. Deploy `out/` to a static host with directory-index routing and `404.html` as its error page. No production Next.js server, API keys, external fonts, or analytics are required. `next start` is not used for a static export.
+
+The [documentation workflow](../../.github/workflows/docs.yml) checks and publishes the site to <https://nonomnonom.github.io/blobs/> on changes to its inputs on `main`. Pull requests run the checks without deploying. GitHub Pages must use **GitHub Actions** as its publishing source. The workflow sets `NEXT_PUBLIC_BASE_PATH=/blobs` at build time; leave it unset for a domain-root deployment or local development. Changing this path requires rebuilding. When previewing a subpath export locally, serve `out/` at that same subpath.
 
 The `postbuild` step normalizes Windows RSC segment filenames for [Next.js issue #85374](https://github.com/vercel/next.js/issues/85374). It leaves already-flat Linux/macOS exports unchanged and refuses to overwrite a conflicting file. Run `npm run build` rather than calling `next build` directly so this step is included.
 
 Run commands from this directory. The website intentionally reuses assets and content elsewhere in the repository; copying only `docs/web` into another checkout omits those inputs.
+
+The `/docs/tour` guide shows native Android screenshots with the Fumadocs image viewer. Capture versions and attribution are recorded in `public/screens/README.md`. Compressed copies of original app illustrations live in `public/media/`, with their source paths recorded alongside them.
+
+Mermaid code fences and `<Mermaid chart="…" title="…" />` render to SVG during the build through the Fumadocs remark plugin and Beautiful Mermaid. No diagram renderer or remote font request is needed in the browser. Diagrams use the same CSS colors and local body font as the rest of the site, respond to appearance changes, and keep a keyboard-focusable scrolling area for wide layouts. Invalid diagram syntax fails the build. Use the Mermaid flowchart, sequence, state, class, ER, or XY syntax supported by the pinned renderer.
 
 `node_modules/`, `.next/`, `.source/`, and `out/` are generated and ignored. Commit `package-lock.json` with dependency changes. Use `npm run format` to apply the website’s Prettier configuration.
 
