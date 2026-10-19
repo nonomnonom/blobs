@@ -42,6 +42,8 @@ $report | Set-Content -Encoding utf8 "../corpus/evaluation/evidence/package-life
 
 Pull `files/package-lifecycle-$runId.json` from `dev.blobs.app.debug` with `adb exec-out run-as` and retain it under `evaluation/evidence/`. On the recorded Android 16 x86_64 emulator, the 3.83 MB Wikipedia starter package took 2,796 ms for download and inspection, then 514 ms to install and validate (3,309 ms total). The 639.45 MB Qwen 0.6B package took 95,207 ms for download and inspection, then 8,007 ms to install and validate (103,213 ms total, about 6.7 MB/s over that emulator's network). These are single-run network diagnostics; package identity, archive and installed hashes are in [`the Qwen report`](evidence/android-package-lifecycle-qwen-q8-x86_64-android16-2026-10-19.json) and [`the starter-library report`](evidence/android-package-lifecycle-starter-x86_64-android16-2026-10-19.json).
 
+The published travel edition `2026-09.3` also completed this flow in the installed v0.3.9 debug app: remote signed-list refresh took 723 ms; download and inspection took 31,958 ms; installation, validation, and activation took 29,307 ms (61,263 ms from the download action to completion). This single Android 16 x86_64 run downloaded 295,304,448 bytes and installed a 628,633,600-byte library. The [travel lifecycle report](evidence/android-package-lifecycle-travel-v3-x86_64-android16-2026-10-19.json) records the exact APK and package hashes. It verifies first installation of this travel edition, not replacement of an older installed travel edition or model answer quality. The emulator was returned to airplane mode with Wi-Fi disabled afterward.
+
 Install the locked evaluation dependencies and run the corpus tests from this directory's parent:
 
 ```powershell
