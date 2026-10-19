@@ -6,7 +6,7 @@ Blobs is an offline-first Android research app with an online, curated asset lib
 
 The Android app uses one Gradle application module. `AppContainer` composes app-scoped storage, package, retrieval and work objects. `ProductViewModel` owns navigation and UI actions; `ProductState` and `WorkState` describe the state consumed by Compose. `WorkController` coordinates exclusive answer, import and package operations and their cancellation. Feature screens live under `feature/`, with setup and settings in their own folders and shared package cards beside library screens.
 
-```mermaid
+```mermaid title="Application data flow"
 flowchart LR
     Screens[Compose screens] --> UI[ProductViewModel]
     UI --> Work[WorkController]
@@ -62,7 +62,7 @@ The publisher writes the payload as UTF-8 with LF line endings before signing an
 
 Publish with an explicit revision greater than every previously published revision:
 
-```powershell
+```powershell title="Publish assets"
 uv run --locked --project ../corpus --group publisher python tools/publish_hf_assets.py --revision NEXT_REVISION
 ```
 

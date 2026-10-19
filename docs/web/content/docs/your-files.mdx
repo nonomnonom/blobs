@@ -1,0 +1,32 @@
+---
+title: Add your own files
+description: Bring your reading material into Blobs.
+---
+
+Open **Library** and choose the option to add documents from your phone. Android’s file picker lets you select the material you want to import. Blobs reads and indexes the text locally.
+
+## Supported files
+
+- Plain text (`.txt`)
+- Markdown
+- CSV
+- JSON
+- PDFs containing selectable text
+
+Scanned-image PDFs need OCR, which Blobs doesn’t provide. Password-protected and certificate-encrypted PDFs aren’t supported.
+
+## Import limits
+
+One collection can contain up to 50 files and 25 MB of input in total. An ordinary file can be up to 10 MB; PDFs are limited to 200 pages. The extracted collection is bounded to five million Unicode code points.
+
+If a file is too large, split it into focused documents before importing. Text-based files usually give more useful searchable passages than images or complex page layouts.
+
+## Use your collection
+
+Once installed, your collection appears in the library. Enable it to make it available for answers, search it directly, or choose specific documents for a conversation.
+
+You can disable, export as a portable JSON pack, or remove a collection. Removing a saved collection is different from disabling it: disabling keeps the files, while removal frees their storage.
+
+## Keep private files private
+
+Imported files remain in app-private storage. Blobs doesn’t upload them for indexing or inference. If you export a collection or conversation and share the resulting file, that copy leaves Blobs under your control.

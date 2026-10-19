@@ -7,6 +7,7 @@ __pycache__/
 Thumbs.db
 /.local/
 /work/
+/.next/
 design/
 corpus/reports/
 corpus/evaluation/results/

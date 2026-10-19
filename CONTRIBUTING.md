@@ -17,6 +17,7 @@ Bug fixes, accessibility improvements, documentation, reproducible corpus correc
 | Corpus acquisition, normalization and packaging | `corpus/blobs_corpus/` |
 | Optional app performance and retrieval tools | `corpus/evaluation/` |
 | Android preparation and release tooling | `android/tools/` |
+| Documentation website, content and styling | `docs/web/` |
 
 Use a matching filename for a screen or primary type. Keep Kotlin package declarations aligned with directories in every source set. Shared feature components belong beside their consumers; shared application components belong in `ui/`. The Python package contract belongs to `blobs_corpus.package`; `android/tools/build_package.py` is its compatibility entry point.
 
@@ -30,7 +31,11 @@ Preserve package identity and digest checks, offline operation, cancellation and
 
 ## Verification
 
-Run the checks relevant to the behavior being changed. From `corpus/`:
+Run the checks relevant to the behavior being changed.
+
+For the Next.js/Fumadocs documentation website, use Node.js 24 and run `npm ci`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run format:check`, and `npm run build` from `docs/web/`. Preview the exported site with `npm run preview`; check navigation, search, mobile layout, and both themes. See the [website guide](docs/web/README.md).
+
+For corpus changes, from `corpus/`:
 
 ```powershell
 uv sync --locked

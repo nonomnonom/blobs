@@ -1,0 +1,20 @@
+{
+  "title": "Blobs guides",
+  "pages": [
+    "index",
+    "---Getting started---",
+    "get-started",
+    "models",
+    "---Using Blobs---",
+    "chat",
+    "library",
+    "your-files",
+    "privacy",
+    "troubleshooting",
+    "---For developers---",
+    "developers",
+    "architecture",
+    "corpus",
+    "contributing"
+  ]
+}

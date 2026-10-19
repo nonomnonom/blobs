@@ -4,6 +4,8 @@ Blobs is an offline Android research app compatible with GrapheneOS. It searches
 
 The active implementation is in [`android/`](android/README.md). Reproducible corpus preparation and evaluation tools are in [`corpus/`](corpus/README.md). The adopted asset distribution design is documented in [`docs/architecture.md`](docs/architecture.md).
 
+The English documentation website is in [`docs/web/`](docs/web/README.md), built with Next.js and Fumadocs. It includes setup, models, libraries, privacy, troubleshooting, and contributor guides.
+
 ## What is implemented
 
 - First-run setup for downloading and verifying a model and knowledge library in the app. Add documents or import a library from Library; manage models in Settings.
@@ -53,7 +55,7 @@ For code ownership, naming, checks and source delivery, see [Contributing](CONTR
 | `android/` | Kotlin/Compose app, JNI runtime, package tools, tests, and Android notices |
 | `android/corpus/` | Versioned source records for the in-app starter library |
 | `corpus/` | uv-managed corpus extraction, normalization, packaging, evaluation, Git LFS records, and data notices |
-| `docs/` | Product architecture and asset distribution decisions |
+| `docs/` | Product architecture and the Next.js/Fumadocs website in `docs/web/` |
 | `.github/` | CI, dependency updates, and pull-request template |
 
 ## Asset distribution
