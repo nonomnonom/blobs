@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "status": "local candidate; not published to the app download list",
+  "status": "published; signed download list and downloaded archive verified",
   "extraction_identity": {
     "dependencies": {
       "libzim": "3.13.1",
@@ -86,9 +86,25 @@
       "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
       "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
       "sha256": "da61f4c387b8fc439c081841b78526368e4639534292362d072f8ee20b85d773",
-      "title": "Travel guides \u00b7 English",
+      "title": "Travel guides · English",
       "version": "2026-09.3"
     }
   },
-  "profile": "corpus-build-wikivoyage-2026-09.3-windows-20261019.json"
+  "profile": "corpus-build-wikivoyage-2026-09.3-windows-20261019.json",
+  "publication": {
+    "repository": "nonomnonom/blobs-catalog",
+    "package_revision": "cae7f6c11e3bad49897dd17bb580ed5bf2da15ed",
+    "catalog_revision": "af28e65d7dc9b612f4144a379c94e60da53acbab",
+    "package_url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/cae7f6c11e3bad49897dd17bb580ed5bf2da15ed/packages/wikivoyage-en-2026-09-v3.blobs",
+    "signed_catalog_sha256": "47cc5cb3602562bfee150c2ce43e4c42b4faa9dd3cf7e3ad02052412849f1937",
+    "verified_at_utc": "2026-10-19T06:24:13.996733+00:00",
+    "checks": [
+      "downloaded signed list verifies with bundled catalog-public-key-v2.pem",
+      "remote payload equals bundled download list",
+      "all nine other package entries unchanged",
+      "downloaded archive size and SHA-256 match signed entry",
+      "streamed archive payload and manifest match signed entry"
+    ],
+    "scope": "Public distribution verification; no new Android runtime measurement."
+  }
 }

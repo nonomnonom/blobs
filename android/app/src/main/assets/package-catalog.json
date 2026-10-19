@@ -146,21 +146,21 @@
       }
     },
     {
-      "file_name": "wikivoyage-en-2026-09-v2.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/wikivoyage-en-2026-09-v2.blobs",
+      "file_name": "wikivoyage-en-2026-09-v3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/cae7f6c11e3bad49897dd17bb580ed5bf2da15ed/packages/wikivoyage-en-2026-09-v3.blobs",
       "download_format": "blobs",
-      "download_bytes": 295139283,
-      "download_sha256": "aa17c4f905728be2ee7f68fc1b539f772a4dbd0bc900eccca80a53617b271413",
+      "download_bytes": 295304448,
+      "download_sha256": "2ff792457b81790fdba6c9f5118b15294448b3d96f934dca1844868c912bfdf8",
       "manifest": {
-        "bytes": 628436992,
+        "bytes": 628633600,
         "format": 1,
         "id": "wikivoyage-en",
         "kind": "library",
         "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
         "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
-        "sha256": "d04019952ea5dc8b8b31568cea39b5203f18cb6969086225ec48d88eb0291056",
+        "sha256": "da61f4c387b8fc439c081841b78526368e4639534292362d072f8ee20b85d773",
         "title": "Travel guides · English",
-        "version": "2026-09.2"
+        "version": "2026-09.3"
       },
       "role": "optional",
       "description": "Offline destination guides and travel basics. This snapshot is from September 2026. Opening hours, fares, visas and local safety advice can change; check current details before you travel.",

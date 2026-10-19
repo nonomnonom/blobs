@@ -94,7 +94,7 @@ uv run --locked python -m blobs_corpus.package library `
   --origin "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides"
 ```
 
-The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change. This recipe prepares a local edition; availability in the app is controlled separately by the signed download list.
+The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change. Edition `2026-09.3` is published in the signed download list. The [publication receipt](evaluation/evidence/corpus-rebuild-wikivoyage-2026-09.3-20261019.json) records its immutable Hugging Face revisions and verification of the downloaded archive. The recipe above rebuilds that edition locally.
 
 ### Profile a corpus build
 
