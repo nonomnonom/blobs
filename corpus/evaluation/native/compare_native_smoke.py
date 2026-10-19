@@ -28,7 +28,14 @@ def summarize(paths):
         raise ValueError('All runs in one model group must include warm-turn metrics')
     fingerprints = {report['observations'].get('device_fingerprint') or report.get('device_fingerprint')
                     for report in reports}
-    device_profiles = {json.dumps(report.get('device_profile'), sort_keys=True) for report in reports}
+    device_profiles = {
+        json.dumps(
+            {key: value for key, value in report.get('device_profile', {}).items()
+             if key != 'serial'},
+            sort_keys=True,
+        )
+        for report in reports
+    }
     models = {(report['model']['bytes'], report['model']['sha256']) for report in reports}
     applications = {(report['application']['apk_sha256'], report['application']['test_apk_sha256'])
                     for report in reports}

@@ -126,6 +126,13 @@ class EvaluationInputTests(unittest.TestCase):
             self.assertNotEqual(result['application']['baseline'], result['application']['candidate'])
             self.assertNotIn('raw_answer', json.dumps(result))
             self.assertAlmostEqual(result['candidate_vs_baseline_percent']['total_latency'], 10)
+
+            mutated = json.loads(candidate[-1].read_text(encoding='utf-8'))
+            mutated['device_profile']['serial'] = 'emulator-5556'
+            candidate[-1].write_text(json.dumps(mutated), encoding='utf-8')
+            serial_variant = compare_native_smoke(baseline, candidate, runtime)
+            self.assertEqual(serial_variant['candidate']['median']['total_ms'], 1100)
+
             self.assertAlmostEqual(
                 result['candidate_warm_turn_vs_baseline_cold']['candidate_warm_vs_baseline_cold_percent']
                 ['total_latency'], -20,

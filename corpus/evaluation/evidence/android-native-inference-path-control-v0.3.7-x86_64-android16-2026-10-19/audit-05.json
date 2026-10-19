@@ -1,0 +1,163 @@
+{
+  "application": {
+    "apk_sha256": "77afe09210b2aedb0c4c968d60cf040291cdea937c855bdeb0fddae6257a2047",
+    "package": "dev.blobs.app.debug",
+    "test_apk_sha256": "c590de9612697d3d27c15f8325f0aa857df85c82f8ddb557748fc18d984d1969"
+  },
+  "checks": {
+    "context_capacity_sufficient": true,
+    "device_profile_complete": true,
+    "exact_model_identity": true,
+    "exact_three_token_cancellation": true,
+    "fixed_workload": true,
+    "inference_completed": true,
+    "inference_metrics_present": true,
+    "inference_stage_order": true,
+    "inputs_complete": true,
+    "installed_build_identity": true,
+    "missing_model_stopped_before_prompt": true,
+    "model_cache_lifecycle_valid": true,
+    "pinned_runtime": true,
+    "thread_selection_valid": true
+  },
+  "complete": true,
+  "device_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+  "device_profile": {
+    "abi": "x86_64",
+    "api": 36,
+    "available_processors": 4,
+    "device": "emu64xa",
+    "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys",
+    "max_heap_bytes": 201326592,
+    "model": "sdk_gphone64_x86_64"
+  },
+  "format": 1,
+  "inputs": {
+    "installed_app": {
+      "bytes": 238,
+      "file": "evaluation/evidence/android-native-inference-installed-qwen-v0.3.7-x86_64-android16-2026-10-19/installed-app.json",
+      "sha256": "ede67bc836feaab11d46ce8b2ee6e0d2cb389a73b694c27b7b64f2fb54561ec9"
+    },
+    "model_lock": {
+      "bytes": 973,
+      "file": "evaluation/locks/qwen3-0.6b-native-smoke-v1.lock.json",
+      "sha256": "6691ceb04fd0d8f55a484284f1645c31d9cd149ab9709a5e83563a49b60b5403"
+    },
+    "package_install": {
+      "bytes": 1281,
+      "file": "evaluation/evidence/android-package-lifecycle-qwen-q8-x86_64-android16-2026-10-19.json",
+      "sha256": "7561d8813596683b705609af757ff904810d7f4889ef2a397f9b4ca453e176ad"
+    },
+    "run": {
+      "bytes": 3773,
+      "file": "evaluation/evidence/android-native-inference-path-control-v0.3.7-x86_64-android16-2026-10-19/run-05.json",
+      "sha256": "7113d14f268deb441e508117d8041762eccb8fb73dc9ad066dd6e74bf99ac6f1"
+    }
+  },
+  "interpretation": {
+    "model_source": "Installed through the signed in-app package list.",
+    "timing": "Recorded stage durations describe this emulator run only."
+  },
+  "model": {
+    "bytes": 639446688,
+    "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031"
+  },
+  "observations": {
+    "cancellation_metrics": {
+      "context_setup_us": 28569,
+      "context_tokens": 512,
+      "first_token_callback_us": 378186,
+      "generation_loop_us": 51032,
+      "inference_threads": 4,
+      "model_cache_hit": true,
+      "model_load_us": 0,
+      "non_thinking_prefix": true,
+      "output_tokens": 3,
+      "prefill_us": 349031,
+      "prompt_tokens": 36,
+      "queue_us": 0,
+      "template_and_tokenize_us": 272,
+      "token_callback_us": 107,
+      "total_us": 431978
+    },
+    "failure_metrics": {
+      "context_setup_us": -1,
+      "context_tokens": -1,
+      "first_token_callback_us": -1,
+      "generation_loop_us": -1,
+      "inference_threads": 4,
+      "model_cache_hit": false,
+      "model_load_us": 107,
+      "non_thinking_prefix": false,
+      "output_tokens": 0,
+      "prefill_us": -1,
+      "prompt_tokens": -1,
+      "queue_us": 0,
+      "template_and_tokenize_us": -1,
+      "token_callback_us": 0,
+      "total_us": 42589
+    },
+    "inference_metrics": {
+      "context_setup_us": 59954,
+      "context_tokens": 512,
+      "first_token_callback_us": 614105,
+      "generation_loop_us": 2579001,
+      "inference_threads": 4,
+      "model_cache_hit": false,
+      "model_load_us": 243102,
+      "non_thinking_prefix": true,
+      "output_tokens": 71,
+      "prefill_us": 307648,
+      "prompt_tokens": 29,
+      "queue_us": 0,
+      "template_and_tokenize_us": 300,
+      "token_callback_us": 1403,
+      "total_us": 3195033
+    },
+    "reload_inference_metrics": {
+      "context_setup_us": 26180,
+      "context_tokens": 512,
+      "first_token_callback_us": 518631,
+      "generation_loop_us": 2076875,
+      "inference_threads": 4,
+      "model_cache_hit": false,
+      "model_load_us": 224290,
+      "non_thinking_prefix": true,
+      "output_tokens": 71,
+      "prefill_us": 267550,
+      "prompt_tokens": 29,
+      "queue_us": 0,
+      "template_and_tokenize_us": 274,
+      "token_callback_us": 1595,
+      "total_us": 2599032
+    },
+    "warm_inference_metrics": {
+      "context_setup_us": 27392,
+      "context_tokens": 512,
+      "first_token_callback_us": 292556,
+      "generation_loop_us": 2294250,
+      "inference_threads": 4,
+      "model_cache_hit": true,
+      "model_load_us": 0,
+      "non_thinking_prefix": true,
+      "output_tokens": 71,
+      "prefill_us": 264602,
+      "prompt_tokens": 29,
+      "queue_us": 0,
+      "template_and_tokenize_us": 261,
+      "token_callback_us": 1626,
+      "total_us": 2589426
+    }
+  },
+  "requested_inference_threads": null,
+  "runtime_commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+  "scope": "Identified Android model compatibility, native inference timing, adaptive thread selection, cancellation and failure-path evidence. This is not a phone-performance prediction or generated-answer quality evaluation.",
+  "script_sha256": "eb9c603ee12daf7a96fd122fb9f91f1cfe4d849c14d6005fa9b219308b2b5371",
+  "thread_mode": "adaptive",
+  "workload": {
+    "id": "native-inference-smoke-v1",
+    "max_output_tokens": 96,
+    "system_sha256": "6c9d83e4a80a7550bef6f135352efa92b4bc8b06c8f7c5031e73d147b86981f1",
+    "user_sha256": "c423998c131a228c0e9d859b02ac54c1c68f3bb44d06ab4c9f20e9df409a76e6"
+  }
+}
