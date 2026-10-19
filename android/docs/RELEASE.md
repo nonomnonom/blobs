@@ -32,6 +32,15 @@ The release assembler checks APK identity and signature, exact package metadata,
 uv run --locked --project ../corpus python tools/verify_release.py .\release\<version>
 ```
 
-Publish the APK, source archive, verification and installation notes, footprint, notices, and checksum inventory to a GitHub Release matching the APK version. Publish the `SHA256SUMS.txt` digest in the release notes so users can check the downloaded files.
+Create a complete offline ZIP outside the immutable release folder:
+
+```powershell
+uv run --locked --project ../corpus python tools/archive_release.py `
+  .\release\<version> .\.local\blobs-<version>-offline-kit.zip
+```
+
+The archiver first verifies the release kit, then checks every archived file against the verified checksum inventory. It preserves the nested license files, refuses existing output paths, and publishes the ZIP only after successful verification. The JSON output includes the archive size, archive SHA-256, and `SHA256SUMS.txt` digest.
+
+Publish the APK, source archive, and complete offline ZIP to a GitHub Release matching the APK version. Publish both the ZIP SHA-256 and the `SHA256SUMS.txt` digest in the release notes. Direct users to extract the ZIP and follow its `VERIFY.md` and `INSTALL.md`; uploading only the top-level kit files omits the required license directory. ZIP byte hashes may differ across filesystem metadata or entry ordering even when the checked file contents are identical; always publish the digest of the actual uploaded ZIP.
 
 Never generate a replacement signing key for an existing application identity unless the release intentionally requires users to uninstall their current app. Android will reject an APK signed by a different key as an update; uninstalling removes private conversations and installed packages. Keep the signing key and its recoverable password outside Git and all release artifacts.
