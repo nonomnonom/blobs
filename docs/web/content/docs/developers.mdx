@@ -5,50 +5,11 @@ description: Work on the native Android app or this documentation site.
 
 Blobs uses Kotlin and Jetpack Compose for Android, Room and SQLite FTS5 for storage and retrieval, and a pinned llama.cpp CPU runtime for local inference. Python runs on the development computer for corpus preparation, not on users’ phones.
 
-## Requirements
+## Build the Android app
 
-- JDK 17
-- uv 0.12.19
-- Android SDK platform 37 and build tools 36.0.0
-- Android NDK 27.1.12297006
-- CMake 3.22.1
+Follow the [Android build guide](https://github.com/nonomnonom/blobs/blob/main/android/README.md) for the pinned toolchain, a clone without large corpus downloads, preparation, verification, and installation. App builds and unit tests do not need the reviewed record shards.
 
-Set `ANDROID_HOME` or create an ignored `android/local.properties`.
-
-## Clone without large record shards
-
-With Git LFS installed, configure only the new checkout:
-
-```powershell title="Clone the repository"
-git clone --no-checkout https://github.com/nonomnonom/blobs.git
-git -C blobs lfs install --local --skip-smudge
-git -C blobs checkout
-cd blobs
-```
-
-App builds and unit tests can leave corpus shards as LFS pointers. Fetch specific records only when rebuilding their corpus edition.
-
-## Prepare and verify Android
-
-From the repository root:
-
-```powershell title="Prepare and verify Android"
-uv sync --locked --project corpus
-cd android
-uv run --locked --project ../corpus python tools/fetch_runtime.py
-.\gradlew.bat verify
-```
-
-Use `./gradlew` on Linux or macOS. The first preparation and build need a connection to fetch dependencies. `verify` runs ktlint, Android lint, JVM tests, debug and release assembly, and instrumentation-test compilation.
-
-With a device or emulator connected:
-
-```powershell title="Run on Android"
-.\gradlew.bat installDebug
-.\gradlew.bat connectedDebugAndroidTest
-```
-
-Some asset-dependent and opt-in checks have additional staging requirements. See the [Android guide](https://github.com/nonomnonom/blobs/blob/main/android/README.md) and [evaluation guide](https://github.com/nonomnonom/blobs/blob/main/corpus/evaluation/README.md) before running them.
+Use the [contribution guide](https://github.com/nonomnonom/blobs/blob/main/CONTRIBUTING.md#verification) to choose checks for your change. Asset-dependent performance tools are optional; they are separate from ordinary application verification.
 
 ## Run this website
 
@@ -62,13 +23,6 @@ npm run dev
 
 Open `http://localhost:3000`. The website uses Next.js, Fumadocs, local fonts, and MDX. Edit guides in `content/docs`; `meta.json` controls the sidebar order. Model and library tables read the Android app’s bundled package metadata.
 
-```sh title="Check and preview the documentation site"
-npm run lint
-npm run typecheck
-npm run build
-npm run preview
-```
-
-The production build exports static files to `out/`, including the search index. Preview serves that directory on port 3000 when available. Deploy the directory to a static host that supports directory indexes and a custom `404.html`. No server process or API secret is required in production. The site currently assumes hosting at the domain root.
+The [website guide](https://github.com/nonomnonom/blobs/blob/main/docs/web/README.md) covers checks, static export, preview, and GitHub Pages hosting at `/blobs`. Set `NEXT_PUBLIC_BASE_PATH` at build time for another subpath, or leave it unset for domain-root hosting.
 
 See [contributing](/docs/contributing) for change ownership and review expectations.

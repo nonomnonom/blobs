@@ -31,4 +31,4 @@ Tap **Check for updates** when connected to refresh the available choices. Openi
 
 Use a smaller model, keep questions focused, and limit the sources you ask Blobs to search when that helps your task. You can stop a reply at any time.
 
-The native runner keeps one model and a bounded context while the app is active. It can reuse an exact prompt prefix for later requests. Leaving the app releases that memory. This is an in-memory optimization, not a saved copy of conversations outside normal app storage.
+Leaving the app releases model memory. Returning to chat can require loading it again; your saved conversations remain available.

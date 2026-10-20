@@ -20,7 +20,7 @@ Follow the [corpus preparation guide](https://github.com/nonomnonom/blobs/blob/m
 
 Keep article identity, source URL, section, license, and attribution with each record. Source locks pin revisions and hashes; changed source material must become a new edition rather than silently replacing the published text.
 
-Regional subsets use the existing reviewed article records. The Bali subset, for example, selects 30 articles from the English travel edition. It doesn’t need a separate retrieval engine or map format.
+Regional subsets reuse reviewed articles. The Bali subset selects 30 articles from the English travel edition; its selection lock preserves their identities and provenance.
 
 ## Verify rights before publishing
 
@@ -28,12 +28,6 @@ Confirm redistribution rights for each included work, including article-specific
 
 Model weights and third-party datasets retain their own licenses. Original source-code licensing doesn’t grant rights to those assets or to Blobs artwork. See the [data notices](https://github.com/nonomnonom/blobs/blob/main/corpus/THIRD_PARTY_NOTICES.md).
 
-## Keep large artifacts separate
-
-GitHub hosts source code and APK releases. Hugging Face hosts installable packages and current reviewed record editions. Some older reviewed editions remain in Git LFS. Models, generated packages, caches, and signing keys stay out of Git.
-
 ## Publish an immutable edition
 
-The existing `android/tools/publish_hf_assets.py` publisher validates staged files, uploads only allowed assets, pins immutable repository revisions and hashes, signs the download list, and updates the bundled fallback. Use a new increasing list revision. A corrected payload needs a new package edition.
-
-Read [trust and publishing](/docs/architecture#trust-and-publishing) for signing, anti-rollback behavior, and the current command. Never commit a private signing key or include it in a release archive.
+Read [trust and publishing](/docs/architecture#trust-and-publishing) for the publisher command, signing, and revision rules. A corrected payload needs a new package edition. Models, generated packages, caches, and signing keys stay out of Git; reviewed record locations and hashes are in the corpus guide.

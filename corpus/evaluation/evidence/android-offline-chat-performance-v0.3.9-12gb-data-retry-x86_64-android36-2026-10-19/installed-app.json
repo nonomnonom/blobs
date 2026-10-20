@@ -1,8 +1,0 @@
-{
-  "package": "dev.blobs.app.debug",
-  "complete": true,
-  "version_name": "0.3.9",
-  "app_apk_sha256": "c228da21769fdd732fe49a16c6e7fa8ec794d22e8ba85a8c9bb2837c95f40f84",
-  "test_apk_sha256": "457d9da7d8f708f23285d4e6f682d5d46c4a98b25f5e00c33bc543960189d395",
-  "instrumentation_test": "dev.blobs.app.NativeInferenceTest#verifiedModelFileProducesSavedCitedAnswer"
-}

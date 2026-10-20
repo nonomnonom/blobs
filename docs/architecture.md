@@ -1,10 +1,10 @@
 # Blobs architecture
 
-Blobs is an offline-first Android research app with an online, curated asset library. After setup, model inference, retrieval, citations, and reading use files stored on the device. Network access is limited to explicit package downloads and signed download-list checks.
+Blobs runs inference, retrieval, citations, and source reading on Android using installed files. Network access is limited to user-requested downloads and signed download-list checks. There is no account or hosted inference service.
 
 ## Application structure
 
-The Android app uses one Gradle application module. `AppContainer` composes app-scoped storage, package, retrieval and work objects. `ProductViewModel` owns navigation and UI actions; `ProductState` and `WorkState` describe the state consumed by Compose. `WorkController` coordinates exclusive answer, import and package operations and their cancellation. Feature screens live under `feature/`, with setup and settings in their own folders and shared package cards beside library screens.
+One Gradle application module contains the Compose UI, Room storage, SQLite FTS5 retrieval, and JNI integration with a pinned llama.cpp CPU runtime. `AppContainer` composes app-scoped objects; `ProductViewModel` owns navigation and UI actions; `WorkController` coordinates exclusive answer, import, and package operations and their cancellation.
 
 ```mermaid title="Application data flow"
 flowchart LR
@@ -19,51 +19,46 @@ flowchart LR
     Catalog --> Codec[CatalogCodec: schema and signatures]
 ```
 
-`data/local` owns Room entities, DAOs and explicit migrations. `data/library` owns read-only source access, retrieval and document import. `data/packages` owns package identity, validation, downloading, installation and the curated download list. `inference` owns model integration, answer formatting and grounding checks; JNI code lives in `app/src/main/cpp`. The uv-managed `corpus/blobs_corpus` package owns corpus preparation and the shared `.blobs` archive contract. Android preparation scripts reuse that contract rather than maintaining a second builder.
+Feature screens live in `feature/`; shared application UI lives in `ui/`. `data/local` owns Room entities, DAOs, and explicit migrations; `data/library` owns source access, retrieval, and document import; `data/packages` owns asset identity, validation, downloading, and installation. `inference` owns answer formatting and grounding, with JNI code in `app/src/main/cpp`. The host-side `corpus/blobs_corpus` package owns corpus preparation and the shared `.blobs` archive contract reused by Android tools.
 
-The native runner retains one model and one bounded context in memory while the app is active. It reuses only an exact token prefix of the newly rendered prompt, removes all following cached tokens, and evaluates at least the final input token to refresh logits. A changed model identity, insufficient context capacity, missing sliding-window state, or unsupported partial memory removal creates a fresh context. Interrupted prefill and failed decodes discard their context. After an explicitly aborted generation, the runner can retain the completed prompt only if the runtime confirms that its positions remain present and can remove the generated tail; otherwise it discards the context. No cache is saved to disk. Leaving the app or releasing the model clears both weights and context. Context capacity remains bounded to 4,096 tokens, with at most 3,072 input and 768 output tokens.
+## Retrieval and answers
 
-Regional text packs use the existing library format and installation path. Retrieval removes identical passages from overlapping packs and applies its document budget across the same source article. A source scope still selects only the user's chosen installed documents. The Bali pack is a small selection of the full travel library; it does not introduce maps, GPS, routing graphs or navigation permissions.
+`LibraryStore` searches enabled libraries or the user's selected document scope. Article names, aliases, and requested sections guide selection. Named subjects receive coverage before additional passages from the same subject; identical passages from overlapping packs are removed. A confident broad definition stays within the matched article and its subarticles. Response-length instructions are removed from search terms while the saved question retains its original wording.
 
-These are source boundaries within the current application, not separate services or independently deployed modules. Contributor commands and compatibility rules are in [Contributing](../CONTRIBUTING.md).
+Retrieval is bounded to six sources, 6,000 UTF-16 characters, and three passages per document. Generation receives the first four selected sources, with section and source/saved dates. Scoped FTS searches resolve document IDs before passage ranking; global searches keep the normal FTS rank path.
 
-## Where files live
+Explicit follow-ups retain a bounded lexical anchor: up to 300 characters from the latest standalone question and 300 from subsequent questions. The model also receives an excerpt of the last two turns. This is lexical context rather than semantic pronoun resolution.
 
-- GitHub hosts the app source, build and verification tools, and Android releases.
-- The public Hugging Face dataset [`nonomnonom/blobs-catalog`](https://huggingface.co/datasets/nonomnonom/blobs-catalog) hosts the signed package list, Blobs-formatted Qwen model package, starter library, and optional libraries. Reviewed travel-record shards for corpus rebuilds are hosted there too; see the [corpus guide](../corpus/README.md#download-reviewed-travel-records-from-hugging-face). Files are pinned by repository revision, byte count, and SHA-256.
-- Gemma model weights are downloaded from their upstream Hugging Face repositories at pinned revisions.
-- Installed models, libraries, conversations, and settings remain in app-private storage.
+Complete and token-limited answers pass the same lexical citation check. Rejected final output is cleared and saved as unverified; partial text may already have appeared while streaming. Recognized English requests for live information receive an app-authored offline-reference notice. Neither mechanism proves semantic correctness or freshness. Sources remain snapshots, and citations let users inspect what an answer relies on.
 
-The list is curated by Blobs maintainers. It is not an unrestricted index of Hugging Face, and it never triggers an asset download by itself.
+## Native runtime and memory
 
-## First run and updates
+The runner retains one model and a bounded context while the app is active. It reuses only an exact prompt prefix, removes the following cached tokens, and evaluates at least the final input token to refresh logits. A changed model, insufficient capacity, unsupported memory removal, interrupted prefill, or decode failure requires a fresh context. Cancellation retains a completed prompt only when the runtime confirms valid positions and can remove the generated tail.
 
-1. Blobs reads available memory and storage locally and recommends a compatible model. The user chooses whether to accept the recommendation or select another listed model.
-2. Setup downloads the selected model and required starter library only after the user taps the download action. The size and available-space guidance appear before each download.
-3. The app verifies the signed package metadata, pinned byte count, SHA-256, and package format before validating and installing files atomically.
-4. Optional libraries can be downloaded from the in-app Library screen. Users can remove installed assets to reclaim space.
-5. Blobs never checks for updates in the background or just because a screen opens. The user can tap “Check for updates” in Library or Models; that fetches the signed download list and caches the verified result. Blobs uses the cached or bundled list offline.
+Context capacity is at most 4,096 tokens, with 3,072 input and 768 output tokens. No context cache is written to disk. Backgrounding the app or releasing the model clears native weights and context.
 
-Users can also add their own TXT, Markdown, CSV, JSON, and text-based PDF files from the phone. Blobs extracts text locally, builds a searchable SQLite FTS5 library, and installs it through the same integrity-checked package path as downloaded libraries. Import is bounded to 50 files, 25 MB total input, 10 MB per ordinary file, 200 PDF pages, and 5 million Unicode code points per collection. Scanned-image PDFs, OCR, password-protected PDFs, and certificate-encrypted PDFs are not supported. Each saved collection can be switched off for retrieval, exported as a portable JSON pack, or removed. These collections stay in app-private storage unless the user explicitly exports them.
+## Assets and installation
 
-No catalog request or model/library download starts in the background. A failed or interrupted install leaves the previous working asset intact. Once setup is complete, network access is unnecessary for chat and research; online catalog checks and downloads start only after the user asks for them.
+GitHub hosts source and APK releases. The Hugging Face dataset [`nonomnonom/blobs-catalog`](https://huggingface.co/datasets/nonomnonom/blobs-catalog) hosts the signed download list and installable packages; Gemma weights come from pinned upstream repositories. Installed assets, conversations, and settings stay in app-private storage.
+
+Setup recommends a model from locally available memory and storage. Downloads start after the user chooses them. Blobs verifies signed metadata, byte count, SHA-256, package paths, storage bounds, and SQLite/GGUF format before atomic installation. A failed operation leaves the previous working asset intact. Installing or enabling another library edition disables other editions in one database transaction while retaining their files for manual rollback.
+
+Opening a screen does not check for updates. **Check for updates** fetches and caches a verified signed list; bundled or cached choices remain available offline. Updating the list does not download assets or remove installed files.
+
+Document import supports TXT, Markdown, CSV, JSON, and text-based PDF. Limits are 50 files and 25 MiB input per collection, 10 MiB per file with a 25 MiB allowance for JSON, 200 PDF pages, one million Unicode code points per document, and five million per collection. OCR, scanned-image PDFs, and protected PDFs are unsupported. Imports use the same installation path and can be disabled, exported as JSON, or removed.
 
 ## Trust and publishing
 
-Catalog envelopes use ECDSA P-256 with SHA-256. The app embeds the current trusted public key (v2); the retired v1 key is no longer accepted by new builds. Key rotation ships with an app update so the trusted key set remains part of the reviewed application source. The signing key is kept outside Git and release artifacts. Each package reference points to an immutable Hugging Face revision; package size and SHA-256 are checked before installation. Model and library payloads also pass format, path, storage, and database validation.
+Catalog envelopes use ECDSA P-256 with SHA-256. New builds trust the embedded v2 public key; v1 is retired. Key rotation requires an app update. Keep private keys outside Git and release artifacts.
 
-Before publishing an asset, maintainers verify its origin, redistribution rights, license and attribution, package compatibility, size, and digest. A corrected asset is published as a new immutable package version and catalog entry; removing an entry does not silently remove a user's installed files.
+Lists carry an increasing positive `revision`. Before replacing its cache, the app atomically records the highest accepted revision and payload digest. It rejects older revisions and different payloads with the same revision. The bundled list sets the minimum for fresh installs. The same accepted payload can restore a missing cache; a damaged revision record blocks online refresh while installed assets and bundled metadata remain usable. Restoring app data can restore an older boundary, so this is not hardware-backed rollback protection.
 
-The repeatable Hugging Face publisher is `android/tools/publish_hf_assets.py`. It checks staged assets against the app's package list, publishes only the allow-listed README and package files, pins URLs to the resulting revision, signs the refreshed list, and updates the app's bundled fallback list. GitHub remains the source and APK distribution channel.
+Before distributing an asset, review origin, redistribution rights, attribution, compatibility, size, and digest. Corrections require a new immutable package edition. The publisher validates archive digests and manifests, uploads only allowed README/package files, pins immutable Hugging Face URLs, signs the list, and updates the bundled fallback. It writes exact UTF-8/LF payload bytes before signing; reformatting requires a new revision.
 
-Signed lists carry a positive increasing `revision`. The app atomically records the highest accepted revision and its payload digest before replacing the cached list. It rejects older revisions and different payloads reusing the same revision. The bundled list supplies a minimum revision for fresh installs. A missing list cache can be restored from the same accepted payload; a damaged revision record blocks online refresh while bundled metadata and installed libraries remain available. Restoring private app data can also restore an older revision boundary; this is not hardware-backed rollback protection.
-
-The publisher writes the payload as UTF-8 with LF line endings before signing and copies those exact bytes into the bundled list. This keeps its digest stable across Windows builds and Git checkouts. Formatting or content changes require a new revision; do not reformat an already signed payload.
-
-Publish with an explicit revision greater than every previously published revision:
+From `android/`, with reviewed assets staged and an explicit revision greater than all published revisions:
 
 ```powershell title="Publish assets"
 uv run --locked --project ../corpus --group publisher python tools/publish_hf_assets.py --revision NEXT_REVISION
 ```
 
-The publisher validates staged archives against both their full digest and embedded manifest before upload. Installed starter editions remain usable when an update is advertised. Installing or enabling a library edition disables other editions of that library in one database transaction and retains their files for manual rollback.
+See [corpus preparation](https://github.com/nonomnonom/blobs/blob/main/corpus/README.md) for source records, [Android releases](https://github.com/nonomnonom/blobs/blob/main/android/docs/RELEASE.md) for APK signing, and [Contributing](https://github.com/nonomnonom/blobs/blob/main/CONTRIBUTING.md) for development checks.

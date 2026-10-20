@@ -1,30 +1,31 @@
-# Blobs corpus engineering
+# Build Blobs libraries
 
-This uv-managed Python project creates and verifies offline knowledge packages for Blobs. Python runs only on the development computer. Android consumes the resulting `.blobs` file and does not require Python, Git LFS, a server, or network access.
+This Python workspace turns attributed source text into searchable `.blobs` packages. It runs on the development computer; Android only needs the resulting package. To download existing libraries in the app, use [the library guide](https://nonomnonom.github.io/blobs/docs/library/).
 
-## Environment
+## Set up
+
+From `corpus/`, using uv 0.12.19:
 
 ```powershell
-$env:UV_CACHE_DIR = "$PWD/.cache/uv"
 uv sync --locked
 uv run --locked python -m unittest discover -s tests
 ```
 
-Python and dependency versions are pinned by `pyproject.toml` and `uv.lock`.
+Python and dependency versions are pinned in `pyproject.toml` and `uv.lock`. Run the commands below from this directory.
 
 ## Fetch reviewed records
 
-App builds and corpus unit tests do not need the full reviewed-record collection. Use the source-only clone instructions in the [repository README](../README.md#build) to leave large Git LFS objects as pointers. If you need an existing edition for a package rebuild, fetch only that edition from the repository root:
+App builds and unit tests do not need large record shards. Follow the [source-only clone instructions](../android/README.md#build-and-verify). For a package rebuild, fetch only the edition you need from the repository root:
 
 ```powershell
 git lfs pull --include="corpus/artifacts/records/nps-outdoor-safety-2026-10.2/**" --exclude=""
 ```
 
-Replace the edition path for another collection. Package builders need the hydrated record files, not LFS pointers. Alternatively, rebuild the edition from its pinned source using the pipeline below. Installable `.blobs` packages and model weights are delivered separately through Hugging Face.
+Package builders require hydrated files, not LFS pointers. Current travel, regional, and focused preparedness records are also available at immutable Hugging Face revisions in [published-records.json](published-records.json). It records paths, digests, and package identities, without requiring you to download a source archive again.
 
 ### Download reviewed travel records from Hugging Face
 
-The current travel edition is available on Hugging Face without fetching Git LFS objects or the original ZIM archive. From `corpus/`, download its immutable revision, then validate and export it into a new local directory:
+With the `hf` CLI installed:
 
 ```powershell
 hf download nonomnonom/blobs-catalog --type dataset `
@@ -37,324 +38,72 @@ uv run --locked python -m blobs_corpus.export `
   work/verified-records/wikivoyage-en-all-nopic-2026-09.3
 ```
 
-The export checks each shard's byte count and SHA-256 and validates every document. It refuses to overwrite an existing output directory. The 42 compressed shards total 139,743,071 bytes and contain 34,597 reviewed documents plus redirects and rejection records. The manifest SHA-256 is `cb1a846d0f19dc9797bb53b1440f65bf2a22abea2be88b640dcd3773b554bc2b`. Use the exported `manifest.json` as the input to the library package builder below. See the [publication receipt](evaluation/evidence/corpus-rebuild-wikivoyage-2026-09.3-20261019.json) for the verification of the public copy.
+Export validates shard sizes, SHA-256, and each document, then writes to a new directory. Use its `manifest.json` to build a package. Reproducing the byte-identical published travel archive requires builder commit `64fa8e0`; newer builders can produce a different database checksum from the same records.
 
-Existing editions already in Git LFS remain available there; this new travel edition is hosted on HF. Article URLs, license notices, contributor-history links, and source processing identities remain with the data. Reproducing the published archive requires the builder from commit `64fa8e0`; newer builders can produce a different database layout and checksum from the same records.
+## Prepare a source edition
 
-## Pipeline
+Source locks in [`sources/`](sources/) pin archive bytes or individual web revisions and normalized text. Use a new edition when source content changes. The pipeline acquires, extracts, curates, exports, and packages records.
 
-The pipeline acquires a pinned source archive, extracts bounded records, normalizes article text and attribution, validates quality constraints, exports immutable record shards, builds a SQLite FTS5 payload, and packages that payload with an exact manifest.
-
-### Regional travel and practical living
-
-| Pack | Contents | Download | On phone |
-| --- | --- | --- | --- |
-| Bali travel guides | 30 English Wikivoyage guides, including Bali, Ubud, Denpasar and Nusa Penida | 673.6 KB | 1.50 MB |
-| Practical living | Four English Appropedia articles: composting, drip irrigation, rainwater harvesting and solar cookers | 81.4 KB | 229.4 KB |
-
-Bali is a September 2026 text snapshot selected from the full English travel library. It
-describes places and getting around; it contains no map tiles, live transport data or route
-calculation. Installing both travel packs does not add new Bali articles. Android retrieval
-avoids repeating the same passages from overlapping packs.
-
-Practical living contains community reference text saved on 20 October 2026, without source
-diagrams, embedded media or linked resources. It is a small collection of concepts rather
-than a complete construction, drinking-water or food-safety manual. Each included article
-specifies CC BY-SA 3.0; this article-specific notice takes precedence over Appropedia's
-general CC BY-SA 4.0 footer. Source URLs, revision identities and contributor-history links
-are retained. See [data notices](THIRD_PARTY_NOTICES.md) for attribution and adaptation details.
-
-The [publication receipt](evaluation/evidence/regional-practical-libraries-2026-10-20.json)
-pins packages, reviewed records, counts and hashes. Download both record editions without
-the full travel collection:
-
-```powershell
-hf download nonomnonom/blobs-catalog --type dataset `
-  --revision 7f417f7e72f9326aa381278308b255611c0635ad `
-  --include "records/bali-travel-2026-09.1/*" `
-  --include "records/practical-living-2026-10.1/*" `
-  --local-dir work/regional-records
-```
-
-Pass a downloaded `documents.jsonl.gz` to `python -m blobs_corpus.package library` with
-schema 3 and the exact identity in that edition's `receipt.json` to rebuild its package.
-For source acquisition instead, `web_pages acquire` and `web_pages extract` accept
-`sources/practical-living-2026-10.json`; the lock pins each wiki revision and normalized text.
-The commands refuse changed revisions or article text rather than updating a published edition.
-
-To recreate the Bali selection from the verified full travel records:
-
-```powershell
-uv run --locked python -m blobs_corpus.subset `
-  sources/bali-travel-2026-09.json `
-  work/verified-records/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
-  work/bali-records/documents.jsonl.gz
-```
-
-The selection lock pins the source manifest and every selected article's identity, title,
-URL and text hash. Selection preserves original text, dates, rights and provenance and
-publishes its output atomically without replacing an existing file.
-
-### Focused preparedness libraries
-
-Three small, optional English packs complement the travel, outdoor, camping, and general
-emergency libraries. They contain different source articles from the general emergency pack.
-
-| Pack | Included Ready.gov guides | Download | On phone |
-| --- | --- | --- | --- |
-| Weather & wildfire safety | Floods, thunderstorms/lightning, winter weather, wildfires | 26.8 KB | 114.7 KB |
-| Earthquake & tsunami safety | Earthquakes, tsunamis | 14.8 KB | 90.1 KB |
-| Food during power outages | Emergency food supplies, cooking, refrigeration during outages | 7.7 KB | 73.7 KB |
-
-These are text-only snapshots of U.S. guidance, including U.S. alert systems and emergency
-numbers. Their pages were updated in March–September 2026. They do not provide live alerts,
-forecasts, evacuation maps, or local orders. Follow current local authorities and food-safety
-guidance. Blobs is independent and not endorsed by FEMA. Agency marks, images, and linked
-third-party resources are excluded; source rights remain subject to the
-[FEMA reuse notice](https://www.fema.gov/about/website-information) and page-specific notices.
-
-The acquisition locks are `sources/weather-safety-2026-10.json`,
-`sources/earthquake-tsunami-safety-2026-10.json`, and `sources/emergency-food-2026-10.json`.
-They pin each article's title, date, selector, URL, and normalized text hash. The
-[publication receipt](evaluation/evidence/focused-preparedness-libraries-2026-10-19.json)
-records the immutable package and reviewed-record URLs, sizes, and digests, plus Android
-installation and anonymous download checks. Models and generated answer wording are not
-evaluated by these checks.
-
-To rebuild a pack, download its reviewed `documents.jsonl.gz` from the receipt's pinned HF
-revision and pass it to `python -m blobs_corpus.package library` with schema 3 and the exact
-manifest identity recorded in that receipt. Each record folder also includes `source-lock.json`
-and `receipt.json`. The existing `web_pages acquire` and `web_pages extract` commands can
-instead reproduce the reviewed records while the source pages still match their locks.
-
-Core commands are exposed through `python -m blobs_corpus.<module>`. Use `--help` on a module before running it. Builders refuse existing output editions and publish through a temporary path so a failed run cannot replace verified data.
-
-### Rebuild the pinned Top 1M library
-
-Run these commands from this directory. The source archive is about 3 GB; acquisition verifies its locked size and SHA-256, and extraction checkpoints deterministic 5,000-entry shards so an interrupted run can resume. Extraction and package construction can take a long time on a development computer.
+For the Top 1M Wikipedia introduction collection:
 
 ```powershell
 uv run --locked python -m blobs_corpus.acquire `
   sources/wikipedia-en-top1m-mini-2026-04.json work/sources
-
 uv run --locked python -m blobs_corpus.extract `
   sources/wikipedia-en-top1m-mini-2026-04.json `
   work/sources/wikipedia_en_top1m_mini_2026-04.zim `
   work/extract/wikipedia-en-top1m-mini-2026-04
-
 uv run --locked python -m blobs_corpus.curate `
   work/extract/wikipedia-en-top1m-mini-2026-04/manifest.json `
   work/reviewed/wikipedia-en-top1m-mini-2026-04
-
 uv run --locked python -m blobs_corpus.export `
   work/reviewed/wikipedia-en-top1m-mini-2026-04/manifest.json `
   artifacts/records/wikipedia-en-top1m-mini-2026-04
+```
 
+For a small web collection, use its page lock:
+
+```powershell
+uv run --locked python -m blobs_corpus.web_pages acquire `
+  sources/nps-outdoor-safety-2026-10.json work/sources/nps-outdoor-safety
+uv run --locked python -m blobs_corpus.web_pages extract `
+  sources/nps-outdoor-safety-2026-10.json `
+  work/sources/nps-outdoor-safety `
+  work/reviewed/nps-outdoor-safety/documents.jsonl.gz
+```
+
+| Collection | Source lock | Preparation |
+| --- | --- | --- |
+| Wikipedia introductions | `wikipedia-en-top1m-mini-2026-04.json` | Archive pipeline above |
+| English travel | `wikivoyage-en-all-nopic-2026-09.json` | Same archive pipeline with the travel paths |
+| Outdoor safety | `nps-outdoor-safety-2026-10.json` | Web pages |
+| Camping safety | `camping-safely-2026-10.json` | Web pages |
+| Backcountry planning | `backcountry-basics-2026-10-v2.json` | Web pages |
+| Emergency preparedness | `ready-emergency-preparedness-2026-10.json` | Web pages |
+| Weather, earthquakes/tsunamis, emergency food | `weather-safety-2026-10.json`, `earthquake-tsunami-safety-2026-10.json`, `emergency-food-2026-10.json` | Web pages |
+| Practical living | `practical-living-2026-10.json` | Web pages |
+| Bali travel | `bali-travel-2026-09.json` | `python -m blobs_corpus.subset LOCK REVIEWED_MANIFEST OUTPUT` |
+
+The [captured starter library](../android/corpus/README.md) has its own local build recipe. Run a module with `--help` for its arguments. Builders refuse existing outputs. Extraction can resume after interruption; remove a stale `.extract.lock` only after confirming its extractor is no longer running.
+
+## Package reviewed text
+
+Supply either a reviewed `manifest.json` or `documents.jsonl.gz`. For example, package the Top 1M records prepared above:
+
+```powershell
 uv run --locked python -m blobs_corpus.package library `
   artifacts/records/wikipedia-en-top1m-mini-2026-04/manifest.json `
-  artifacts/wikipedia-en-top1m-mini-2026-04.blobs `
-  --schema 3 `
-  --id wikipedia-top1m-mini `
-  --version 2026-04.1 `
+  work/packages/wikipedia-top1m-mini.blobs `
+  --schema 3 --id wikipedia-top1m-mini --version 2026-04.1 `
   --title "Wikipedia Top 1M introductions" `
   --license "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs" `
   --origin "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim"
 ```
 
-The source lock captures snapshot, scope, license, origin, byte count, and digest. Review the generated curation report and package receipt before distributing an edition. Do not commit the raw archive, database, or `.blobs` package to Git; the repository's large reviewed record-shard policy uses Git LFS, while reproducible release packages are distributed separately.
+For another collection, use its own identity, license, and origin. Keep canonical URLs, source dates, revision/history links, and adaptation notices with every article. Images and linked third-party resources need separate rights review; see [data notices](THIRD_PARTY_NOTICES.md). SQLite/FTS integrity and streamed payload checks run before packaging. A failed build must not replace a published edition.
 
-### Build the travel library
+## Distribute a library
 
-The English travel library uses the pinned September 2026 Wikivoyage snapshot. The recipe below prepares edition `2026-09.3` with the current strict Unicode validator. Earlier reviewed records contain two articles with replacement characters and cannot be rebuilt under that validator; re-extract from the pinned archive into a new directory. Rejected articles remain accounted for in the extraction manifest and rejection shards. Run from `corpus/`:
+Add a new immutable package edition to the signed download list using [trust and publishing](../docs/architecture.md#trust-and-publishing). Source locks, attribution, package hashes, and retrieval cases accompany a new collection. Libraries share the existing importer and FTS5 format.
 
-```powershell
-uv run --locked python -m blobs_corpus.acquire `
-  sources/wikivoyage-en-all-nopic-2026-09.json work/sources
-
-uv run --locked python -m blobs_corpus.extract `
-  sources/wikivoyage-en-all-nopic-2026-09.json `
-  work/sources/wikivoyage_en_all_nopic_2026-09.zim `
-  work/extract/wikivoyage-en-all-nopic-2026-09-strict-v1
-
-uv run --locked python -m blobs_corpus.curate `
-  work/extract/wikivoyage-en-all-nopic-2026-09-strict-v1/manifest.json `
-  work/reviewed/wikivoyage-en-all-nopic-2026-09.3
-
-uv run --locked python -m blobs_corpus.export `
-  work/reviewed/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
-  artifacts/records/wikivoyage-en-all-nopic-2026-09.3
-
-uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
-  work/packages/wikivoyage-en-2026-09-v3.blobs `
-  --schema 3 `
-  --id wikivoyage-en `
-  --version 2026-09.3 `
-  --title "Travel guides · English" `
-  --license "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution" `
-  --origin "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides"
-```
-
-The resulting package is an optional library alongside the starter library. Its article-history links preserve contributor attribution. The snapshot date is shown to users because travel details change. Edition `2026-09.3` is published in the signed download list. The [publication receipt](evaluation/evidence/corpus-rebuild-wikivoyage-2026-09.3-20261019.json) records its immutable Hugging Face revisions and verification of the downloaded archive. The recipe above rebuilds that edition locally.
-
-### Profile a corpus build
-
-Measure the complete build before choosing a language migration or optimization:
-
-```powershell
-uv run --locked python -m evaluation.retrieval.profile_build `
-  work/reviewed/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
-  work/profile-travel-build
-```
-
-Use a new output directory for each run. It contains the SQLite payload, build log, a `build.pstats` trace, and `profile.json` with input/code identities, host details, elapsed time, and per-function CPU attribution. Profiling overhead is included. Cumulative function times overlap and must not be added together; use self times to identify where execution is spent. This measures host-side corpus construction, not Android inference or answer quality.
-
-The [recorded Windows travel build](evaluation/evidence/corpus-build-wikivoyage-2026-09.3-windows-20261019.json) took 50.3 seconds under cProfile. SQLite `execute` and `commit` accounted for 31.1 seconds of self time; passage splitting accounted for 5.9 seconds cumulatively. This single diagnostic run points first to database writes when investigating build cost. It does not measure a Mojo implementation or establish a language speedup.
-
-Secondary indexes are now built after loading document and passage rows. The [follow-up build](evaluation/evidence/corpus-build-deferred-indexes-windows-20261019.json) took 48.2 seconds under the same profiler and produced 623,865,856 bytes, compared with 628,633,600 bytes before. Every document, provenance record, passage, span, article-name mapping, and FTS storage row matched the previous build; the final schema also matched. These single runs do not establish a reliable timing speedup. This builder change affects future package builds: the published `2026-09.3` archive and its checksum remain immutable, and rebuilding with the newer builder produces a different database checksum.
-
-### Build the U.S. outdoor-safety library
-
-This small survival-oriented edition contains five National Park Service pages on hiking preparation, outdoor emergencies, water treatment, natural-water hazards, and winter hiking. It is explicitly U.S. national-park guidance; it does not replace current park rules, weather alerts, or emergency services. The source lock pins each page's title, update date, canonical URL, and normalized article-text SHA-256. Ingest rejects a title or article-text change for review, while ignoring unrelated changes to page chrome. Source images and navigation are excluded.
-
-```powershell
-uv run --locked python -m blobs_corpus.web_pages acquire `
-  sources/nps-outdoor-safety-2026-10.json work/sources/nps-outdoor-safety-2026-10
-
-uv run --locked python -m blobs_corpus.web_pages extract `
-  sources/nps-outdoor-safety-2026-10.json `
-  work/sources/nps-outdoor-safety-2026-10 `
-  artifacts/records/nps-outdoor-safety-2026-10.2/documents.jsonl.gz
-
-uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/nps-outdoor-safety-2026-10.2/documents.jsonl.gz `
-  work/packages/nps-outdoor-safety-2026-10-v2.blobs `
-  --schema 3 `
-  --id nps-outdoor-safety `
-  --version 2026-10.2 `
-  --title "Outdoor safety · U.S. national parks" `
-  --license "U.S. Government work · National Park Service (public domain unless marked)" `
-  --origin "https://www.nps.gov/aboutus/disclaimer.htm" `
-  --work-directory work/build/nps-outdoor-safety-2026-10.2
-```
-
-The [NPS reuse notice](https://www.nps.gov/aboutus/disclaimer.htm) says government-created NPS material is generally public domain unless otherwise marked and warns that some page material can have third-party restrictions. This edition contains text-only extracts from the five locked NPS pages, no images, and no NPS marks. It is a small set of U.S. national-park safety guides, not a comprehensive survival manual. The user-facing package description must state that local conditions and rules vary, advise following current ranger and emergency-service instructions, and clarify that Blobs is not an NPS product or endorsement. Review source rights and content again before making a new edition.
-
-### Build the U.S. emergency-preparedness library
-
-This household-focused edition uses four dated Ready.gov pages covering family planning, emergency kits, evacuation, and power outages. It is a U.S. federal preparedness reference, not live emergency information; users should follow current local instructions. Source text is extracted without images, agency marks, or linked third-party materials. FEMA says most FEMA.gov material may be reused, while page-specific third-party restrictions can apply; review those notices before preparing every edition.
-
-```powershell
-uv run --locked python -m blobs_corpus.web_pages acquire `
-  sources/ready-emergency-preparedness-2026-10.json work/sources/ready-emergency-preparedness-2026-10
-
-uv run --locked python -m blobs_corpus.web_pages extract `
-  sources/ready-emergency-preparedness-2026-10.json `
-  work/sources/ready-emergency-preparedness-2026-10 `
-  artifacts/records/ready-emergency-preparedness-2026-10/documents.jsonl.gz
-
-uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/ready-emergency-preparedness-2026-10/documents.jsonl.gz `
-  work/packages/ready-emergency-preparedness-2026-10-v1.blobs `
-  --schema 3 `
-  --id ready-emergency-preparedness `
-  --version 2026-10.1 `
-  --title "Emergency preparedness · U.S. households" `
-  --license "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions" `
-  --origin "https://www.fema.gov/about/website-information" `
-  --work-directory work/build/ready-emergency-preparedness-2026-10
-```
-
-FEMA's [website information and reuse policy](https://www.fema.gov/about/website-information) says most FEMA.gov material may be copied and distributed, but warns that some material is licensed or restricted. FEMA lists Ready.gov among the .gov domains it owns and manages. The source lock pins each Ready.gov page's title, update date, canonical URL, and normalized text digest; the text-only extraction omits visual assets. The user-facing listing must identify the U.S. scope, show that the snapshot can become outdated, and advise users to follow current emergency officials. Blobs is independent and not endorsed by FEMA.
-
-### Build the camping-safety library
-
-This edition packages the NPS four-step camping-safety series: preparation, arrival checks, safe practices during a stay, and closing out a trip. It is a U.S. national-park reference, not live park guidance or a survival manual. Its source pages were last updated in 2017–2019, so users should check current park rules, alerts, and ranger instructions before traveling. The source lock pins article titles, dates, normalized text hashes, URLs, and the exact article selector; extraction omits images and external linked content.
-
-```powershell
-uv run --locked python -m blobs_corpus.web_pages acquire `
-  sources/camping-safely-2026-10.json work/sources/camping-safely-2026-10
-
-uv run --locked python -m blobs_corpus.web_pages extract `
-  sources/camping-safely-2026-10.json `
-  work/sources/camping-safely-2026-10 `
-  artifacts/records/camping-safely-2026-10/documents.jsonl.gz
-
-uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/camping-safely-2026-10/documents.jsonl.gz `
-  work/packages/camping-safely-2026-10-v1.blobs `
-  --schema 3 `
-  --id camping-safety `
-  --version 2026-10.1 `
-  --title "Camping safely · U.S. national parks" `
-  --license "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm" `
-  --origin "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039" `
-  --work-directory work/build/camping-safely-2026-10
-```
-
-The source is the NPS [Four Major Steps to Camping Safely](https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039) series. Follow its links for park-specific instructions and current conditions. The package is independent and not endorsed by NPS.
-
-### Build backcountry trip planning
-
-This planning edition combines the NPS Ten Essentials, Trip Planning Guide, and Wilderness & Backcountry Camping pages. It covers trip preparation, park day or overnight plans, packing, and general backcountry considerations. The Trip Planning Guide explicitly does not cover multi-day backcountry trips. This is not a comprehensive survival manual, field medical guide, or live source for weather, park rules, permits, closures, or alerts. Park-specific directions and current conditions take precedence. The Ten Essentials article credits The Mountaineers; that attribution remains in the extracted text. This package contains text only, follows the NPS reuse notice, and does not include images or agency marks.
-
-```powershell
-uv run --locked python -m blobs_corpus.web_pages acquire `
-  sources/backcountry-basics-2026-10-v2.json work/sources/backcountry-basics-2026-10-v2
-
-uv run --locked python -m blobs_corpus.web_pages extract `
-  sources/backcountry-basics-2026-10-v2.json `
-  work/sources/backcountry-basics-2026-10-v2 `
-  artifacts/records/backcountry-basics-2026-10-v2/documents.jsonl.gz
-
-uv run --locked python -m blobs_corpus.package library `
-  artifacts/records/backcountry-basics-2026-10-v2/documents.jsonl.gz `
-  work/packages/backcountry-basics-2026-10-v3.blobs `
-  --schema 3 `
-  --id backcountry-basics `
-  --version 2026-10.3 `
-  --title "Backcountry trip planning · U.S. national parks" `
-  --license "National Park Service text; public-domain status may vary by page; source credits The Mountaineers for the Ten Essentials system" `
-  --origin "https://www.nps.gov/aboutus/disclaimer.htm" `
-  --work-directory work/build/backcountry-basics-2026-10
-```
-
-Its eight retrieval-only cases check that packing, trip-plan, and backcountry questions find the expected source. The host report measures retrieval only; it does not evaluate generated answers or substitute for current park instructions. For the pinned host and Android emulator checks, see [`evaluation/README.md`](evaluation/README.md).
-
-Extraction checkpoints are safe to resume after a normal interrupt. If the process is forcibly terminated, it can leave `work/extract/EDITION/.extract.lock`; confirm no extractor is still running before removing that stale file and resuming. Never remove the lock while an extraction process is active.
-
-Example package build from normalized records:
-
-```powershell
-uv run --locked python -m blobs_corpus.package library \
-  artifacts/records/EDITION/manifest.json \
-  artifacts/EDITION.blobs \
-  --schema 3 \
-  --id EDITION \
-  --version VERSION \
-  --title "Offline knowledge library" \
-  --license "CC BY-SA 4.0" \
-  --origin "SOURCE_URL"
-```
-
-Inspect the module help for the current schema and required metadata. Generated `.blobs` files and build workspaces are ignored by Git.
-
-### Add topic libraries
-
-Keep the starter, travel, outdoor-safety, emergency-preparedness, camping-safety, and future topic libraries as separate packages. Each library gets its own pinned source locks, attribution and license review, package receipt, retrieval cases, and catalog entry. Publishing a new signed catalog revision makes an additional library downloadable without replacing the user's model, starter library, or app. Android shares the same importer and SQLite FTS5 format across libraries, so adding a topic does not require a new retrieval implementation. Keep a topic bundle together only when its sources and intended use form one coherent edition.
-
-## Data integrity
-
-- HTML sources are decoded as strict UTF-8, and source pages and normalized records containing a Unicode replacement character are rejected instead of silently publishing damaged text.
-- Inputs are pinned by origin, revision, byte length, and SHA-256.
-- Normalized records retain canonical URL, contributor/history URL, source archive identity, and available revision identity.
-- Extraction and passage lengths are bounded.
-- SQLite integrity and FTS integrity checks run before publication.
-- Package verification streams the complete payload and checks declared length, CRC, and SHA-256.
-- Redirect and alternate-name resolution retains unresolved and ambiguous counts instead of guessing.
-
-Large reviewed record shards under `artifacts/records/` use Git LFS. Model weights, raw downloads, extracted databases, generated packages, caches, and raw run logs stay outside Git. Selected compact benchmark reports under `evaluation/` are versioned as reproducible evidence.
-
-Optional host-side retrieval replay and inference-performance measurements are documented in [`evaluation/README.md`](evaluation/README.md). They do not score generated-answer quality and are not part of the Android runtime or required to build the app.
-
-See [data notices](THIRD_PARTY_NOTICES.md) for Wikipedia attribution and host-side dependency licenses.
+Keep raw archives, databases, generated packages, models, caches, and run reports out of Git. Use `work/` or `reports/` for local output. [Optional evaluation tools](evaluation/README.md) help investigate retrieval and performance; they are not required to build the app.

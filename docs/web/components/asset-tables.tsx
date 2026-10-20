@@ -14,8 +14,8 @@ export function ModelTable() {
     return (
         <Table className="min-w-[420px]">
             <caption>
-                Models in the app’s bundled download list. Sizes use decimal
-                units.
+                Models in the app’s bundled download list. Download sizes use
+                decimal units; RAM is shown in GiB.
             </caption>
             <thead>
                 <tr>
@@ -32,7 +32,7 @@ export function ModelTable() {
                             <th scope="row">{asset.manifest.title}</th>
                             <td>{downloadSize(asset.download_bytes)}</td>
                             <td>
-                                {asset.compatibility.minimum_ram_mb! / 1024} GB
+                                {asset.compatibility.minimum_ram_mb! / 1024} GiB
                             </td>
                         </tr>
                     ))}

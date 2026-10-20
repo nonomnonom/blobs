@@ -1,0 +1,60 @@
+{
+  "format": 1,
+  "repository": "nonomnonom/blobs-catalog",
+  "libraries": [
+    {
+      "id": "wikivoyage-en",
+      "version": "2026-09.3",
+      "documents": 34597,
+      "records_revision": "698ab323d165b46128b000ecbe06367380906c10",
+      "records_path": "records/wikivoyage-en-all-nopic-2026-09.3",
+      "manifest_sha256": "cb1a846d0f19dc9797bb53b1440f65bf2a22abea2be88b640dcd3773b554bc2b",
+      "byte_identical_builder_commit": "64fa8e0"
+    },
+    {
+      "id": "weather-safety",
+      "version": "2026-10.1",
+      "documents": 4,
+      "records_revision": "9bab07fb944ee48777115a6a184771bf351c9506",
+      "records_path": "records/weather-safety-2026-10.1/documents.jsonl.gz",
+      "records_sha256": "f49191098901820cc074d57d2d60f3eb0c4af064bdc8f76d4ac31ea4d68538bd",
+      "source_lock": "corpus/sources/weather-safety-2026-10.json"
+    },
+    {
+      "id": "earthquake-tsunami-safety",
+      "version": "2026-10.1",
+      "documents": 2,
+      "records_revision": "9bab07fb944ee48777115a6a184771bf351c9506",
+      "records_path": "records/earthquake-tsunami-safety-2026-10.1/documents.jsonl.gz",
+      "records_sha256": "c50fd2ac5881c807a07a444b36be3ec58812e401d978c3c0a464672449d8060f",
+      "source_lock": "corpus/sources/earthquake-tsunami-safety-2026-10.json"
+    },
+    {
+      "id": "emergency-food",
+      "version": "2026-10.1",
+      "documents": 1,
+      "records_revision": "9bab07fb944ee48777115a6a184771bf351c9506",
+      "records_path": "records/emergency-food-2026-10.1/documents.jsonl.gz",
+      "records_sha256": "0bc8ade00dbff1f1be4c1d8ae59c6dbbcc03d26fe9c1f0cd43b52e5464edcd32",
+      "source_lock": "corpus/sources/emergency-food-2026-10.json"
+    },
+    {
+      "id": "practical-living",
+      "version": "2026-10.1",
+      "documents": 4,
+      "records_revision": "7f417f7e72f9326aa381278308b255611c0635ad",
+      "records_path": "records/practical-living-2026-10.1/documents.jsonl.gz",
+      "records_sha256": "29935e6b5e17762c529debdedf76a6d5b25389632dc25161dd7be2011e57d2a9",
+      "source_lock": "corpus/sources/practical-living-2026-10.json"
+    },
+    {
+      "id": "bali-travel",
+      "version": "2026-09.1",
+      "documents": 30,
+      "records_revision": "7f417f7e72f9326aa381278308b255611c0635ad",
+      "records_path": "records/bali-travel-2026-09.1/documents.jsonl.gz",
+      "records_sha256": "e2b6d130b6b79dc7b756a1c09e7a99006ba8d7b8a59714f5700317f57b2e55f1",
+      "source_lock": "corpus/sources/bali-travel-2026-09.json"
+    }
+  ]
+}

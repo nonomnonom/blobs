@@ -11,3 +11,6 @@ Thumbs.db
 design/
 corpus/reports/
 corpus/evaluation/results/
+corpus/evaluation/evidence/
+corpus/evaluation/baselines/
+/docs/bounty-*.json
