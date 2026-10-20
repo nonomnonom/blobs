@@ -26,8 +26,14 @@ class LibraryStore {
         val passageId: Long,
         val titlePriority: Boolean,
         val titleOverlap: Int,
-        val directTitleMatch: Boolean
-    )
+        val directTitleMatch: Boolean,
+        val subjectMatch: Boolean = false,
+        val namedSubject: String? = null,
+        val sectionOverlap: Int = 0,
+        val topicOverlap: Int = 0
+    ) {
+        val sectionPriority: Int get() = if (sectionOverlap >= 2) sectionOverlap else 0
+    }
 
     fun validate(file: File, catalogDigestPinned: Boolean = false) {
         open(file.path).use { db ->
@@ -163,9 +169,10 @@ class LibraryStore {
         scope: Set<String>?
     ): List<Evidence> {
         if (scope?.isEmpty() == true) return emptyList()
-        val terms = searchTerms(question)
+        val searchQuestion = RetrievalQuery.forSearch(question)
+        val terms = RetrievalQuery.match(searchQuestion)
         if (terms.isEmpty()) return emptyList()
-        val titleTerms = RetrievalQuery.titleTerms(question)
+        val titleTerms = RetrievalQuery.titleTerms(searchQuestion)
         val enabledLibraries = packages.filter { it.kind == "library" && it.enabled }
         return enabledLibraries.flatMap { pack ->
             val ids = scope?.filter {
@@ -177,12 +184,12 @@ class LibraryStore {
                 val schema = version(db)
                 val current = schema >= 2L
                 val titleMatches = if (current && hasNames(db)) {
-                    matchingTitles(db, question, ids)
+                    matchingTitles(db, searchQuestion, ids)
                 } else {
                     emptyList()
                 }
                 val query = if (current && hasNames(db)) {
-                    RetrievalQuery.match(question, titleMatches.map { it.title })
+                    RetrievalQuery.match(searchQuestion, titleMatches.map { it.title })
                 } else {
                     terms
                 }
@@ -203,40 +210,100 @@ class LibraryStore {
                     ""
                 }
                 val directTitleIds = titleMatches.filter {
-                    it.key == RetrievalQuery.nameKey(it.title) &&
-                        RetrievalQuery.isDirectTitleMatch(question, it.title)
-                }.map { it.id }.distinct()
+                    (
+                        it.key == RetrievalQuery.nameKey(it.title) &&
+                            RetrievalQuery.isDirectTitleMatch(searchQuestion, it.title)
+                        ) || ' ' in it.key
+                }.map { it.id }.toMutableSet()
                 val titlePriorityIds = titleMatches.filter {
                     it.id in directTitleIds &&
-                        RetrievalQuery.isBroadTitleQuestion(question, it.title)
-                }.map { it.id }.toSet()
+                        RetrievalQuery.isBroadTitleQuestion(searchQuestion, it.title)
+                }.map { it.id }.toMutableSet()
+                val subjects = titleMatches.filter { it.id in directTitleIds }
+                    .map { it.title }.toMutableList()
+                val namedSubjects = subjects.toList()
                 val titleFlag = if (current) "CASE WHEN p.title!='' THEN 1 ELSE 0 END" else "0"
                 val candidateLimit = if (enabledLibraries.size > 1) {
                     MULTI_LIBRARY_CANDIDATE_LIMIT
                 } else {
                     SINGLE_LIBRARY_CANDIDATE_LIMIT
                 }
-                val ranked = db.prepare(
-                    "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt,$titleFlag,p.id FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id WHERE passages_fts MATCH ?$filter$contentFilter ORDER BY $ranking LIMIT ?"
-                ).use { statement ->
-                    statement.bindText(1, query)
-                    var parameter = 2
-                    ids?.forEach { id -> statement.bindText(parameter++, id) }
-                    statement.bindLong(parameter, candidateLimit.toLong())
-                    buildList {
-                        while (statement.step()) {
-                            add(
-                                RetrievalCandidate(
-                                    evidence = read(statement, pack),
-                                    passageId = statement.getLong(10),
-                                    titlePriority = statement.getLong(9) != 0L &&
-                                        statement.getText(0) in titlePriorityIds,
-                                    titleOverlap = 0,
-                                    directTitleMatch = statement.getText(0) in directTitleIds
+                fun search(
+                    searchQuery: String,
+                    subjectFilter: String = "",
+                    subjectParameters: List<String> = emptyList()
+                ): List<RetrievalCandidate> {
+                    val scoped = ids != null || subjectFilter.isNotEmpty()
+                    val from = if (scoped) {
+                        "documents d CROSS JOIN passages p ON p.doc_id=d.id$spanJoin CROSS JOIN passages_fts ON passages_fts.rowid=p.id"
+                    } else {
+                        "passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id"
+                    }
+                    // Keep configured rank, but sort only after the scoped rowid lookups.
+                    val order = if (scoped && current) "+rank, p.id" else ranking
+                    return db.prepare(
+                        "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt,$titleFlag,p.id FROM $from WHERE passages_fts MATCH ?$filter$contentFilter$subjectFilter ORDER BY $order LIMIT ?"
+                    ).use { statement ->
+                        statement.bindText(1, searchQuery)
+                        var parameter = 2
+                        ids?.forEach { id -> statement.bindText(parameter++, id) }
+                        subjectParameters.forEach { statement.bindText(parameter++, it) }
+                        statement.bindLong(parameter, candidateLimit.toLong())
+                        buildList {
+                            while (statement.step()) {
+                                add(
+                                    RetrievalCandidate(
+                                        evidence = read(statement, pack),
+                                        passageId = statement.getLong(10),
+                                        titlePriority = statement.getLong(9) != 0L &&
+                                            statement.getText(0) in titlePriorityIds,
+                                        titleOverlap = 0,
+                                        directTitleMatch = statement.getText(0) in directTitleIds
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
+                }
+                val ranked = search(query)
+                if (current) {
+                    val subjectNames = subjects.map(RetrievalQuery::nameKey)
+                    ranked.distinctBy { it.evidence.id }.forEach { candidate ->
+                        val title = candidate.evidence.title
+                        val words = RetrievalQuery.titleTerms(title)
+                        val name = " ${RetrievalQuery.nameKey(title)} "
+                        if (
+                            words.size >= 2 && titleTerms.containsAll(words) &&
+                            (subjectNames.isEmpty() || subjectNames.any { " $it " in name })
+                        ) {
+                            val id = candidate.evidence.id.substringAfter('/')
+                            directTitleIds.add(id)
+                            if (title !in subjects) subjects.add(title)
+                            if (RetrievalQuery.isBroadTitleQuestion(searchQuestion, title)) {
+                                titlePriorityIds.add(id)
+                            }
+                        }
+                    }
+                }
+                val topicTerms = RetrievalQuery.topicTerms(searchQuestion, subjects)
+                val topical = if (subjects.isNotEmpty() && topicTerms.isNotEmpty()) {
+                    val subjectFilter = subjects.joinToString(
+                        " OR ",
+                        " AND d.id IN (SELECT id FROM documents WHERE ",
+                        ")"
+                    ) { "(title=? OR title LIKE ? ESCAPE '\\')" }
+                    val parameters = subjects.flatMap { title ->
+                        val escaped = title.replace("\\", "\\\\")
+                            .replace("%", "\\%").replace("_", "\\_")
+                        listOf(title, "$escaped/%")
+                    }
+                    search(
+                        RetrievalQuery.match(topicTerms.joinToString(" ")),
+                        subjectFilter,
+                        parameters
+                    )
+                } else {
+                    emptyList()
                 }
                 val routed = if (current && directTitleIds.isNotEmpty()) {
                     val routeFilter = directTitleIds.joinToString(",", "d.id IN (", ")") { "?" }
@@ -272,21 +339,48 @@ class LibraryStore {
                 val overlapByTitle = mutableMapOf<String, Int>()
                 val ordered = buildList {
                     addAll(routed.filter { it.titlePriority })
+                    addAll(topical)
                     ranked.firstOrNull()?.let(::add)
                     addAll(routed.filterNot { it.titlePriority })
                     addAll(ranked.drop(1))
                 }.distinctBy { it.passageId }
                     .map { candidate ->
                         candidate.copy(
+                            directTitleMatch = candidate.evidence.id.substringAfter('/') in
+                                directTitleIds,
                             titleOverlap = overlapByTitle.getOrPut(candidate.evidence.title) {
                                 RetrievalQuery.titleOverlap(titleTerms, candidate.evidence.title)
-                            }
+                            },
+                            subjectMatch = subjects.any {
+                                candidate.evidence.title == it ||
+                                    candidate.evidence.title.startsWith("$it/")
+                            },
+                            namedSubject = namedSubjects.firstOrNull {
+                                candidate.evidence.title == it ||
+                                    candidate.evidence.title.startsWith("$it/")
+                            }?.let(RetrievalQuery::nameKey),
+                            sectionOverlap = RetrievalQuery.titleTerms(candidate.evidence.section)
+                                .intersect(topicTerms).size,
+                            topicOverlap = RetrievalQuery.evidenceOverlap(
+                                topicTerms,
+                                "",
+                                candidate.evidence.section,
+                                candidate.evidence.text
+                            )
                         )
                     }
                     .withIndex()
                     .sortedWith(
                         compareByDescending<IndexedValue<RetrievalCandidate>> {
+                            it.value.titlePriority
+                        }.thenByDescending {
                             it.value.titleOverlap
+                        }.thenByDescending {
+                            it.value.subjectMatch
+                        }.thenByDescending {
+                            it.value.sectionPriority
+                        }.thenByDescending {
+                            it.value.topicOverlap
                         }.thenByDescending {
                             it.value.directTitleMatch
                         }.thenBy {
@@ -302,6 +396,12 @@ class LibraryStore {
                 indexed.sortedWith(
                     compareByDescending<IndexedValue<RetrievalCandidate>> {
                         it.value.titlePriority
+                    }.thenByDescending {
+                        it.value.subjectMatch
+                    }.thenByDescending {
+                        it.value.sectionPriority
+                    }.thenByDescending {
+                        it.value.topicOverlap
                     }.thenByDescending {
                         it.value.directTitleMatch
                     }.thenByDescending {
@@ -321,6 +421,20 @@ class LibraryStore {
             }
             ranked.map { it.value }
         }.let { matched ->
+            val broadTitles = matched.filter {
+                it.titlePriority
+            }.map { it.evidence.title }.distinct()
+            val focused = if (broadTitles.isEmpty()) {
+                matched
+            } else {
+                matched.filter { candidate ->
+                    broadTitles.any {
+                        candidate.evidence.title == it ||
+                            candidate.evidence.title.startsWith("$it/")
+                    }
+                }
+            }
+
             // Regional packs can contain the same reviewed article as a larger collection.
             fun documentKey(evidence: Evidence) = Triple(
                 evidence.url,
@@ -328,13 +442,12 @@ class LibraryStore {
                 evidence.title
             )
             val candidates = if (enabledLibraries.size > 1) {
-                matched.distinctBy {
+                focused.distinctBy {
                     Triple(documentKey(it.evidence), it.evidence.section, it.evidence.text)
                 }
             } else {
-                matched
+                focused
             }
-            val diverse = candidates.distinctBy { documentKey(it.evidence) }
             val selected = mutableListOf<Evidence>()
             val selectedPassages = mutableSetOf<Pair<String, Long>>()
             val perDocument = mutableMapOf<Triple<String, String, String>, Int>()
@@ -344,7 +457,7 @@ class LibraryStore {
                 val passageKey = evidence.id to candidate.passageId
                 if (
                     selected.size < 6 &&
-                    perDocument.getOrDefault(documentKey(evidence), 0) < 2 &&
+                    perDocument.getOrDefault(documentKey(evidence), 0) < 3 &&
                     characters + evidence.text.length <= 6000 &&
                     selectedPassages.add(passageKey)
                 ) {
@@ -354,8 +467,18 @@ class LibraryStore {
                     characters += evidence.text.length
                 }
             }
-            diverse.forEach(::append)
-            candidates.forEach(::append)
+            val named = candidates.filter { it.namedSubject != null }.distinctBy { it.namedSubject }
+            if (named.size > 1) named.forEach(::append)
+            candidates.groupBy {
+                Triple(
+                    it.titlePriority,
+                    if (it.subjectMatch) it.titleOverlap else 0,
+                    it.subjectMatch
+                )
+            }.values.forEach { group ->
+                group.distinctBy { documentKey(it.evidence) }.forEach(::append)
+                group.forEach(::append)
+            }
             selected
         }
     }
@@ -507,6 +630,7 @@ class LibraryStore {
         internal val multiLibraryCandidateLimit: Int
             get() = MULTI_LIBRARY_CANDIDATE_LIMIT
 
-        fun searchTerms(question: String): String = RetrievalQuery.match(question)
+        fun searchTerms(question: String): String =
+            RetrievalQuery.match(RetrievalQuery.forSearch(question))
     }
 }

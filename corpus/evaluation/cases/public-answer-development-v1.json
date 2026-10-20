@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "id": "public-answer-development-v1",
+  "scope": "Three public development questions for inspecting saved answers, source support and offline limits. Not held out, blinded or a statistical frontier-model comparison.",
+  "reference_checked": "2026-10-20",
+  "reference_method": "The reviewing assistant browsed primary websites and prepared the references below. No separate commercial frontier API benchmark was run. Published information does not establish live operating status.",
+  "cases": [
+    {
+      "id": "ubud-vegan",
+      "question": "Tell me the best vegan restaurants in Ubud. Explain what makes each a useful option and any limits of your information.",
+      "checks": [
+        "Names locally relevant restaurants whose vegan offering is supported by its cited passages",
+        "Gives useful differences between options rather than merely listing names",
+        "Does not turn an ordinary restaurant into a vegan recommendation without support",
+        "Qualifies subjective best and snapshot freshness; does not fabricate current ratings"
+      ],
+      "online_reference": "Zest and Sayuri are supported options, rather than an objective ranking. Zest describes an entirely vegan menu built around Balinese produce. Sayuri describes both cooked and raw vegan food and a cafe in Ubud. These menu differences can help a visitor choose. Current reviews and actual availability require further checking.",
+      "reference_urls": [
+        "https://www.zestubud.com/",
+        "https://sayurihealingfood.com/ubud-cafe/"
+      ]
+    },
+    {
+      "id": "japan-rail",
+      "question": "How can a visitor travel around Japan by rail? Compare the main train types and explain ticket or pass limitations using sources.",
+      "checks": [
+        "Distinguishes local or rapid services, limited express and Shinkansen",
+        "Explains relevant ticket, reservation or pass limits using Japan-specific evidence",
+        "Does not use railway rules from another country as evidence about Japan",
+        "Avoids unsupported current fares and qualifies any missing details"
+      ],
+      "online_reference": "Local and rapid services serve shorter journeys; limited express and Shinkansen connect longer routes with different stopping patterns and reservation arrangements. Check the selected service and pass coverage. The national JR Pass covers many JR services but is not a blanket pass for every railway. Nozomi and Mizuho require the separately purchased special ticket together with a valid pass. Compare the itinerary with individual tickets before choosing a pass.",
+      "reference_urls": [
+        "https://faq.japan-travel.jnto.go.jp/en/guide/traveling-by-rail/",
+        "https://japanrailpass.net/en/use/conditions-for-use/",
+        "https://japanrailpass.net/en/use/special-ticket/"
+      ]
+    },
+    {
+      "id": "ubud-current",
+      "question": "Which vegan restaurant in Ubud is open right now and has the best current reviews? Give current opening hours and ratings.",
+      "checks": [
+        "Explicitly declines to verify live opening status or current ratings offline",
+        "May give sourced historical options with a clear freshness limit",
+        "Does not invent a current rating, current hours or objective best venue"
+      ],
+      "online_reference": "An offline snapshot cannot establish current reviews or whether a venue is open at this moment. Online official menus can provide published hours, such as Sayuri's 2026 delivery menu, but even those do not prove live operation or an objective best review score. A useful answer should separate these checks and avoid claiming more than was verified.",
+      "reference_urls": [
+        "https://sayurihealingfood.com/wp-content/uploads/2026/01/2026-1-DELIVERY-Menu-Sayuri-Healing-Food.pdf"
+      ]
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.PackageEntity
 import java.io.File
@@ -48,9 +49,15 @@ class LibraryRetrievalBenchmarkTest {
                 (0 until expectedTitles.length()).map(expectedTitles::getString)
             )
         }
+        val passageRequirements = (0 until casesJson.length()).associate { index ->
+            val row = casesJson.getJSONObject(index)
+            row.getString("id") to row.optJSONArray("required_passages")
+        }
         assertTrue(
             "Every query must have at least one expected source",
-            cases.all { it.third.isNotEmpty() }
+            cases.all {
+                it.third.isNotEmpty() || (passageRequirements[it.first]?.length() ?: 0) > 0
+            }
         )
 
         val database = File(context.cacheDir, "retrieval-benchmark-library.sqlite")
@@ -78,13 +85,33 @@ class LibraryRetrievalBenchmarkTest {
             store.retrieve(listOf(library), question, null)
             val samples = mutableListOf<Long>()
             var titles = emptyList<String>()
+            var selected = emptyList<Evidence>()
             repeat(REPEATS) {
                 val start = SystemClock.elapsedRealtimeNanos()
                 val evidence = store.retrieve(listOf(library), question, null)
+                selected = evidence
                 samples += (SystemClock.elapsedRealtimeNanos() - start) / 1_000_000
                 titles = evidence.map { it.title }.distinct()
                 for (expectedTitle in expectedTitles) {
                     assertTrue("$caseId must retrieve $expectedTitle", expectedTitle in titles)
+                }
+                passageRequirements[caseId]?.let { requirements ->
+                    repeat(requirements.length()) { index ->
+                        val requirement = requirements.getJSONObject(index)
+                        val title = requirement.getString("title")
+                        val terms = requirement.getJSONArray("contains_terms")
+                        val rank = requirement.getInt("max_rank")
+                        assertTrue(terms.length() > 0 && rank in 1..6)
+                        assertTrue(
+                            "$caseId needs a matching passage for $title within $rank sources",
+                            evidence.take(rank).any { source ->
+                                (source.title == title || source.title.startsWith("$title/")) &&
+                                    (0 until terms.length()).all {
+                                        source.text.contains(terms.getString(it), ignoreCase = true)
+                                    }
+                            }
+                        )
+                    }
                 }
             }
             val sorted = samples.sorted()
@@ -97,6 +124,23 @@ class LibraryRetrievalBenchmarkTest {
                     .put("expected_document_titles", JSONArray(expectedTitles))
                     .put("expected_title_ranks", JSONArray(ranks))
                     .put("selected_titles", JSONArray(titles))
+                    .put(
+                        "selected_evidence",
+                        JSONArray(
+                            selected.map { source ->
+                                JSONObject()
+                                    .put("document_id", source.id.substringAfter('/'))
+                                    .put("title", source.title)
+                                    .put("section", source.section)
+                                    .put(
+                                        "text_sha256",
+                                        MessageDigest.getInstance("SHA-256")
+                                            .digest(source.text.toByteArray())
+                                            .joinToString("") { "%02x".format(it) }
+                                    )
+                            }
+                        )
+                    )
                     .put("elapsed_ms_samples", JSONArray(samples))
                     .put("median_elapsed_ms", sorted[sorted.size / 2])
             )

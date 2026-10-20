@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -104,6 +105,25 @@ class UiParityTest {
             compose.waitUntil(10_000) { model.state.value.notice == R.string.export_saved }
             org.junit.Assert.assertTrue(export.readText().contains("Preserve this import draft"))
             export.delete()
+            compose.runOnUiThread { model.navigate(Page.LIBRARY) }
+            val toggle = compose.onNodeWithContentDescription(
+                compose.activity.getString(R.string.use_collection_for_answers, manifest.title)
+            )
+            toggle.performScrollTo().performClick()
+            compose.waitUntil(10_000) {
+                model.packages.value.any { it.key == manifest.key && !it.enabled }
+            }
+            toggle.performClick()
+            compose.waitUntil(10_000) {
+                model.packages.value.any { it.key == manifest.key && it.enabled }
+            }
+            compose.runOnUiThread { model.navigate(Page.STORAGE) }
+            compose.onNodeWithContentDescription(
+                compose.activity.getString(R.string.remove_package_name, manifest.title)
+            ).performScrollTo().performClick()
+            compose.onNodeWithText(text(R.string.remove)).performClick()
+            compose.waitUntil(10_000) { model.packages.value.none { it.key == manifest.key } }
+            assertEquals("Preserve this import draft", model.state.value.draft)
         } finally {
             runBlocking {
                 container.database.packages().all().find { it.key == manifest.key }?.let {
@@ -113,6 +133,59 @@ class UiParityTest {
                 container.database.conversations().delete(conversation.id)
             }
             file.delete()
+        }
+    }
+
+    @Test
+    fun renamingAndDeletingAConversationKeepsOtherDrafts() {
+        val container = (compose.activity.application as BlobsApplication).container
+        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val dao = container.database.conversations()
+        val id = "history-${UUID.randomUUID()}"
+        val title = "History smoke $id"
+        val target = ConversationEntity(id, title, "Keep target draft", 1, 1)
+        val other = ConversationEntity("$id-other", "Other conversation", "Keep other draft", 1, 1)
+        runBlocking {
+            dao.save(target)
+            dao.save(other)
+            dao.saveTurn(
+                TurnEntity(
+                    "$id-turn", id, "Saved question", "Saved answer", "COMPLETE",
+                    "Test model", "*", "[]", 1
+                )
+            )
+        }
+        try {
+            compose.waitUntil(10_000) { model.state.value.loaded && model.work.value.ready }
+            compose.runOnUiThread { model.navigate(Page.HISTORY) }
+            compose.onNodeWithContentDescription(
+                text(R.string.search_history)
+            ).performTextInput(title)
+            compose.onNodeWithContentDescription(text(R.string.rename)).performClick()
+            compose.onNodeWithText(text(R.string.conversation_title))
+                .performTextReplacement("$title renamed")
+            compose.onNodeWithText(text(R.string.save)).performClick()
+            compose.onNodeWithText("$title renamed").assertIsDisplayed()
+            runBlocking {
+                assertEquals("Keep target draft", dao.find(id)?.draft)
+                assertEquals("Saved answer", dao.turns(id).single().answer)
+            }
+            compose.onNodeWithContentDescription(text(R.string.delete)).performClick()
+            compose.onNodeWithText(text(R.string.cancel)).performClick()
+            compose.onNodeWithText("$title renamed").assertIsDisplayed()
+            compose.onNodeWithContentDescription(text(R.string.delete)).performClick()
+            compose.onNodeWithText(text(R.string.delete)).performClick()
+            compose.onNodeWithText(text(R.string.history_no_match)).assertIsDisplayed()
+            runBlocking {
+                assertEquals(null, dao.find(id))
+                assertEquals(emptyList<TurnEntity>(), dao.turns(id))
+                assertEquals("Keep other draft", dao.find(other.id)?.draft)
+            }
+        } finally {
+            runBlocking {
+                dao.delete(id)
+                dao.delete(other.id)
+            }
         }
     }
 
@@ -132,7 +205,8 @@ class UiParityTest {
             )
             container.database.conversations().saveTurn(
                 TurnEntity(
-                    "$id-turn", id, "UI reading test", "A saved answer [1].", "STOPPED",
+                    "$id-turn", id, "UI reading test",
+                    """A saved $\text{CO}_2$ answer [1].""", "STOPPED",
                     "Test model", "*", Evidence.encode(listOf(source)), 1
                 )
             )
@@ -155,6 +229,9 @@ class UiParityTest {
                 ViewModelProvider(compose.activity)[ProductViewModel::class.java]
                     .turns.value.any { it.id == "$id-turn" }
             }
+            val formattedAnswer = hasText("A saved CO₂ answer", substring = true)
+            compose.onNode(hasScrollToIndexAction()).performScrollToNode(formattedAnswer)
+            compose.onNode(formattedAnswer).assertIsDisplayed()
             revealFollowUp()
             compose.onNodeWithContentDescription(text(R.string.follow_up_hint))
                 .performTextInput("Keep this follow-up")
@@ -219,6 +296,10 @@ class UiParityTest {
                 assertEquals(
                     "STOPPED",
                     container.database.conversations().turns(id).single().status
+                )
+                assertEquals(
+                    """A saved $\text{CO}_2$ answer [1].""",
+                    container.database.conversations().turns(id).single().answer
                 )
             }
         } finally {

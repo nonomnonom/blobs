@@ -115,7 +115,7 @@ class FirstRunJourneyTest {
                 "A starter suggestion must have locally available sources",
                 container.library.retrieve(
                     model.packages.value,
-                    RetrievalQuery.resolve(text(suggestion), null),
+                    RetrievalQuery.resolve(text(suggestion), emptyList()),
                     null
                 ).isNotEmpty()
             )

@@ -7,6 +7,19 @@ object AnswerText {
     private val groupedNamespacedCitation = Regex("\\[(S\\d{1,6}(?:\\s*,\\s*S\\d{1,6})+)\\]")
     private val groupedSourceId = Regex("S(\\d{1,6})")
     private val legacyCitation = Regex("\\[(\\d{1,6})]")
+    private val textSubscript = Regex(
+        """```[\s\S]*?(?:```|$)|`[^`\n]*`|\$(?:\\text|\\mathrm)\{([A-Za-z]+)\}_(?:\{([0-9]+)\}|([0-9]+))\$"""
+    )
+
+    fun readable(text: String): String = textSubscript.replace(text) { match ->
+        val letters = match.groupValues[1]
+        if (letters.isEmpty()) {
+            match.value
+        } else {
+            val digits = match.groupValues[2].ifEmpty { match.groupValues[3] }
+            letters + digits.map { '₀' + (it - '0') }.joinToString("")
+        }
+    }
 
     fun visible(raw: String): String {
         val start = raw.indexOf("<think>")

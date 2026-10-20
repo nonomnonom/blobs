@@ -28,9 +28,11 @@ from evaluation.native.compare_native_smoke import (
     record as record_native_smoke,
 )
 from evaluation.retrieval.host_replay import (
+    content_question,
     direct_title_ids,
     retrieve,
     retrieval_query,
+    retrieval_spec,
     select_evidence,
     verify_report_library,
 )
@@ -42,6 +44,34 @@ from evaluation.retrieval.title_coverage import inspect_database as inspect_pack
 
 
 class EvaluationInputTests(unittest.TestCase):
+    def test_response_length_directives_leave_the_topic_and_domain_questions_intact(self):
+        self.assertEqual(
+            content_question("What is a solar panel? Please answer in two short sentences."),
+            "What is a solar panel?",
+        )
+        for question in (
+            "What are consecutive life sentences?",
+            "What does 'answer in two short sentences' mean?",
+        ):
+            self.assertEqual(content_question(question), question)
+
+    def test_question_scaffolding_is_not_routed_as_an_article_name(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "names.sqlite"
+            with closing(sqlite3.connect(database)) as db:
+                db.executescript("""
+                    CREATE TABLE documents(id TEXT,title TEXT);
+                    CREATE TABLE document_names(name TEXT,doc_id TEXT);
+                    INSERT INTO documents VALUES ('solar','Solar panel'),('isa','Is-a');
+                    INSERT INTO document_names VALUES ('solar panel','solar'),('is a','isa');
+                """)
+            bare = retrieval_spec(database, "What is a solar panel?")
+            styled = retrieval_spec(
+                database, "What is a solar panel? Please answer in two short sentences."
+            )
+            self.assertEqual(styled, bare)
+            self.assertEqual(styled[1], ["Solar panel"])
+
     def test_answer_contract_fixture_build_is_verified_and_reproducible(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -997,11 +1027,48 @@ class EvaluationInputTests(unittest.TestCase):
             updated="Unknown",
         )
 
+    def test_broad_definition_keeps_its_article_family_instead_of_keyword_mentions(self):
+        rows = [
+            self.passage(1, "Solar panel", "Solar cells convert sunlight.", opening=True),
+            self.passage(2, "Solar panel/Types", "Panel types use different materials."),
+            self.passage(3, "Solar panel scam", "Fraudulent solar panel projects."),
+        ]
+        for index, row in enumerate(rows):
+            row.update(title_priority=index == 0, subject_match=index < 2, title_overlap=2)
+        chosen = select_evidence(
+            rows, dict(id="fixture", version="1", sha256="0" * 64, title="Fixture")
+        )
+        self.assertEqual([row["title"] for row in chosen], ["Solar panel", "Solar panel/Types"])
+
+    def test_explicit_subjects_get_context_before_extra_sections_and_editions(self):
+        title = "Long battery energy storage"
+        rows = [self.passage(i, title, f"Storage detail {i}") for i in range(1, 7)] + [
+            self.passage(7, "Solar panel", "Solar panels convert sunlight."),
+            self.passage(8, "Wind turbine", "Wind turbines convert wind."),
+        ]
+        for row in rows:
+            row.update(
+                title_priority=False,
+                title_overlap=4 if row["title"] == title else 1,
+                subject_match=True,
+                named_subject=row["title"].lower(),
+            )
+            if row["passage_id"] in (4, 5, 6):
+                row["id"] = "another-edition"
+        selected = select_evidence(
+            rows, dict(id="fixture", version="1", sha256="0" * 64, title="Fixture")
+        )
+        self.assertEqual(
+            [source["title"] for source in selected[:3]],
+            [title, "Solar panel", "Wind turbine"],
+        )
+
     def test_named_concepts_keep_definitions_without_replacing_single_topic_ranking(self):
         rows = [
             self.passage(1, "A", "Specialized A detail"),
             self.passage(2, "A", "Another A detail"),
             self.passage(3, "B", "Specialized B detail"),
+            self.passage(6, "A", "Third A detail"),
             self.passage(4, "A", "Definition A", opening=True),
             self.passage(5, "B", "Definition B", opening=True),
         ]

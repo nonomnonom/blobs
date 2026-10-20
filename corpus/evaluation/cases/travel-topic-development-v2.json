@@ -1,0 +1,175 @@
+{
+  "format": 1,
+  "id": "travel-topic-development-v2",
+  "library": {
+    "id": "wikivoyage-en",
+    "version": "2026-09.3",
+    "payload_sha256": "da61f4c387b8fc439c081841b78526368e4639534292362d072f8ee20b85d773"
+  },
+  "cases": [
+    {
+      "id": "jakarta-city",
+      "question": "What should I know before visiting Jakarta?",
+      "expected_document_titles": [
+        "Jakarta"
+      ]
+    },
+    {
+      "id": "japan-rail",
+      "question": "How can I travel around Japan by rail?",
+      "expected_document_titles": [
+        "Rail travel in Japan"
+      ]
+    },
+    {
+      "id": "beach-packing",
+      "question": "What should I pack for a beach trip?",
+      "expected_document_titles": [
+        "Packing for beach travel"
+      ]
+    },
+    {
+      "id": "china-visas",
+      "question": "How do visa requirements for China work?",
+      "expected_document_titles": [
+        "Visa requirements for China"
+      ]
+    },
+    {
+      "id": "travel-basics",
+      "question": "What are the basics of travel?",
+      "expected_document_titles": [
+        "Travel basics"
+      ]
+    },
+    {
+      "id": "bangkok-airport",
+      "question": "How do I get from the airport to Bangkok city?",
+      "expected_document_titles": [
+        "Bangkok"
+      ]
+    },
+    {
+      "id": "vegan-ubud",
+      "question": "Tell me the best vegan restaurants in Ubud.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "Ubud",
+          "contains_terms": [
+            "vegan"
+          ],
+          "max_rank": 4
+        }
+      ]
+    },
+    {
+      "id": "vegan-bangkok",
+      "question": "Tell me the best vegan restaurants in Bangkok.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "Bangkok",
+          "contains_terms": [
+            "vegan"
+          ],
+          "max_rank": 4
+        }
+      ]
+    },
+    {
+      "id": "vegan-berlin",
+      "question": "Tell me the best vegan restaurants in Berlin.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "Berlin",
+          "contains_terms": [
+            "vegan"
+          ],
+          "max_rank": 4
+        }
+      ]
+    },
+    {
+      "id": "vegan-taipei",
+      "question": "Tell me the best vegan restaurants in Taipei.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "Taipei",
+          "contains_terms": [
+            "vegan"
+          ],
+          "max_rank": 4
+        }
+      ]
+    },
+    {
+      "id": "vegan-paris",
+      "question": "Tell me the best vegan restaurants in Paris.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "Paris",
+          "contains_terms": [
+            "vegan"
+          ],
+          "max_rank": 4
+        }
+      ]
+    },
+    {
+      "id": "vegan-london",
+      "question": "Tell me the best vegan restaurants in London.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "London",
+          "contains_terms": [
+            "vegan"
+          ],
+          "max_rank": 4
+        }
+      ]
+    },
+    {
+      "id": "vegan-new-york-city",
+      "question": "Tell me the best vegan restaurants in New York City.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "New York City",
+          "contains_terms": [
+            "vegan"
+          ],
+          "max_rank": 4
+        }
+      ]
+    },
+    {
+      "id": "japan-rail-comparison",
+      "question": "How can a visitor travel around Japan by rail? Compare the main train types and explain ticket or pass limitations using sources.",
+      "expected_document_titles": [],
+      "required_passages": [
+        {
+          "title": "Rail travel in Japan",
+          "contains_terms": [
+            "local",
+            "limited express"
+          ],
+          "max_rank": 4
+        },
+        {
+          "title": "Rail travel in Japan",
+          "contains_terms": [
+            "pass",
+            "JR"
+          ],
+          "max_rank": 4
+        }
+      ]
+    }
+  ],
+  "scope": "Development regression for source selection, not a held-out answer-quality benchmark. Required passages check local source evidence within the four-source answer budget."
+}

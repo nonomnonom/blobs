@@ -394,7 +394,7 @@ private fun TurnCard(
 
 private fun AnnotatedString.Builder.appendEmphasis(value: String) {
     var start = 0
-    val text = value.replace(Regex("(?m)^#{1,6} +"), "")
+    val text = AnswerText.readable(value).replace(Regex("(?m)^#{1,6} +"), "")
     for (match in Regex("\\*\\*([^*]+)\\*\\*").findAll(text)) {
         append(text.substring(start, match.range.first))
         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.groupValues[1]) }

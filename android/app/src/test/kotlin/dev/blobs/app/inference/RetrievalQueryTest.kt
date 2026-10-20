@@ -7,10 +7,57 @@ import org.junit.Test
 
 class RetrievalQueryTest {
     @Test
+    fun standaloneResponseLengthInstructionsStayOutOfSearchContent() {
+        val question = "What is a solar panel?"
+        assertEquals(
+            question,
+            RetrievalQuery.forSearch("$question Please answer in two short sentences.")
+        )
+        assertEquals(
+            "Why does wind turn a turbine?",
+            RetrievalQuery.forSearch("Respond in 3 sentences: Why does wind turn a turbine?")
+        )
+        assertEquals(
+            "$question What is a wind turbine?",
+            RetrievalQuery.forSearch(
+                "$question Please answer in two short sentences. " +
+                    "What is a wind turbine? Please answer in two short sentences."
+            )
+        )
+    }
+
+    @Test
+    fun sentenceTopicsAndQuotedInstructionsRemainSearchable() {
+        for (question in listOf(
+            "What are consecutive life sentences?",
+            "What makes short sentences easy to read?",
+            "What does 'answer in two short sentences' mean?",
+            "Explain the is-a relationship in object-oriented programming."
+        )) {
+            assertEquals(question, RetrievalQuery.forSearch(question))
+        }
+    }
+
+    @Test
+    fun articlesAloneCannotMakeGenericPhrasesIntoNamedSubjects() {
+        assertTrue(RetrievalQuery.names("What is a solar panel?").none { it.key == "is a" })
+        assertTrue(RetrievalQuery.names("What is a solar panel?").any { it.key == "solar panel" })
+        assertTrue(
+            RetrievalQuery.names("Tell me about A Star Is Born.").any {
+                it.key ==
+                    "a star is born"
+            }
+        )
+    }
+
+    @Test
     fun aNewTopicDoesNotInheritThePreviousQuestion() {
         val question = "Why did the Western Roman Empire fall?"
-        assertEquals(question, RetrievalQuery.resolve(question, "How do trees cool cities?"))
-        assertEquals(question, RetrievalQuery.resolve(question, null))
+        assertEquals(
+            question,
+            RetrievalQuery.resolve(question, listOf("How do trees cool cities?"))
+        )
+        assertEquals(question, RetrievalQuery.resolve(question, emptyList()))
     }
 
     @Test
@@ -22,8 +69,54 @@ class RetrievalQueryTest {
             "What about green roofs?",
             "Tell me more"
         )) {
-            assertTrue(RetrievalQuery.resolve(question, previous).endsWith(previous))
+            assertTrue(RetrievalQuery.resolve(question, listOf(previous)).endsWith(previous))
         }
+    }
+
+    @Test
+    fun choicesAndOrdinalFollowUpsKeepTheirSourceTopic() {
+        val previous = "Compare the vegan restaurants in Ubud and Bangkok."
+        for (question in listOf(
+            "Which of those has more vegan options?",
+            "Which one is cheaper?",
+            "How does the second one compare?",
+            "What about the first option?"
+        )) {
+            assertEquals("$question $previous", RetrievalQuery.resolve(question, listOf(previous)))
+        }
+        val newTopic = "Which cities have the best public transport?"
+        assertEquals(newTopic, RetrievalQuery.resolve(newTopic, listOf(previous)))
+    }
+
+    @Test
+    fun chainedFollowUpsRetainTheNamedAnchor() {
+        val history = listOf(
+            "Tell me about vegan restaurants in Ubud.",
+            "Which of those are cheapest?",
+            "How do they compare?"
+        )
+        val resolved = RetrievalQuery.resolve("Why?", history)
+        assertEquals("Why? ${history.joinToString(" ")}", resolved)
+        val reset = history + "How do trees cool cities?" + "How do they do that?"
+        val next = RetrievalQuery.resolve("Tell me more", reset)
+        assertTrue(next.contains("trees"))
+        assertTrue(!next.contains("Ubud"))
+        assertEquals("Why?", RetrievalQuery.resolve("Why?", emptyList()))
+        val longContext = RetrievalQuery.resolve("Why?", listOf("x".repeat(1000), "Tell me more"))
+        assertTrue(longContext.length <= 620)
+    }
+
+    @Test
+    fun aSubjectIntroducedInAFollowUpSurvivesLaterFollowUps() {
+        val history = listOf(
+            "Tell me about vegan restaurants in Ubud.",
+            "What about Bangkok?",
+            "Which of those is cheaper?",
+            "Tell me more"
+        )
+        val resolved = RetrievalQuery.resolve("Why?", history)
+        assertTrue(resolved.contains("Ubud"))
+        assertTrue(resolved.contains("Bangkok"))
     }
 
     @Test

@@ -6,6 +6,13 @@ import java.util.Locale
 
 /** A conservative lexical citation check, not a semantic entailment test. */
 object AnswerGrounding {
+    fun shouldWithholdCompletion(
+        nativeResult: Int,
+        text: String,
+        evidence: List<Evidence>
+    ): Boolean = (nativeResult == 0 || nativeResult == 2) &&
+        text.isNotBlank() && !hasSupportedCitations(text, evidence)
+
     private val citation = Regex("\\[S(\\d{1,6})]")
     private val groupedCitation = Regex("\\[(S\\d{1,6}(?:\\s*,\\s*S\\d{1,6})+)\\]")
     private val groupedSourceId = Regex("S(\\d{1,6})")

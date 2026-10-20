@@ -27,19 +27,34 @@ object RetrievalQuery {
     private val followUp = Regex(
         "^(and\\b|what about\\b|how about\\b|tell me more\\b|go on\\b|" +
             "why[?.!]*$|why (is|was) that\\b|" +
-            "(how|what|why|can|could|does|do|is|are) (does |do |is |are |would |can )?" +
-            "(it|its|they|their|them|that|this|these|those|both)\\b)"
+            "(how|what|why|which|can|could|does|do|is|are) " +
+            "(does |do |is |are |would |can |of )?" +
+            "(it|its|they|their|them|that|this|these|those|both|one|" +
+            "the (first|second|third|former|latter))\\b)"
+    )
+    private val responseLengthInstruction = Regex(
+        "(?i)(?:^|(?<=[.!?\\n]))\\s*(?:please\\s+)?" +
+            "(?:answer|respond)\\s+in\\s+(?:[0-9]+|one|two|three)\\s+" +
+            "(?:(?:short|brief|concise)\\s+)?(?:sentences?|paragraphs?|words?)\\s*" +
+            "(?:[.!?:](?=\\s|$)|$)"
     )
 
-    fun resolve(question: String, previousQuestion: String?): String {
-        if (previousQuestion.isNullOrBlank()) return question
-        val normalized = question.trim().lowercase(Locale.ROOT)
-        return if (followUp.containsMatchIn(normalized)) {
-            "$question ${previousQuestion.take(300)}"
-        } else {
-            question
-        }
+    fun forSearch(question: String): String = responseLengthInstruction.replace(question, "").trim()
+
+    fun resolve(question: String, previousQuestions: List<String>): String {
+        if (!isFollowUp(question)) return question
+        val recent = previousQuestions.filter(String::isNotBlank)
+        if (recent.isEmpty()) return question
+        val anchorIndex = recent.indexOfLast { !isFollowUp(it) }.coerceAtLeast(0)
+        val anchor = recent[anchorIndex].take(300)
+        val continuation = recent.drop(anchorIndex + 1)
+            .joinToString(" ") { it.take(300) }.takeLast(300)
+        val context = listOf(anchor, continuation).filter(String::isNotBlank).joinToString(" ")
+        return "$question $context"
     }
+
+    private fun isFollowUp(question: String): Boolean =
+        followUp.containsMatchIn(question.trim().lowercase(Locale.ROOT))
 
     private fun normalized(text: String): String =
         Normalizer.normalize(text, Normalizer.Form.NFKC).lowercase(Locale.ROOT)
@@ -70,6 +85,14 @@ object RetrievalQuery {
     fun titleTerms(question: String): Set<String> = nameKey(question).split(' ')
         .filter { it.length >= 2 && it !in stopWords && it !in titleNoiseWords }
         .toSet()
+
+    fun topicTerms(question: String, subjectTitles: List<String>): Set<String> =
+        if (subjectTitles.isEmpty()) {
+            emptySet()
+        } else {
+            titleTerms(question) - subjectTitles.flatMap { titleTerms(it) }.toSet() -
+                broadTitleIntentWords - setOf("best")
+        }
 
     fun titleOverlap(questionTerms: Set<String>, title: String): Int {
         val titleWords = nameKey(title).split(' ').toSet()
@@ -105,7 +128,7 @@ object RetrievalQuery {
             (0..words.size - length).mapNotNull { start ->
                 val phrase = words.subList(start, start + length)
                 val key = phrase.joinToString(" ")
-                if (key.length in 2..600 && phrase.any { it !in stopWords }) {
+                if (key.length in 2..600 && phrase.any { it.length >= 2 && it !in stopWords }) {
                     NameCandidate(key, start until start + length)
                 } else {
                     null

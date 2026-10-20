@@ -24,6 +24,7 @@ import dev.blobs.app.inference.inferenceThreadCount
 import java.io.File
 import java.security.MessageDigest
 import java.util.UUID
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -188,9 +189,18 @@ class NativeInferenceTest {
             val uri = Uri.fromFile(File(requireNotNull(args.getString("libraryPackage"))))
             val manifest = container.installer.inspect(uri)
             require(manifest.kind == "library")
+            val catalogId = args.getString("catalogLibraryId")
+            val catalogPinned = catalogId != null
+            if (catalogPinned) {
+                val asset = container.catalog.recoverableDownloads.single {
+                    it.manifest.id == catalogId && it.manifest.kind == "library"
+                }
+                check(manifest == asset.manifest) { "Library differs from the trusted catalog" }
+            }
             report.put("manifest", JSONObject(manifest.json()))
+            report.put("catalog_digest_pinned", catalogPinned)
             saveReport(output, report)
-            val installed = container.installer.install(uri, manifest) {}
+            val installed = container.installer.install(uri, manifest, catalogPinned) {}
             report.put("installed_key", installed.key).put("complete", true)
         } catch (error: Exception) {
             report.put("error", error.toString())
@@ -201,10 +211,56 @@ class NativeInferenceTest {
     }
 
     @Test
+    fun installStagedCatalogModelForEvaluation() = runBlocking<Unit> {
+        val args = InstrumentationRegistry.getArguments()
+        val runId = requireNotNull(args.getString("runId"))
+        require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val container = (context.applicationContext as BlobsApplication).container
+        withTimeout(15_000) { container.work.state.first { it.ready } }
+        check(!container.work.state.value.busy)
+        val asset = container.catalog.recoverableDownloads.single {
+            it.manifest.id == args.getString("catalogModelId") && it.manifest.kind == "model"
+        }
+        check(container.database.packages().all().none { it.key == asset.manifest.key }) {
+            "This check requires a model that is not already installed"
+        }
+        val source = File(requireNotNull(args.getString("modelFile"))).canonicalFile
+        check(source.parentFile == File(context.filesDir, "package-downloads").canonicalFile)
+        check(source.isFile && source.extension == "gguf")
+        val output = File(context.filesDir, "installed-catalog-$runId.json")
+        check(!output.exists())
+        val report = JSONObject().put("format", 1).put("complete", false)
+            .put("scope", "Normal catalog-pinned raw GGUF installer; locally staged bytes")
+            .put("manifest", JSONObject(asset.manifest.json()))
+            .put("fingerprint", Build.FINGERPRINT)
+        saveReport(output, report)
+        val start = SystemClock.elapsedRealtime()
+        try {
+            val installed = container.installer.install(Uri.fromFile(source), asset.manifest) {}
+            report.put("installed_key", installed.key).put("installed_path", installed.path)
+                .put("complete", true)
+            if (args.getString("deleteSourceAfterInstall") == "true") {
+                check(source.delete())
+                report.put("staged_source_deleted", true)
+            }
+        } catch (error: Exception) {
+            report.put("error", error.toString())
+            throw error
+        } finally {
+            report.put("elapsed_ms", SystemClock.elapsedRealtime() - start)
+            saveReport(output, report)
+        }
+    }
+
+    @Test
     fun installedLibraryAndModelCompleteOfflineChatFlow() = recordOfflineChatFlow(false)
 
     @Test
     fun verifiedModelFileCompletesOfflineChatFlow() = recordOfflineChatFlow(true)
+
+    @Test
+    fun publicFixtureAnswerEvaluation() = recordOfflineChatFlow(true, capturePublicFixture = true)
 
     @Test
     fun emptyLibraryReturnsNoSourcesWithoutLoadingModel() = runBlocking {
@@ -269,7 +325,10 @@ class NativeInferenceTest {
         )
     }
 
-    private fun recordOfflineChatFlow(verifiedFile: Boolean) = runBlocking {
+    private fun recordOfflineChatFlow(
+        verifiedFile: Boolean,
+        capturePublicFixture: Boolean = false
+    ) = runBlocking {
         val foreground = ActivityScenario.launch(MainActivity::class.java)
         val args = InstrumentationRegistry.getArguments()
         val installedModelKey = args.getString("installedModel")
@@ -290,6 +349,11 @@ class NativeInferenceTest {
         require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
         val question = decodedArgument(args, "question")
             ?: "How do trees reduce urban heat? Explain with sources."
+        if (capturePublicFixture) {
+            require(decodedArgument(args, "question") != null) {
+                "Provide an explicit public evaluation question; this check exports its answer and sources"
+            }
+        }
         require(question.length in 1..2000)
         val timeoutMs = (args.getString("timeoutSeconds") ?: "240").toLong() * 1000
         require(timeoutMs in 60_000..600_000)
@@ -466,6 +530,16 @@ class NativeInferenceTest {
         val start = SystemClock.elapsedRealtime()
         var firstVisibleMs: Long? = null
         var evidenceReadyMs: Long? = null
+        var lastPublicFixtureText = ""
+        val fixtureObserver = if (capturePublicFixture) {
+            launch {
+                container.work.state.collect {
+                    if (it.threadId == id && it.text.isNotBlank()) lastPublicFixtureText = it.text
+                }
+            }
+        } else {
+            null
+        }
         val evidenceObserver = launch {
             container.work.state.first { it.threadId == id && it.evidence != "[]" }
             evidenceReadyMs = SystemClock.elapsedRealtime() - start
@@ -493,6 +567,7 @@ class NativeInferenceTest {
             }
             observer.cancel()
             evidenceObserver.cancel()
+            fixtureObserver?.cancel()
             val turn = container.database.conversations().turns(id).lastOrNull()
             report.put("complete", !container.work.state.value.busy && turn != null)
             report.put("finished_within_timeout", finished)
@@ -502,9 +577,21 @@ class NativeInferenceTest {
             report.put("status", turn?.status ?: JSONObject.NULL)
             val evidence = turn?.evidence?.let(Evidence::decode).orEmpty()
             report.put("evidence_count", evidence.size)
+            if (capturePublicFixture) {
+                report.put("answer", turn?.answer ?: JSONObject.NULL)
+                report.put("last_observed_streamed_text", lastPublicFixtureText)
+                report.put("evidence", org.json.JSONArray(turn?.evidence ?: "[]"))
+                report.put(
+                    "content_scope",
+                    "Explicit public evaluation fixture; saved user-visible answer"
+                )
+            }
             report.put("saved_elapsed_ms", turn?.elapsedMs ?: JSONObject.NULL)
             report.put("error", turn?.error ?: JSONObject.NULL)
             val performance = container.work.lastPerformanceSnapshot
+            if (capturePublicFixture) {
+                report.put("native_result", performance?.nativeResult ?: JSONObject.NULL)
+            }
             report.put(
                 "performance",
                 performance?.let {

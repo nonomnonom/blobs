@@ -7,6 +7,36 @@ import org.junit.Test
 
 class AnswerGroundingTest {
     @Test
+    fun tokenLimitedOutputMustMeetTheSameCitationPolicyAsCompleteOutput() {
+        val sources = listOf(evidence("Checksum", "A checksum detects transmission errors."))
+        for (result in listOf(0, 2)) {
+            assertTrue(
+                AnswerGrounding.shouldWithholdCompletion(
+                    result,
+                    "A checksum detects transmission errors, and there are more details",
+                    sources
+                )
+            )
+            assertTrue(
+                AnswerGrounding.shouldWithholdCompletion(
+                    result,
+                    "The restaurant serves vegan meals [S1].",
+                    sources
+                )
+            )
+            assertFalse(
+                AnswerGrounding.shouldWithholdCompletion(
+                    result,
+                    "A checksum detects transmission errors [S1].",
+                    sources
+                )
+            )
+        }
+        assertFalse(AnswerGrounding.shouldWithholdCompletion(1, "Stopped partial text", sources))
+        assertFalse(AnswerGrounding.shouldWithholdCompletion(0, "", sources))
+    }
+
+    @Test
     fun acceptsClaimsWithMeaningfulOverlapAndRejectsUnrelatedCitations() {
         val checksum = evidence(
             title = "Checksum",

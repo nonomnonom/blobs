@@ -18,10 +18,9 @@ from blobs_corpus.names import name_key
 
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
-# The regional-pack deduplication change applies only to multiple enabled libraries;
-# this single-library replay preserves its existing selection policy.
-LIBRARY_STORE_SHA256 = "82472922018835186d368a3b2f1668985339dc148b2be2ced1d390c76d2ee9e8"
-QUERY_SHA256 = "fb9a8ef4a876f5f5a773bb965c4bc6b21884962585b632998c5f1eea0f79e678"
+# Single-library parity compares exact passage identities and text hashes.
+LIBRARY_STORE_SHA256 = "cbe74d9ad59531205e2b396be431c6f961d592f7ed7a04c2a9d7fa43a2c4f8bf"
+QUERY_SHA256 = "c6102dc4b0b232a3da8da5bb2284f868255debaace89e507b07287db82b4a166"
 STOP_WORDS = {
     "the",
     "and",
@@ -99,6 +98,17 @@ TITLE_INTENT_STOP_WORDS = STOP_WORDS | {
     "around",
 }
 TITLE_NOISE_WORDS = {"city", "town"}
+RESPONSE_LENGTH_INSTRUCTION = re.compile(
+    r"(?:^|(?<=[.!?\n]))\s*(?:please\s+)?"
+    r"(?:answer|respond)\s+in\s+(?:[0-9]+|one|two|three)\s+"
+    r"(?:(?:short|brief|concise)\s+)?(?:sentences?|paragraphs?|words?)\s*"
+    r"(?:[.!?:](?=\s|$)|$)",
+    re.IGNORECASE,
+)
+
+
+def content_question(question):
+    return RESPONSE_LENGTH_INSTRUCTION.sub("", question).strip()
 
 
 def sha(path):
@@ -169,7 +179,20 @@ def title_overlap(question_terms, title):
     )
 
 
+def topic_terms(question, subjects):
+    if not subjects:
+        return set()
+    subject_terms = set().union(*(title_terms(title) for title in subjects))
+    return title_terms(question) - subject_terms - TITLE_INTENT_STOP_WORDS - {"best"}
+
+
+def evidence_overlap(terms, section, text):
+    words = set(re.findall(r"[^\W_]+", f"{section} {text}".lower()))
+    return len((terms - TITLE_INTENT_STOP_WORDS - TITLE_NOISE_WORDS) & words)
+
+
 def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_priority_ids=None):
+    question = content_question(question)
     route_ids = list(dict.fromkeys(priority_ids))
     title_priority = set(route_ids if broad_priority_ids is None else broad_priority_ids)
     with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as db:
@@ -198,6 +221,83 @@ def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_p
                   ('references','external links','see also','further reading','bibliography'))
                 ORDER BY rank LIMIT 48"""
         ranked = [dict(row) for row in db.execute(statement, (query,))] if query else []
+        subjects = (
+            [
+                row[0]
+                for row in db.execute(
+                    "SELECT title FROM documents WHERE id IN ("
+                    + ",".join("?" for _ in route_ids)
+                    + ")",
+                    route_ids,
+                )
+            ]
+            if route_ids
+            else []
+        )
+        explicit_subjects = subjects.copy()
+        named_subjects = [name_key(title) for title in subjects]
+        question_terms = title_terms(question)
+        for row in ranked:
+            words = title_terms(row["title"])
+            name = f" {name_key(row['title'])} "
+            if (
+                len(words) >= 2
+                and words <= question_terms
+                and (
+                    not named_subjects or any(f" {subject} " in name for subject in named_subjects)
+                )
+            ):
+                if row["id"] not in route_ids:
+                    route_ids.append(row["id"])
+                if row["title"] not in subjects:
+                    subjects.append(row["title"])
+                broad_terms = [
+                    word
+                    for word in name_key(question).split()
+                    if len(word) >= 2 and word not in TITLE_INTENT_STOP_WORDS
+                ]
+                if broad_terms and all(
+                    word in name_key(row["title"]).split() for word in broad_terms
+                ):
+                    title_priority.add(row["id"])
+        focus_terms = topic_terms(question, subjects)
+        topical = []
+        if subjects and focus_terms:
+            subject_filter = (
+                " AND d.id IN (SELECT id FROM documents WHERE "
+                + " OR ".join("(title=? OR title LIKE ? ESCAPE '\\')" for _ in subjects)
+                + ")"
+            )
+            parameters = []
+            for title in subjects:
+                escaped = title.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                parameters.extend((title, escaped + "/%"))
+            focus_words = list(
+                dict.fromkeys(word for word in name_key(question).split() if word in focus_terms)
+            )
+            focus_query = " OR ".join(
+                dict.fromkeys(
+                    [f'"{word}"' for word in focus_words][:20]
+                    + [f'"{left} {right}"' for left, right in zip(focus_words, focus_words[1:])][
+                        :20
+                    ]
+                )
+            )
+            focus_statement = statement.replace(
+                "WHERE passages_fts MATCH ?", "WHERE passages_fts MATCH ?" + subject_filter
+            )
+            focus_statement = (
+                focus_statement.replace(
+                    "FROM passages_fts JOIN passages p ON p.id=passages_fts.rowid",
+                    "FROM documents d CROSS JOIN passages p ON p.doc_id=d.id",
+                )
+                .replace(
+                    "JOIN documents d ON d.id=p.doc_id WHERE",
+                    "CROSS JOIN passages_fts ON passages_fts.rowid=p.id WHERE",
+                )
+                .replace("ORDER BY rank", "ORDER BY +rank, p.id")
+            )
+            topical = [dict(row) for row in db.execute(focus_statement, [focus_query, *parameters])]
         routed = []
         if route_ids:
             placeholders = ",".join("?" for _ in route_ids)
@@ -222,11 +322,10 @@ def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_p
         context_rows = [row for row in routed if row["id"] not in title_priority]
         candidates = []
         seen_passages = set()
-        for row in [*priority_rows, *ranked[:1], *context_rows, *ranked[1:]]:
+        for row in [*priority_rows, *topical, *ranked[:1], *context_rows, *ranked[1:]]:
             if row["passage_id"] not in seen_passages:
                 candidates.append(row)
                 seen_passages.add(row["passage_id"])
-        question_terms = title_terms(question)
         title_scores = {}
 
         def order_key(item):
@@ -235,7 +334,31 @@ def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_p
             if score is None:
                 score = title_overlap(question_terms, row["title"])
                 title_scores[row["title"]] = score
-            return -score, -(row["id"] in route_ids), index
+            row["title_priority"] = bool(row["opening_title"] and row["id"] in title_priority)
+            row["title_overlap"] = score
+            row["subject_match"] = any(
+                row["title"] == title or row["title"].startswith(title + "/") for title in subjects
+            )
+            row["named_subject"] = next(
+                (
+                    name_key(title)
+                    for title in explicit_subjects
+                    if row["title"] == title or row["title"].startswith(title + "/")
+                ),
+                None,
+            )
+            row["topic_overlap"] = evidence_overlap(focus_terms, row["section"], row["body"])
+            row["section_overlap"] = len(title_terms(row["section"]) & focus_terms)
+            row["section_priority"] = row["section_overlap"] if row["section_overlap"] >= 2 else 0
+            return (
+                -row["title_priority"],
+                -score,
+                -row["subject_match"],
+                -row["section_priority"],
+                -row["topic_overlap"],
+                -(row["id"] in route_ids),
+                index,
+            )
 
         candidates = [row for _, row in sorted(enumerate(candidates), key=order_key)]
     return select_evidence(candidates, manifest), candidates
@@ -245,13 +368,16 @@ def direct_title_ids(database, question, titles, *, broad_only=False):
     """Return exact canonical-title routes selected by the Android name matcher."""
     if not titles:
         return []
+    question = content_question(question)
     words = name_key(question).split()[:40]
     candidates = []
     for size in range(min(6, len(words)), 0, -1):
         for start in range(len(words) - size + 1):
             phrase = words[start : start + size]
             key = " ".join(phrase)
-            if 2 <= len(key) <= 600 and any(word not in STOP_WORDS for word in phrase):
+            if 2 <= len(key) <= 600 and any(
+                len(word) >= 2 and word not in STOP_WORDS for word in phrase
+            ):
                 candidates.append((key, set(range(start, start + size))))
     keys = list(dict.fromkeys(key for key, _ in candidates))
     if not keys:
@@ -278,7 +404,7 @@ def direct_title_ids(database, question, titles, *, broad_only=False):
             continue
         occupied.update(positions)
         title = match[0]
-        if key == name_key(title) and match[1] not in ids:
+        if (key == name_key(title) or " " in key) and match[1] not in ids:
             question_terms = [
                 word
                 for word in name_key(question).split()
@@ -293,7 +419,7 @@ def direct_title_ids(database, question, titles, *, broad_only=False):
                 and name_key(match.group()) in title_terms
                 for match in question_words
             )
-            direct = broad or len(name_key(title).split()) > 1 or explicit_proper
+            direct = broad or len(name_key(title).split()) > 1 or explicit_proper or " " in key
             if broad if broad_only else direct:
                 ids.append(match[1])
     return ids
@@ -303,13 +429,16 @@ def retrieval_spec(database, question):
     """Mirror LibraryStore's unique source-name routing and FTS query construction."""
     import sqlite3
 
+    question = content_question(question)
     words = name_key(question).split()[:40]
     candidates = []
     for size in range(min(6, len(words)), 0, -1):
         for start in range(len(words) - size + 1):
             phrase = words[start : start + size]
             key = " ".join(phrase)
-            if 2 <= len(key) <= 600 and any(word not in STOP_WORDS for word in phrase):
+            if 2 <= len(key) <= 600 and any(
+                len(word) >= 2 and word not in STOP_WORDS for word in phrase
+            ):
                 candidates.append((key, set(range(start, start + size))))
     with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as db:
         names = list(dict.fromkeys(key for key, _ in candidates))
@@ -359,11 +488,51 @@ def retrieval_query(database, question):
 
 def select_evidence(candidates, manifest):
     """Apply the frozen native whole-passage, document and UTF-16 budgets."""
+    broad_titles = {row["title"] for row in candidates if row.get("title_priority")}
+    if broad_titles:
+        candidates = [
+            row
+            for row in candidates
+            if any(
+                row["title"] == title or row["title"].startswith(title + "/")
+                for title in broad_titles
+            )
+        ]
     selected, counts, characters = [], Counter(), 0
     key = f"{manifest['id']}-{manifest['version']}-{manifest['sha256'][:16]}"
+    groups = {}
     for row in candidates:
+        group = (
+            row.get("title_priority", False),
+            row.get("title_overlap", 0) if row.get("subject_match", False) else 0,
+            row.get("subject_match", False),
+        )
+        groups.setdefault(group, []).append(row)
+    ordered, seen = [], set()
+    named = {}
+    for row in candidates:
+        if row.get("named_subject"):
+            named.setdefault(row["named_subject"], row)
+    if len(named) > 1:
+        for row in named.values():
+            ordered.append(row)
+            seen.add(row.get("passage_id"))
+    for rows in groups.values():
+        documents, diverse = set(), []
+        for row in rows:
+            if row["id"] not in documents:
+                diverse.append(row)
+                documents.add(row["id"])
+        for row in diverse + rows:
+            passage_id = row.get("passage_id")
+            if passage_id is None or passage_id not in seen:
+                ordered.append(row)
+                seen.add(passage_id)
+    if not all("title_priority" in row for row in candidates):
+        ordered = candidates
+    for row in ordered:
         size = len(row["body"].encode("utf-16-le")) // 2
-        if counts[row["id"]] >= 2 or characters + size > 6000:
+        if counts[row["id"]] >= 3 or characters + size > 6000:
             continue
         counts[row["id"]] += 1
         characters += size

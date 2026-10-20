@@ -8,6 +8,29 @@ import org.junit.Test
 
 class AnswerTextTest {
     @Test
+    fun textSubscriptsAreReadableWithoutChangingCitationIds() {
+        assertEquals(
+            "CO₂ emissions [S4]. H₁₂ [S1, S2].",
+            AnswerText.readable("""$\text{CO}_2$ emissions [S4]. $\mathrm{H}_{12}$ [S1, S2].""")
+        )
+    }
+
+    @Test
+    fun textSubscriptFormattingPreservesCodeCurrencyAndUnsupportedOrPartialMath() {
+        val untouched = listOf(
+            """Code `$\text{CO}_2$` stays literal.""",
+            """```latex
+            $\text{CO}_2$
+            ```""",
+            """```latex
+            $\text{CO}_2$""",
+            """Prices are $5 and $12. Ordinary CO2 and CO₂ stay the same.""",
+            """Unsupported $\frac{1}{2}$ and partial $\text{CO}_2"""
+        )
+        untouched.forEach { assertEquals(it, AnswerText.readable(it)) }
+    }
+
+    @Test
     fun incompleteThinkingNeverLeaksIntoAnswer() {
         assertEquals("", AnswerText.visible("<think>unpublished reasoning"))
         assertEquals("An answer [1]", AnswerText.visible("<think>hidden</think>\nAn answer [1]"))
