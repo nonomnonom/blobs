@@ -1,8 +1,8 @@
 [versions]
-agp = "9.4.0"
+agp = "9.4.1"
 kotlin = "2.4.21"
 ksp = "2.3.12"
-core = "1.17.0"
+core = "1.19.1"
 activity = "1.12.0"
 lifecycle = "2.9.4"
 compose-bom = "2026.09.00"
