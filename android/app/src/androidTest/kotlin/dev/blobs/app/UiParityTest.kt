@@ -18,6 +18,7 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.ConversationEntity
@@ -44,6 +45,16 @@ class UiParityTest {
         compose.onNode(hasScrollToIndexAction())
             .performScrollToNode(hasContentDescription(text(R.string.follow_up_hint)))
         compose.onNodeWithContentDescription(text(R.string.follow_up_hint)).performScrollTo()
+    }
+
+    private fun hideKeyboard() {
+        closeSoftKeyboard()
+        compose.waitUntil(10_000) {
+            val insets = ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
+            insets != null && !insets.isVisible(WindowInsetsCompat.Type.ime()) &&
+                insets.getInsets(WindowInsetsCompat.Type.ime()).bottom == 0
+        }
+        compose.waitForIdle()
     }
 
     @Test
@@ -235,13 +246,7 @@ class UiParityTest {
             revealFollowUp()
             compose.onNodeWithContentDescription(text(R.string.follow_up_hint))
                 .performTextInput("Keep this follow-up")
-            compose.activityRule.scenario.onActivity { activity ->
-                androidx.core.view.WindowCompat.getInsetsController(
-                    activity.window,
-                    activity.window.decorView
-                )
-                    .hide(WindowInsetsCompat.Type.ime())
-            }
+            hideKeyboard()
             revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             val selectedTitle = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
@@ -252,13 +257,7 @@ class UiParityTest {
             compose.onNodeWithText(text(R.string.manage_models)).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.done)).performClick()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
-            compose.activityRule.scenario.onActivity { activity ->
-                androidx.core.view.WindowCompat.getInsetsController(
-                    activity.window,
-                    activity.window.decorView
-                )
-                    .hide(WindowInsetsCompat.Type.ime())
-            }
+            hideKeyboard()
             val label = compose.activity.getString(R.string.read_source, 1, source.title)
             val sourceRow = hasContentDescription(label) and hasText(source.title)
             compose.onNode(hasScrollToIndexAction()).performScrollToNode(sourceRow)
