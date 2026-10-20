@@ -1,5 +1,6 @@
 name: Feature request
 description: Explain a user need or a maintenance improvement.
+labels: [enhancement]
 body:
   - type: textarea
     id: need

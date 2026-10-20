@@ -1,5 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
+  - name: Questions and community help
+    url: https://github.com/nonomnonom/blobs/discussions
+    about: Ask about setup, model choices, library preparation, or using Blobs offline.
   - name: Report a security vulnerability privately
     url: https://github.com/nonomnonom/blobs/security/advisories/new
     about: Keep vulnerability details out of public issues.

@@ -37,4 +37,4 @@ Follow the [Android build guide](android/README.md) to build and run the app. Se
 
 Original Blobs source code, tooling and documentation are licensed under [Apache-2.0](LICENSE). Original Blobs artwork and branding are excluded from that grant; see [NOTICE](NOTICE). Third-party components, model weights and datasets retain their own licenses; see [`android/THIRD_PARTY_NOTICES.md`](android/THIRD_PARTY_NOTICES.md) and [`corpus/THIRD_PARTY_NOTICES.md`](corpus/THIRD_PARTY_NOTICES.md).
 
-Report ordinary bugs or feature requests through [GitHub issues](https://github.com/nonomnonom/blobs/issues). For security vulnerabilities, use [private reporting](SECURITY.md). Participation follows the [community code of conduct](CODE_OF_CONDUCT.md).
+Ask questions in [Discussions](https://github.com/nonomnonom/blobs/discussions), report bugs or source corrections through [GitHub issues](https://github.com/nonomnonom/blobs/issues), and follow [Contributing](CONTRIBUTING.md) for code changes. For security vulnerabilities, use [private reporting](SECURITY.md). Participation follows the [community code of conduct](CODE_OF_CONDUCT.md).

@@ -1,0 +1,30 @@
+name: Source or citation issue
+description: Report incorrect library content, missing attribution, or a citation that does not support an answer.
+labels: [data-quality]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share public sources or small fictional examples. Remove private documents and conversations from screenshots and logs.
+        Report parser or package-security vulnerabilities through [private reporting](https://github.com/nonomnonom/blobs/security/advisories/new).
+  - type: input
+    id: edition
+    attributes:
+      label: App version and library edition
+      description: Include the model if the problem concerns a generated answer.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is incorrect?
+      description: Include the question, relevant answer or passage, and source title. Explain whether the issue is in the saved article, retrieval, citation, or generated answer.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Evidence or proposed correction
+      description: Link to a public reference or explain why the supplied passage does not support the answer. For attribution issues, identify the source and applicable notice.
+    validations:
+      required: true

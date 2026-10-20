@@ -2,6 +2,8 @@
 
 Bug fixes, accessibility improvements, documentation, corpus corrections, and performance work are welcome. Check [existing issues](https://github.com/nonomnonom/blobs/issues) or open a [proposal](https://github.com/nonomnonom/blobs/issues/new/choose) before a large change. Include the affected version, reproduction steps, and expected behavior. Report vulnerabilities [privately](SECURITY.md) and follow the [code of conduct](CODE_OF_CONDUCT.md).
 
+For setup questions, model choices, and help using Blobs, use [Discussions](https://github.com/nonomnonom/blobs/discussions). Use the source/citation issue form for incorrect library content, attribution, or unsupported references in an answer.
+
 ## Find your starting point
 
 | Work | Guide | Source |
@@ -50,5 +52,11 @@ Website checks and preview instructions are in [the website guide](docs/web/READ
 ## Submit a change
 
 Use focused Conventional Commits and the [pull-request template](.github/pull_request_template.md). Explain the resulting behavior, checks actually run, and remaining limitations. Cover validation, ordering, cancellation, recovery, and data transitions when affected. Describe migration/rollback for data or runtime changes; include light, dark, and large-text screenshots for UI changes.
+
+Work on a branch and open a pull request against `main`. The required CI check runs Android or website verification when the affected files need it; community-only changes use the lightweight checks. Address review conversations before merging. Accepted pull requests use squash merge; merged source branches in this repository are deleted automatically.
+
+CI runs when a pull request is opened or updated. Use **Update branch** to refresh an older pull request after CI configuration changes. Maintainers can run the **CI** workflow manually for a full check on a selected branch.
+
+The repository owner, [@nonomnonom](https://github.com/nonomnonom), maintains releases, reviews contributions, and moderates project spaces. The owner decides whether a proposal fits the project and can request a smaller scope or more evidence. External contributions need maintainer review; the repository does not require a second maintainer's approval for the owner's own changes. There is no guaranteed review or support deadline.
 
 Original code and documentation contributions use [Apache-2.0](LICENSE). Preserve third-party notices and identify the license of new material. Original artwork and branding have separate terms in [NOTICE](NOTICE).
