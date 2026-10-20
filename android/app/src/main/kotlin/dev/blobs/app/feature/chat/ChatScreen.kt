@@ -305,6 +305,8 @@ private fun TurnCard(
 
             "UNVERIFIED" -> R.string.status_unverified
 
+            "CONTEXT_FULL" -> R.string.context_full
+
             "NO_SOURCES" -> R.string.status_no_sources
 
             else -> R.string.status_error

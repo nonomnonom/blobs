@@ -3,9 +3,9 @@ package dev.blobs.app.inference
 object AnswerText {
     data class Citation(val range: IntRange, val sourceIndex: Int)
 
-    private val namespacedCitation = Regex("\\[S(\\d{1,6})]")
-    private val groupedNamespacedCitation = Regex("\\[(S\\d{1,6}(?:\\s*,\\s*S\\d{1,6})+)\\]")
-    private val groupedSourceId = Regex("S(\\d{1,6})")
+    private val namespacedCitation = Regex("\\[S(\\d+)]")
+    private val groupedNamespacedCitation = Regex("\\[(S\\d+(?:\\s*,\\s*S\\d+)+)\\]")
+    private val groupedSourceId = Regex("S(\\d+)")
     private val legacyCitation = Regex("\\[(\\d{1,6})]")
     private val textSubscript = Regex(
         """```[\s\S]*?(?:```|$)|`[^`\n]*`|\$(?:\\text|\\mathrm)\{([A-Za-z]+)\}_(?:\{([0-9]+)\}|([0-9]+))\$"""
@@ -43,7 +43,7 @@ object AnswerText {
                 .toList()
             sources.takeIf { it.isNotEmpty() }?.joinToString(", ", "[", "]") { "S$it" } ?: ""
         }
-        return Regex("\\[(S?)(\\d{1,6})]").replace(grouped) {
+        return Regex("\\[(S?)(\\d+)]").replace(grouped) {
             val source = it.groupValues[2].toIntOrNull() ?: 0
             if (it.groupValues[1] == "S" && source in 1..count) it.value else ""
         }

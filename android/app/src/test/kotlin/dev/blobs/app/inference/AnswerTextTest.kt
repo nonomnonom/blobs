@@ -56,6 +56,13 @@ class AnswerTextTest {
                 2
             )
         )
+        assertEquals(
+            "Supported [S1]. Unavailable .",
+            AnswerText.validSourceCitations(
+                "Supported [S1, S2147483648]. Unavailable [S999999999999999999999].",
+                2
+            )
+        )
     }
 
     @Test

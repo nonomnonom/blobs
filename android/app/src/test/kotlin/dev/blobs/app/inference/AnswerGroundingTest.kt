@@ -96,7 +96,7 @@ class AnswerGroundingTest {
     }
 
     @Test
-    fun acceptsGroupedCitationsAndUsesEveryReferencedSource() {
+    fun rejectsAnUnrelatedSourceInAGroupEvenWhenAnotherSourceSupportsTheClaim() {
         val tcp =
             evidence("Transmission Control Protocol", "TCP provides reliable, ordered delivery.")
         val udp =
@@ -105,12 +105,44 @@ class AnswerGroundingTest {
                 "UDP sends datagrams and does not guarantee delivery."
             )
 
-        assertTrue(
+        assertFalse(
             AnswerGrounding.hasSupportedCitations(
                 "UDP sends datagrams without guaranteed delivery [S1, S2].",
                 listOf(tcp, udp)
             )
         )
+        assertTrue(
+            AnswerGrounding.hasSupportedCitations(
+                "UDP sends datagrams without guaranteed delivery [S2].",
+                listOf(tcp, udp)
+            )
+        )
+    }
+
+    @Test
+    fun rejectsSourceIdsTooLargeToParseAlongsideAValidCitation() {
+        val sources = listOf(evidence("Checksum", "A checksum detects transmission errors."))
+        for (citation in listOf("[S2147483648]", "[S999999999999999999999]", "[S1, S2147483648]")) {
+            assertFalse(
+                AnswerGrounding.hasSupportedCitations(
+                    "A checksum detects transmission errors [S1] $citation.",
+                    sources
+                )
+            )
+        }
+    }
+
+    @Test
+    fun completionChecksOriginalOutputBeforeDisplayRemovesUnavailableCitations() {
+        val sources = listOf(evidence("Checksum", "A checksum detects transmission errors."))
+        val raw = "A checksum detects transmission errors [S1]. " +
+            "A checksum detects transmission errors [S9]."
+        assertTrue(
+            AnswerGrounding.hasSupportedCitations(AnswerText.validSourceCitations(raw, 1), sources)
+        )
+        for (result in listOf(0, 2)) {
+            assertTrue(AnswerGrounding.shouldWithholdCompletion(result, raw, sources))
+        }
     }
 
     private fun evidence(title: String, text: String) = Evidence(

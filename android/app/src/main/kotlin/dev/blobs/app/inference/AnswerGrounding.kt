@@ -13,9 +13,9 @@ object AnswerGrounding {
     ): Boolean = (nativeResult == 0 || nativeResult == 2) &&
         text.isNotBlank() && !hasSupportedCitations(text, evidence)
 
-    private val citation = Regex("\\[S(\\d{1,6})]")
-    private val groupedCitation = Regex("\\[(S\\d{1,6}(?:\\s*,\\s*S\\d{1,6})+)\\]")
-    private val groupedSourceId = Regex("S(\\d{1,6})")
+    private val citation = Regex("\\[S(\\d+)]")
+    private val groupedCitation = Regex("\\[(S\\d+(?:\\s*,\\s*S\\d+)+)\\]")
+    private val groupedSourceId = Regex("S(\\d+)")
     private val words = Regex("[\\p{L}\\p{N}]+")
     private val sentenceBreak = Regex("(?<=[.!?])\\s+(?=[A-Z])|\\n{2,}")
     private val stopWords = setOf(
@@ -45,11 +45,11 @@ object AnswerGrounding {
             val references = buildList {
                 groupedCitation.findAll(sentence).forEach { group ->
                     groupedSourceId.findAll(group.groupValues[1]).forEach { match ->
-                        match.groupValues[1].toIntOrNull()?.minus(1)?.let(::add)
+                        add(match.groupValues[1].toIntOrNull()?.minus(1) ?: -1)
                     }
                 }
                 citation.findAll(sentence).forEach { match ->
-                    match.groupValues[1].toIntOrNull()?.minus(1)?.let(::add)
+                    add(match.groupValues[1].toIntOrNull()?.minus(1) ?: -1)
                 }
             }.distinct()
             if (references.isEmpty()) continue
@@ -59,11 +59,13 @@ object AnswerGrounding {
             val claim = groupedCitation.replace(sentence, "")
             val claimTerms = terms(citation.replace(claim, ""))
             if (claimTerms.isEmpty()) return false
-            val sourceTerms = references.flatMapTo(mutableSetOf()) { index ->
+            val requiredOverlap = minOf(2, claimTerms.size)
+            val citedTerms = references.map { index ->
                 terms("${evidence[index].title} ${evidence[index].section} ${evidence[index].text}")
             }
+            if (citedTerms.any { claimTerms.intersect(it).size < requiredOverlap }) return false
+            val sourceTerms = citedTerms.flatten().toSet()
             val overlap = claimTerms.intersect(sourceTerms).size
-            val requiredOverlap = minOf(2, claimTerms.size)
             if (overlap < requiredOverlap || overlap.toDouble() / claimTerms.size < 0.25) {
                 return false
             }

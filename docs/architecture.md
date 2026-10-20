@@ -29,7 +29,9 @@ Retrieval is bounded to six sources, 6,000 UTF-16 characters, and three passages
 
 Explicit follow-ups retain a bounded lexical anchor: up to 300 characters from the latest standalone question and 300 from subsequent questions. The model also receives an excerpt of the last two turns. This is lexical context rather than semantic pronoun resolution.
 
-Complete and token-limited answers pass the same lexical citation check. Rejected final output is cleared and saved as unverified; partial text may already have appeared while streaming. Recognized English requests for live information receive an app-authored offline-reference notice. Neither mechanism proves semantic correctness or freshness. Sources remain snapshots, and citations let users inspect what an answer relies on.
+If native tokenization rejects an oversized prompt, generation first drops the conversation excerpt, then tries shorter source excerpts. It preserves the full question, conversation topic, source order, and IDs. Saved evidence matches the excerpts supplied to the successful attempt. If the question still exceeds the reading limit, the app explains how to shorten it. These retries happen before prefill or streamed output; other errors and cancellation do not trigger retries.
+
+Complete and token-limited answers pass the same lexical citation check on the original visible output, before display formatting removes unavailable references. Every cited source must contribute lexical overlap; invalid IDs reject completion. Rejected final output is cleared and saved as unverified; partial text may already have appeared while streaming. Recognized English requests for live information receive an app-authored offline-reference notice. Neither mechanism proves semantic correctness or freshness. Sources remain snapshots, and citations let users inspect what an answer relies on.
 
 ## Native runtime and memory
 
