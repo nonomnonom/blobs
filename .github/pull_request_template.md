@@ -1,5 +1,7 @@
 Describe the user-visible behavior or engineering capability this changes.
 
+Link the related issue or discussion when applicable.
+
 Validation:
 
 - Commands and relevant device/API level:
