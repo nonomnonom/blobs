@@ -60,6 +60,10 @@ def curate(source: Path, output: Path):
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest = copy.deepcopy(original)
     excluded, totals = [], Counter()
+    # The portfolio rule forbids shipping the same body twice. Distinct source
+    # pages can still normalize to identical text, so the first record in
+    # manifest order keeps the body and later copies are recorded as exclusions.
+    seen_bodies = set()
     with tempfile.TemporaryDirectory(prefix=".curate-", dir=output.parent) as temporary:
         staged = Path(temporary) / "reviewed"
         staged.mkdir()
@@ -68,12 +72,22 @@ def curate(source: Path, output: Path):
             path = source.parent / info["name"]
             counts = Counter(shard["counts"])
             changed = False
+            dropped = set()
             archive_project = project(shard.get("archive") or original["source"]["id"])
             for doc in documents(path):
                 reason = exclusion(doc, archive_project)
+                counter = "excluded_non_articles"
+                if reason is None:
+                    body_sha256 = doc.get("provenance", {}).get("body_sha256")
+                    if body_sha256 and body_sha256 in seen_bodies:
+                        reason = "Duplicate body text of an earlier record"
+                        counter = "excluded_duplicate_bodies"
+                    elif body_sha256:
+                        seen_bodies.add(body_sha256)
                 if reason is None:
                     continue
                 changed = True
+                dropped.add(doc["id"])
                 excluded.append(
                     dict(
                         id=doc["id"],
@@ -93,17 +107,13 @@ def curate(source: Path, output: Path):
                     long_over_100000_chars=int(len(body) > 100000),
                 )
                 counts.subtract({key: value for key, value in removed.items() if key in counts})
-                counts["excluded_non_articles"] += 1
+                counts[counter] += 1
             for kind, item in shard["files"].items():
                 target = staged / item["name"]
                 if kind == "documents" and changed:
                     write_lines(
                         target,
-                        (
-                            doc
-                            for doc in documents(path)
-                            if exclusion(doc, archive_project) is None
-                        ),
+                        (doc for doc in documents(path) if doc["id"] not in dropped),
                     )
                     item.update(bytes=target.stat().st_size, sha256=digest(target))
                 else:
@@ -112,18 +122,20 @@ def curate(source: Path, output: Path):
             totals.update(counts)
         manifest["totals"] = dict(totals)
         manifest["curation"] = dict(
-            policy="Kiwix article-only review v1",
+            policy="Kiwix article-only review v2",
             source_id=original["source"]["id"],
             policy_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             input_manifest_sha256=digest(source),
             input_totals=original["totals"],
+            deduplication="exact body_sha256 within the reviewed edition; first record in manifest order wins",
             excluded_documents=excluded,
         )
         write_json(staged / "manifest.json", manifest)
         verified_shards(staged / "manifest.json")
         os.rename(staged, output)
     print(
-        f"Reviewed {totals['documents']:,} articles; excluded {len(excluded)} support pages; {output}",
+        f"Reviewed {totals['documents']:,} articles; excluded {len(excluded)} pages "
+        f"({totals.get('excluded_duplicate_bodies', 0):,} duplicate bodies); {output}",
         flush=True,
     )
     return manifest

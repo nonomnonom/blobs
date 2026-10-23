@@ -288,6 +288,41 @@ class BuildTests(unittest.TestCase):
                 self.assertNotIn("cycle one", rows)
         self.assertEqual(name_key("  CO₂ / ＡＩ — Earth’s  "), "co2 ai earth s")
 
+    def test_review_drops_a_second_record_with_an_identical_body(self):
+        text = b"<p>Two archive pages can normalize to the same text even when their titles and paths differ, and only one may be shipped.</p>"
+        items = [
+            article(text, "First", "First", LOCK),
+            article(text, "Second", "Second", LOCK),
+        ]
+        with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
+            root = Path(folder)
+            shard = root / "documents.jsonl.gz"
+            write_lines(shard, items)
+            info = dict(
+                name=shard.name,
+                bytes=shard.stat().st_size,
+                sha256=hashlib.sha256(shard.read_bytes()).hexdigest(),
+            )
+            manifest = dict(
+                format=1,
+                source=LOCK,
+                complete=True,
+                next_entry=2,
+                totals={"documents": 2},
+                shards=[dict(start=0, end=2, counts={"documents": 2}, files={"documents": info})],
+            )
+            write_json(root / "manifest.json", manifest)
+            reviewed = curate(root / "manifest.json", root / "reviewed")
+            self.assertEqual(
+                [d["title"] for d in documents(root / "reviewed/manifest.json")], ["First"]
+            )
+            self.assertEqual(reviewed["totals"]["excluded_duplicate_bodies"], 1)
+            self.assertEqual(reviewed["totals"]["documents"], 1)
+            self.assertEqual(
+                reviewed["curation"]["excluded_documents"][0]["reason"],
+                "Duplicate body text of an earlier record",
+            )
+
     def test_review_excludes_support_pages_without_changing_source_shards(self):
         text = b"<p>This original text is long enough to be extracted, but its archive path determines whether it belongs to an article.</p>"
         items = [
