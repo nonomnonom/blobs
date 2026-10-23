@@ -1,0 +1,132 @@
+{
+  "archive_binary_metadata": {
+    "Illustration_48x48@1": {
+      "bytes": 3123,
+      "sha256": "d7865a8f432e9ed538ebccbfd629c19f5e72139846105db73bc2031ec5b187e2"
+    }
+  },
+  "archive_metadata": {
+    "Counter": "application/javascript=4;image/png=2;image/svg+xml=118;text/css=22;text/html=4101;text/javascript=34",
+    "Creator": "Wikivoyage",
+    "Date": "2026-09-17",
+    "Description": "An Offline Version of Wikivoyage in Portuguese Language",
+    "Flavour": "nopic",
+    "Language": "por",
+    "Name": "wikivoyage_pt_all",
+    "Publisher": "openZIM",
+    "Scraper": "mwoffliner 2.0.0",
+    "Source": "pt.wikivoyage.org",
+    "Tags": "wikivoyage;_category:wikivoyage;_pictures:no;_videos:no;_details:yes;_ftindex:yes",
+    "Title": "Wikivoyage"
+  },
+  "complete": true,
+  "curation": {
+    "excluded_documents": [],
+    "input_manifest_sha256": "76799404fa020f210a403c5494e7aae6a5e1994a80a416de145120c44151f77b",
+    "input_totals": {
+      "attributed": 4097,
+      "documents": 4097,
+      "html_redirects": 1,
+      "long_over_100000_chars": 30,
+      "non_article_assets": 180,
+      "redirects": 509,
+      "rejected": 3,
+      "short_under_1000_chars": 2349,
+      "text_characters": 24779253,
+      "text_utf8_bytes": 25712370,
+      "with_headings": 4047
+    },
+    "policy": "Kiwix article-only review v1",
+    "policy_sha256": "529edf19fca30da4358e2a4fb1e2cf547b1ead037e38a5258d811c318e67cca5",
+    "source_id": "wikivoyage-pt-all-nopic"
+  },
+  "format": 1,
+  "identity": {
+    "dependencies": {
+      "libzim": "3.13.1",
+      "selectolax": "1.0.0"
+    },
+    "extractor": "4",
+    "extractor_sha256": "4bd1b70ea40c7d6dec3f0f78a6367554720b9847ca50fbfde056ede9bd42e6af",
+    "lock_sha256": "f6aee523d1fc4b347f4354f86c9e34ac74ff04aa9fd188fa4a8cc7dcb16a6af0",
+    "python": "3.13.12",
+    "source_sha256": "cc7b1594136a6c1e92d579a5ac62976557f2f56783f7d283a5e4fe3816b2e28d"
+  },
+  "next_entry": 4790,
+  "shards": [
+    {
+      "counts": {
+        "attributed": 4097,
+        "documents": 4097,
+        "html_redirects": 1,
+        "long_over_100000_chars": 30,
+        "non_article_assets": 180,
+        "redirects": 509,
+        "rejected": 3,
+        "short_under_1000_chars": 2349,
+        "text_characters": 24779253,
+        "text_utf8_bytes": 25712370,
+        "with_headings": 4047
+      },
+      "end": 4790,
+      "files": {
+        "aliases": {
+          "bytes": 10494,
+          "name": "00000000-00004790.aliases.jsonl.gz",
+          "sha256": "e3a4fadfe3d54527af04bc2552556c1d42f36154bac7a1fb48bb7dadef0d67eb"
+        },
+        "documents": {
+          "bytes": 11457607,
+          "name": "00000000-00004790.documents.jsonl.gz",
+          "sha256": "85f9edfe8ce04ff55b7287345d63c9b3af265fbdf417962c4c3fa4776ded9c33"
+        },
+        "rejected": {
+          "bytes": 218,
+          "name": "00000000-00004790.rejected.jsonl.gz",
+          "sha256": "d93a9c8998c9dd3dfb1b4468d83d5fc04cd72e4863f21a859ceb40d33fe56ac3"
+        }
+      },
+      "start": 0
+    }
+  ],
+  "source": {
+    "allowed_hosts": [
+      "download.kiwix.org",
+      "lb.download.kiwix.org",
+      "mirror.download.kiwix.org",
+      "mirrors.dotsrc.org",
+      "ftp.nluug.nl",
+      "wi.mirror.driftle.ss"
+    ],
+    "bytes": 18137141,
+    "checksum_source": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_pt_all_nopic_2026-09.zim.sha256",
+    "collection": "Wikivoyage · Portuguese travel guides",
+    "edition": "2026-09",
+    "filename": "wikivoyage_pt_all_nopic_2026-09.zim",
+    "format": 1,
+    "id": "wikivoyage-pt-all-nopic",
+    "license": "CC BY-SA 4.0; see each guide's revision history for contributor attribution. Text extracted and reformatted by Blobs; images excluded.",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "metadata_source": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_pt_all_nopic_2026-09.zim.meta4",
+    "publisher": "Wikivoyage contributors",
+    "scope": "Portuguese Wikivoyage full article text without images; Kiwix snapshot 2026-09. Coverage is thinner than the English project and travel details change; verify time-sensitive information before relying on it.",
+    "sha256": "cc7b1594136a6c1e92d579a5ac62976557f2f56783f7d283a5e4fe3816b2e28d",
+    "url": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_pt_all_nopic_2026-09.zim",
+    "verified_date": "2026-10-24",
+    "wiki_host": "pt.wikivoyage.org"
+  },
+  "total_entries": 4790,
+  "totals": {
+    "attributed": 4097,
+    "documents": 4097,
+    "html_redirects": 1,
+    "long_over_100000_chars": 30,
+    "non_article_assets": 180,
+    "redirects": 509,
+    "rejected": 3,
+    "short_under_1000_chars": 2349,
+    "text_characters": 24779253,
+    "text_utf8_bytes": 25712370,
+    "with_headings": 4047
+  }
+}
