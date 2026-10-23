@@ -13,13 +13,12 @@ from .records import documents
 MAX_FILE_BYTES = 512 * 1024**2
 
 
-def export_records(source: Path, output: Path):
+def export_records(source: Path, output: Path, portfolio_root: Path | None = None):
     manifest = verified_shards(source)
     if not manifest["complete"] or not manifest.get("curation"):
         raise ValueError("Export a complete, reviewed corpus edition")
     if output.exists():
         raise FileExistsError(output)
-    assert_distinct(source)
     files = [item for shard in manifest["shards"] for item in shard["files"].values()]
     if any(item["bytes"] > MAX_FILE_BYTES for item in files):
         raise ValueError("A normalized shard exceeds the 512 MiB artifact budget")
@@ -34,6 +33,7 @@ def export_records(source: Path, output: Path):
                 "Record body contains a Unicode replacement character in a legacy "
                 "corpus; re-review the extraction before export"
             )
+    assert_distinct(source, portfolio_root)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".export-", dir=output.parent) as temporary:
         staged = Path(temporary) / "edition"

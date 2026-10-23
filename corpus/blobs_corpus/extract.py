@@ -175,15 +175,20 @@ def _extract(lock, source, output, max_entries):
                     # reader stub; no random sampling or ZIM full-text query.
                     entry = archive._get_entry_by_id(index)
                     if entry.is_redirect:
-                        emit(
-                            "aliases",
-                            dict(
-                                title=entry.title,
-                                path=entry.path,
-                                target=entry.get_redirect_entry().path,
-                            ),
-                        )
-                        counts["redirects"] += 1
+                        # A ZIM root entry is a redirect with no path and no title.
+                        # It can name nothing, and the name index rejects it.
+                        if entry.path and entry.title:
+                            emit(
+                                "aliases",
+                                dict(
+                                    title=entry.title,
+                                    path=entry.path,
+                                    target=entry.get_redirect_entry().path,
+                                ),
+                            )
+                            counts["redirects"] += 1
+                        else:
+                            counts["unnamed_redirects"] += 1
                         continue
                     item = entry.get_item()
                     if item.mimetype.split(";")[0] != "text/html":

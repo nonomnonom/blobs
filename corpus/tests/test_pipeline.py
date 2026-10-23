@@ -296,6 +296,7 @@ class BuildTests(unittest.TestCase):
                 ("Article", "Article"),
                 ("Main Page", "index"),
                 ("Support file", "_assets_/MathML"),
+                ("MathML support", "_mw_/MathML"),
             ]
         ]
         with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
@@ -310,20 +311,20 @@ class BuildTests(unittest.TestCase):
                 format=1,
                 source=LOCK,
                 complete=True,
-                next_entry=3,
-                totals={"documents": 3},
-                shards=[dict(start=0, end=3, counts={"documents": 3}, files={"documents": info})],
+                next_entry=4,
+                totals={"documents": 4},
+                shards=[dict(start=0, end=4, counts={"documents": 4}, files={"documents": info})],
             )
             write_json(root / "manifest.json", manifest)
             reviewed = curate(root / "manifest.json", root / "reviewed")
             self.assertEqual(
                 [d["title"] for d in documents(root / "reviewed/manifest.json")], ["Article"]
             )
-            self.assertEqual(reviewed["totals"]["excluded_non_articles"], 2)
-            self.assertEqual(len(reviewed["curation"]["excluded_documents"]), 2)
+            self.assertEqual(reviewed["totals"]["excluded_non_articles"], 3)
+            self.assertEqual(len(reviewed["curation"]["excluded_documents"]), 3)
             self.assertEqual(shard.read_bytes(), before)
             exported = root / "exported"
-            export_records(root / "reviewed/manifest.json", exported)
+            export_records(root / "reviewed/manifest.json", exported, portfolio_root=root)
             self.assertEqual(
                 (exported / "manifest.json").read_bytes(),
                 (root / "reviewed/manifest.json").read_bytes(),
@@ -332,10 +333,10 @@ class BuildTests(unittest.TestCase):
                 [d["title"] for d in documents(exported / "manifest.json")], ["Article"]
             )
             with self.assertRaises(FileExistsError):
-                export_records(root / "reviewed/manifest.json", exported)
+                export_records(root / "reviewed/manifest.json", exported, portfolio_root=root)
             with patch("blobs_corpus.export.MAX_FILE_BYTES", 1):
                 with self.assertRaisesRegex(ValueError, "artifact budget"):
-                    export_records(root / "reviewed/manifest.json", root / "oversized")
+                    export_records(root / "reviewed/manifest.json", root / "oversized", portfolio_root=root)
             self.assertFalse((root / "oversized").exists())
             with self.assertRaises(FileExistsError):
                 curate(root / "manifest.json", root / "reviewed")
@@ -404,7 +405,7 @@ class BuildTests(unittest.TestCase):
                 ),
             )
             with self.assertRaisesRegex(ValueError, "Unicode replacement character"):
-                export_records(root / "manifest.json", root / "exported")
+                export_records(root / "manifest.json", root / "exported", portfolio_root=root)
             self.assertFalse((root / "exported").exists())
 
     def test_review_accepts_pinned_wikivoyage_source(self):

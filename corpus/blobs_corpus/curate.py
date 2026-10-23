@@ -25,6 +25,8 @@ def exclusion(document):
     path = document.get("provenance", {}).get("entry_path", "")
     if path.startswith("_assets_/"):
         return "Bundled support asset, not a source article"
+    if path.startswith("_mw_/"):
+        return "MediaWiki support content, not a source article"
     if path == "index":
         return "Archive navigation page, not a source article"
     return None

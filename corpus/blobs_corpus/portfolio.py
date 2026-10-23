@@ -24,7 +24,10 @@ def digest(path: Path) -> str:
 
 
 def install_identity(manifest: dict) -> tuple[str, str]:
-    source_id = str(manifest["source"]["id"])
+    source = manifest.get("source")
+    if not isinstance(source, dict) or not source.get("id"):
+        raise ValueError("A portfolio edition must name its pinned source identity")
+    source_id = str(source["id"])
     metadata = manifest.get("archive_metadata") or {}
     language = str(metadata.get("Language") or source_id.split("-")[1]).lower()
     return source_id.split("-")[0], language
@@ -33,6 +36,7 @@ def install_identity(manifest: dict) -> tuple[str, str]:
 def fingerprint(manifest_path: Path, cache: Path | None = None) -> dict:
     manifest_path = Path(manifest_path)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    identity = install_identity(manifest)
     stamp = digest(manifest_path)
     directory = cache or cache_root()
     target = directory / f"{stamp}.json.gz"
@@ -53,7 +57,7 @@ def fingerprint(manifest_path: Path, cache: Path | None = None) -> dict:
                     {
                         "manifest_sha256": stamp,
                         "source_id": manifest["source"]["id"],
-                        "identity": list(install_identity(manifest)),
+                        "identity": list(identity),
                         "documents": len(urls),
                         "urls": sorted(urls),
                         "bodies": sorted(bodies),
@@ -104,7 +108,9 @@ def findings(manifest_path: Path, root: Path | None = None, cache: Path | None =
             repeated.append(counts)
         elif peer["identity"] == subject["identity"]:
             same_slot.append(counts)
-    rank = lambda row: row["shared_canonical_urls"] + row["shared_body_hashes"]
+    def rank(row):
+        return row["shared_canonical_urls"] + row["shared_body_hashes"]
+
     return {
         "edition": Path(manifest_path).parent.name,
         "source_id": subject["source_id"],
