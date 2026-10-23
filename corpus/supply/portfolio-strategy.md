@@ -89,9 +89,7 @@ archive per volume, then confirm on the built edition.
 | Lane | Edition and measured size | State |
 | --- | --- | --- |
 | Reference, English | `wikipedia-en-top1m-mini` 3,022,411,034-byte archive, 4,980,555,776-byte payload, 997,761 documents | one candidate, 10 of 12 recall unresolved |
-| Reference, Indonesian | `wikipedia-id-all-mini` 1,399,953,305-byte archive, 494,581 documents at 63 percent extraction | extracting; one volume projected |
 | Travel, English | `wikivoyage-en-all-nopic` 272,495,142-byte archive, 622,645,248-byte payload, 34,599 guides | candidate, 50 of 50 on the new suite |
-| Travel, Portuguese | `wikivoyage-pt-all-nopic` 18,137,141-byte archive, 54,059,008-byte payload, 4,097 guides | packaged, no rights sign-off |
 | How-to, practical | Measured on a `cooking.stackexchange.com` edition: 238,098,128-byte archive, 63,803 questions, 250,153 passages, 418,353,152-byte payload | ratio is 1.76 times the archive, so one 6 GiB library holds about 3.0 GB of site archives. Each site is its own ZIM, so a lane needs a reviewed multi-archive edition before it can be packaged as one library; a pack per site would repeat the retired-fragment mistake |
 | Dictionary | Wiktionary nopic archives: English 8.5 GB, French 4.6 GB, Russian 2.0 GB, German 1.5 GB, Portuguese 0.34 GB | English needs deterministic volumes; smaller languages fit one |
 | Places | Overpass snapshots bounded to 5,000,000 bytes and 1,000 elements per reviewed lock | pipeline exists, no reviewed shard yet |
@@ -136,16 +134,13 @@ across several libraries is a design decision, not a free default.
   coherent new edition. Do not hand-edit the signed catalog or publish a
   replacement until the two active candidates pass admission and a matching
   catalog revision can be signed.
-- Keep language editions explicit. Do not imply that one English library is
-  multilingual or globally comprehensive.
-- The owner set a non-English-first supply direction on 2026-10-24: a global
-  product needs distinct-language libraries, and English is no longer a permanent
-  first lane. Prepare, review, and package another language whenever its rights and
-  records are sound, but do not *publish* that library until retrieval, citations,
-  user-facing copy, and held-out cases are measured in that language and the
-  installed model is measured to answer in it. One project in one language holds
-  one install slot; the engine refuses a second, so a successor replaces the
-  retained edition instead of standing beside it.
+- State plainly that every library is English. Do not imply that one English
+  library is multilingual, region-neutral, or globally comprehensive.
+- The owner fixed the supply language on 2026-10-24: Blobs publishes English
+  knowledge only. Do not prepare a per-language or per-region edition of one
+  project, and do not open a locale track. Portfolio growth is by subject
+  category, and the exporter refuses any edition whose archive language is not
+  English, so this is an engine rule rather than a preference in a document.
 - Show archive bytes and installed payload bytes separately, plus edition,
   language, scope, snapshot date, publisher, licence/attribution, update
   policy, known limitations, and resulting aggregate storage.

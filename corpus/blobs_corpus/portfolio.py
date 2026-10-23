@@ -23,14 +23,22 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+ENGLISH_TAGS = {"eng", "en"}
+
+
 def install_identity(manifest: dict) -> tuple[str, str]:
     source = manifest.get("source")
     if not isinstance(source, dict) or not source.get("id"):
         raise ValueError("A portfolio edition must name its pinned source identity")
     source_id = str(source["id"])
     metadata = manifest.get("archive_metadata") or {}
-    language = str(metadata.get("Language") or source_id.split("-")[1]).lower()
-    return source_id.split("-")[0], language
+    tag = str(metadata.get("Language") or source_id.split("-")[1]).lower()
+    if tag not in ENGLISH_TAGS:
+        raise ValueError(
+            f"Supply language policy: Blobs publishes English knowledge only, and this edition is "
+            f"{tag!r}. Categories grow by subject, not by a per-language edition of one project."
+        )
+    return source_id.split("-")[0], "eng"
 
 
 def fingerprint(manifest_path: Path, cache: Path | None = None) -> dict:

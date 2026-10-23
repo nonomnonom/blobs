@@ -15,9 +15,7 @@ SUPPORTED_SOURCES = {
     "wikipedia-en-all-nopic",
     "wikipedia-en-top",
     "wikipedia-en-top1m-mini",
-    "wikipedia-id-all-mini",
     "wikivoyage-en-all-nopic",
-    "wikivoyage-pt-all-nopic",
 }
 
 
