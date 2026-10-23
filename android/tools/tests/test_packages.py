@@ -18,7 +18,10 @@ import verify_release
 
 def fixture_source_archive(path):
     with zipfile.ZipFile(path, "x") as archive:
-        for name in sorted(verify_release.SOURCE_REQUIRED):
+        required = verify_release.SOURCE_REQUIRED | {
+            "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
+        }
+        for name in sorted(required):
             relative = name.removeprefix("blobs/")
             source = package_release.ROOT / relative.removeprefix("android/")
             if not relative.startswith("android/"):
@@ -415,6 +418,7 @@ class PackageTests(unittest.TestCase):
                 "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageCatalog.kt",
                 "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageDownloader.kt",
                 "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+                "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt",
                 "android/tools/verify_release.py",
                 "corpus/uv.lock",
                 "corpus/blobs_corpus/curate.py",
@@ -464,6 +468,10 @@ class PackageTests(unittest.TestCase):
                 )
                 self.assertIn(
                     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+                    names,
+                )
+                self.assertIn(
+                    "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt",
                     names,
                 )
                 self.assertIn("blobs/android/tools/verify_release.py", names)
