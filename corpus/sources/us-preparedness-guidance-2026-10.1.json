@@ -1,0 +1,243 @@
+{
+  "format": 1,
+  "id": "us-preparedness-guidance",
+  "edition": "2026-10.1",
+  "title": "U.S. federal outdoor safety and emergency preparedness guidance",
+  "publisher": "U.S. Department of the Interior (National Park Service); U.S. Department of Homeland Security (FEMA Ready.gov)",
+  "license": "United States federal government work, generally public domain under 17 U.S.C. 105 unless a page marks otherwise. NPS terms: https://www.nps.gov/aboutus/disclaimer.htm. Ready.gov terms: https://www.ready.gov/. Third-party material, images, and linked resources inside a page are not redistributed.",
+  "saved": "2026-10-24",
+  "collection": "U.S. federal outdoor safety and emergency preparedness guidance",
+  "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
+  "sources": [
+    {
+      "id": "hiking-safety",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/hiking-safety.htm",
+      "title": "Hike Smart",
+      "updated": "2024-06-13",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "d391ecddda634e41f976698e482d9f1399971deb93ff83f361157f8f3f3806a7",
+      "consolidated_from": "nps-outdoor-safety-2026-10"
+    },
+    {
+      "id": "outdoor-emergency-plan",
+      "host": "home.nps.gov",
+      "url": "https://home.nps.gov/articles/gtgemergencyplan.htm",
+      "title": "Outdoor Emergency Plan",
+      "updated": "2023-06-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "76682befea8ec8c61adfe542027e83260a2d4800f916c8b1d29013c362f57799",
+      "consolidated_from": "nps-outdoor-safety-2026-10"
+    },
+    {
+      "id": "water-purification",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/2wayspurifywater.htm",
+      "title": "Two Ways to Purify Water",
+      "updated": "2022-08-24",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "b450b5ce821dd6ab6c8c5e7170b32b5bf93703c04f7c32d9bdfcbd92bd78269a",
+      "consolidated_from": "nps-outdoor-safety-2026-10"
+    },
+    {
+      "id": "water-hazards",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/subjects/healthandsafety/water-hazards.htm",
+      "title": "Water Hazards",
+      "updated": "2024-05-03",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "d071d232ef9100ac4d783f2266b2b60b8f2f7c2ec282fd7b70c4ebbc61b55393",
+      "consolidated_from": "nps-outdoor-safety-2026-10"
+    },
+    {
+      "id": "winter-hiking",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/000/winterhikingtips.htm",
+      "title": "Winter Hiking Tips",
+      "updated": "2025-04-02",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "fd5af3b99801f8b7c5086c532f8ff2f076634227ba753696375d8418119bbafc",
+      "consolidated_from": "nps-outdoor-safety-2026-10"
+    },
+    {
+      "id": "family-plan",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/plan",
+      "title": "Make A Plan",
+      "updated": "2026-09-01",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "05401c1742ae13cef8c5d784cb77eafa7c8d438d6c6abbd17841e7c7d4fb3cda",
+      "consolidated_from": "ready-emergency-preparedness-2026-10"
+    },
+    {
+      "id": "emergency-kit",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/kit",
+      "title": "Build A Kit",
+      "updated": "2026-07-01",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "918456efe4b60990a7ba90a29db7bfab86e8017d6089af2a8b099da24fda497f",
+      "consolidated_from": "ready-emergency-preparedness-2026-10"
+    },
+    {
+      "id": "evacuation",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/evacuation",
+      "title": "Evacuation",
+      "updated": "2026-03-20",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "a194f7995683ebd9d1263110383269650596c119124be416e31fe264048dd6c7",
+      "consolidated_from": "ready-emergency-preparedness-2026-10"
+    },
+    {
+      "id": "power-outages",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/power-outages",
+      "title": "Power Outages",
+      "updated": "2026-06-04",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "4e190ac459890c174c8ee2f509af26f5720d775c423492b4caad5ed0ee9a01ae",
+      "consolidated_from": "ready-emergency-preparedness-2026-10"
+    },
+    {
+      "id": "before-trip",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/camp-safety-before-the-trip.htm",
+      "title": "Camping Safely Step 1 - Before the Trip",
+      "updated": "2019-07-01",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "f7de9dd152a0c288a0677fc0992864f2d5fab429167dcf0a4793301beca1f3ad",
+      "consolidated_from": "camping-safely-2026-10"
+    },
+    {
+      "id": "upon-arrival",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/camp-safety-upon-arrival.htm",
+      "title": "Camping Safely Step 2 - Upon Arrival",
+      "updated": "2017-04-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "f045183b150be761fd7bc94c1ca9c4f02011ca28d3e5f32dd3ba2a3187682996",
+      "consolidated_from": "camping-safely-2026-10"
+    },
+    {
+      "id": "during-stay",
+      "host": "home.nps.gov",
+      "url": "https://home.nps.gov/articles/camp-safety-during-your-stay.htm",
+      "title": "Camping Safely Step 3 - During Your Stay",
+      "updated": "2017-04-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "933d2bb22b924aed6b581684ac686339c5d4fca04f70e4d8cac6b544184670f7",
+      "consolidated_from": "camping-safely-2026-10"
+    },
+    {
+      "id": "after-trip",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/camp-safety-after-the-trip.htm",
+      "title": "Camping Safely Step 4 - After the Trip",
+      "updated": "2019-07-01",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "c65fa72838fd626bcd0cc7cfe4a4f2ca7825745b68b858ca4f0e87bc3c353e64",
+      "consolidated_from": "camping-safely-2026-10"
+    },
+    {
+      "id": "ten-essentials",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/articles/10essentials.htm",
+      "title": "Ten Essentials",
+      "updated": "2026-05-28",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "dbc91d59c408e9e8b4014d9c2db67505c62bb17a64638c2ec113a7f82b15af49",
+      "consolidated_from": "backcountry-basics-2026-10-v2"
+    },
+    {
+      "id": "trip-planning-guide",
+      "host": "home.nps.gov",
+      "url": "https://home.nps.gov/subjects/healthandsafety/trip-planning-guide.htm",
+      "title": "Trip Planning Guide",
+      "updated": "2026-08-21",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "4cb054e437e915d59b9193fde4eb3cfe9dba3fc693eabb8721653c8b431af4fb",
+      "consolidated_from": "backcountry-basics-2026-10-v2"
+    },
+    {
+      "id": "backcountry-camping",
+      "host": "www.nps.gov",
+      "url": "https://www.nps.gov/subjects/camping/backcountry-camping.htm",
+      "title": "Wilderness & Backcountry Camping",
+      "updated": "2024-07-02",
+      "selector": "#CS_Element_contentcontainer",
+      "body_sha256": "d9876de00df3b01d750cadcecb72a4fc7c3f2403d32c06c88fc551854b561970",
+      "consolidated_from": "backcountry-basics-2026-10-v2"
+    },
+    {
+      "id": "floods",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/floods",
+      "title": "Floods",
+      "updated": "2026-08-27",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "745f1a94c2b56de2d23dd9938962b6322ee7dd44b6615247049030bfafb46293",
+      "consolidated_from": "weather-safety-2026-10"
+    },
+    {
+      "id": "thunderstorms-lightning",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/thunderstorms-lightning",
+      "title": "Thunderstorms & Lightning",
+      "updated": "2026-05-11",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "11f02c3ae2c7e2449f2dc7c07aa4dc0d9549961ffc8900feb5e8acadf5f77b38",
+      "consolidated_from": "weather-safety-2026-10"
+    },
+    {
+      "id": "winter-weather",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/winter-weather",
+      "title": "Winter Weather",
+      "updated": "2026-03-10",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "75f4083e60a4bfba3768d20e614c14bc765a50d8384e60c3e28765f1fab4f730",
+      "consolidated_from": "weather-safety-2026-10"
+    },
+    {
+      "id": "wildfires",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/wildfires",
+      "title": "Wildfires",
+      "updated": "2026-08-11",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "778e91d9dc49b5f8eebdea3f3c56e838d02358fe3d83ee82c701337fecd0fab2",
+      "consolidated_from": "weather-safety-2026-10"
+    },
+    {
+      "id": "earthquakes",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/earthquakes",
+      "title": "Earthquakes",
+      "updated": "2026-09-09",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "b0cd3319639d409cc6765e32c8ca97931cc5f1042121271c41d86e0f9eec1a22",
+      "consolidated_from": "earthquake-tsunami-safety-2026-10"
+    },
+    {
+      "id": "tsunamis",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/tsunamis",
+      "title": "Tsunamis",
+      "updated": "2026-05-11",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "b7090560f1bfbe18ef95d848475a9fc160d2fd8027e62c2c4e1086d2a7ae1add",
+      "consolidated_from": "earthquake-tsunami-safety-2026-10"
+    },
+    {
+      "id": "food",
+      "host": "www.ready.gov",
+      "url": "https://www.ready.gov/food",
+      "title": "Food",
+      "updated": "2026-03-12",
+      "selector": "#block-uswds-ready-ready2017-system-main",
+      "body_sha256": "a637fb11f2f539b5b2be75e3adeb162b3b05e256ce1c5d64b9e7147924f17c14",
+      "consolidated_from": "emergency-food-2026-10"
+    }
+  ]
+}

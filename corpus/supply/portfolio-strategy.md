@@ -79,6 +79,37 @@ Do not mark either candidate release-ready: the Top 1M retrieval misses remain
 unresolved, neither candidate has target-device acceptance, and a package
 digest does not replace the required source-specific rights review.
 
+## Global supply tranches, measured 2026-10-24
+
+The installed payload, not the download, consumes the 6 GiB per-library limit. Two
+measured ratios bound every plan: payload is 2.0 to 2.1 times normalized text bytes,
+and 1.65 to 3.0 times the source archive bytes. Budget at most about 2.2 GiB of source
+archive per volume, then confirm on the built edition.
+
+| Lane | Edition and measured size | State |
+| --- | --- | --- |
+| Reference, English | `wikipedia-en-top1m-mini` 3,022,411,034-byte archive, 4,980,555,776-byte payload, 997,761 documents | one candidate, 10 of 12 recall unresolved |
+| Reference, Indonesian | `wikipedia-id-all-mini` 1,399,953,305-byte archive, 494,581 documents at 63 percent extraction | extracting; one volume projected |
+| Travel, English | `wikivoyage-en-all-nopic` 272,495,142-byte archive, 622,645,248-byte payload, 34,599 guides | candidate, 50 of 50 on the new suite |
+| Travel, Portuguese | `wikivoyage-pt-all-nopic` 18,137,141-byte archive, 54,059,008-byte payload, 4,097 guides | packaged, no rights sign-off |
+| How-to, practical | Stack Exchange site archives: cooking 238,098,128, money 254,194,306, travel 462,009,141, unix 1.29e9, superuser 3.97e9, diy 2.04e9 bytes | ratio being measured on cooking before any lane is promised |
+| Dictionary | Wiktionary nopic archives: English 8.5 GB, French 4.6 GB, Russian 2.0 GB, German 1.5 GB, Portuguese 0.34 GB | English needs deterministic volumes; smaller languages fit one |
+| Places | Overpass snapshots bounded to 5,000,000 bytes and 1,000 elements per reviewed lock | pipeline exists, no reviewed shard yet |
+| Public guidance | `web_pages` caps a lock at 40 sources and 5,000,000 bytes each | a real health or civics lane needs archive-scale acquisition first |
+
+`stackoverflow.com` is 107 GB and `wikipedia_en_all_nopic` is 48 GB: workstation
+inputs, not libraries, and both stay out of the portfolio until capacity and volume
+plans exist.
+
+The library set is only half of an offline research answer. Before the product can be
+described as answering across this portfolio, the runtime needs the matching work: a
+bounded per-question library route instead of one global scan, stemming and per-locale
+stop-word and non-article section data instead of the English lists now hard-coded in
+`RetrievalQuery.kt` and `LibraryStore.kt`, a tokenizer that can serve scripts without
+spaces, and a model measured in each supplied language. Host retrieval on the
+622 MB travel library already measures 334.9 ms median and 2,140.6 ms p95, so fan-out
+across several libraries is a design decision, not a free default.
+
 ## Curation and install policy
 
 - Keep exactly one English Wikipedia reference package in the installable
@@ -107,10 +138,14 @@ digest does not replace the required source-specific rights review.
   catalog revision can be signed.
 - Keep language editions explicit. Do not imply that one English library is
   multilingual or globally comprehensive.
-- English is the first measured supply language, not a permanent global
-  language strategy. Add another language only after the chosen on-device
-  model, retrieval terms, citations, user-facing UI, and held-out cases have
-  been validated in that language.
+- The owner set a non-English-first supply direction on 2026-10-24: a global
+  product needs distinct-language libraries, and English is no longer a permanent
+  first lane. Prepare, review, and package another language whenever its rights and
+  records are sound, but do not *publish* that library until retrieval, citations,
+  user-facing copy, and held-out cases are measured in that language and the
+  installed model is measured to answer in it. One project in one language holds
+  one install slot; the engine refuses a second, so a successor replaces the
+  retained edition instead of standing beside it.
 - Show archive bytes and installed payload bytes separately, plus edition,
   language, scope, snapshot date, publisher, licence/attribution, update
   policy, known limitations, and resulting aggregate storage.

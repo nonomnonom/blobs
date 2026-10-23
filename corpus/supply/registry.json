@@ -144,15 +144,21 @@
       "id": "primary-public-guidance",
       "priority": 5,
       "tier": "primary-domain",
-      "planned_library_id": "public-guidance-regional",
-      "status": "source-selection",
-      "languages": ["Source-dependent"],
-      "scope": "Separately reviewed official public guidance, grouped by jurisdiction and subject instead of mixing incompatible national advice into one global authority.",
-      "candidate_origins": [],
+      "planned_library_id": "us-preparedness-guidance",
+      "status": "review-planned",
+      "languages": ["English"],
+      "scope": "Separately reviewed official public guidance, grouped by jurisdiction and subject instead of mixing incompatible national advice into one global authority. The first edition consolidates 23 U.S. federal pages from the seven retired single-topic packs: 23 records, 211 passages, a 372,736-byte payload.",
+      "source_lock": "corpus/sources/us-preparedness-guidance-2026-10.2.json",
+      "candidate_origins": [
+        "https://www.nps.gov/",
+        "https://home.nps.gov/",
+        "https://www.ready.gov/"
+      ],
       "selection_requirements": [
         "Approve rights and reuse conditions for every publisher and page.",
         "Keep jurisdiction, publication date, and local-authority limitations visible on every record.",
-        "Split a source into a new immutable edition when its advice or rights change."
+        "Split a source into a new immutable edition when its advice or rights change.",
+        "Refresh a moved page set with `python -m blobs_corpus.web_pages refresh`, which keeps the reviewed selector and identity and records the changed sources in refreshed_from lineage."
       ],
       "known_limits": "Official guidance can still be jurisdiction-specific, time-sensitive, and unsuitable for emergency or professional advice without current local confirmation."
     },
