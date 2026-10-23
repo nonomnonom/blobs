@@ -388,7 +388,7 @@ fun BlobsApp(container: AppContainer) {
 
                                                     Page.PRIVACY -> PrivacyScreen()
 
-                                                    Page.HELP -> HelpScreen(lessMotion)
+                                                    Page.HELP -> HelpScreen()
 
                                                     Page.ABOUT -> AboutScreen()
                                                 }

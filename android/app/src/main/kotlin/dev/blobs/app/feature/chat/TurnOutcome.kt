@@ -7,6 +7,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -18,6 +22,7 @@ import dev.blobs.app.R
 import dev.blobs.app.data.TurnResponse
 import dev.blobs.app.data.local.TurnFinishReason
 import dev.blobs.app.data.local.TurnStatus
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.chat.Trace
 import dev.blobs.app.ui.chat.TraceLine
 import dev.blobs.app.ui.chat.TraceStatus
@@ -40,14 +45,15 @@ internal fun TurnOutcome(
     val status = response.status
     if (status == TurnStatus.RUNNING) return
     val answer = response.body
+    var detailOpen by rememberSaveable(response.turnId) { mutableStateOf(false) }
     val limited = status == TurnStatus.COMPLETE &&
         response.finishReason == TurnFinishReason.TOKEN_LIMIT
     val label = when {
         status == TurnStatus.ERROR && response.error == "MODEL_TEMPLATE" ->
-            R.string.model_incompatible
+            R.string.model_incompatible_title
 
         status == TurnStatus.ERROR && response.finishReason == TurnFinishReason.CONTEXT_FULL ->
-            R.string.context_full
+            R.string.context_full_title
 
         limited || status == TurnStatus.LIMITED -> R.string.status_limited
 
@@ -65,13 +71,26 @@ internal fun TurnOutcome(
 
         status == TurnStatus.COMPLETE -> R.string.status_complete
 
-        status == TurnStatus.CONTEXT_FULL -> R.string.context_full
+        status == TurnStatus.CONTEXT_FULL -> R.string.context_full_title
 
         status == TurnStatus.NO_SOURCES -> R.string.status_no_sources
 
         status == TurnStatus.UNVERIFIED -> R.string.status_unverified
 
         else -> R.string.status_error
+    }
+    val explanation = when {
+        status == TurnStatus.ERROR && response.error == "MODEL_TEMPLATE" ->
+            R.string.model_incompatible_detail
+
+        status == TurnStatus.ERROR && response.finishReason == TurnFinishReason.CONTEXT_FULL ->
+            R.string.context_full_detail
+
+        status == TurnStatus.CONTEXT_FULL -> R.string.context_full_detail
+
+        status == TurnStatus.NO_SOURCES -> R.string.status_no_sources_detail
+
+        else -> null
     }
     val seconds = ((response.usage.elapsedMs + 500) / 1000).toInt()
     val measure = when {
@@ -94,6 +113,21 @@ internal fun TurnOutcome(
             title = stringResource(label),
             description = measure
         )
+    }
+    if (explanation != null) {
+        DetailDisclosure(
+            open = detailOpen,
+            onOpenChange = { detailOpen = it },
+            summary = {
+                Text(
+                    stringResource(R.string.turn_details),
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        ) {
+            Text(stringResource(explanation), style = MaterialTheme.typography.bodyMedium)
+        }
     }
     if (response.evidence != null && answer.isNotBlank()) {
         GroundingChain(response)

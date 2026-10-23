@@ -37,6 +37,20 @@ internal fun GroundingChain(response: TurnResponse, modifier: Modifier = Modifie
         else -> null
     }
     val steps = chainSteps(response, ((response.usage.elapsedMs + 500) / 1000).toInt())
+    val state = when (response.grounding) {
+        TurnGrounding.GROUNDED -> R.string.chain_state_grounded
+        TurnGrounding.UNVERIFIED -> R.string.chain_state_unverified
+        else -> R.string.chain_state_unchecked
+    }
+    val summary = stringResource(
+        R.string.chain_summary,
+        stringResource(state),
+        pluralStringResource(
+            R.plurals.chain_cited_short,
+            response.usage.citedSourceCount,
+            response.usage.citedSourceCount
+        )
+    )
     TraceCollapsible(
         open = open,
         onOpenChange = { open = it },
@@ -45,7 +59,7 @@ internal fun GroundingChain(response: TurnResponse, modifier: Modifier = Modifie
             TraceLine(
                 status = if (grounded) TraceStatus.DONE else TraceStatus.PENDING,
                 icon = R.drawable.ic_blobs_monochrome,
-                title = stringResource(R.string.chain_title)
+                title = summary
             )
         }
     ) {
@@ -69,13 +83,13 @@ private fun chainSteps(response: TurnResponse, seconds: Int): List<ChainStep> {
     val usage = response.usage
     val searched = searchedLabel(response.scope)
     val retrieved = if (usage.sourceCount > 0) {
-        pluralStringResource(R.plurals.chain_retrieved, usage.sourceCount, usage.sourceCount)
+        pluralStringResource(R.plurals.chain_retrieved_detail, usage.sourceCount, usage.sourceCount)
     } else {
         null
     }
-    val ready = if (seconds > 0) stringResource(R.string.chain_ready, seconds) else null
+    val ready = if (seconds > 0) stringResource(R.string.chain_ready_detail, seconds) else null
     val cited = pluralStringResource(
-        R.plurals.chain_cited,
+        R.plurals.chain_cited_detail,
         usage.citedSourceCount,
         usage.citedSourceCount
     )
@@ -105,18 +119,18 @@ private fun chainSteps(response: TurnResponse, seconds: Int): List<ChainStep> {
 private fun searchedLabel(scope: String): String? = when {
     scope.isBlank() -> null
 
-    scope == "*" -> stringResource(R.string.chain_searched_all)
+    scope == "*" -> stringResource(R.string.chain_searched_all_detail)
 
     else -> {
         val selected = scope.lineSequence().filter(String::isNotBlank).count()
-        pluralStringResource(R.plurals.chain_searched_some, selected, selected)
+        pluralStringResource(R.plurals.chain_searched_some_detail, selected, selected)
     }
 }
 
 @StringRes
 private fun claimLabel(claimed: ModelSupport?): Int = when (claimed) {
-    ModelSupport.SOURCED -> R.string.chain_claim_sourced
-    ModelSupport.PARTIAL -> R.string.chain_claim_partial
-    ModelSupport.UNSOURCED -> R.string.chain_claim_unsourced
-    null -> R.string.chain_claim_none
+    ModelSupport.SOURCED -> R.string.chain_claim_sourced_detail
+    ModelSupport.PARTIAL -> R.string.chain_claim_partial_detail
+    ModelSupport.UNSOURCED -> R.string.chain_claim_unsourced_detail
+    null -> R.string.chain_claim_none_detail
 }

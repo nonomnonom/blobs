@@ -46,7 +46,7 @@ import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.data.packages.PackageRole
 import dev.blobs.app.ui.AppViewModel
-import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.ModelLogo
 import dev.blobs.app.ui.Page
@@ -81,6 +81,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
         )
     }
     var comparing by rememberSaveable { mutableStateOf(false) }
+    var detailStep by rememberSaveable { mutableStateOf<SetupStep?>(null) }
     val selected = available.find { it.fileName == selectedFile } ?: profile.recommendedModel
     androidx.compose.runtime.LaunchedEffect(work.download?.fileName) {
         work.download?.takeIf { it.manifest.kind == "model" }?.let { selectedFile = it.fileName }
@@ -136,15 +137,24 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
             }
             when (step) {
                 SetupStep.MODEL -> {
+                    val fitLabel = if (fits && fitsMemory) {
+                        R.string.state_fits
+                    } else {
+                        R.string.state_tight
+                    }
+                    val contextLabel = stringResource(
+                        R.string.model_context_short,
+                        model.contextWindowTokens
+                    )
                     Heading(R.string.setup_model_title)
-                    Body(R.string.setup_model_intro)
                     Text(
-                        pluralStringResource(
-                            R.plurals.model_device_context,
-                            model.contextWindowTokens,
-                            model.contextWindowTokens
+                        stringResource(
+                            R.string.setup_state_line,
+                            contextLabel,
+                            fileSize(selected.downloadBytes),
+                            stringResource(fitLabel)
                         ),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Surface(
@@ -184,12 +194,6 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                                 selected.manifest.title,
                                 style = MaterialTheme.typography.titleLarge
                             )
-                            if (selected.description.isNotBlank()) {
-                                Text(
-                                    selected.description,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
                             Text(
                                 stringResource(
                                     R.string.model_download_size,
@@ -197,17 +201,6 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                                 ),
                                 style = MaterialTheme.typography.bodySmall
                             )
-                            if (fits && fitsMemory) {
-                                Text(
-                                    stringResource(R.string.runs_on_phone),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            } else if (!fitsMemory) {
-                                Text(
-                                    stringResource(R.string.model_memory_warning),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
                         }
                     }
                     TextButton(onClick = {
@@ -227,25 +220,64 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                             }
                         }
                     }
-                    val device = if (Build.MODEL.contains("sdk_gphone", true) ||
-                        Build.FINGERPRINT.contains("generic", true)
+                    DetailDisclosure(
+                        open = detailStep == step,
+                        onOpenChange = { open -> detailStep = if (open) step else null },
+                        summary = {
+                            Text(
+                                stringResource(R.string.setup_why_model),
+                                Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
                     ) {
-                        stringResource(R.string.this_phone)
-                    } else {
-                        "${Build.MANUFACTURER.replaceFirstChar(
-                            Char::uppercase
-                        )} ${Build.MODEL}".replace('_', ' ')
+                        Text(
+                            stringResource(R.string.setup_model_intro),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            pluralStringResource(
+                                R.plurals.model_device_context,
+                                model.contextWindowTokens,
+                                model.contextWindowTokens
+                            ),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        if (selected.description.isNotBlank()) {
+                            Text(
+                                selected.description,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        if (!fitsMemory) {
+                            Text(
+                                stringResource(R.string.model_memory_warning),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        val device = if (Build.MODEL.contains("sdk_gphone", true) ||
+                            Build.FINGERPRINT.contains("generic", true)
+                        ) {
+                            stringResource(R.string.this_phone)
+                        } else {
+                            "${Build.MANUFACTURER.replaceFirstChar(
+                                Char::uppercase
+                            )} ${Build.MODEL}".replace('_', ' ')
+                        }
+                        Text(
+                            stringResource(
+                                R.string.device_available,
+                                device,
+                                fileSize(profile.totalMemoryBytes),
+                                fileSize(profile.freeStorageBytes)
+                            ),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            stringResource(R.string.setup_change_later),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
-                    Text(
-                        stringResource(
-                            R.string.device_available,
-                            device,
-                            fileSize(profile.totalMemoryBytes),
-                            fileSize(profile.freeStorageBytes)
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                     if (!fits && installed == null) {
                         Text(
                             stringResource(
@@ -273,6 +305,15 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                         size = if (large) 116.dp else 180.dp
                     )
                     Heading(R.string.setup_library_title)
+                    Text(
+                        stringResource(
+                            R.string.setup_library_state,
+                            starter.language,
+                            fileSize(starter.downloadBytes)
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -301,9 +342,25 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                             )
                         }
                     }
-                    if (starter.description.isNotBlank()) {
+                    DetailDisclosure(
+                        open = detailStep == step,
+                        onOpenChange = { open -> detailStep = if (open) step else null },
+                        summary = {
+                            Text(
+                                stringResource(R.string.setup_whats_inside),
+                                Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    ) {
+                        if (starter.description.isNotBlank()) {
+                            Text(
+                                starter.description,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                         Text(
-                            starter.description,
+                            stringResource(R.string.setup_change_later),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -380,17 +437,6 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                         model.downloadPackage(starter)
                     }
                 }
-                Text(
-                    stringResource(
-                        when (step) {
-                            SetupStep.MODEL -> R.string.setup_model_once
-                            SetupStep.LIBRARY -> R.string.setup_library_later
-                            SetupStep.READY -> R.string.setup_ready_later
-                        }
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
@@ -445,6 +491,7 @@ private fun ModelOption(
 @Composable
 private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> Unit) {
     val large = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f
+    var detailOpen by rememberSaveable { mutableStateOf(false) }
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
         val height = maxHeight
         Column(
@@ -472,7 +519,7 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
                     }
                 )
                 Text(
-                    stringResource(R.string.setup_ready_intro),
+                    stringResource(R.string.setup_ready_state),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -520,6 +567,22 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
                             }
                         }
                     }
+                }
+                DetailDisclosure(
+                    open = detailOpen,
+                    onOpenChange = { detailOpen = it },
+                    summary = {
+                        Text(
+                            stringResource(R.string.setup_ready_details),
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                ) {
+                    Text(
+                        stringResource(R.string.setup_ready_intro),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
                 PrimaryAction(R.string.setup_first_question, onClick = finish)
             }

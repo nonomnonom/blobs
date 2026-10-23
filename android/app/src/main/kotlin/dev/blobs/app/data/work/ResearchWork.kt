@@ -235,8 +235,8 @@ internal class ResearchWork(
             } catch (error: Exception) {
                 engine.stop()
                 var notice = when (error.message) {
-                    "CONTEXT_FULL" -> R.string.context_full
-                    "MODEL_TEMPLATE" -> R.string.model_incompatible
+                    "CONTEXT_FULL" -> R.string.context_full_detail
+                    "MODEL_TEMPLATE" -> R.string.model_incompatible_detail
                     else -> R.string.answer_failed
                 }
                 try {

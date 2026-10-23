@@ -38,6 +38,25 @@ state change.
 - The empty chat is centered on wide screens, while a finished conversation
   keeps long-form answers at a comfortable reading measure.
 
+## Copy discipline
+
+Every screen answers one question first: what is happening right now. That answer
+is a state line with a number in it ("42% · 120 MB of 300 MB", "Sourced · 3
+cited", "4096-token context · 1.2 GB · runs here"), followed by at most one
+control. Explanation does not sit on the first screen; it lives behind a single
+disclosure primitive, `DetailDisclosure`, whose summary is the state line and
+whose body is the sentences that used to be paragraphs.
+
+- `TraceCollapsible` is a `DetailDisclosure` with a trace gutter, so a turn's
+  research stage, evidence list, and grounding chain all expand the same way.
+- A string revealed by a disclosure is named `*_detail`. The name is the
+  contract: it keeps explanation out of the visible copy budget.
+- The budget is enforced by `CopyDensityTest`, not by review: no shipped string
+  over 25 words, headings at most 4 words, primary and icon labels at most 3
+  words, and at most 8 visible words per control on the densest surfaces.
+- Labels are verbs and sentences are not: "Start chatting", not "Get started
+  with your first question".
+
 ## Information hierarchy
 
 1. **Chat** starts with one question field. Once a conversation exists, the

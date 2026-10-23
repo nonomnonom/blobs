@@ -109,7 +109,7 @@ internal class PackageTransferWork(
                     when (error.message) {
                         "STORAGE" -> R.string.storage_failed
                         "GGUF_CONTEXT_LENGTH" -> R.string.model_context_incompatible
-                        "GGUF_TEMPLATE" -> R.string.model_incompatible
+                        "GGUF_TEMPLATE" -> R.string.model_incompatible_detail
                         else -> R.string.import_failed
                     }
                 )
@@ -236,7 +236,7 @@ internal class PackageTransferWork(
                         "STORAGE" -> R.string.storage_failed
                         "DOWNLOAD_HOST", "DOWNLOAD_REDIRECT" -> R.string.download_source_failed
                         "GGUF_CONTEXT_LENGTH" -> R.string.model_context_incompatible
-                        "GGUF_TEMPLATE" -> R.string.model_incompatible
+                        "GGUF_TEMPLATE" -> R.string.model_incompatible_detail
                         else -> R.string.download_failed
                     }
                 )
