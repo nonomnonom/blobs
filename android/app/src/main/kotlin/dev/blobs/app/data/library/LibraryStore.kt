@@ -257,8 +257,14 @@ class LibraryStore {
             }
         }
 
-        val namedSubjects = unique.filter { it.subject != null }.distinctBy { it.subject }
-        if (namedSubjects.size > 1) namedSubjects.forEach(::append)
+        val subjectCandidates = unique.filter { it.subject != null }
+        subjectCandidates.distinctBy { it.subject }.forEach(::append)
+        // Each named subject keeps a slot, and the most topically relevant article among them
+        // then gets room for its own sections instead of only its leading passage.
+        subjectCandidates.groupBy { documentKey(it.evidence) }
+            .values
+            .sortedByDescending { group -> group.maxOf { it.topicOverlap } }
+            .forEach { group -> group.take(MAX_PASSAGES_PER_DOCUMENT).forEach(::append) }
         unique.distinctBy { documentKey(it.evidence) }.forEach(::append)
         unique.forEach(::append)
         return selected

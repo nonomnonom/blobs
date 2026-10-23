@@ -250,8 +250,11 @@ statement but cannot initiate a second topical query.
 
 The local ranker then applies subject/title relevance, duplicate removal,
 per-document limits, evidence overlap thresholds, and a shared character budget
-before choosing up to three prompt sources. A source reader can return more
-results because browse behaviour is separate from answer evidence selection.
+before choosing up to three prompt sources. Named-subject selection keeps one
+slot per subject and then lets the most topically relevant named article keep
+room for its own sections, so generic siblings that merely carry the subject name
+cannot crowd out the article the question asked about. A source reader can return
+more results because browse behaviour is separate from answer evidence selection.
 
 A large catalog requires retrieval measurements before algorithms expand:
 - maintain versioned, held-out cases by library and query category;
