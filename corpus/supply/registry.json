@@ -196,21 +196,22 @@
       "priority": 9,
       "tier": "everyday-practice",
       "planned_library_id": "howto-repair",
-      "status": "acquisition-planned",
+      "status": "measured-pending-review",
       "archive_locks": [
         "corpus/sources/stackexchange-mechanics-en-all-2026-10.json",
         "corpus/sources/stackexchange-bicycles-en-all-2026-10.json",
         "corpus/sources/stackexchange-aviation-en-all-2026-10.json",
-        "corpus/sources/stackexchange-robotics-en-all-2026-10.json",
         "corpus/sources/stackexchange-3dprinting-en-all-2026-10.json",
         "corpus/sources/stackexchange-woodworking-en-all-2026-10.json"
       ],
       "languages": ["English"],
-      "scope": "Fix-it knowledge from six English Stack Exchange repair communities: vehicle mechanics, bicycles, aviation maintenance, robotics, 3D printing, and woodworking. Pinned archives total 1,821,805,944 bytes. Measure each extracted edition and size the lane from 2.70 times its normalized text bytes, not from the archive total; diy (2,086,024,326 archive bytes) belongs to the practical how-to lane, not to this one, because vehicle and equipment repair is a distinct question set.",
+      "scope": "Fix-it knowledge from five English Stack Exchange repair communities: vehicle mechanics, bicycles, aviation, 3D printing, and woodworking. The measured edition 2026-10.2 keeps only question pages: 88,383 questions over 390,422,824 normalized text bytes, 398,429 passages, 924,274,688 installed payload, and records_sha256 946a47e6. Review excluded 89,235 member profiles, navigation listings, and tag directories; earlier drafts had shipped them as half the lane. The robotics archive is not part of the lane: its question set is mostly ROS, Gazebo, and firmware tooling, which is programming documentation and out of scope. Archive-to-payload is not a stable ratio, so size later volumes from measured text bytes (2.70 times) rather than archive bytes.",
       "candidate_origins": ["https://download.kiwix.org/zim/stack_exchange/"],
       "selection_requirements": [
         "Reject the iFixit archive as a supply source unless the owner accepts a non-commercial licence: iFixit content is CC BY-NC-SA 3.0, and its guides depend on photographs that the text-only pipeline does not carry.",
-        "Decide whether electronics joins this lane as two volumes or is deferred, because 4,00 GB of archive projects past the 6 GiB installed-payload limit.",
+        "Keep only question pages (questions/<id>/<slug>); Stack Exchange ZIMs also carry member profiles, tag directories, and paged listings that are not answers.",
+        "Prefer repair communities whose questions are about physical equipment; a site dominated by software tooling belongs to no Blobs lane.",
+        "Decide whether electronics joins this lane as two volumes or is deferred, because 4.00 GB of archive projects past the 6 GiB installed-payload limit.",
         "Do not overlap with the practical how-to lane; the exporter refuses repeated canonical URLs."
       ],
       "known_limits": "Repair instructions carry safety risk, model coverage is partial, and a text extraction loses the photographs and disassembly diagrams that make a guide usable."

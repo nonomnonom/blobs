@@ -5,6 +5,7 @@ import copy
 import hashlib
 import os
 from pathlib import Path
+import re
 import tempfile
 
 from .acquire import digest
@@ -15,13 +16,23 @@ from .records import documents
 # source project, not per individual archive edition.
 SUPPORTED_PROJECTS = {"wikipedia", "wikisource", "wikivoyage", "stackexchange"}
 
+# Stack Exchange ZIMs also carry the site's chrome: member profiles, tag
+# directories and paged question listings. Only a question page is a post.
+QUESTION_PATH = re.compile(r"questions/\d+/")
+
 
 def project(source_id: str) -> str:
     return str(source_id).split("-")[0]
 
 
-def exclusion(document):
+def exclusion(document, source_project: str = ""):
     path = document.get("provenance", {}).get("entry_path", "")
+    if source_project == "stackexchange" and not QUESTION_PATH.match(path):
+        if path.startswith("users"):
+            return "Community member profile, not a question"
+        if path.startswith("tags"):
+            return "Tag directory page, not a question"
+        return "Site navigation or question listing, not a question"
     if path.startswith("_assets_/"):
         return "Bundled support asset, not a source article"
     if path.startswith("_mw_/"):
@@ -57,8 +68,9 @@ def curate(source: Path, output: Path):
             path = source.parent / info["name"]
             counts = Counter(shard["counts"])
             changed = False
+            archive_project = project(shard.get("archive") or original["source"]["id"])
             for doc in documents(path):
-                reason = exclusion(doc)
+                reason = exclusion(doc, archive_project)
                 if reason is None:
                     continue
                 changed = True
@@ -85,7 +97,14 @@ def curate(source: Path, output: Path):
             for kind, item in shard["files"].items():
                 target = staged / item["name"]
                 if kind == "documents" and changed:
-                    write_lines(target, (doc for doc in documents(path) if exclusion(doc) is None))
+                    write_lines(
+                        target,
+                        (
+                            doc
+                            for doc in documents(path)
+                            if exclusion(doc, archive_project) is None
+                        ),
+                    )
                     item.update(bytes=target.stat().st_size, sha256=digest(target))
                 else:
                     os.link(source.parent / item["name"], target)
