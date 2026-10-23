@@ -41,18 +41,33 @@ installed assets, the research path remains local.
 
 ## Engineering direction
 
-The current priority is a coherent rebuild of engine ownership, dataset/package
-contracts, distribution contracts, application flow, and source structure.
-Keep the runtime simple: one local retrieval and one model completion per
-question, no agent loops or speculative services. Improve lexical retrieval,
-prompt bounds, native streaming, cancellation, durable turn lifecycle, and
-pack provenance before adding semantic retrieval or a reranker.
+The rebuild is not the product finish line. The active goal is to complete,
+maintain, and prove every shipped Blobs surface: the Android application,
+on-device inference and retrieval, library/model installation, conversation
+storage, corpus and package pipeline, signed Hugging Face asset delivery,
+release automation, and public documentation. Every advertised feature must
+work end to end or be clearly identified as unavailable.
 
-This is a rebuild phase. Do not claim that the app is fast, accurate, offline,
-or bounty-ready until repeatable Android evidence records the APK, model,
-library pack, device, configuration, query suite, and observed result. Until
-the product owner explicitly re-enables validation, do not run builds, tests,
-benchmarks, or evaluators. The detailed architecture and proof gates live in
+Keep the runtime simple: one local retrieval and one model completion per
+question, with no agent loops or speculative services. Improve lexical
+retrieval, prompt bounds, native streaming, cancellation, durable turn
+lifecycle, and pack provenance based on measured failures before adding
+semantic retrieval or a reranker. Treat the repository, dataset, package
+catalog, and releases as maintained product surfaces, not one-time build
+outputs.
+
+The product owner explicitly re-enabled validation on 2026-10-23. Builds,
+tests, benchmarks, evaluators, and device acceptance may now run when their
+inputs and resources are available. Preserve other running processes and data
+preparation. Record missing toolchains, devices, credentials, datasets, and
+reproduction inputs as blockers instead of silently substituting evidence.
+
+Do not claim that Blobs is production-ready, offline-verified, fast, accurate,
+or bounty-ready until repeatable evidence records the APK, model, library
+package, device and OS, configuration, query suite, and observed results.
+Hugging Face uploads, signing-key use, GitHub releases, and other irreversible
+publication actions require verified inputs and the required owner
+authorization. The detailed architecture and proof gates live in
 [`docs/architecture.md`](docs/architecture.md) and
 [`docs/engineering-roadmap.md`](docs/engineering-roadmap.md). The behavioral
 target for turn provenance, renderable partial output, and structural grounding

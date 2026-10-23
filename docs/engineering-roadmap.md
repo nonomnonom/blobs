@@ -108,27 +108,30 @@ artifacts remain outside Git unless they are intentionally versioned source
 metadata. A historical observation must say so if the original input, corpus,
 device, or executable can no longer be reproduced.
 
-## Rebuild mode
+## Production-readiness mode
 
-The owner has chosen to rebuild engine, data flow, app structure, and corpus
-pipeline before validation. Therefore **do not run builds, tests, benchmarks,
-or evaluators** during this phase. Existing tests remain regression references;
-they must not be altered just to appear green, and static inspection is not
-runtime proof.
+The product owner explicitly re-enabled validation on 2026-10-23. The rebuild
+is not considered complete until the current code is built, tested, exercised
+on supported Android devices, and its data and release paths are verified.
+Existing tests are regression evidence, not a substitute for missing
+acceptance coverage. Never change or remove a failing test merely to make a
+gate pass.
 
-The rebuild phase ends only when one vertical slice is coherent: a verified
-installed asset, local retrieval, one JNI completion, durable turn persistence,
-cited evidence, and rendered state have clear owners. Validation then resumes
-before performance, quality, offline, or release claims.
+Start with non-destructive baseline checks and identify active processes before
+starting overlapping builds, tests, or data preparation. Preserve those
+processes. Run focused checks first, then repository verification and device
+acceptance when prerequisites are available. Record exact commands, results,
+and blockers. No performance, answer-quality, offline, or release claim follows
+from compilation alone.
 
 | Rebuild area | Direction | Current evidence state |
 | --- | --- | --- |
-| Research engine | `engine/LocalResearchEngine` owns one retrieval-to-completion pass | Changed or under reconstruction; not built or tested in this phase |
-| Native runtime | `local_model_runtime.cpp` owns model lifecycle and decode; `KvCache` owns transient exact-prefix reuse; `blobs.cpp` is a JNI adapter | Static ownership/header inspection only; not built or tested in this phase |
-| Dataset archive | `archive.py` owns the `.blobs` envelope; `package.py` carries `records_sha256` | Contract work only; no package-build claim |
-| Transfer | `PackageTransferExecutor`, recovery, and `PackageTransferWork` own interrupted asset lifecycle | Contract work only; no device proof |
-| Retrieval | SQLite boundary, validation, reader, aliases, and ranking are separated | Contract work only; no measured quality or latency |
-| Persistence and UI | `ConversationStore`, Room migrations, scope snapshot, grounding, finish reason | Contract work only; no compiled-app claim |
+| Research engine | `engine/LocalResearchEngine` owns one retrieval-to-completion pass | Unverified until current build, tests, and device flow pass |
+| Native runtime | `local_model_runtime.cpp` owns model lifecycle and decode; `KvCache` owns transient exact-prefix reuse; `blobs.cpp` is a JNI adapter | Unverified until native build and model/device exercises pass |
+| Dataset archive | `archive.py` owns the `.blobs` envelope; `package.py` carries `records_sha256` | Unverified until reproducible package build and archive checks pass |
+| Transfer | `PackageTransferExecutor`, recovery, and `PackageTransferWork` own interrupted asset lifecycle | Unverified until cancellation, recovery, and atomic-install acceptance passes |
+| Retrieval | SQLite boundary, validation, reader, aliases, and ranking are separated | Unverified until fixed retrieval cases run against identified packages |
+| Persistence and UI | `ConversationStore`, Room migrations, scope snapshot, grounding, finish reason | Unverified until compile, migration tests, and interaction acceptance pass |
 | Knowledge catalog | Source locks, provenance, pack admission, and publication contract | Existing artifacts are inventory, not a claim of quality or completeness |
 
 ## Runtime invariants
@@ -172,9 +175,9 @@ Semantic retrieval, reranking, new model families, spatial indexes, and
 recommendation scoring are not assumed requirements. They are experiments only
 after the lexical baseline exposes a measured gap on the target device.
 
-## Evaluation after rebuild
+## Evidence gates
 
-When validation is re-enabled, evidence is collected in layers:
+Validation is active. Collect evidence in layers:
 
 | Layer | What it proves | What it does not prove |
 | --- | --- | --- |
@@ -191,17 +194,18 @@ rubric, or device differ.
 
 ## Immediate next work
 
-1. Complete the dataset trust boundary: host record provenance and device
-   library validation must agree on the same contract.
-2. Inventory the existing large core-reference archives with complete catalog
-   metadata and identify missing rights, source-lock, and retrieval-case inputs.
-3. Define the first global catalog release set from quality and coverage, not
-   from whichever pack is easiest to build.
-4. Complete the single Android vertical slice without adding a second runtime
-   path or service.
-5. Once validation is explicitly enabled, establish package-specific retrieval
-   baselines and target-device offline acceptance.
-6. Use those results to remove the largest measured quality or latency
-   bottleneck, then repeat the same suite.
-7. Publish only verified immutable assets, sign the catalog, and create release
-   evidence before making a bounty claim.
+1. Establish a safe baseline: inspect running work and available toolchains,
+   then run the smallest deterministic Android and corpus checks.
+2. Compile the current app, run JVM and corpus/release tooling tests, and
+   resolve actual failures without obscuring unrelated baseline issues.
+3. Inventory existing core-reference inputs, source rights, reviewed records,
+   package identities, retrieval cases, and signed-catalog consistency.
+4. Verify Android install, update, cancellation, recovery, chat, citations,
+   history, import/export, storage, and offline behavior on available supported
+   devices; record unavailable devices as blockers.
+5. Use fixed package-specific cases and repeatable device records to find the
+   largest measured answer-quality, retrieval, reliability, or latency gap.
+6. Fix and re-run the relevant evidence gates. Keep claims limited to what the
+   exact APK, model, package, device, and test record demonstrate.
+7. Publish only owner-authorized, verified immutable assets, sign the catalog,
+   validate the published revision, and create release evidence.
