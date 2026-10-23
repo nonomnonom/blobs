@@ -156,12 +156,24 @@ across several libraries is a design decision, not a free default.
 
 ## Acquisition stop conditions
 
-The locked full English Wikipedia nopic ZIM is about 52.7 GB before extraction.
-The last observed free space on the build volume was about 75.6 GB. That leaves
-too little demonstrated room for the raw source plus extracted shards,
-normalized records, SQLite staging, archives, and a safe rollback margin.
-Do not start that acquisition until a separate capacity estimate and staging
-plan show all intermediates fit without deleting a good local edition.
+Measured staging cost, per source archive byte, from the editions on this machine:
+normalized record shards are 0.28 to 0.51 times the archive (Wikivoyage 0.51, Top 1M
+0.28, Stack Exchange cooking 0.31), a review step writes a second copy of that size,
+export hardlinks the shards, and packaging needs one installed payload plus its archive
+per volume while the earlier volumes stay on disk. Plan with 0.55 for shards and the
+payload bound of 1.65 to 3.0 times the archive.
+
+| Lane | Archive | Peak staging estimate | Verdict at 59.5 GB free |
+| --- | ---: | ---: | --- |
+| Big reference, top-1M full text | 16 GB | 16 + 8.8 + 8.8 + 6.0 + 2.2 + 11.0 (five prior volume archives) = 52.8 GB | Do not start while the reference rebuild holds about 12 GB of intermediates. Re-measure after it finishes, or give `--work-directory` a second volume. |
+| History and primary texts, Wikisource | 11 GB | 11 + 6.1 + 6.1 + 6.0 + 2.2 + 4.4 = 35.8 GB | Possible alone with at least 40 GB free. Not before the rebuild completes. |
+| Practical how-to lane | 2.83 GB | 2.83 + 1.6 + 1.6 + 5.0 + 2.0 = 13.0 GB | Clear now. |
+| Repair lane | 1.70 GB | 1.70 + 0.95 + 0.95 + 3.0 + 1.2 = 7.8 GB | Clear now. |
+
+Never delete a good local edition to make room. A lane that does not fit waits for a
+second staging volume or a smaller selection, and every multi-volume family still needs
+cross-volume retrieval cases before it can enter `release_ready`. The full English
+Wikipedia archive (49 GB, 18 volumes) stays out of scope on this machine.
 
 ## Evidence gates before release
 
