@@ -9,7 +9,12 @@ from copy import deepcopy
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from publish_hf_assets import main, pin_uploaded_assets, verify_staged_package
+from publish_hf_assets import (
+    main,
+    pin_uploaded_assets,
+    require_release_admissions,
+    verify_staged_package,
+)
 from sign_catalog import validate_catalog
 
 
@@ -37,6 +42,7 @@ class PublishHfAssetsTest(unittest.TestCase):
                 patch("publish_hf_assets.ROOT", root),
                 patch("publish_hf_assets.sign_catalog", side_effect=sign),
                 patch("publish_hf_assets.run_hf", return_value=json.dumps({"sha": "a" * 40})),
+                patch("publish_hf_assets.require_release_admissions"),
                 patch.object(
                     sys,
                     "argv",
@@ -56,6 +62,15 @@ class PublishHfAssetsTest(unittest.TestCase):
             self.assertEqual([bundled.read_bytes()], signed_payloads)
             self.assertNotIn(b"\r", bundled.read_bytes())
             self.assertTrue(bundled.read_bytes().endswith(b"\n"))
+
+    def test_release_admission_rejects_legacy_catalog_libraries(self):
+        root = Path(__file__).resolve().parents[2]
+        catalog = json.loads(
+            (root / "app/src/main/assets/package-catalog.json").read_text(encoding="utf-8")
+        )
+
+        with self.assertRaisesRegex(ValueError, "not release-ready"):
+            require_release_admissions(catalog, {})
 
     def test_catalog_signer_rejects_replacement_characters_in_display_text(self):
         root = Path(__file__).resolve().parents[2]

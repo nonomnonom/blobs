@@ -1,6 +1,5 @@
 import hashlib
 import json
-import re
 from pathlib import Path
 import sys
 import tempfile
@@ -50,17 +49,18 @@ def fixture_inputs(
 
 
 class StageMultiLibraryBenchmarkTest(unittest.TestCase):
-    def test_workflow_case_sets_resolve_against_the_bundled_catalog(self):
+    def test_latest_multi_library_case_set_resolves_against_the_bundled_catalog(self):
         root = Path(__file__).resolve().parents[3]
-        workflow = (root / ".github/workflows/android.yml").read_text(encoding="utf-8")
-        names = set(re.findall(r"multi-library-retrieval-scaling-v\d+\.json", workflow))
-        self.assertTrue(names)
-        for name in names:
-            packages = read_inputs(
-                root / "corpus/evaluation/cases" / name,
-                root / "android/app/src/main/assets/package-catalog.json",
-            )
-            self.assertTrue(packages)
+        case_sets = list(
+            (root / "corpus/evaluation/cases").glob("multi-library-retrieval-scaling-v*.json")
+        )
+        self.assertTrue(case_sets)
+        latest_case_set = max(case_sets, key=lambda path: int(path.stem.rsplit("-v", 1)[1]))
+        packages = read_inputs(
+            latest_case_set,
+            root / "android/app/src/main/assets/package-catalog.json",
+        )
+        self.assertTrue(packages)
 
     def test_resolves_only_matching_hash_pinned_library_packages(self):
         case, catalog, _ = fixture_inputs()

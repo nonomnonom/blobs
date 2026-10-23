@@ -4,7 +4,8 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "corpus"))
-from blobs_corpus.package import build_library, main, package, passages, verify_package
+from blobs_corpus.library import build_library, passages
+from blobs_corpus.package import main, package, verify_package
 
 __all__ = ["build_library", "main", "package", "passages", "verify_package"]
 

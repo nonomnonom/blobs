@@ -43,16 +43,25 @@ class PackageTests(unittest.TestCase):
                 "THIRD_PARTY_NOTICES.md",
                 "app/src/main/assets/licenses/TEST.txt",
                 "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+                "app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt",
                 "app/build/reports/release-evidence/old-build.txt",
             ):
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("Original fixture text", encoding="utf-8")
-            installer = root / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
-            installer.write_text(
-                "expected.bytes - resumeBytes + 64L * 1024 * 1024\nexpected.bytes < 48_000_000_000L\n",
-                encoding="utf-8",
+            manifest_source = (
+                package_release.ROOT
+                / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
             )
+            (
+                root / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
+            ).write_text(manifest_source.read_text(encoding="utf-8"), encoding="utf-8")
+            installer = root / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
+            installer_source = (
+                package_release.ROOT
+                / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
+            )
+            installer.write_text(installer_source.read_text(encoding="utf-8"), encoding="utf-8")
             inputs = []
             for kind, payload in [
                 ("model", b"GGUF fixture"),

@@ -12,6 +12,7 @@ from blobs_corpus.footprint import (
     STORAGE_LIMIT_BYTES,
     catalog_storage_values,
     installer_policy_text,
+    package_payload_limits_text,
     storage_values,
 )
 
@@ -26,6 +27,7 @@ SOURCE_REQUIRED = {
     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageCatalog.kt",
     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageDownloader.kt",
     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+    "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt",
     "blobs/android/tools/package_release.py",
     "blobs/android/tools/verify_release.py",
     "blobs/corpus/README.md",
@@ -303,13 +305,21 @@ def verify_kit(directory: Path) -> dict:
 
     footprint = read_json(files["FOOTPRINT.json"])
     policy_path = "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
+    package_policy_path = (
+        "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
+    )
     with zipfile.ZipFile(files[source_name]) as archive:
         policy_source = archive.read(f"blobs/{policy_path}")
+        package_policy_source = archive.read(f"blobs/{package_policy_path}")
         catalog_source = archive.read("blobs/android/app/src/main/assets/package-catalog.json")
     policy = installer_policy_text(
         policy_source.decode("utf-8"), hashlib.sha256(policy_source).hexdigest()
     )
+    policy["package_payload_limits"] = package_payload_limits_text(
+        package_policy_source.decode("utf-8"), hashlib.sha256(package_policy_source).hexdigest()
+    )
     expected_policy = dict(file=policy_path, **policy)
+    expected_policy["package_payload_limits"]["source_file"] = package_policy_path
     footprint_format = footprint.get("format")
     if footprint_format not in {1, 2} or footprint.get("complete") is not True:
         raise ValueError("FOOTPRINT.json is incomplete or unsupported")
