@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "id": "stackexchange-diy-en-all",
+  "edition": "2026-10",
+  "filename": "diy.stackexchange.com_en_all_2026-10.zim",
+  "url": "https://download.kiwix.org/zim/stack_exchange/diy.stackexchange.com_en_all_2026-10.zim",
+  "bytes": 2086024326,
+  "sha256": "df795a094698282164ddee422814f88bf84841a2413c89ac23401efd71f22731",
+  "checksum_source": "https://download.kiwix.org/zim/stack_exchange/diy.stackexchange.com_en_all_2026-10.zim.sha256",
+  "metadata_source": "https://download.kiwix.org/zim/stack_exchange/diy.stackexchange.com_en_all_2026-10.zim.meta4",
+  "verified_date": "2026-10-24",
+  "allowed_hosts": [
+    "download.kiwix.org",
+    "lb.download.kiwix.org",
+    "mirror.download.kiwix.org"
+  ],
+  "publisher": "Stack Exchange network contributors",
+  "collection": "Stack Exchange \u00b7 Diy questions and answers",
+  "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post's revision history for attribution. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "scope": "English diy site questions and answers through the pinned archive snapshot; community advice, not professional authority.",
+  "wiki_host": "diy.stackexchange.com"
+}
