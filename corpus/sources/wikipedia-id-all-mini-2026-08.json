@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "id": "wikipedia-id-all-mini",
+  "edition": "2026-08",
+  "filename": "wikipedia_id_all_mini_2026-08.zim",
+  "url": "https://download.kiwix.org/zim/wikipedia/wikipedia_id_all_mini_2026-08.zim",
+  "bytes": 1399953305,
+  "sha256": "4cbb51a03a32ba3fe5dbb9f83693699dd4e92014d534a199d2dcd04dd50ceb38",
+  "checksum_source": "https://download.kiwix.org/zim/wikipedia/wikipedia_id_all_mini_2026-08.zim.sha256",
+  "metadata_source": "https://download.kiwix.org/zim/wikipedia/wikipedia_id_all_mini_2026-08.zim.meta4",
+  "verified_date": "2026-10-24",
+  "allowed_hosts": ["download.kiwix.org", "lb.download.kiwix.org", "mirror.download.kiwix.org", "mirrors.dotsrc.org", "ftp.nluug.nl", "wi.mirror.driftle.ss", "dumps.wikimedia.org"],
+  "publisher": "Wikipedia contributors",
+  "collection": "Indonesian Wikipedia · August 2026 most-read article introductions",
+  "license": "CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "scope": "Kiwix Indonesian Wikipedia lead sections of the most-read articles without images; snapshot 2026-08; Indonesian-language source text is kept unchanged and is not a translation of the English edition.",
+  "wiki_host": "id.wikipedia.org"
+}

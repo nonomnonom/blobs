@@ -22,7 +22,7 @@
     "release_ready_count": 0,
     "local_candidates_are_not_admissions": true,
     "keep_history": "Retire unnecessary packs from the active portfolio and catalog; preserve source locks, reviewed records, receipts, and prior editions needed for reproduction.",
-    "product_rule": "Prefer a small number of complementary, broad libraries with measured retrieval over overlapping topical fragments. Never infer freshness, rights, or quality from availability or package size."
+    "product_rule": "Prefer a small number of complementary, broad libraries with measured retrieval over overlapping topical fragments. Never infer freshness, rights, or quality from availability or package size. A second library over the same project universe in the same language is a duplicate and is rejected, whatever its size. A different-language edition counts as a distinct work only when exact canonical URLs and normalized body hashes do not overlap with an admitted or candidate library."
   },
   "local_candidate_portfolio": [
     {
@@ -87,7 +87,8 @@
         "Use one immutable edition with a verified byte digest.",
         "Preserve canonical article URLs and contributor-attribution paths.",
         "Publish an explicit exclusion report for redirects, non-articles, malformed pages, and removed media.",
-        "If output requires more than one archive, define deterministic complementary shard boundaries and retrieval cases for cross-shard queries before packaging."
+        "If output requires more than one archive, define deterministic complementary shard boundaries and retrieval cases for cross-shard queries before packaging.",
+        "Admitting this family retires wikipedia-top1m-mini from the installable portfolio; it replaces the one English reference identity rather than adding a second overlapping English Wikipedia library."
       ],
       "known_limits": "A snapshot cannot provide live events or guarantee correctness of individual articles."
     },
@@ -154,6 +155,55 @@
         "Split a source into a new immutable edition when its advice or rights change."
       ],
       "known_limits": "Official guidance can still be jurisdiction-specific, time-sensitive, and unsuitable for emergency or professional advice without current local confirmation."
+    },
+    {
+      "id": "wikivoyage-portuguese-travel",
+      "priority": 6,
+      "tier": "travel-and-regional",
+      "planned_library_id": "wikivoyage-pt",
+      "status": "review-planned",
+      "languages": ["Portuguese"],
+      "scope": "Complete pinned Portuguese Wikivoyage edition as a distinct-language travel work. Measured on the retained snapshot: 4,097 guides from 4,790 archive entries, mean body 6,048 characters, 95 guides without a MediaWiki revision id, and 2 guides carrying one upstream Unicode replacement character each.",
+      "source_lock": "corpus/sources/wikivoyage-pt-all-nopic-2026-09.json",
+      "partition_plan": {
+        "status": "not-required",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Projected installed payload is far below the 6 GiB limit, so one volume is planned. Recompute from the reviewed manifest before packaging."
+      },
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikivoyage/wikivoyage_pt_all_nopic_2026-09.zim"
+      ],
+      "selection_requirements": [
+        "Extend the Kiwix curation allow-list and record the changed review-policy identity before curating a non-English edition.",
+        "Decide and document how the four exact-duplicate body groups (36 excess records, mostly 167-character boilerplate town stubs) are reviewed, not silently shipped.",
+        "Keep the measured non-overlap proof with the English candidate in the release record: zero shared canonical URLs and zero shared normalized body hashes.",
+        "Require Portuguese-language retrieval cases and a model that is measured in Portuguese before any catalog entry."
+      ],
+      "known_limits": "2,349 of 4,097 guides are shorter than 1,000 characters, so coverage is broad in place names and thin in detail. No map tiles, routing, live transport, or current-availability claims. Portuguese questions still pass through English-only stop-word and follow-up handling in the Android query layer."
+    },
+    {
+      "id": "wikipedia-indonesian-reference",
+      "priority": 7,
+      "tier": "core-reference",
+      "planned_library_id": "wikipedia-id-mini",
+      "status": "review-planned",
+      "languages": ["Indonesian"],
+      "scope": "Pinned Indonesian Wikipedia most-read lead-section edition as a distinct-language reference work, sized for a single Android volume.",
+      "source_lock": "corpus/sources/wikipedia-id-all-mini-2026-08.json",
+      "partition_plan": {
+        "status": "not-required",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Confirm the measured installed payload stays below 6 GiB after review; the 1,399,953,305-byte source archive projects into a single volume."
+      },
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikipedia/wikipedia_id_all_mini_2026-08.zim"
+      ],
+      "selection_requirements": [
+        "Extend the Kiwix curation allow-list and record the changed review-policy identity before curating.",
+        "Measure canonical URL and body-hash overlap against the English reference candidate and publish the result; shared topics are not duplicates, identical works are.",
+        "Require Indonesian retrieval cases and an Indonesian-measured model pairing before any catalog entry."
+      ],
+      "known_limits": "Lead sections only, not full articles, and Indonesian Wikipedia coverage differs from the English edition. A snapshot cannot provide live events or guarantee article correctness."
     }
   ],
   "legacy_dispositions": [
@@ -165,12 +215,12 @@
     {
       "library_id": "wikipedia-top1m-mini",
       "status": "development-only",
-      "reason": "Keep as a local broad-coverage candidate, but do not re-release the historical archive. Rebuild from the current reviewed records and measure retrieval before deciding whether it complements or duplicates the full-article candidate."
+      "reason": "Keep as a local broad-coverage candidate, but do not re-release the historical archive. Rebuild from the current reviewed records and measure retrieval before deciding whether it complements or duplicates the full-article candidate. It is the single English reference install until `wikipedia-global-reference` is admitted; admitting that family retires this candidate instead of adding a second English Wikipedia download."
     },
     {
       "library_id": "wikipedia-en-top-50k",
       "status": "retired",
-      "reason": "Do not distribute as a separate overlapping Wikipedia library beside the selected Top 1M broad-reference candidate. Retain source records and historical retrieval evidence for diagnosis; use one reference install identity."
+      "reason": "Do not distribute as a separate overlapping Wikipedia library beside the selected Top 1M reference candidate: 49,970 of 49,999 canonical article URLs (99.9%) also exist in the Top 1M edition, so the two cover the same English universe. The 990 MB reviewed records edition was removed on 2026-10-24 because its package and receipt had already been deleted and the records alone reproduced no published result. The source lock, the retired disposition, and the pinned 7-of-12 smoke report stay as the explanation. One English reference install identity only."
     },
     {
       "library_id": "wikivoyage-en",
