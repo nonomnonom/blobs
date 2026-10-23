@@ -7,7 +7,7 @@ import dev.blobs.app.data.local.ConversationStore
 import dev.blobs.app.data.local.TurnFinishReason
 import dev.blobs.app.data.local.TurnGrounding
 import dev.blobs.app.data.local.TurnStatus
-import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.OfflineAnswerNotice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -39,46 +39,58 @@ internal object ConversationExport {
                         OfflineAnswerNotice.forQuestion(turn.question)
                     )
                     val sourceData = if (live.turnId == turn.id) live.evidence else turn.evidence
+                    val response = TurnResponse.of(
+                        turn.copy(evidence = sourceData),
+                        modelAnswer
+                    )
                     writer.appendLine(
-                        "### ${turn.question}\n\n$modelAnswer\n\n" +
-                            "Turn: ${turn.id}\n" +
-                            "Status: ${statusLabel(turn.status)}\n" +
-                            "Model: ${turn.model}\n" +
-                            "Scope: ${formatScope(turn.scope)}\n" +
+                        "### ${response.question}\n\n${response.body}\n\n" +
+                            "Turn: ${response.turnId}\n" +
+                            "Status: ${statusLabel(response.status)}\n" +
+                            "Model: ${response.model}\n" +
+                            "Scope: ${formatScope(response.scope)}\n" +
                             "Library scope snapshot: " +
-                            "${turn.libraryScope.ifBlank { "legacy turn" }}\n" +
-                            "Grounding: ${groundingLabel(
-                                modelAnswer,
-                                sourceData,
-                                turn.grounding
-                            )}\n" +
-                            "Finish: ${finishLabel(turn.finishReason)}\n" +
-                            "Elapsed: ${turn.elapsedMs} ms\n" +
+                            "${response.libraryScope.ifBlank { "legacy turn" }}\n" +
+                            "Grounding: ${groundingLabel(response.grounding)}\n" +
+                            "Model support: ${supportLabel(response.modelSupport)}\n" +
+                            "Finish: ${finishLabel(response.finishReason)}\n" +
+                            "Usage: ${response.usage.sourceCount} retrieved, " +
+                            "${response.usage.citedSourceCount} cited, " +
+                            "${response.usage.suggestionCount} follow-ups, " +
+                            "${response.usage.elapsedMs} ms\n" +
                             turn.error.takeIf { it.isNotBlank() }?.let { "Error: $it\n" }
                                 .orEmpty()
                     )
-                    val sources = Evidence.decodeOrNull(sourceData)
-                    if (sources == null) {
+                    if (response.suggestions.isNotEmpty()) {
+                        writer.appendLine("Suggested next questions:\n")
+                        response.suggestions.forEach { offer ->
+                            val origin = if (offer.sourceIndex >= 0) {
+                                " from [S${offer.sourceIndex + 1}]"
+                            } else {
+                                ""
+                            }
+                            writer.appendLine("- ${offer.text} (${offer.basis.storedValue}$origin)")
+                        }
+                        writer.appendLine()
+                    }
+                    val evidenceItems = response.evidence
+                    if (evidenceItems == null) {
                         writer.appendLine(
                             "Unreadable source record (preserved):\n$sourceData\n"
                         )
                     }
-                    if (sources?.isEmpty() == true) {
+                    if (evidenceItems?.isEmpty() == true) {
                         writer.appendLine("No local sources returned.\n")
                     }
-                    val evidenceItems = sources.orEmpty()
-                    val citedIndices = AnswerText.citedSourceIndices(
-                        modelAnswer,
-                        evidenceItems.size
-                    )
-                    val cited = evidenceItems.withIndex().filter { indexed ->
+                    val citedIndices = response.citedSourceIndices
+                    val cited = evidenceItems.orEmpty().withIndex().filter { indexed ->
                         indexed.index in citedIndices
                     }
                     if (cited.isNotEmpty()) writer.appendLine("Cited local sources:\n")
                     cited.forEach { indexed ->
                         writeEvidence(writer, "[S${indexed.index + 1}]", indexed.value)
                     }
-                    val related = evidenceItems.withIndex().filter { indexed ->
+                    val related = evidenceItems.orEmpty().withIndex().filter { indexed ->
                         indexed.index !in citedIndices
                     }
                     if (related.isNotEmpty()) {
@@ -108,27 +120,15 @@ internal object ConversationExport {
         )
     }
 
-    private fun groundingLabel(
-        answer: String,
-        encodedEvidence: String,
-        storedGrounding: String
-    ): String {
-        when (TurnGrounding.fromStored(storedGrounding)) {
-            TurnGrounding.GROUNDED -> return "grounded"
-            TurnGrounding.UNVERIFIED -> return "unverified"
-            TurnGrounding.NOT_REQUESTED -> return "not_requested"
-            TurnGrounding.NONE -> return "none"
-            else -> Unit
-        }
-        val sourceCount = Evidence.decodeOrNull(encodedEvidence)?.size ?: return "unverified"
-        return if (AnswerText.hasCompleteCitationCoverage(answer, sourceCount)) {
-            "grounded"
-        } else {
-            "unverified"
-        }
+    private fun groundingLabel(grounding: TurnGrounding): String = when (grounding) {
+        TurnGrounding.GROUNDED -> "grounded"
+        TurnGrounding.UNVERIFIED -> "unverified"
+        TurnGrounding.NOT_REQUESTED -> "not_requested"
+        TurnGrounding.NONE -> "none"
+        else -> "unverified"
     }
 
-    private fun statusLabel(stored: String): String = when (TurnStatus.fromStored(stored)) {
+    private fun statusLabel(status: TurnStatus?): String = when (status) {
         TurnStatus.RUNNING -> "running"
         TurnStatus.COMPLETE -> "complete"
         TurnStatus.STOPPED -> "stopped"
@@ -141,7 +141,7 @@ internal object ConversationExport {
         else -> "legacy"
     }
 
-    private fun finishLabel(stored: String): String = when (TurnFinishReason.fromStored(stored)) {
+    private fun finishLabel(finishReason: TurnFinishReason?): String = when (finishReason) {
         TurnFinishReason.STOP -> "stop"
         TurnFinishReason.TOKEN_LIMIT -> "token_limit"
         TurnFinishReason.CANCELLED -> "cancelled"
@@ -150,6 +150,9 @@ internal object ConversationExport {
         TurnFinishReason.PENDING -> "pending"
         else -> "legacy"
     }
+
+    private fun supportLabel(claimed: ModelSupport?): String =
+        claimed?.storedValue ?: "not recorded"
 
     private fun formatScope(scope: String): String = when (scope) {
         "*" -> "all enabled libraries"

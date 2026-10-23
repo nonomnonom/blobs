@@ -11,7 +11,9 @@ Rust services, hosted agents, remote inference, or a local HTTP server.
 - After a user installs assets, question answering, retrieval, source reading,
   conversations, and cancellation work without network access.
 - A turn follows one fixed path: local FTS retrieval, a bounded prompt, one
-  local JNI completion, citation-marker cleanup, persistence, and UI.
+  grammar-constrained local JNI completion, response decoding, citation-marker
+  cleanup, persistence, and UI. The response shape is enforced by the runtime and
+  checked in code, not requested as prose.
 - Evidence is inspectable and belongs only to the turn that returned it.
   Citation markers establish source identity, not semantic proof.
 - A retrieval miss never hides an otherwise usable answer; the model must be

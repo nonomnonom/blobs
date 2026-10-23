@@ -21,8 +21,10 @@ internal object BlobsDimens {
     val historyPaneMinWidth = 264.dp
     val historyPaneMaxWidth = 304.dp
     val userMessageWidth = 640.dp
-    val inlineCitationTarget = 48.dp
-    val inlineCitationVisual = 28.dp
+    val inlineCitationWidth = 22.dp
+    val inlineCitationHeight = 20.dp
+    val traceGutter = 18.dp
+    val conversationTurnPeek = 56.dp
     val setupProgressSegmentWidth = 32.dp
     val setupProgressSegmentHeight = 4.dp
 }

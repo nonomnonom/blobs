@@ -31,6 +31,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -56,13 +57,20 @@ class WorkFlowTest {
         db.conversations().saveDraft("thread", "Keep my next question", 2)
         assertTrue(work.answer("thread", original.question, model, emptyList(), null, original.id))
         withTimeout(10_000) { work.state.first { !it.busy } }
-        val retried = db.conversations().turns("thread").single()
-        assertEquals(original.id, retried.id)
-        assertEquals(original.createdAt, retried.createdAt)
+        val turns = db.conversations().turns("thread")
+        assertEquals(2, turns.size)
+        val retried = turns.single { it.id != original.id }
+        assertNotEquals(original.id, retried.id)
+        assertEquals(original.question, retried.question)
+        assertTrue(retried.createdAt >= original.createdAt)
+        assertEquals("ERROR", turns.single { it.id == original.id }.status)
         assertEquals("Keep my next question", db.conversations().find("thread")?.draft)
         db.conversations().saveTurn(retried.copy(status = "COMPLETE", answer = "Saved answer"))
         assertFalse(work.answer("thread", original.question, model, emptyList(), null, original.id))
-        assertEquals("Saved answer", db.conversations().turns("thread").single().answer)
+        assertEquals(
+            "Saved answer",
+            db.conversations().turns("thread").single { it.id == retried.id }.answer
+        )
     }
 
     @Test
@@ -185,7 +193,14 @@ class WorkFlowTest {
             DownloadFormat.BLOBS,
             manifest,
             PackageRole.OPTIONAL,
-            Long.MAX_VALUE
+            Long.MAX_VALUE,
+            libraryProfile = LibraryProfile(
+                recordCount = 1,
+                scope = "Cancellation fixture",
+                sourceSnapshotDate = "2026-01-01",
+                updatePolicy = "Static test fixture",
+                limitations = "Not production data"
+            )
         )
         val downloader = PackageDownloader(root, { Long.MAX_VALUE }) { url ->
             object : HttpURLConnection(url) {

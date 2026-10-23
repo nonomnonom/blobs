@@ -70,7 +70,7 @@ claims from a successful build alone.
 The app offers model and library downloads during setup. To prepare the pinned fallback model for local installation:
 
 ```powershell
-uv run --locked --project ../corpus python tools/prepare_model.py minicpm5
+uv run --locked --project ../corpus python tools/prepare_model.py qwen35
 ```
 
 Build the starter library using its [versioned recipe and source records](corpus/README.md), or follow [corpus preparation](../corpus/README.md) for larger collections. Import `.blobs` packages through **Library → Import a library** or **Settings → Models → Add a model file**. Package builders refuse existing outputs; generated files stay out of Git.

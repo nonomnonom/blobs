@@ -36,8 +36,9 @@ internal fun AnswerContent(
             group.sourceIndices.map { sourceIndex -> sourceIndex to group.displayNumber }
         }.toMap()
     }
-    val markerSize = BlobsDimens.inlineCitationTarget
-    val markerSp = (markerSize.value / LocalDensity.current.fontScale).sp
+    val fontScale = LocalDensity.current.fontScale
+    val markerWidthSp = (BlobsDimens.inlineCitationWidth.value / fontScale).sp
+    val markerHeightSp = (BlobsDimens.inlineCitationHeight.value / fontScale).sp
     val inlineContent = evidence.mapIndexed { index, source ->
         val displayNumber = displayNumbers[index] ?: index + 1
         val description = stringResource(
@@ -46,7 +47,7 @@ internal fun AnswerContent(
             source.title
         )
         "citation-${index + 1}" to InlineTextContent(
-            Placeholder(markerSp, markerSp, PlaceholderVerticalAlign.TextCenter)
+            Placeholder(markerWidthSp, markerHeightSp, PlaceholderVerticalAlign.TextCenter)
         ) {
             InlineCitation(displayNumber, description) { onRead(source) }
         }

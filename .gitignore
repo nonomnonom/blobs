@@ -11,8 +11,10 @@ Thumbs.db
 /work/
 /.next/
 design/
+node_modules/
 corpus/reports/
 corpus/evaluation/results/
 corpus/evaluation/evidence/
 corpus/evaluation/baselines/
 /docs/bounty-*.json
+.rea

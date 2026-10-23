@@ -1,37 +1,8 @@
 {
   "format": 1,
-  "revision": 2026102203,
+  "revision": 2026102401,
   "release_tag": "v0.3.10",
   "packages": [
-    {
-      "file_name": "MiniCPM5-1B-Q4_K_M.gguf",
-      "url": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/3d55fac80935ae6456986ad2384b5cbcc4d6c948/MiniCPM5-1B-Q4_K_M.gguf",
-      "download_format": "gguf",
-      "download_bytes": 688065920,
-      "download_sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
-      "manifest": {
-        "format": 1,
-        "id": "minicpm5-1b-q4km",
-        "version": "3d55fac8",
-        "kind": "model",
-        "title": "MiniCPM5 1B Q4_K_M · 128k",
-        "bytes": 688065920,
-        "sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
-        "license": "Apache-2.0",
-        "origin": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/tree/3d55fac80935ae6456986ad2384b5cbcc4d6c948"
-      },
-      "role": "model",
-      "recommended_up_to_memory_mb": 16384,
-      "description": "Official OpenBMB Q4_K_M GGUF. Hybrid Think/No Think model; Blobs uses No Think by default.",
-      "language": "English",
-      "publisher": "OpenBMB",
-      "compatibility": {
-        "runtime": "llama.cpp",
-        "format": "GGUF",
-        "minimum_ram_mb": 4096,
-        "minimum_app_version": "0.3.1"
-      }
-    },
     {
       "file_name": "Qwen3.5-2B-Q4_K_M.gguf",
       "url": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf",

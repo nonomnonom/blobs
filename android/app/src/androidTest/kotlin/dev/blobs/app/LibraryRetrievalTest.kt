@@ -1,12 +1,14 @@
 package dev.blobs.app
 
 import android.os.SystemClock
+import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.PackageEntity
 import java.io.File
+import java.security.MessageDigest
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
@@ -358,7 +360,9 @@ class LibraryRetrievalTest {
                 "Compare the main train types and explain ticket or pass limitations using sources."
             val store = LibraryStore()
             val result = store.retrieve(listOf(pack), question, null).take(4)
+            val routed = result.joinToString("; ") { "${it.id} ${it.title}/${it.section}" }
             assertTrue(
+                routed,
                 result.any { it.title == "Rail travel in Aster" && it.section == "Train types" }
             )
             assertTrue(
@@ -670,6 +674,7 @@ class LibraryRetrievalTest {
                 db.prepare(
                     "INSERT INTO documents VALUES ('reference-article','References','Author','local:test','CC0','today','today','References can discuss neural research.','Test')"
                 ).use { it.step() }
+                insertProvenance(db, "reference-article", "References can discuss neural research.")
                 db.prepare(
                     "INSERT INTO passages(doc_id,body,section,title) VALUES ('reference-article','References can discuss neural research.','References','References')"
                 ).use { it.step() }
@@ -738,6 +743,7 @@ class LibraryRetrievalTest {
             listOf(
                 "PRAGMA user_version=2",
                 "CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT,publisher TEXT,url TEXT,license TEXT,updated TEXT,saved TEXT,body TEXT,collection TEXT)",
+                "CREATE TABLE document_provenance(doc_id TEXT PRIMARY KEY NOT NULL,body_sha256 TEXT NOT NULL,details TEXT NOT NULL)",
                 "CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT,body TEXT,section TEXT,title TEXT)",
                 "CREATE TABLE document_names(name TEXT,doc_id TEXT,PRIMARY KEY(name,doc_id)) WITHOUT ROWID",
                 "CREATE VIRTUAL TABLE passages_fts USING fts5(body,title,section,content='passages',content_rowid='id')",
@@ -786,9 +792,14 @@ class LibraryRetrievalTest {
                     it.step()
                 }
             }
+            for ((id, _, body) in docs) {
+                insertProvenance(db, id, body)
+            }
             db.prepare(
                 "INSERT INTO document_names VALUES ('ai','ai'),('co2','co2'),('jakarta','jakarta'),('sharedname','ai'),('sharedname','co2')"
-            ).use { it.step() }
+            ).use {
+                it.step()
+            }
             db.prepare("INSERT INTO passages_fts(passages_fts) VALUES ('rebuild')").use {
                 it.step()
             }
@@ -810,6 +821,7 @@ class LibraryRetrievalTest {
             listOf(
                 "PRAGMA user_version=3",
                 "CREATE TABLE documents(id TEXT PRIMARY KEY,title TEXT,publisher TEXT,url TEXT,license TEXT,updated TEXT,saved TEXT,body TEXT,collection TEXT)",
+                "CREATE TABLE document_provenance(doc_id TEXT PRIMARY KEY NOT NULL,body_sha256 TEXT NOT NULL,details TEXT NOT NULL)",
                 "CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT,section TEXT,title TEXT)",
                 "CREATE TABLE passage_spans(passage_id INTEGER PRIMARY KEY,start INTEGER,end INTEGER,section_path TEXT)",
                 "CREATE VIRTUAL TABLE passages_fts USING fts5(body,title,section,content='')",
@@ -821,6 +833,7 @@ class LibraryRetrievalTest {
                 it.bindText(1, body)
                 it.step()
             }
+            insertProvenance(db, "unicode", body)
             db.prepare(
                 "INSERT INTO passages VALUES (1,'unicode','Mechanism','Unicode span')"
             ).use { it.step() }
@@ -880,6 +893,7 @@ class LibraryRetrievalTest {
             listOf(
                 "PRAGMA user_version=1",
                 "CREATE TABLE documents(id TEXT,title TEXT,publisher TEXT,url TEXT,license TEXT,updated TEXT,saved TEXT,body TEXT,collection TEXT)",
+                "CREATE TABLE document_provenance(doc_id TEXT PRIMARY KEY NOT NULL,body_sha256 TEXT NOT NULL,details TEXT NOT NULL)",
                 "CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT,body TEXT,section TEXT)",
                 "CREATE VIRTUAL TABLE passages_fts USING fts5(body,content='passages',content_rowid='id')"
             ).forEach { sql -> db.prepare(sql).use { it.step() } }
@@ -890,6 +904,7 @@ class LibraryRetrievalTest {
                 it.bindText(2, body)
                 it.step()
             }
+            insertProvenance(db, "doc", body)
             repeat(passages) {
                 db.prepare(
                     "INSERT INTO passages(doc_id,body,section) VALUES ('doc',?,'Cooling')"
@@ -906,5 +921,17 @@ class LibraryRetrievalTest {
             key, key, "1", "library", "Trees $key", file.path, file.length(),
             "0".repeat(64), "Test", "local:test", 1
         )
+    }
+
+    private fun insertProvenance(db: SQLiteConnection, docId: String, body: String) {
+        val hash = MessageDigest.getInstance("SHA-256")
+            .digest(body.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+        db.prepare("INSERT INTO document_provenance VALUES (?,?,?)").use {
+            it.bindText(1, docId)
+            it.bindText(2, hash)
+            it.bindText(3, "{\"origin\":\"local:test\"}")
+            it.step()
+        }
     }
 }

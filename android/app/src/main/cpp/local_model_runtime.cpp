@@ -188,9 +188,10 @@ void release_model() {
 }
 
 int generate(const GenerationRequest &request, const TokenSink &sink) {
+    const bool grammar_without_root = !request.grammar.empty() && request.grammar_root.empty();
     if (request.model_path.empty() || request.system_prompt.empty() || request.user_prompt.empty() ||
         request.output_token_limit < 1 || request.output_token_limit > 512 || request.threads < 1 ||
-        request.threads > 4 || !sink) {
+        request.threads > 4 || grammar_without_root || !sink) {
         throw std::invalid_argument("NATIVE_ARGUMENT");
     }
 
@@ -310,6 +311,17 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
         }
         llama_sampler_chain_add(sampler.get(), component);
     };
+    if (!request.grammar.empty()) {
+        // Constrained decoding: the sampler can only accept a token that keeps the response
+        // document valid. A grammar that fails to parse is a build fault, not a model result.
+        llama_sampler *constraint = llama_sampler_init_grammar(
+            vocab, request.grammar.c_str(), request.grammar_root.c_str()
+        );
+        if (!constraint) {
+            throw std::runtime_error("GRAMMAR");
+        }
+        llama_sampler_chain_add(sampler.get(), constraint);
+    }
     add_sampler(
         llama_sampler_init_penalties(llama_vocab_n_tokens(vocab), 256, 1.0f, 0.0f, 1.2f)
     );

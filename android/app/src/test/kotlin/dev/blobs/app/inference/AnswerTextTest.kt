@@ -102,6 +102,26 @@ class AnswerTextTest {
     }
 
     @Test
+    fun extractFollowUpsParsesSuggestionsAndCleansBody() {
+        val raw = """
+            Photosynthesis is a process used by plants [S1].
+
+            Follow-up questions:
+            1. What are light-dependent reactions?
+            2. How do C4 plants adapt to dry environments?
+        """.trimIndent()
+        val (clean, suggestions) = AnswerText.extractFollowUps(raw)
+        assertEquals("Photosynthesis is a process used by plants [S1].", clean)
+        assertEquals(
+            listOf(
+                "What are light-dependent reactions?",
+                "How do C4 plants adapt to dry environments?"
+            ),
+            suggestions
+        )
+    }
+
+    @Test
     fun userOperatorsCannotBecomeSearchSyntax() {
         assertEquals("\"trees\" OR \"roofs\"", LibraryStore.searchTerms("trees OR roofs - \" ; *"))
         assertEquals("", LibraryStore.searchTerms("How does this?"))

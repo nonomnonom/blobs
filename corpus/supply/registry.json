@@ -169,7 +169,7 @@
       "planned_library_id": "howto-practical",
       "status": "acquisition-planned",
       "languages": ["English"],
-      "scope": "Everyday practical questions answered by English Stack Exchange sites outside programming: cooking, money, travel, gardening, and home life. Pinned archives total 2,831,425,701 bytes and project to a 4,983,309,285-byte installed payload at the measured 1.76 ratio, so one volume is planned.",
+      "scope": "Everyday practical questions answered by English Stack Exchange sites outside programming: cooking, money, travel, gardening, and home life. Pinned archives total 2,831,425,701 bytes. A measured two-archive lane (cooking plus money, 142,527 documents) installed 1,048,535,040 bytes over 388,625,311 bytes of normalized text, so installed payload runs 2.698 times text bytes. Archive-to-payload is NOT a stable ratio (1.76 for cooking, 2.48 for money, because sites differ in how much of the archive is text), so plan from measured text bytes: the four pinned archives measured 1,007,217,051 text bytes while diy was still extracting and project to about 2,720,000,000 installed bytes, which fits one 6,442,450,944-byte volume with room for growth.",
       "source_lock": "corpus/sources/stackexchange-cooking-en-all-2026-10.json",
       "archive_locks": [
         "corpus/sources/stackexchange-cooking-en-all-2026-10.json",
@@ -206,7 +206,7 @@
         "corpus/sources/stackexchange-woodworking-en-all-2026-10.json"
       ],
       "languages": ["English"],
-      "scope": "Fix-it knowledge from six English Stack Exchange repair communities: vehicle mechanics, bicycles, aviation maintenance, robotics, 3D printing, and woodworking. Pinned archives total 1,821,805,944 bytes and project to a 2,993,578,461-byte installed payload at the measured 1.76 ratio, so one volume is planned.",
+      "scope": "Fix-it knowledge from six English Stack Exchange repair communities: vehicle mechanics, bicycles, aviation maintenance, robotics, 3D printing, and woodworking. Pinned archives total 1,821,805,944 bytes. Measure each extracted edition and size the lane from 2.70 times its normalized text bytes, not from the archive total; diy (2,086,024,326 archive bytes) belongs to the practical how-to lane, not to this one, because vehicle and equipment repair is a distinct question set.",
       "candidate_origins": ["https://download.kiwix.org/zim/stack_exchange/"],
       "selection_requirements": [
         "Reject the iFixit archive as a supply source unless the owner accepts a non-commercial licence: iFixit content is CC BY-NC-SA 3.0, and its guides depend on photographs that the text-only pipeline does not carry.",

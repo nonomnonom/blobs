@@ -81,7 +81,11 @@ interface ConversationDao {
     suspend fun saveTurn(turn: TurnEntity)
 
     @Query(
-        "UPDATE turns SET answer = :answer, evidence = :evidence, status = :status, elapsedMs = :elapsed, error = :error, grounding = :grounding, finishReason = :finishReason WHERE id = :id AND status = 'RUNNING'"
+        "UPDATE turns SET answer = :answer, evidence = :evidence, status = :status, " +
+            "elapsedMs = :elapsed, error = :error, grounding = :grounding, " +
+            "finishReason = :finishReason, suggestions = :suggestions, " +
+            "modelSupport = :modelSupport " +
+            "WHERE id = :id AND status = 'RUNNING'"
     )
     suspend fun updateAnswer(
         id: String,
@@ -91,7 +95,9 @@ interface ConversationDao {
         elapsed: Long,
         error: String,
         grounding: String,
-        finishReason: String
+        finishReason: String,
+        suggestions: String,
+        modelSupport: String
     ): Int
 
     @Query(

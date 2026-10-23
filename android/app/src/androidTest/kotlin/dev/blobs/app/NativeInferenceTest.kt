@@ -16,6 +16,8 @@ import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.GgufValidator
 import dev.blobs.app.data.packages.PackageManifest
+import dev.blobs.app.inference.FollowUpSuggestions
+import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.ResearchPrompt
 import java.io.File
 import java.security.MessageDigest
@@ -571,6 +573,14 @@ class NativeInferenceTest {
             report.put("first_visible_state_ms", firstVisibleMs ?: JSONObject.NULL)
             report.put("evidence_ready_state_ms", evidenceReadyMs ?: JSONObject.NULL)
             report.put("status", turn?.status ?: JSONObject.NULL)
+            report.put("grounding", turn?.grounding ?: JSONObject.NULL)
+            report.put("finish_reason", turn?.finishReason ?: JSONObject.NULL)
+            report.put("model_support", turn?.modelSupport ?: JSONObject.NULL)
+            report.put(
+                "follow_up_count",
+                turn?.suggestions?.let { FollowUpSuggestions.decodeOrNull(it)?.size }
+                    ?: JSONObject.NULL
+            )
             val evidence = turn?.evidence?.let(Evidence::decode).orEmpty()
             report.put("evidence_count", evidence.size)
             if (capturePublicFixture) {
@@ -613,6 +623,13 @@ class NativeInferenceTest {
         assertTrue(
             "Chat context exceeded its evidence source budget",
             evidence.size <= ResearchPrompt.MAX_ANSWER_SOURCES
+        )
+        requireNotNull(ModelSupport.fromStored(turn.modelSupport)) {
+            "The completion did not return a valid response document: ${turn.error}"
+        }
+        assertTrue(
+            "Response document punctuation leaked into the durable answer",
+            turn.answer.none { it == '{' || it == '}' }
         )
         val performance = requireNotNull(container.work.lastPerformanceSnapshot)
         assertTrue(performance.retrievalElapsedMs >= 0)

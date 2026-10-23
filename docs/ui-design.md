@@ -25,6 +25,13 @@ state change.
 - Citations are compact numbered controls in the answer. On touch devices they
   open the saved passage directly; the expandable source group provides the
   surrounding metadata and passage preview when the reader needs it.
+- Grounding is a chain, not a badge. A finished turn offers one expandable
+  "How this answer was checked" line whose steps are only things the runtime
+  recorded for that turn: the scope searched, passages found, elapsed time, how
+  many passages carry a marker, the support claim the model made, and the
+  structural verdict. The shape borrows the AI Elements chain-of-thought
+  pattern; Blobs shows no model reasoning, because a single local completion
+  produces none to show.
 - A question uses an asymmetric bubble to distinguish the user's words from a
   model answer. World panels use one-sided lower corners only for the bounded
   illustrated scene, not as a generic card treatment.
@@ -82,3 +89,8 @@ every generated token. Text scaling is never reduced to force a screen to fit.
 - The AI Elements inline-citation and sources patterns informed progressive
   evidence disclosure. Blobs uses a touch-first direct-reader interaction in
   place of hover.
+- The AI Elements chat and message-scroller patterns inform the transcript in
+  `ui/chat`: a shared step shape (`Trace`, `TraceLine`, `TraceCollapsible`) for
+  anything a turn did, and a scroll policy that moves the transcript only when
+  the reader asked to move. Blobs keeps the step shape to stages the runtime
+  actually reports, so no step history is invented for a finished turn.

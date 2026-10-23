@@ -6,9 +6,10 @@ keeps the full research path on the device after assets are installed.
 
 This document describes the intended product contract and the current ownership
 structure. It is not proof that an APK, a device, a model, a library, or a
-bounty submission has passed acceptance. The rebuild phase remains governed by
-[goal.md](../goal.md): do not run builds, tests, benchmarks, or evaluators until
-the owner re-enables validation.
+bounty submission has passed acceptance. Production validation is governed by
+[goal.md](../goal.md): builds, tests, benchmarks, evaluators, and device acceptance
+may run when inputs and resources are available, while preserving running processes
+and data preparation.
 
 Blobs does not adopt code, runtime, wire formats, assets, or data-pack formats
 from another product. Competitor artifacts, when available, are read-only
@@ -198,9 +199,9 @@ private key.
 | Retrieve | `LibraryStore` | Candidate evidence in turn scope | One bounded FTS query per selected local library, followed by local ranking and de-duplication |
 | Checkpoint evidence | `ResearchWork` | Evidence saved before model load | Sources remain inspectable if work stops before output |
 | Build prompt | `ResearchPrompt` | Bounded prompt representation only | History, topic, and source text are escaped as reference data |
-| Complete | `NativeBridge` and native runtime | Bounded streamed bytes | One local completion emits partial text |
-| Finalize | `AnswerText`, `ResearchWork`, `ConversationStore` | Canonical body, citations, grounding, finish reason, timing | The chat shows a completed, stopped, or error turn with the actual cited evidence |
-| Read/export | `LibraryReader`, `ConversationStore` | No mutation required | The user can open the recorded source text and export turn provenance |
+| Complete | `NativeBridge` and native runtime | Bounded streamed response document | One sampler-constrained completion streams prose the reader can already read |
+| Finalize | `StructuredAnswer`, `AnswerText`, `FollowUpSuggestions`, `ResearchWork`, `ConversationStore` | Canonical body, support claim, citations, grounding, finish reason, timing, next-question offers | The chat shows a completed, stopped, or error turn with the actual cited evidence |
+| Read/export | `TurnResponse`, `LibraryReader`, `ConversationStore` | No mutation required | The user can open the recorded source text and export turn provenance |
 
 A blank retrieval is not itself an error. The model receives a normal local
 request with an instruction to disclose that installed sources do not support a
@@ -212,6 +213,27 @@ Grounding is a structural label, not an entailment guarantee:
 `grounded` means every displayed factual prose sentence has a valid marker;
 `unverified` means citation coverage is incomplete or retrieval did not support
 it; `not_requested` is reserved for a turn deliberately run without retrieval.
+
+The answer shape is a runtime property, not a request. `StructuredAnswer` owns
+the one response document: the prose first, the model's own local-source support
+claim last. `inference/` hands its grammar to the native sampler, so only a token
+that keeps that document valid can ever be chosen, and the finalizer re-reads the
+whole document before persisting. Streaming, cancellation, and a token-limited
+turn render the decoded prefix, so no document punctuation reaches a reader or a
+stored answer. `AnswerGrounding` then decides the disclosure: citation coverage is
+the only route to `grounded`, and a claimed `partial` or `unsourced` support can
+only lower it.
+
+Next-question offers are app-derived, never model- or app-invented prose.
+`FollowUpSuggestions` reads the finished question, its evidence, and its answer
+only, then keeps verbatim local library text: a section title of evidence the
+answer never cited, or a heading-like line inside cited evidence whose words the
+answer never reached. Each offer is stored with the turn together with the basis
+and evidence index that produced it, so a reader can check why it appeared. An
+offer is a proposal for the next explicit user action; it does not enter the
+prompt, retrieval, or runtime of the turn that produced it. Answers written by
+an older build that already carried a model-written suggestion block stay
+readable; their offers are labelled `legacy_model` and link to no evidence.
 
 A cancellation signal reaches native decoding, waits for the current
 checkpoint, and persists available partial text and evidence as `stopped`.
@@ -269,15 +291,28 @@ source of conversational state or a way to avoid the single-completion rule.
 ## Persistence, UI, and source access
 
 Room is the durable source of truth for conversations, turns, library scope,
-evidence, package state, and package record digest. Historical migrations leave
-fields unknown when a past turn did not record them; migration must not invent
-grounding or source identity.
+evidence, package state, package record digest, next-question offers, and the
+support claim recorded by a completed turn.
+Historical migrations leave fields unknown when a past turn did not record
+them; migration must not invent grounding or source identity.
+
+`TurnResponse` is the single projection of a stored turn: lifecycle, answer body,
+citation annotations, offers, and usage counts. Chat rendering and conversation
+export read that record instead of parsing stored text independently.
 
 The UI distinguishes retrieval, generation, pending model preparation, stopped,
 limited, and error states. Evidence is visibly distinct from generated prose.
 The source reader opens the installed library and document identified by recorded
 evidence, including a disabled edition retained solely for source inspection.
 Retrieval only searches enabled packages.
+
+Transcript movement is decided in one place, `ui/chat/ConversationScrollPolicy`, so a
+streaming answer never competes with the reader. A new turn anchors near the top with a
+peek of the previous turn, streamed content is followed only while the reader is already
+at the live edge, and a drag, a fling, or an explicit jump to latest is what changes that
+state. Opening a saved thread lands on its last anchored turn, not the raw bottom. Steps a
+turn took share one shape (`Trace`, `TraceLine`, `TraceCollapsible`) and report only the
+stage the runtime states and the counts the turn itself recorded.
 
 ## Ownership summary
 
@@ -287,7 +322,7 @@ Retrieval only searches enabled packages.
 | Work lifecycle | `WorkController`, `WorkSession`, `ResearchWork`, `PackageTransferWork` | Exclusive work, cancellation, durable turn/transfer lifecycle |
 | Research engine | `engine/` | Fixed retrieval-to-completion path |
 | Local data | `data/library`, `data/local`, `data/packages`, `data/transfer` | FTS, evidence, persistence, packages, transfer |
-| Inference | `inference/` and `app/src/main/cpp` | Prompt budget, citations, JNI, native model lifecycle |
+| Inference | `inference/` and `app/src/main/cpp` | Prompt budget, response contract and grammar, citations, grounding decision, JNI, native constrained sampling |
 | Knowledge supply | `corpus/` | Sources, review, records, packages, provenance, evaluation inputs |
 | Asset release | `android/tools/`, `android/docs/` | Catalog signing, pinned publication, APK and offline-kit verification |
 
@@ -301,6 +336,27 @@ readiness requires a reproducible record containing the APK, model identity,
 library manifest and digest, device/OS/ABI, configuration, queries, raw output,
 and measurement method. An observation without reproducible input, executable,
 device, or corpus is historical.
+
+Recorded on 2026-10-24 for the response contract: `NativeInferenceTest#
+verifiedModelFileCompletesOfflineChatFlow` ran in airplane mode on
+`sdk_gphone64_x86_64` (Android 16, API 36, emulator), debug APK from this
+working tree, model `unsloth/Qwen3.5-2B-GGUF` revision
+`f6d5376be1edb4d416d56da11e5397a961aca8ae`, file
+`Qwen3.5-2B-Q4_K_M.gguf`, SHA-256 `aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223`
+(verified on device), library `corpus-fixture` version 1, SHA-256
+`9944c8e073517c3badfc7f5205472c6c3656a72d9da43eb1413317479dc5e92d`, question
+"How do trees reduce urban heat? Explain with sources.", report run ids
+`structured-003` and `structured-004` (identical result: `complete`/`stop`,
+`model_support=sourced`, first visible text 17.1-17.8 s, end to end 39.8-39.9 s
+at a 320-token bound). The completion returned a document the decoder accepted,
+the turn ended `complete`/`stop`, and the stored answer contained no response
+punctuation. Retrieval matched nothing, so `grounding=unverified` held even
+though the model claimed support, and no next-question offer was created.
+Emulator timings are this device's observation only: an
+emulator is not target-device acceptance and proves no phone performance.
+An earlier run of the same capture recorded `error=GRAMMAR` and status `error`
+after a wrapped GBNF production failed to parse, which is why one production per
+line is now a checked invariant.
 
 The current rebuild deliberately has no build, test, benchmark, or evaluator
 evidence. Static code inspection can confirm ownership and contracts only; it

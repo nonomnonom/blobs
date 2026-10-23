@@ -9,7 +9,7 @@ hosted inference client. Android device acceptance for this path is pending.
 
 ## Available models
 
-The bundled list includes MiniCPM5 1B, Qwen3.5 2B, and Phi-4 Mini. The table below reads the same metadata used by the Android app.
+The bundled list includes Qwen3.5 2B and Phi-4 Mini. The table below reads the same metadata used by the Android app.
 
 <ModelTable />
 
@@ -17,7 +17,7 @@ Minimum RAM is the list’s compatibility floor, not a guarantee of a particular
 
 ## Pick a comfortable starting point
 
-The default is MiniCPM5 1B (Q4_K_M, about 688 MB), the official OpenBMB GGUF with a declared 128k context window. It supports Think and No Think modes; Blobs requests No Think. Qwen3.5 2B (Q4_K_M, about 1.28 GB) and Phi-4 Mini (Q4_K_M, about 2.49 GB) remain available as alternatives. The current Android rebuild configuration fixes the active native context at 4,096 tokens and the answer budget at 256 tokens; it does not select a larger context from device RAM. A model's advertised context is not allocated in full. These source settings have not yet been validated on a target device.
+The default is Qwen3.5 2B (Q4_K_M, about 1.28 GB), the official Unsloth GGUF with a declared 262k context window; non-thinking chat is used by default. Phi-4 Mini (Q4_K_M, about 2.49 GB) remains available as a larger alternative. The current Android rebuild configuration fixes the active native context at 4,096 tokens and the answer budget at 256 tokens; it does not select a larger context from device RAM. A model's advertised context is not allocated in full. These source settings have not yet been validated on a target device.
 
 ## Change models
 

@@ -1,44 +1,46 @@
 package dev.blobs.app.feature.chat
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.data.ResearchStage
-import dev.blobs.app.data.library.Evidence
+import dev.blobs.app.data.TurnResponse
 import dev.blobs.app.data.local.TurnEntity
-import dev.blobs.app.data.local.TurnFinishReason
-import dev.blobs.app.data.local.TurnGrounding
 import dev.blobs.app.data.local.TurnStatus
-import dev.blobs.app.data.local.finishReasonKind
-import dev.blobs.app.data.local.groundingKind
-import dev.blobs.app.data.local.statusKind
-import dev.blobs.app.inference.AnswerText
 import dev.blobs.app.inference.OfflineAnswerNotice
 import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.theme.BlobsComponentShapes
+import dev.blobs.app.ui.chat.Bubble
+import dev.blobs.app.ui.chat.BubbleContent
+import dev.blobs.app.ui.chat.Message
+import dev.blobs.app.ui.chat.MessageAlign
+import dev.blobs.app.ui.chat.MessageContent
+import dev.blobs.app.ui.chat.MessageFooter
+import dev.blobs.app.ui.chat.MessageHeader
 import dev.blobs.app.ui.theme.BlobsDimens
 
+/**
+ * One research turn, in the order the reader needs it: their question, the answer, the
+ * state the answer is in, the evidence behind it, then what they can do next.
+ */
 @Composable
 internal fun TurnCard(
     turn: TurnEntity,
@@ -46,116 +48,109 @@ internal fun TurnCard(
     busy: Boolean,
     model: AppViewModel,
     researchStage: ResearchStage?,
-    latest: Boolean
+    latest: Boolean,
+    modifier: Modifier = Modifier
 ) {
     val appName = stringResource(R.string.app_name)
-    val status = turn.statusKind
-    val finishReason = turn.finishReasonKind
-    val evidence = Evidence.decodeOrNull(turn.evidence)
+    val response = remember(turn, answer) { TurnResponse.of(turn, answer) }
+    val status = response.status
+    val evidence = response.evidence
     val offlineNotice = OfflineAnswerNotice.forQuestion(turn.question)
-    val modelAnswer = answer.removePrefix(offlineNotice)
-    val citedSourceIndices = AnswerText.citedSourceIndices(modelAnswer, evidence?.size ?: 0)
-    val hasCompleteCitationCoverage = AnswerText.hasCompleteCitationCoverage(
-        modelAnswer,
-        evidence?.size ?: 0
-    )
-    val grounding = when (turn.groundingKind) {
-        TurnGrounding.GROUNDED -> TurnGrounding.GROUNDED
-
-        TurnGrounding.NOT_REQUESTED -> TurnGrounding.NOT_REQUESTED
-
-        TurnGrounding.UNVERIFIED -> TurnGrounding.UNVERIFIED
-
-        else -> if (hasCompleteCitationCoverage) {
-            TurnGrounding.GROUNDED
-        } else {
-            TurnGrounding.UNVERIFIED
-        }
-    }
+    val modelAnswer = response.body
     val groups = remember(evidence) { groupTurnSources(evidence.orEmpty()) }
-    val hasNoSources = status == TurnStatus.NO_SOURCES ||
-        (
-            status == TurnStatus.COMPLETE &&
-                turn.scope.isNotBlank() &&
-                evidence?.isEmpty() == true &&
-                modelAnswer.isNotBlank()
-            )
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Column(
             Modifier.widthIn(max = BlobsDimens.answerReadingWidth).fillMaxWidth()
                 .padding(horizontal = BlobsDimens.page),
             verticalArrangement = Arrangement.spacedBy(BlobsDimens.md)
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Surface(
-                    modifier = Modifier.widthIn(max = BlobsDimens.userMessageWidth),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    shape = BlobsComponentShapes.userMessage
-                ) {
-                    SelectionContainer {
-                        Text(
-                            turn.question,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                                .semantics { heading() }
+            Bubble(align = MessageAlign.End) {
+                BubbleContent(turn.question)
+            }
+            Message(align = MessageAlign.Start) {
+                MessageHeader(avatar = R.drawable.mascot_curious, label = appName)
+                if (offlineNotice.isNotBlank() && modelAnswer.isNotBlank()) {
+                    Text(
+                        offlineNotice.trim(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                MessageContent {
+                    if (modelAnswer.isNotEmpty()) {
+                        AnswerContent(
+                            answer = modelAnswer,
+                            evidence = evidence.orEmpty(),
+                            onRead = model::read
+                        )
+                    }
+                    if (status == TurnStatus.RUNNING) {
+                        ResearchStep(researchStage, evidence?.size ?: 0)
+                    }
+                    TurnOutcome(
+                        response = response,
+                        latest = latest,
+                        busy = busy,
+                        onChooseLibraries = { model.navigate(Page.SOURCES) },
+                        onSearchAll = { model.retry(turn, widen = true) },
+                        onRetry = { model.retry(turn) }
+                    )
+                    if (evidence == null) Body(R.string.sources_unavailable)
+                    TurnSources(
+                        turnId = turn.id,
+                        groups = groups,
+                        citedSourceIndices = response.citedSourceIndices,
+                        onRead = model::read
+                    )
+                    if (response.suggestions.isNotEmpty()) {
+                        Suggestions(response.suggestions.map { it.text }, busy) { model.send(it) }
+                    }
+                }
+                if (status != TurnStatus.RUNNING) {
+                    MessageFooter {
+                        TurnActions(
+                            turnId = turn.id,
+                            answer = modelAnswer,
+                            modelName = turn.model.substringBeforeLast(" · ")
                         )
                     }
                 }
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        }
+    }
+}
+
+@Composable
+private fun Suggestions(offers: List<String>, busy: Boolean, onChoose: (String) -> Unit) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs),
+        modifier = Modifier.padding(vertical = BlobsDimens.xxs)
+    ) {
+        Text(
+            stringResource(R.string.suggested_follow_ups),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        offers.forEach { offer ->
+            OutlinedButton(
+                onClick = { if (!busy) onChoose(offer) },
+                enabled = !busy,
+                shape = MaterialTheme.shapes.small,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                )
             ) {
-                Image(
-                    painterResource(R.drawable.mascot_curious),
+                Icon(
+                    painterResource(R.drawable.ic_chat_bubble),
                     contentDescription = null,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.padding(end = 8.dp).size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Text(appName, style = MaterialTheme.typography.labelMedium)
-            }
-            if (offlineNotice.isNotBlank() && modelAnswer.isNotBlank()) {
                 Text(
-                    offlineNotice.trim(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            if (modelAnswer.isNotEmpty()) {
-                AnswerContent(
-                    answer = modelAnswer,
-                    evidence = evidence.orEmpty(),
-                    onRead = model::read
-                )
-            }
-            if (status == TurnStatus.RUNNING) {
-                ResearchActivity(researchStage, evidence?.size ?: 0)
-            }
-            TurnOutcome(
-                turn = turn,
-                status = status,
-                finishReason = finishReason,
-                grounding = grounding,
-                answer = modelAnswer,
-                hasNoSources = hasNoSources,
-                latest = latest,
-                busy = busy,
-                onChooseLibraries = { model.navigate(Page.SOURCES) },
-                onSearchAll = { model.retry(turn, widen = true) },
-                onRetry = { model.retry(turn) }
-            )
-            if (evidence == null) Body(R.string.sources_unavailable)
-            TurnSources(
-                turnId = turn.id,
-                groups = groups,
-                citedSourceIndices = citedSourceIndices,
-                onRead = model::read
-            )
-            if (status != TurnStatus.RUNNING) {
-                TurnActions(
-                    turnId = turn.id,
-                    answer = modelAnswer,
-                    modelName = turn.model.substringBeforeLast(" · ")
+                    offer,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

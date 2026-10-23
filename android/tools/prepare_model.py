@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     pins = json.loads((ROOT / "models.lock.json").read_text(encoding="utf-8"))
-    parser.add_argument("model", choices=sorted(pins), default="minicpm5", nargs="?")
+    parser.add_argument("model", choices=sorted(pins), default="qwen35", nargs="?")
     args = parser.parse_args()
     pin = pins[args.model]
     output = ROOT / "packages" / f"{pin['id']}.blobs"

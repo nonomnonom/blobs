@@ -56,13 +56,15 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
     jbyteArray path,
     jbyteArray system,
     jbyteArray user,
+    jbyteArray grammar,
+    jbyteArray grammar_root,
     jbyteArray backend_directory,
     jint limit,
     jint threads,
     jobject sink
 ) {
-    if (!path || !system || !user || !backend_directory || !sink || limit < 1 || limit > 512 || threads < 1 ||
-        threads > 4) {
+    if (!path || !system || !user || !grammar || !grammar_root || !backend_directory || !sink ||
+        limit < 1 || limit > 512 || threads < 1 || threads > 4) {
         throw_java(env, "java/lang/IllegalArgumentException", "NATIVE_ARGUMENT");
         return blobs::kGenerationFailure;
     }
@@ -85,6 +87,8 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
             utf8(env, path),
             utf8(env, system),
             utf8(env, user),
+            utf8(env, grammar),
+            utf8(env, grammar_root),
             utf8(env, backend_directory),
             limit,
             threads,

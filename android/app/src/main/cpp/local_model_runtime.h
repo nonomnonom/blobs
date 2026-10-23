@@ -15,6 +15,8 @@ struct GenerationRequest {
     std::string model_path;
     std::string system_prompt;
     std::string user_prompt;
+    std::string grammar;
+    std::string grammar_root;
     std::string backend_directory;
     int output_token_limit;
     int threads;

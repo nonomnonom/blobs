@@ -33,6 +33,7 @@ import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -273,9 +274,25 @@ class UiParityTest {
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             val selectedTitle = ViewModelProvider(compose.activity)[AppViewModel::class.java]
                 .selectedModel()?.title ?: text(R.string.model_missing)
-            compose.onNodeWithContentDescription(
+            val work = ViewModelProvider(compose.activity)[AppViewModel::class.java].work.value
+            assertTrue("Composer controls stay locked while work is busy: $work", !work.busy)
+            // A notice banner from earlier work shifts the composer while it is on screen,
+            // so the reading controls are exercised from a settled layout.
+            val reader = ViewModelProvider(compose.activity)[AppViewModel::class.java]
+            compose.runOnUiThread { reader.dismissNotice() }
+            compose.waitUntil(10_000) {
+                reader.state.value.notice == null && reader.work.value.notice == null
+            }
+            compose.waitForIdle()
+            val modelChoice = compose.onNodeWithContentDescription(
                 compose.activity.getString(R.string.model_choice, selectedTitle)
-            ).performScrollTo().performClick()
+            )
+            modelChoice.performScrollTo()
+            compose.waitForIdle()
+            modelChoice.performClick()
+            val opened = compose.onAllNodes(hasText(text(R.string.manage_models)))
+                .fetchSemanticsNodes().isNotEmpty()
+            assertTrue("The model chip tap opened no menu", opened)
             compose.onNodeWithText(text(R.string.manage_models)).performClick()
             compose.waitUntil(10_000) {
                 ViewModelProvider(compose.activity)[AppViewModel::class.java]

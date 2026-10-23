@@ -55,9 +55,10 @@ class LaunchTest {
             ) {
                 compose.onNodeWithContentDescription(history).assertIsDisplayed()
             } else {
+                // The page title is the app bar, which has no scroll parent to reach.
                 compose.onNodeWithText(
                     compose.activity.getString(R.string.setup_header)
-                ).performScrollTo().assertIsDisplayed()
+                ).assertIsDisplayed()
             }
         }
         compose.activityRule.scenario.recreate()
@@ -144,12 +145,11 @@ class LaunchTest {
     @Test
     fun firstRunCatalogIsPinnedAndSetupOffersInAppDownloads() {
         val catalog = PackageCatalog(compose.activity)
-        assertEquals(3, catalog.models.size)
-        assertEquals("minicpm5-1b-q4km", catalog.models[0].manifest.id)
+        assertEquals(2, catalog.models.size)
+        assertEquals("qwen35-2b-q4km", catalog.models[0].manifest.id)
         assertEquals(DownloadFormat.GGUF, catalog.models[0].format)
-        assertTrue(catalog.models[0].url.contains("/openbmb/MiniCPM5-1B-GGUF/resolve/"))
-        assertEquals("qwen35-2b-q4km", catalog.models[1].manifest.id)
-        assertEquals("phi4-mini-q4km", catalog.models[2].manifest.id)
+        assertTrue(catalog.models[0].url.contains("/unsloth/Qwen3.5-2B-GGUF/resolve/"))
+        assertEquals("phi4-mini-q4km", catalog.models[1].manifest.id)
         assertEquals("model", catalog.models.first().manifest.kind)
         assertEquals("library", catalog.starterLibrary.manifest.kind)
         assertEquals("wikivoyage-en", catalog.starterLibrary.manifest.id)
@@ -227,7 +227,7 @@ class LaunchTest {
             compose.onNodeWithText(recommended.manifest.title).assertIsDisplayed()
             compose.onNodeWithText(
                 compose.activity.getString(
-                    if (profile.recommendedModelFitsStorage) {
+                    if (profile.recommendedModelFitsDevice) {
                         R.string.recommended
                     } else {
                         R.string.model_smallest_option
@@ -257,8 +257,6 @@ class LaunchTest {
                 compose.activity.getString(R.string.compare_models)
             ).performScrollTo().performClick()
             compose.onAllNodesWithText(catalog.models[1].manifest.title)[0]
-                .performScrollTo().assertIsDisplayed()
-            compose.onNodeWithText(catalog.models[2].manifest.title)
                 .performScrollTo().assertIsDisplayed()
             compose.onNodeWithText(compose.activity.getString(R.string.download_selected_model))
                 .assertIsDisplayed()

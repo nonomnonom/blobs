@@ -12,7 +12,7 @@ internal object AnswerText {
     private val numericReferenceList = Regex("^\\s*\\d+(?:\\s*[,;]\\s*\\d+)*\\s*$")
     private val namespacedSourceId = Regex("(?i)\\bS(\\d+)\\b")
     private val textSubscript = Regex(
-        """```[\s\S]*?(?:```|$)|`[^`\n]*`|\$(?:\\text|\\mathrm)\{([A-Za-z]+)}_(?:\{([0-9]+)}|([0-9]+))\$"""
+        """```[\s\S]*?(?:```|$)|`[^`\n]*`|\$(?:\\text|\\mathrm)\{([A-Za-z]+)\}_(?:\{([0-9]+)\}|([0-9]+))\$"""
     )
 
     fun readable(text: String): String = textSubscript.replace(text) { match ->
@@ -23,6 +23,28 @@ internal object AnswerText {
             val digits = match.groupValues[2].ifEmpty { match.groupValues[3] }
             letters + digits.map { '₀' + (it - '0') }.joinToString("")
         }
+    }
+
+    fun extractFollowUps(text: String): Pair<String, List<String>> {
+        if (text.isBlank()) return text to emptyList()
+        val match = Regex(
+            "(?mi)(?:^|\\n)\\s*(?:#{1,6}\\s*)?(?:Follow-up questions|Suggested questions|Saran pertanyaan lanjutan|Saran pertanyaan|Follow-up|Pertanyaan lanjutan)[:\\n]+\\s*"
+        ).find(text) ?: return text to emptyList()
+
+        val cleanAnswer = text.substring(0, match.range.first).trimEnd()
+        val followUpText = text.substring(match.range.last)
+
+        val suggestions = followUpText.lines()
+            .map { line ->
+                line.trim()
+                    .replace(Regex("^(?:[*-]|\\d+[.)])\\s*"), "")
+                    .replace(Regex("^\"|\"$"), "")
+                    .trim()
+            }
+            .filter { it.length in 5..150 }
+            .take(3)
+
+        return cleanAnswer to suggestions
     }
 
     /**

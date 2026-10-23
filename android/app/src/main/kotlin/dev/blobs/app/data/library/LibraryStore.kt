@@ -164,7 +164,7 @@ class LibraryStore {
                     val title = statement.getText(1)
                     val evidence = LibrarySqlite.readEvidence(statement, pack)
                     val subject = subjectTitles.firstOrNull {
-                        title == it || title.startsWith("$it/")
+                        title == it || title.startsWith("$it/") || title.endsWith(" $it")
                     }
                     add(
                         RetrievalCandidate(

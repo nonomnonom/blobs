@@ -42,6 +42,14 @@ Read the private report produced by the test without mutating it:
 & $adb -s $serial exec-out run-as $package cat "files/answer-$runId.json"
 ```
 
+The report names the recorded identity and the durable turn state: `status`,
+`grounding`, `finish_reason`, `model_support` (the support claim decoded from the
+response document; empty means the completion did not return one),
+`follow_up_count`, `evidence_count`, `error`, and the end-to-end timings. Stage
+inputs where the application process can read them: files pushed into
+`/sdcard/Android/data/...` may be unreadable to the app, while a copy under
+`run-as <package>` in the app data directory is not.
+
 Review the answer together with recorded evidence/passages. Unsupported claims,
 retrieval misses, partial answers, and cancellation must be recorded as
 observed; never rewrite them as a failure merely because they differ from an

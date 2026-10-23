@@ -4,15 +4,17 @@ This directory owns the portfolio decision before a source becomes a Blobs
 library. It is deliberately separate from `sources/`: a source lock identifies
 one immutable input, while the registry decides whether a source family should
 exist, what it must cover, and whether an older library may be released again.
+See [portfolio-strategy.md](portfolio-strategy.md) for the competitor-informed
+portfolio, deduplication policy, and current local candidate state.
 
 `registry.json` has three uses:
 
-1. It names the high-quality global source families that the rebuild will
+1. It names the high-quality global source families that production validation will
    prepare next.
 2. It records whether a legacy catalog package is retired, development-only, or
    blocked pending a new admission.
 3. It supplies the release allow-list used by `android/tools/publish_hf_assets.py`.
-   The list is empty during the rebuild. A publisher therefore cannot turn an
+   The list is empty until each admission gate is satisfied. A publisher cannot turn an
    old local package into a public package merely by adding it to the Android
    catalog.
 

@@ -136,6 +136,30 @@
     </plurals>
     <string name="research_writing">Writing an answer…</string>
     <string name="status_complete">Answer saved</string>
+    <plurals name="turn_passages">
+        <item quantity="one">%1$d passage · %2$d cited · %3$d s</item>
+        <item quantity="other">%1$d passages · %2$d cited · %3$d s</item>
+    </plurals>
+    <string name="turn_elapsed">%1$d s</string>
+    <string name="chain_title">How this answer was checked</string>
+    <string name="chain_searched_all">Searched every enabled library</string>
+    <plurals name="chain_searched_some">
+        <item quantity="one">Searched %1$d selected library</item>
+        <item quantity="other">Searched %1$d selected libraries</item>
+    </plurals>
+    <plurals name="chain_retrieved">
+        <item quantity="one">%1$d passage found</item>
+        <item quantity="other">%1$d passages found</item>
+    </plurals>
+    <string name="chain_ready">Answer ready in %1$d s</string>
+    <plurals name="chain_cited">
+        <item quantity="one">%1$d passage carries a citation marker</item>
+        <item quantity="other">%1$d passages carry citation markers</item>
+    </plurals>
+    <string name="chain_claim_sourced">The model claimed every sentence was sourced</string>
+    <string name="chain_claim_partial">The model claimed only part of the answer was sourced</string>
+    <string name="chain_claim_unsourced">The model claimed the answer was not sourced</string>
+    <string name="chain_claim_none">No support claim was recorded for this answer</string>
     <string name="status_stopped">Stopped · partial answer saved</string>
     <string name="status_stopped_empty">Stopped before an answer was ready</string>
     <string name="status_interrupted">Interrupted · your partial answer is here</string>
@@ -148,6 +172,7 @@
     <string name="status_no_sources">No matching passages in the selected sources. Try different words or search your whole library.</string>
     <string name="search_all">Search all sources</string>
     <string name="retry">Try again</string>
+    <string name="suggested_follow_ups">Suggested follow-ups</string>
     <string name="copy_answer">Copy answer</string>
     <string name="copied">Copied</string>
     <string name="follow_up">Ask a follow-up</string>

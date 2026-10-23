@@ -1,27 +1,31 @@
 package dev.blobs.app.feature.chat
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.data.ResearchStage
+import dev.blobs.app.ui.chat.Trace
+import dev.blobs.app.ui.chat.TraceLine
+import dev.blobs.app.ui.chat.TraceStatus
 
+/**
+ * The one local research stage the runtime can prove it is in.
+ *
+ * Stages already passed are not reconstructed here: the runtime reports the current stage
+ * only, so a turn in flight shows a single live line instead of a step history the app
+ * never measured.
+ */
 @Composable
-internal fun ResearchActivity(stage: ResearchStage?, evidenceCount: Int) {
+internal fun ResearchStep(
+    stage: ResearchStage?,
+    evidenceCount: Int,
+    modifier: Modifier = Modifier
+) {
     val label = when (stage) {
         ResearchStage.PREPARING_MODEL -> stringResource(R.string.research_preparing)
 
@@ -43,22 +47,7 @@ internal fun ResearchActivity(stage: ResearchStage?, evidenceCount: Int) {
         ResearchStage.WRITING_ANSWER -> R.drawable.ic_chat_bubble
         ResearchStage.PREPARING_MODEL, null -> R.drawable.ic_blobs_monochrome
     }
-    Row(
-        Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Icon(
-            painterResource(icon),
-            null,
-            Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    Trace(modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+        TraceLine(status = TraceStatus.RUNNING, icon = icon, title = label)
     }
 }

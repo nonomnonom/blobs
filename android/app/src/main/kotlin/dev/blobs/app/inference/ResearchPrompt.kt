@@ -20,7 +20,8 @@ internal data class ResearchPrompt(
             If local sources do not support a specific factual claim, say that instead of presenting memory as fact.
             You may offer general help without a citation when useful, but label uncertainty and do not invent detail.
             Do not claim that you searched, browsed, or verified live information. Keep the answer concise unless the
-            user asks for detail. /no_think
+            user asks for detail. Stop after the answer; suggested next questions are added by the app.
+            /no_think
         """.trimIndent()
 
         fun <T> withContextBudget(

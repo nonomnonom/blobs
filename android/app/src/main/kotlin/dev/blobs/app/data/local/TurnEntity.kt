@@ -40,5 +40,7 @@ data class TurnEntity(
     @ColumnInfo(defaultValue = "'LEGACY'") val grounding: String = TurnGrounding.LEGACY.storedValue,
     @ColumnInfo(
         defaultValue = "'LEGACY'"
-    ) val finishReason: String = TurnFinishReason.LEGACY.storedValue
+    ) val finishReason: String = TurnFinishReason.LEGACY.storedValue,
+    @ColumnInfo(defaultValue = "''") val suggestions: String = "",
+    @ColumnInfo(defaultValue = "''") val modelSupport: String = ""
 )

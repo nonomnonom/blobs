@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 
 @Database(
     entities = [ConversationEntity::class, TurnEntity::class, PackageEntity::class],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 abstract class BlobsDatabase : RoomDatabase() {
@@ -80,6 +80,17 @@ abstract class BlobsDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(connection: SQLiteConnection) {
+                listOf(
+                    "ALTER TABLE turns ADD COLUMN suggestions TEXT NOT NULL DEFAULT ''",
+                    "ALTER TABLE turns ADD COLUMN modelSupport TEXT NOT NULL DEFAULT ''"
+                ).forEach { sql ->
+                    connection.prepare(sql).use { it.step() }
+                }
+            }
+        }
+
         fun open(context: Context, name: String = "blobs.db"): BlobsDatabase = Room
             .databaseBuilder(context.applicationContext, BlobsDatabase::class.java, name)
             .setDriver(BundledSQLiteDriver())
@@ -91,6 +102,7 @@ abstract class BlobsDatabase : RoomDatabase() {
             .addMigrations(MIGRATION_5_6)
             .addMigrations(MIGRATION_6_7)
             .addMigrations(MIGRATION_7_8)
+            .addMigrations(MIGRATION_8_9)
             .build()
     }
 }

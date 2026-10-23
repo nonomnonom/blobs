@@ -6,11 +6,14 @@ import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.ResearchPrompt
+import dev.blobs.app.inference.StructuredAnswer
 import dev.blobs.app.inference.TokenSink
 
-internal const val MAX_RESEARCH_OUTPUT_TOKENS = 256
+// The response document costs a bounded envelope, so the prose keeps the earlier 256-token room.
+internal const val MAX_RESEARCH_OUTPUT_TOKENS = 320
 private const val STREAM_RENDER_INTERVAL_MS = 50L
 private const val MAX_RESEARCH_OUTPUT_BYTES = 32 * 1024
 
@@ -52,6 +55,7 @@ internal data class ResearchUsage(
 
 internal data class ResearchOutcome(
     val answer: String,
+    val support: ModelSupport?,
     val evidence: List<Evidence>,
     val finish: ResearchFinish,
     val timings: ResearchTimings,
@@ -69,6 +73,8 @@ internal class LocalResearchEngine(
     private val runtime: NativeBridge = NativeBridge()
 ) {
     private val systemPromptBytes = ResearchPrompt.system.toByteArray(Charsets.UTF_8)
+    private val grammarBytes = StructuredAnswer.grammar.toByteArray(Charsets.UTF_8)
+    private val grammarRootBytes = StructuredAnswer.GRAMMAR_ROOT.toByteArray(Charsets.UTF_8)
 
     fun reset() = runtime.reset()
 
@@ -110,7 +116,7 @@ internal class LocalResearchEngine(
             if (renderedBytes == output.size) return
             renderedBytes = output.size
             answer = AnswerText.validSourceCitations(
-                AnswerText.visible(output.completeUtf8Text()),
+                readable(AnswerText.visible(output.completeUtf8Text())),
                 evidence.size
             )
             if (firstAnswerElapsedMs == null && answer.isNotBlank()) {
@@ -134,6 +140,8 @@ internal class LocalResearchEngine(
                     modelPathBytes,
                     systemPromptBytes,
                     prompt.text.toByteArray(Charsets.UTF_8),
+                    grammarBytes,
+                    grammarRootBytes,
                     MAX_RESEARCH_OUTPUT_TOKENS,
                     TokenSink { token, size ->
                         if (output.append(token, size)) {
@@ -153,8 +161,10 @@ internal class LocalResearchEngine(
             renderAnswer()
         }
 
+        val decoded = StructuredAnswer.decode(AnswerText.visible(output.completeUtf8Text()))
         return ResearchOutcome(
             answer = answer,
+            support = decoded?.support,
             evidence = evidence,
             finish = when (nativeResult) {
                 NativeBridge.FINISHED -> ResearchFinish.FINISHED
@@ -176,6 +186,14 @@ internal class LocalResearchEngine(
             )
         )
     }
+
+    /**
+     * Prose a reader can see right now. A payload renders its decoded prefix, so a stream, a
+     * cancellation, or a token-limited turn never shows JSON punctuation. Anything else is plain
+     * text from an unconstrained completion and is shown as it arrives.
+     */
+    private fun readable(visible: String): String =
+        if (visible.startsWith("{")) StructuredAnswer.partialText(visible).orEmpty() else visible
 }
 
 /** A bounded owned copy of the reusable JNI byte array for one answer turn. */

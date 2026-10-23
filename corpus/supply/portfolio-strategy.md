@@ -90,7 +90,7 @@ archive per volume, then confirm on the built edition.
 | --- | --- | --- |
 | Reference, English | `wikipedia-en-top1m-mini` 3,022,411,034-byte archive, 4,980,555,776-byte payload, 997,761 documents | one candidate, 10 of 12 recall unresolved |
 | Travel, English | `wikivoyage-en-all-nopic` 272,495,142-byte archive, 622,645,248-byte payload, 34,599 guides | candidate, 50 of 50 on the new suite |
-| How-to, practical | Measured on a `cooking.stackexchange.com` edition: 238,098,128-byte archive, 63,803 questions, 250,153 passages, 418,353,152-byte payload | ratio is 1.76 times the archive, so one 6 GiB library holds about 3.0 GB of site archives. Each site is its own ZIM, so a lane needs a reviewed multi-archive edition before it can be packaged as one library; a pack per site would repeat the retired-fragment mistake |
+| How-to, practical | Measured lane of two pinned site editions: cooking plus money, 492,292,434 archive bytes, 142,527 documents, 607,591 passages, 1,048,535,040 installed bytes | the merged ratio is 2.13 and the money archive alone runs 2.48, so plan with 2.5 times the archive - about 2.5 GB of site archives per 6 GiB volume, not the 1.76 that one favourable site suggested. Each site is its own ZIM, so a lane merges verified per-archive editions into one reviewed stream; a pack per site would repeat the retired-fragment mistake |
 | Dictionary | Wiktionary nopic archives: English 8.5 GB, French 4.6 GB, Russian 2.0 GB, German 1.5 GB, Portuguese 0.34 GB | English needs deterministic volumes; smaller languages fit one |
 | Places | Overpass snapshots bounded to 5,000,000 bytes and 1,000 elements per reviewed lock | pipeline exists, no reviewed shard yet |
 | Public guidance | `web_pages` caps a lock at 40 sources and 5,000,000 bytes each | a real health or civics lane needs archive-scale acquisition first |
@@ -156,19 +156,25 @@ across several libraries is a design decision, not a free default.
 
 ## Acquisition stop conditions
 
-Measured staging cost, per source archive byte, from the editions on this machine:
-normalized record shards are 0.28 to 0.51 times the archive (Wikivoyage 0.51, Top 1M
-0.28, Stack Exchange cooking 0.31), a review step writes a second copy of that size,
-export hardlinks the shards, and packaging needs one installed payload plus its archive
-per volume while the earlier volumes stay on disk. Plan with 0.55 for shards and the
-payload bound of 1.65 to 3.0 times the archive.
+Measured staging cost, from the editions on this machine: normalized record shards
+are 0.28 to 0.51 times the archive (Wikivoyage 0.51, Top 1M 0.28, Stack Exchange
+cooking 0.31), a review step writes a second copy of that size, export hardlinks the
+shards, and packaging needs one installed payload plus its archive per volume while
+earlier volumes stay on disk.
+
+Installed payload predicts from text, not from the archive: the merged cooking-plus-
+money lane installed 1,048,535,040 bytes over 388,625,311 bytes of normalized text,
+which is 2.698 times. Archive-to-payload swings between 1.76 and 2.48 across two
+sites of the same project, so size every lane from measured text bytes of its
+extracted editions and treat 2.70 as the planning factor.
 
 | Lane | Archive | Peak staging estimate | Verdict at 59.5 GB free |
 | --- | ---: | ---: | --- |
 | Big reference, top-1M full text | 16 GB | 16 + 8.8 + 8.8 + 6.0 + 2.2 + 11.0 (five prior volume archives) = 52.8 GB | Do not start while the reference rebuild holds about 12 GB of intermediates. Re-measure after it finishes, or give `--work-directory` a second volume. |
 | History and primary texts, Wikisource | 11 GB | 11 + 6.1 + 6.1 + 6.0 + 2.2 + 4.4 = 35.8 GB | Possible alone with at least 40 GB free. Not before the rebuild completes. |
-| Practical how-to lane | 2.83 GB | 2.83 + 1.6 + 1.6 + 5.0 + 2.0 = 13.0 GB | Clear now. |
-| Repair lane | 1.70 GB | 1.70 + 0.95 + 0.95 + 3.0 + 1.2 = 7.8 GB | Clear now. |
+| Practical how-to lane | 2.83 GB | 2.83 + 1.6 + 1.6 + 7.1 + 2.0 = 15.1 GB | Clear now, but the installed payload would pass 6 GiB, so this selection ships as complementary volumes or as a narrower first edition. |
+| Repair lane | 1.70 GB | 1.70 + 0.95 + 0.95 + 4.25 + 1.2 = 9.1 GB | Clear now and fits one volume at the 2.5 planning bound. |
+| Home and diy | 2.09 GB | 2.09 + 1.2 + 1.2 + 5.2 + 1.4 = 11.1 GB | Clear now; one volume only as its own lane, not added to the repair lane. |
 
 Never delete a good local edition to make room. A lane that does not fit waits for a
 second staging volume or a smaller selection, and every multi-volume family still needs

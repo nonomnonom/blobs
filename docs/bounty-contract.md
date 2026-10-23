@@ -5,9 +5,9 @@ contract. It is an independent specification, not an adoption of another
 product's code, runtime, Rust implementation, wire protocol, or repository
 structure.
 
-Status on 2026-10-23: this is rebuild direction, not proof that an APK, device,
-model, or library already meets the contract. Validation remains paused under
-[goal.md](../goal.md).
+Status on 2026-10-23: this is the target behavior contract, not proof that an APK, device,
+model, or library already meets the contract. Validation is active under
+[goal.md](../goal.md) to record reproducible evidence against this target.
 
 ## One-turn outcome
 
@@ -15,14 +15,26 @@ After assets are installed, one question follows one fixed path:
 
 ```text
 library scope snapshot -> local FTS retrieval -> evidence -> bounded prompt
-                       -> one JNI completion -> marker validation
-                       -> persistence -> UI
+                       -> one grammar-constrained JNI completion -> response decode
+                       -> marker validation -> persistence -> UI
 ```
 
 There is no agent loop, hidden retry, second retrieval, remote fallback, local
 server, or second model call. Android UI does not need JSON compatibility with
-another application. The following domain terms must be reflected in durable
-turn state and export.
+another application. The response document below is Blobs' own internal contract:
+it is enforced by the sampler and validated in Kotlin, never served over a
+socket.
+
+The completion returns one document with the answer first and a support claim
+last. The grammar, not prompt prose, guarantees the shape: the answer always
+terminates, `[` and `]` can only ever spell an admissible citation marker, and no
+preamble or trailing commentary can reach the reader. Kotlin re-checks the whole
+document before persisting anything, renders prose (never the document itself)
+while streaming, and withholds a half-received escape. A support claim can only
+make the disclosure stricter: `partial` or `unsourced` is never shown as
+`grounded`, and a turn with no recorded claim keeps the structural decision.
+
+The following domain terms must be reflected in durable turn state and export.
 
 A persisted turn is either `running` or has exactly one terminal status. New
 turns persist only the lifecycle status; the native outcome is preserved
@@ -103,8 +115,9 @@ limited answer, Blobs excludes that preceding partial turn from the new
 retrieval context and prompt history; it never turns a clipped answer into
 hidden prompt state for its own replacement.
 
-A future follow-up suggestion must be deterministic from the question, evidence,
-and result. It cannot require a second completion or join the prompt/runtime.
+Follow-up suggestions are deterministic from the question, evidence, and result.
+Blobs derives them itself, stores one record per offer with the turn, and never
+lets their generation start a second completion or join the prompt/runtime.
 
 ## Implementation order
 

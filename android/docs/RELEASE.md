@@ -2,6 +2,33 @@
 
 Blobs distributes the Android app through GitHub. The app's signed Hugging Face download list supplies model and library packages inside the app; those large assets do not need to be duplicated in every GitHub release.
 
+## Settle the version and changelog
+
+Every change merged to `main` since the last release carries a changeset, so the
+release begins by consuming them. From the repository root:
+
+```powershell
+npm ci
+npm run release:version
+```
+
+`changeset version` raises the version in `package.json`, moves each note into
+`CHANGELOG.md`, and deletes the consumed `.changeset` files. The sync step then
+writes that version to `versionName` in `app/build.gradle.kts` and advances
+`versionCode` by one, because Android only accepts an update signed with the
+existing key when the code increases. `npm run release:check` fails when the two
+files disagree, and CI runs it on every pull request.
+
+Choose the semver level the way you would choose the next app version: patch for
+a fix, minor for new user-visible behavior, major for a breaking change such as a
+library format or data transition that older releases cannot read. Commit the
+result as the release commit and open it as a pull request against `main`, or
+commit it directly on `main`; the consumed changesets satisfy the release-note
+check. Publish the matching tag and GitHub Release after the kit verifies.
+
+The changelog text is the starting point for the release notes, which still need
+the published ZIP SHA-256 and `SHA256SUMS.txt` digest.
+
 ## Build and verify a candidate
 
 From `android/`, prepare the pinned runtime and run the complete local verification gate:
@@ -23,13 +50,13 @@ Every update to `dev.blobs.app` must use the same Android signing key as the exi
 ```powershell
 .\gradlew.bat :app:assembleRelease
 uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs/apk/release/app-release.apk --certificate-sha256 $env:BLOBS_CERT_SHA256
-uv run --locked --project ../corpus python tools/prepare_model.py minicpm5
+uv run --locked --project ../corpus python tools/prepare_model.py qwen35
 hf download nonomnonom/blobs-catalog `
   --type dataset `
   --revision cae7f6c11e3bad49897dd17bb580ed5bf2da15ed `
   --include "packages/wikivoyage-en-2026-09-v3.blobs" `
   --local-dir .local/model-catalog-assets/wikivoyage
-uv run --locked --project ../corpus python tools/package_release.py --model .\packages\minicpm5-1b-q4km.blobs --library .\.local\model-catalog-assets\wikivoyage\packages\wikivoyage-en-2026-09-v3.blobs --certificate-sha256 $env:BLOBS_CERT_SHA256
+uv run --locked --project ../corpus python tools/package_release.py --model .\packages\qwen35-2b-q4km.blobs --library .\.local\model-catalog-assets\wikivoyage\packages\wikivoyage-en-2026-09-v3.blobs --certificate-sha256 $env:BLOBS_CERT_SHA256
 ```
 
 The release assembler checks APK identity and signature, exact package metadata, source archive contents, footprint, and a complete SHA-256 inventory. It creates an immutable `android/release/<version>/` folder.

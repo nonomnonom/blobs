@@ -100,7 +100,9 @@ internal class ConversationStore(private val conversations: ConversationDao) {
         elapsedMs: Long,
         error: String = "",
         grounding: TurnGrounding = TurnGrounding.PENDING,
-        finishReason: TurnFinishReason = TurnFinishReason.PENDING
+        finishReason: TurnFinishReason = TurnFinishReason.PENDING,
+        suggestions: String = "",
+        modelSupport: String = ""
     ) {
         conversations.updateAnswer(
             id,
@@ -110,7 +112,9 @@ internal class ConversationStore(private val conversations: ConversationDao) {
             elapsedMs,
             error,
             grounding.storedValue,
-            finishReason.storedValue
+            finishReason.storedValue,
+            suggestions,
+            modelSupport
         )
     }
 }

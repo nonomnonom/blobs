@@ -3,8 +3,8 @@
 ## Evidence boundary
 
 Contract tests prove deterministic behaviour: input validation, prompt bounds,
-cancellation, persistence, citation-marker identity, and asset lifecycle. They
-do not prove that a model answers world facts correctly.
+response decode, cancellation, persistence, citation-marker identity, and asset
+lifecycle. They do not prove that a model answers world facts correctly.
 
 An evaluator measures retrieval or records a product artifact after the runtime
 finishes a turn. It does not run a host HTTP server, agent loop, or model judge.

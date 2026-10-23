@@ -14,7 +14,7 @@ Bundled notices are readable offline in Settings → About Blobs and under app/s
 | Arm KleidiAI | Apache 2.0 and BSD 3-Clause components; upstream texts and copyright in KleidiAI.txt; pinned in third_party/kleidiai.lock.json |
 | AndroidX, Kotlin, Coroutines, serialization, Okio, Guava and JSpecify | Publisher POM license entries and artifact notices in Runtime-dependencies.txt; Apache 2.0 text included |
 | Android NDK runtime | Complete NOTICE supplied with pinned NDK 27.1.12297006 |
-| MiniCPM5 1B and Qwen3.5 2B Q4_K_M GGUF weights | Apache 2.0; exact publisher repository, revision and checksum in the in-app package catalog and installed package metadata |
+| Qwen3.5 2B Q4_K_M GGUF weights | Apache 2.0; exact publisher repository, revision and checksum in the in-app package catalog and installed package metadata |
 | Phi-4 Mini Instruct Q4_K_M GGUF conversion | MIT; community conversion by LM Studio, with exact repository, revision and checksum in the in-app package catalog and installed package metadata |
 | Wikivoyage starter text | CC BY-SA 4.0; license text, article-history links, contributor attribution, and adaptation notes included |
 | Optional Appropedia practical-living text | Article-specific CC BY-SA 3.0; offline license text, pinned revisions and contributor-history links preserved |

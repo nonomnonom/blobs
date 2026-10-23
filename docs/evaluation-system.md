@@ -56,6 +56,7 @@ or device is **historical**.
 | UI or turn state | Relevant state test and affected accessibility inspection |
 | FTS or evidence selection | Same retrieval cases, same package hash, and coverage report |
 | Prompt, model, or KV cache | `NativeInferenceTest` on target device; recorded evidence review |
+| Response grammar, decode, or answer shape | `StructuredAnswerTest` plus `NativeInferenceTest` on a real model, with a report that records the decoded support claim and grounding |
 | JNI, native lifecycle, or cancellation | Relevant ABI build and target-device acceptance with explicit model/library |
 | Installer, pack, or storage | Integrity, recovery/rollback, and offline target-device acceptance |
 | Public library catalog | Source/admission record, manifest, archive hash, signed catalog revision, install report |

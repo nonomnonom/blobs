@@ -362,6 +362,10 @@ class UserLibraryPackage(private val context: Context) {
             execute(db, "CREATE INDEX documents_title ON documents(title,id)")
             execute(
                 db,
+                "CREATE TABLE document_provenance(doc_id TEXT PRIMARY KEY NOT NULL,body_sha256 TEXT NOT NULL,details TEXT NOT NULL)"
+            )
+            execute(
+                db,
                 "CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT NOT NULL,section TEXT NOT NULL,title TEXT NOT NULL)"
             )
             execute(
@@ -409,6 +413,8 @@ class UserLibraryPackage(private val context: Context) {
             """.trimIndent()
         )
         val spanInsert = db.prepare("INSERT INTO passage_spans VALUES (?,?,?,?)")
+        val provenanceInsert = db.prepare("INSERT INTO document_provenance VALUES (?,?,?)")
+        val bodyDigest = MessageDigest.getInstance("SHA-256")
         try {
             var passageId = 1L
             documents.forEach { document ->
@@ -425,6 +431,18 @@ class UserLibraryPackage(private val context: Context) {
                         document.saved,
                         document.body,
                         collection
+                    )
+                )
+                bind(
+                    provenanceInsert,
+                    listOf(
+                        document.id,
+                        bodyDigest.digest(document.body.toByteArray(Charsets.UTF_8))
+                            .joinToString("") { "%02x".format(it) },
+                        JSONObject()
+                            .put("origin", "local:user-documents")
+                            .put("title", document.title)
+                            .toString()
                     )
                 )
                 documentSpans(document.body).forEachIndexed { index, span ->
@@ -458,6 +476,7 @@ class UserLibraryPackage(private val context: Context) {
             passageInsert.close()
             ftsInsert.close()
             spanInsert.close()
+            provenanceInsert.close()
         }
     }
 

@@ -166,7 +166,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                                         if (selected ==
                                             profile.recommendedModel
                                         ) {
-                                            if (profile.recommendedModelFitsStorage && fitsMemory) {
+                                            if (profile.recommendedModelFitsDevice) {
                                                 R.string.recommended
                                             } else {
                                                 R.string.model_smallest_option

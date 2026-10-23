@@ -17,7 +17,10 @@ import dev.blobs.app.engine.ResearchFinish
 import dev.blobs.app.engine.ResearchPhase
 import dev.blobs.app.engine.ResearchRequest
 import dev.blobs.app.engine.ResearchUsage
+import dev.blobs.app.inference.AnswerGrounding
 import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.inference.FollowUpSuggestions
+import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.ResearchPrompt
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -156,6 +159,9 @@ internal class ResearchWork(
                 evidence = Evidence.encode(outcome.evidence)
                 retrievalElapsedMs = outcome.timings.retrievalElapsedMs
                 researchUsage = outcome.usage
+                val finished = terminalBody(question, answer, outcome.evidence)
+                answer = finished.body
+                val followUps = finished.suggestions
                 session.update { it.copy(text = answer, evidence = evidence) }
                 val finishReason = when {
                     interrupted || stopped || outcome.finish == ResearchFinish.CANCELLED ->
@@ -168,7 +174,12 @@ internal class ResearchWork(
 
                     else -> TurnFinishReason.ERROR
                 }
-                val grounding = terminalGrounding(answer, outcome.evidence.size, finishReason)
+                val grounding = terminalGrounding(
+                    answer,
+                    outcome.evidence.size,
+                    finishReason,
+                    outcome.support
+                )
                 val permitsCompletion = answer.isNotBlank()
                 val status = when {
                     stopped || outcome.finish == ResearchFinish.CANCELLED -> TurnStatus.STOPPED
@@ -190,12 +201,17 @@ internal class ResearchWork(
                     SystemClock.elapsedRealtime() - start,
                     error = "",
                     grounding = grounding,
-                    finishReason = finishReason
+                    finishReason = finishReason,
+                    suggestions = followUps,
+                    modelSupport = outcome.support?.storedValue.orEmpty()
                 )
             } catch (_: CancellationException) {
                 if (begun) {
                     withContext(NonCancellable) {
                         checkpoint?.join()
+                        val sources = Evidence.decodeOrNull(evidence).orEmpty()
+                        val finished = terminalBody(question, answer, sources)
+                        answer = finished.body
                         runCatching {
                             conversations.update(
                                 id,
@@ -206,10 +222,12 @@ internal class ResearchWork(
                                 error = "",
                                 grounding = terminalGrounding(
                                     answer,
-                                    Evidence.decodeOrNull(evidence)?.size ?: 0,
-                                    TurnFinishReason.CANCELLED
+                                    sources.size,
+                                    TurnFinishReason.CANCELLED,
+                                    claimed = null
                                 ),
-                                finishReason = TurnFinishReason.CANCELLED
+                                finishReason = TurnFinishReason.CANCELLED,
+                                suggestions = finished.suggestions
                             )
                         }
                     }
@@ -224,6 +242,12 @@ internal class ResearchWork(
                 try {
                     if (begun) {
                         checkpoint?.join()
+                        val finished = terminalBody(
+                            question,
+                            answer,
+                            Evidence.decodeOrNull(evidence).orEmpty()
+                        )
+                        answer = finished.body
                         conversations.update(
                             id,
                             answer,
@@ -240,7 +264,8 @@ internal class ResearchWork(
                                 TurnFinishReason.CONTEXT_FULL
                             } else {
                                 TurnFinishReason.ERROR
-                            }
+                            },
+                            suggestions = finished.suggestions
                         )
                     }
                 } catch (_: Exception) {
@@ -342,11 +367,30 @@ internal class ResearchWork(
     private fun terminalGrounding(
         answer: String,
         evidenceCount: Int,
-        finishReason: TurnFinishReason
+        finishReason: TurnFinishReason,
+        claimed: ModelSupport?
     ): TurnGrounding = when {
         answer.isBlank() -> TurnGrounding.NONE
         finishReason != TurnFinishReason.STOP -> TurnGrounding.UNVERIFIED
-        AnswerText.hasCompleteCitationCoverage(answer, evidenceCount) -> TurnGrounding.GROUNDED
-        else -> TurnGrounding.UNVERIFIED
+        else -> AnswerGrounding.decide(answer, evidenceCount, claimed)
+    }
+
+    /**
+     * The canonical persisted body of one turn. Offers written into an answer by
+     * an older prompt are removed, and the next questions are derived from the
+     * question, evidence, and body this turn already holds.
+     */
+    private fun terminalBody(
+        question: String,
+        raw: String,
+        evidence: List<Evidence>
+    ): TerminalBody {
+        val body = AnswerText.extractFollowUps(raw).first
+        return TerminalBody(
+            body,
+            FollowUpSuggestions.encode(FollowUpSuggestions.from(question, body, evidence))
+        )
     }
 }
+
+private data class TerminalBody(val body: String, val suggestions: String)

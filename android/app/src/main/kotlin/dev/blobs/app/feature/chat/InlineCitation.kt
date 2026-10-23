@@ -17,26 +17,21 @@ import dev.blobs.app.ui.theme.BlobsDimens
 internal fun InlineCitation(number: Int, description: String, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.size(BlobsDimens.inlineCitationTarget).semantics {
-            contentDescription = description
-        },
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        shape = MaterialTheme.shapes.small
+        modifier = Modifier
+            .size(
+                width = BlobsDimens.inlineCitationWidth,
+                height = BlobsDimens.inlineCitationHeight
+            )
+            .semantics { contentDescription = description },
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = MaterialTheme.shapes.extraSmall
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Surface(
-                modifier = Modifier.size(BlobsDimens.inlineCitationVisual),
-                shape = MaterialTheme.shapes.extraSmall,
-                color = MaterialTheme.colorScheme.surfaceContainerLow
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        number.toString(),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+            Text(
+                number.toString(),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelSmall
+            )
         }
     }
 }

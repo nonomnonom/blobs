@@ -126,8 +126,9 @@ from compilation alone.
 
 | Rebuild area | Direction | Current evidence state |
 | --- | --- | --- |
-| Research engine | `engine/LocalResearchEngine` owns one retrieval-to-completion pass | Unverified until current build, tests, and device flow pass |
-| Native runtime | `local_model_runtime.cpp` owns model lifecycle and decode; `KvCache` owns transient exact-prefix reuse; `blobs.cpp` is a JNI adapter | Unverified until native build and model/device exercises pass |
+| Research engine | `engine/LocalResearchEngine` owns one retrieval-to-completion pass and renders only the decoded answer | Unverified until current build, tests, and device flow pass |
+| Response contract | `inference/StructuredAnswer` owns the response document, its grammar, and its decode | Unverified until the constrained completion runs on device |
+| Native runtime | `local_model_runtime.cpp` owns model lifecycle, constrained sampling, and decode; `KvCache` owns transient exact-prefix reuse; `blobs.cpp` is a JNI adapter | Unverified until native build and model/device exercises pass |
 | Dataset archive | `archive.py` owns the `.blobs` envelope; `package.py` carries `records_sha256` | Unverified until reproducible package build and archive checks pass |
 | Transfer | `PackageTransferExecutor`, recovery, and `PackageTransferWork` own interrupted asset lifecycle | Unverified until cancellation, recovery, and atomic-install acceptance passes |
 | Retrieval | SQLite boundary, validation, reader, aliases, and ranking are separated | Unverified until fixed retrieval cases run against identified packages |
@@ -139,8 +140,8 @@ from compilation alone.
 A question follows one fixed local path:
 
 ```text
-question -> FTS retrieval -> evidence -> bounded prompt -> one JNI completion
-         -> citation validation -> persistence -> UI and source reader
+question -> FTS retrieval -> evidence -> bounded prompt -> one grammar-constrained JNI completion
+         -> response decode -> citation validation -> persistence -> UI and source reader
 ```
 
 Keep these invariants unless a new approved product decision replaces them:
@@ -163,7 +164,7 @@ Keep these invariants unless a new approved product decision replaces them:
 | B. Core data | Reproducible core-reference pack inventory and admission manifests | Pack scope, size, source rights, provenance, and gaps are reviewable |
 | C. Device package path | Verified catalog download or user import to atomic activation | Old package survives failed/cancelled update |
 | D. Retrieval baseline | Fixed cases per library and FTS coverage diagnosis | Same package gives explainable hit/miss results |
-| E. Prompt and inference | One bounded prompt and one completion on native runtime | No hidden request path; cancellation has a terminal result |
+| E. Prompt and inference | One bounded prompt and one grammar-constrained completion on native runtime | No hidden request path; the response shape is enforced by the sampler and re-checked in code; cancellation has a terminal result |
 | F. UX and source reading | Clear research states, citations, library management, source reader | Evidence is distinct from model prose |
 | G. Target-device validation | Cold/warm, one-to-five turns, memory, storage, thermal, cancellation, offline | Results name device, OS, ABI, model, library, configuration |
 | H. Quality iteration | Held-out retrieval and answer review | Improve a measured weakness without changing uncontrolled variables |
@@ -191,6 +192,41 @@ network mode, context policy, output limit, and warm/cold policy fixed unless
 one is the declared experiment variable. Do not call a desktop observation an
 Android result, and do not call a result a competitor win if corpora, task,
 rubric, or device differ.
+
+## Blocked now
+
+These are recorded as blockers, not worked around, and each needs an input or an
+owner decision rather than a code change:
+
+- Nothing is publishable. `corpus/supply/registry.json` carries an empty
+  `release_ready` list, so `android/tools/publish_hf_assets.py` refuses every
+  catalog library before any network call. Nine shipped catalog libraries map to
+  `retired` registry families and two to `development-only`.
+- Catalog manifests carry no `records_sha256`, which the same publisher requires
+  for a library package.
+- No catalog signing key and no `BLOBS_CATALOG_SIGNING_KEY`, and no release
+  keystore or `BLOBS_*` values, so catalog signing and `release.ps1` stop by
+  design. Publication, upload, and release remain unauthorized.
+- The full-Wikipedia partition plan is not created, and its source lock says do
+  not acquire or package.
+- Instrumented baseline is red for four checks unrelated to the research path:
+  two `LaunchTest` UI assertions, one `LibraryRetrievalTest` ranking assertion,
+  and one `UiParityTest` control. They were unobservable before 2026-10-24
+  because the instrumentation sources did not compile.
+- CI never runs instrumented tests: `verify` builds and compiles them only, so
+  device acceptance stays a manual, recorded step.
+- The pinned `clang-format==23.1.3` rejects the committed native style: an
+  unmodified `git show HEAD` copy of `blobs.cpp` already fails the
+  `--dry-run --Werror` check the corpus job runs. The formatter or
+  `.clang-format` needs one deliberate decision before that gate can be green;
+  reformatting five files to a new default is not that decision.
+- The pinned formatter rejects six committed Python files the same way:
+  `ruff format --check` on `android/tools/publish_hf_assets.py`,
+  `corpus/archive.py`, `corpus/footprint.py`, `corpus/library.py`,
+  `corpus/partition.py`, and `corpus/places.py` reports changes. Those files are
+  untouched by this work, so the decision is a formatter-version policy, not a
+  code fix. The suites themselves pass (44 corpus tests, 28 tooling tests) and
+  `ruff check` is clean.
 
 ## Immediate next work
 

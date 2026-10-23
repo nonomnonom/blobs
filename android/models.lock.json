@@ -1,14 +1,4 @@
 {
-  "minicpm5": {
-    "id": "minicpm5-1b-q4km",
-    "title": "MiniCPM5 1B Q4_K_M",
-    "revision": "3d55fac80935ae6456986ad2384b5cbcc4d6c948",
-    "repository": "openbmb/MiniCPM5-1B-GGUF",
-    "file": "MiniCPM5-1B-Q4_K_M.gguf",
-    "bytes": 688065920,
-    "sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
-    "license": "Apache-2.0"
-  },
   "qwen35": {
     "id": "qwen35-2b-q4km",
     "title": "Qwen3.5 2B Q4_K_M",

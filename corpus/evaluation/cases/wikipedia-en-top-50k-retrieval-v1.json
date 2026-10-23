@@ -1,6 +1,7 @@
 {
   "format": 1,
   "id": "wikipedia-en-top-50k-retrieval-v1",
+  "status": "historical-diagnostic-not-for-release",
   "library": {
     "id": "wikipedia-en-top-50k",
     "version": "2026-09.1",

@@ -31,6 +31,15 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: python3 .github/scripts/checks.py changes
+      - name: Require a release note for shipped changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 .github/scripts/checks.py changesets
+      - name: Verify the release version stays in sync
+        run: |
+          node --test scripts/*.test.mjs
+          node scripts/sync-android-version.mjs --check
 
   android:
     name: Android
