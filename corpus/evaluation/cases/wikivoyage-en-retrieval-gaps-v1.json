@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "id": "wikivoyage-en-retrieval-gaps-v1",
+  "library": {
+    "id": "wikivoyage-en",
+    "version": "2026-09.4",
+    "records_sha256": "b94c8609ea743bd813e4426daaeea3efd1dafbb5dfc33ba7779acea2f8751d41",
+    "payload_sha256": "38a6141fb3039465d20a71094ff36180f043037e7230ce3daac79d34b21ce651"
+  },
+  "note": "Documented host-retrieval gaps on the packaged library: disambiguated country titles, singular/plural topic titles, and morphological variants are not surfaced by FTS5 unicode61 without stemming. These cases record the observed miss; they are not acceptance targets.",
+  "cases": [
+    {
+      "id": "georgia-solo-safety",
+      "question": "Is Georgia safe for a solo traveller and what scams should I expect?",
+      "expectation": "miss"
+    },
+    {
+      "id": "indonesia-island-hopping",
+      "question": "What is the practical way to hop between Indonesian islands?",
+      "expectation": "miss"
+    },
+    {
+      "id": "ferries-island-hopping",
+      "question": "How do I book ferries for island hopping and when should I arrive?",
+      "expectation": "miss"
+    },
+    {
+      "id": "budget-long-term",
+      "question": "How can I keep daily costs low on a months-long trip?",
+      "expectation": "miss"
+    }
+  ]
+}

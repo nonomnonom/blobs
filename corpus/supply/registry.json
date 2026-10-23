@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "updated": "2026-10-23",
-  "phase": "rebuild",
+  "updated": "2026-10-24",
+  "phase": "production-validation",
   "release_admission": {
     "required_evidence": [
       "versioned_source_lock",
@@ -16,6 +16,53 @@
     ],
     "rule": "Only an exact entry in release_ready may be published as a library."
   },
+  "portfolio_policy": {
+    "library_payload_limit_bytes": 6442450944,
+    "aggregate_installed_assets_limit_bytes": 48000000000,
+    "release_ready_count": 0,
+    "local_candidates_are_not_admissions": true,
+    "keep_history": "Retire unnecessary packs from the active portfolio and catalog; preserve source locks, reviewed records, receipts, and prior editions needed for reproduction.",
+    "product_rule": "Prefer a small number of complementary, broad libraries with measured retrieval over overlapping topical fragments. Never infer freshness, rights, or quality from availability or package size."
+  },
+  "local_candidate_portfolio": [
+    {
+      "id": "wikipedia-top1m-mini",
+      "version": "2026-04.2",
+      "role": "only-core-reference-candidate",
+      "source_lock": "corpus/sources/wikipedia-en-top1m-mini-2026-04.json",
+      "records_manifest": "corpus/artifacts/records/wikipedia-en-top1m-mini-2026-04/manifest.json",
+      "package": "corpus/work/packages/wikipedia-top1m-mini-2026-04.2.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikipedia-top1m-mini-retrieval-v1.json",
+      "state": "built-with-retrieval-gaps",
+      "package_sha256": "afb50f923a66a8c218ed00efe80d4c45c9116c637e603a758e918777167111f2",
+      "payload_sha256": "d6245ce39e03d6ab5d46d191a3a313dcd81a859c2e2efa3b9550617474108d2d",
+      "records_sha256": "77e11c5b6a1a1e96deaabd8689b66028958288f4c57825ebb68af180491f3748",
+      "payload_bytes": 4980555776,
+      "archive_bytes": 1786362860,
+      "retrieval_report": "corpus/work/evaluation/results/wikipedia-top1m-mini-2026-04.2-retrieval-smoke.json",
+      "content_audit": "corpus/work/evaluation/results/wikipedia-top1m-mini-2026-04.2-content-audit.json",
+      "limits": "997,761 short English introductions; host retrieval smoke found 10/12 expected titles (83.3%), 8 at rank 1, 364.7ms median and 1,795.6ms p95. Photosynthesis and Inflation were missed although both expected article IDs exist. Snapshot is older than the September 2026 full-text selection; not complete Wikipedia."
+    },
+    {
+      "id": "wikivoyage-en",
+      "version": "2026-09.4",
+      "role": "travel-reference-candidate",
+      "source_lock": "corpus/sources/wikivoyage-en-all-nopic-2026-09.json",
+      "records_manifest": "corpus/artifacts/records/wikivoyage-en-all-nopic-2026-09/manifest.json",
+      "package": "corpus/work/packages/wikivoyage-en-2026-09.4.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-v2.json",
+      "retrieval_gap_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-gaps-v1.json",
+      "rights_review": "corpus/supply/reviews/wikivoyage-en-2026-09.4-rights-review.md",
+      "state": "measured-pending-retrieval-pin",
+      "package_sha256": "392272e7854bee7988fdc3572a16e4dd59e5f00a7ff92fe50f653fd2f59c2cb2",
+      "payload_sha256": "38a6141fb3039465d20a71094ff36180f043037e7230ce3daac79d34b21ce651",
+      "records_sha256": "b94c8609ea743bd813e4426daaeea3efd1dafbb5dfc33ba7779acea2f8751d41",
+      "payload_bytes": 622645248,
+      "archive_bytes": 290642424,
+      "retrieval_report": "corpus/work/evaluation/results/wikivoyage-en-2026-09.4-retrieval-v2.json",
+      "limits": "34,599 English travel guides. The published 2026-09.3 count of 34,597 is reconciled: the two extra guides were rejected only by the older body-character policy, and their Unicode replacement characters are upstream in the pinned ZIM. Host retrieval on the 50-case suite found 50 of 50 expected titles, 36 at rank 1, mean reciprocal rank 0.844, median 334.9ms and p95 2,140.6ms; four paraphrase, plural-topic and disambiguated-title questions are recorded as measured misses in the gap case set. That run used an uncommitted `LibraryStore.kt` subject-matching change, so the replay pin must be re-reviewed and the suite re-run before the figures can support an admission. No rights sign-off and no target-device acceptance."
+    }
+  ],
   "supply_families": [
     {
       "id": "wikipedia-global-reference",
@@ -49,7 +96,7 @@
       "priority": 2,
       "tier": "travel-and-regional",
       "planned_library_id": "wikivoyage-en",
-      "status": "source-selection",
+      "status": "rights-review",
       "languages": ["English"],
       "scope": "A complete pinned English travel-guide edition, retaining destination and contributor history paths.",
       "candidate_origins": ["https://library.kiwix.org/"],
@@ -112,13 +159,18 @@
   "legacy_dispositions": [
     {
       "library_id": "wikipedia-starter",
-      "status": "development-only",
-      "reason": "Small local starter material lacks the archive-level record digest required for a new public edition."
+      "status": "retired",
+      "reason": "A 100-record English Wikipedia subset duplicates the broad reference lane and adds no separate install purpose. Preserve the old edition only for historical reproduction."
     },
     {
       "library_id": "wikipedia-top1m-mini",
       "status": "development-only",
-      "reason": "A historical build receipt exists, but the exact public archive still needs independent manifest verification; it is superseded in priority by the full core-reference family."
+      "reason": "Keep as a local broad-coverage candidate, but do not re-release the historical archive. Rebuild from the current reviewed records and measure retrieval before deciding whether it complements or duplicates the full-article candidate."
+    },
+    {
+      "library_id": "wikipedia-en-top-50k",
+      "status": "retired",
+      "reason": "Do not distribute as a separate overlapping Wikipedia library beside the selected Top 1M broad-reference candidate. Retain source records and historical retrieval evidence for diagnosis; use one reference install identity."
     },
     {
       "library_id": "wikivoyage-en",
@@ -127,43 +179,43 @@
     },
     {
       "library_id": "nps-outdoor-safety",
-      "status": "development-only",
-      "reason": "A small regional source lock is not archive-proven for a new public edition."
+      "status": "retired",
+      "reason": "Do not ship as a fragmented five-record pack; any future U.S. preparedness library must consolidate and review its source set before creating a new edition."
     },
     {
       "library_id": "ready-emergency-preparedness",
-      "status": "development-only",
-      "reason": "A small regional source lock is not archive-proven for a new public edition."
+      "status": "retired",
+      "reason": "Do not ship as a fragmented four-record pack; any future U.S. preparedness library must consolidate and review its source set before creating a new edition."
     },
     {
       "library_id": "camping-safety",
-      "status": "development-only",
-      "reason": "Overlaps other focused outdoor guidance and is not archive-proven for a new public edition."
+      "status": "retired",
+      "reason": "Overlaps the NPS backcountry/outdoor subset and is too small as a separate install. Preserve its source evidence for a possible reviewed consolidation."
     },
     {
       "library_id": "backcountry-basics",
-      "status": "development-only",
+      "status": "retired",
       "reason": "Catalog and source-lock editions disagree."
     },
     {
       "library_id": "weather-safety",
-      "status": "development-only",
+      "status": "retired",
       "reason": "Source and record evidence exist, but no archive proof has been admitted."
     },
     {
       "library_id": "earthquake-tsunami-safety",
-      "status": "development-only",
+      "status": "retired",
       "reason": "Source and record evidence exist, but no archive proof has been admitted."
     },
     {
       "library_id": "emergency-food",
-      "status": "development-only",
-      "reason": "One narrow record is not a standalone high-quality library and has no archive proof."
+      "status": "retired",
+      "reason": "One narrow record is not a standalone library. Keep only as source evidence if a reviewed preparedness collection is built."
     },
     {
       "library_id": "practical-living",
-      "status": "development-only",
-      "reason": "Four selected articles are not archive-proven for a new public edition."
+      "status": "retired",
+      "reason": "Four loosely related topics do not form a coherent reference pack or distinct install purpose."
     },
     {
       "library_id": "bali-travel",
