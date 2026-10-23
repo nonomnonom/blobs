@@ -6,4 +6,8 @@ __pycache__/
 artifacts/*.blobs
 artifacts/.package-*/
 artifacts/.build-*/
+# Normalized record editions are release artifacts published to the
+# nonomnomon/blobs-catalog dataset; the repository keeps locks, receipts and
+# corpus/published-records.json pointers instead of the bytes.
+artifacts/records/
 artifacts/records/.export-*/
