@@ -30,8 +30,10 @@ _EDITION = re.compile(r"[0-9A-Za-z.-]{1,40}")
 _SHA256 = re.compile(r"[a-f0-9]{64}")
 _OSM_TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 _OSM_TYPES = {"node", "way", "relation"}
-_AMENITIES = {"restaurant", "cafe", "fast_food"}
-_VEGAN_VALUES = {"yes", "only"}
+_AMENITY = re.compile(r"[a-z0-9_]{1,40}")
+_TAG_KEY = re.compile(r"[a-z:_-]{1,60}")
+MAX_AMENITIES = 12
+MAX_TAG_RULES = 4
 _CAPTURE_RECEIPT_FORMAT = 1
 
 
@@ -120,6 +122,54 @@ class _SameHostRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def read_selection(value: object) -> dict[str, Any]:
+    """Validate the reviewed rule that decides which named places a shard carries."""
+    if not isinstance(value, dict):
+        raise ValueError("Missing place selection rules")
+    amenities = value.get("amenities")
+    if (
+        not isinstance(amenities, list)
+        or not 1 <= len(amenities) <= MAX_AMENITIES
+        or any(not isinstance(item, str) or not _AMENITY.fullmatch(item) for item in amenities)
+    ):
+        raise ValueError("Invalid place amenity selection")
+    rules = value.get("tag_any", [])
+    if not isinstance(rules, list) or len(rules) > MAX_TAG_RULES:
+        raise ValueError("Invalid place tag selection")
+    for rule in rules:
+        if (
+            not isinstance(rule, dict)
+            or not isinstance(rule.get("key"), str)
+            or not _TAG_KEY.fullmatch(rule["key"])
+            or not isinstance(rule.get("values"), list)
+            or not 1 <= len(rule["values"]) <= 12
+            or any(not isinstance(item, str) or not item.strip() for item in rule["values"])
+        ):
+            raise ValueError("Invalid place tag rule")
+    return dict(
+        amenities=sorted(set(amenities)),
+        tag_any=[
+            dict(key=rule["key"], values=sorted({item.strip().lower() for item in rule["values"]}))
+            for rule in rules
+        ],
+    )
+
+
+def place_indicator(tags: dict[str, str], selection: dict[str, Any]) -> str | None:
+    """Return the raw OpenStreetMap evidence that qualifies one element."""
+    amenity = tags.get("amenity", "").strip().lower()
+    if amenity not in selection["amenities"]:
+        return None
+    if not selection["tag_any"]:
+        return f"amenity={amenity}"
+    for rule in selection["tag_any"]:
+        parts = {value.strip().lower() for value in tags.get(rule["key"], "").split(";")}
+        matched = parts & set(rule["values"])
+        if matched:
+            return rule["key"] + " includes " + ", ".join(sorted(matched))
+    return None
+
+
 def _validated_snapshot_source(value: object) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError("Missing place snapshot source")
@@ -142,7 +192,7 @@ def _validated_snapshot_source(value: object) -> dict[str, Any]:
             raise ValueError(f"Invalid snapshot {field}")
     if value["matching_elements"] > value["elements"]:
         raise ValueError("Snapshot matching count exceeds element count")
-    return value
+    return dict(value, selection=read_selection(value.get("selection")))
 
 
 def read_lock(path: Path) -> dict[str, Any]:
@@ -177,17 +227,7 @@ def _digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def _vegan_indicator(tags: dict[str, str]) -> str | None:
-    diet = tags.get("diet:vegan", "").strip().lower()
-    if diet in _VEGAN_VALUES:
-        return f"diet:vegan={diet}"
-    cuisines = {value.strip().lower() for value in tags.get("cuisine", "").split(";")}
-    if "vegan" in cuisines:
-        return "cuisine includes vegan"
-    return None
-
-
-def _snapshot_summary(snapshot: dict[str, Any]) -> dict[str, Any]:
+def _snapshot_summary(snapshot: dict[str, Any], selection: dict[str, Any]) -> dict[str, Any]:
     metadata, elements = snapshot.get("osm3s"), snapshot.get("elements")
     if (
         not isinstance(metadata, dict)
@@ -210,12 +250,11 @@ def _snapshot_summary(snapshot: dict[str, Any]) -> dict[str, Any]:
             element.get("type") in _OSM_TYPES
             and type(element.get("id")) is int
             and element["id"] > 0
-            and tags.get("amenity") in _AMENITIES
             and bool(_tag_text(tags, "name"))
-            and _vegan_indicator(tags) is not None
+            and place_indicator(tags, selection) is not None
         )
     if matching == 0:
-        raise ValueError("Snapshot has no supported named vegan places")
+        raise ValueError("Snapshot has no places matching the reviewed selection")
     return dict(
         osm_base=metadata["timestamp_osm_base"],
         elements=len(elements),
@@ -245,8 +284,11 @@ def read_capture_receipt(path: Path) -> dict[str, Any]:
     return receipt
 
 
-def capture(endpoint: str, query_path: Path, output: Path) -> dict[str, Any]:
+def capture(
+    endpoint: str, query_path: Path, output: Path, selection: dict[str, Any]
+) -> dict[str, Any]:
     """Capture one small Overpass JSON response for review, without making a lock."""
+    selection = read_selection(selection)
     endpoint = _https_url(endpoint, "snapshot endpoint")
     parsed = urllib.parse.urlsplit(endpoint)
     if parsed.query or parsed.fragment:
@@ -287,7 +329,7 @@ def capture(endpoint: str, query_path: Path, output: Path) -> dict[str, Any]:
         raise ValueError("Place snapshot is not valid UTF-8 JSON") from error
     if not isinstance(snapshot, dict):
         raise ValueError("Place snapshot must be a JSON object")
-    summary = _snapshot_summary(snapshot)
+    summary = _snapshot_summary(snapshot, selection)
     partial = output.with_suffix(output.suffix + ".partial")
     if partial.exists():
         raise FileExistsError(partial)
@@ -309,6 +351,7 @@ def capture(endpoint: str, query_path: Path, output: Path) -> dict[str, Any]:
             query_sha256=hashlib.sha256(query.encode("utf-8")).hexdigest(),
             snapshot_bytes=len(raw),
             snapshot_sha256=hashlib.sha256(raw).hexdigest(),
+            selection=selection,
             **summary,
         ),
     )
@@ -417,8 +460,8 @@ def _place_document(
         raise ValueError("Invalid OpenStreetMap tags")
     amenity = _tag_text(tags, "amenity")
     name = _tag_text(tags, "name")
-    indicator = _vegan_indicator(tags)
-    if amenity not in _AMENITIES or name is None or indicator is None:
+    indicator = place_indicator(tags or {}, read_selection(lock["source"]["selection"]))
+    if amenity is None or name is None or indicator is None:
         return None
     latitude, longitude = _coordinate(element)
     timestamp = element.get("timestamp")
@@ -432,7 +475,7 @@ def _place_document(
         f"OpenStreetMap place: {name}",
         f"Local collection: {lock['collection']}",
         f"Type: {amenity.replace('_', ' ')}",
-        f"Vegan indicator in OpenStreetMap: {indicator}",
+        f"Selection evidence in OpenStreetMap: {indicator}",
     ]
     for label, value in (
         ("Cuisine", _tag_text(tags, "cuisine")),
@@ -471,7 +514,7 @@ def _place_document(
             osm_id=element_id,
             osm_version=element.get("version"),
             osm_timestamp=timestamp,
-            vegan_indicator=indicator,
+            place_indicator=indicator,
             latitude=latitude,
             longitude=longitude,
             extractor="blobs_corpus.places/1",
@@ -531,6 +574,8 @@ def main() -> None:
     capture_parser.add_argument("endpoint")
     capture_parser.add_argument("query", type=Path)
     capture_parser.add_argument("output", type=Path)
+    capture_parser.add_argument("amenities", help="comma-separated OSM amenity values")
+    capture_parser.add_argument("--tag-any", type=Path, help="JSON file with [{key, values}] rules that must also match")
     extract_parser = commands.add_parser("extract")
     extract_parser.add_argument("lock", type=Path)
     extract_parser.add_argument("snapshot", type=Path)
@@ -551,7 +596,14 @@ def main() -> None:
     lock_parser.add_argument("--notes", required=True)
     args = parser.parse_args()
     if args.command == "capture":
-        print(json.dumps(capture(args.endpoint, args.query, args.output), indent=2))
+        tag_any = []
+        if args.tag_any is not None:
+            tag_any = json.loads(args.tag_any.read_text(encoding="utf-8"))
+        selection = dict(
+            amenities=[item.strip() for item in args.amenities.split(",") if item.strip()],
+            tag_any=tag_any,
+        )
+        print(json.dumps(capture(args.endpoint, args.query, args.output, selection), indent=2))
     elif args.command == "extract":
         print(extract(args.lock, args.snapshot, args.output))
     else:

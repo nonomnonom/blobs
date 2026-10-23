@@ -15,8 +15,18 @@ from .names import build_names
 from .partition import PartitionSelection
 
 
+MAX_HEADING_CHARS = 300
+
+
 def passage_spans(body: str, title: str, limit: int = 1400):
-    headings = list(re.finditer(r"^\s*(={2,6})\s*(.+?)\s*\1\s*$", body, re.MULTILINE))
+    # A pasted console or table rule can satisfy the heading pattern with thousands of
+    # characters. MediaWiki article titles are far shorter, so such a line is content,
+    # not a section, and must not become part of the Android section path.
+    headings = [
+        match
+        for match in re.finditer(r"^\s*(={2,6})\s*(.+?)\s*\1\s*$", body, re.MULTILINE)
+        if len(match.group(2)) <= MAX_HEADING_CHARS
+    ]
     section, ancestry, start = title, [], 0
 
     def chunks(start, end):
