@@ -99,14 +99,17 @@ def merge(
             files = {}
             for kind, item in shard["files"].items():
                 original = directory / item["name"]
-                target = output / item["name"]
+                # Two archives name their first shard identically, so the lane edition
+                # prefixes each member file with its own source identity.
+                stored = f"{manifest['source']['id']}--{item['name']}"
+                target = output / stored
                 try:
                     os.link(original, target)
                 except OSError as error:
                     if error.errno not in (errno.EXDEV,) and getattr(error, "winerror", None) != 17:
                         raise
                     shutil.copyfile(original, target)
-                files[kind] = dict(item)
+                files[kind] = dict(item, name=stored)
             shard_rows.append(
                 dict(
                     start=shard["start"] + offset,
@@ -172,11 +175,13 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("members", type=Path, nargs="+", help="archive edition manifest.json files")
-    parser.add_argument("output", type=Path)
-    parser.add_argument("--lane", required=True)
-    parser.add_argument("--edition", required=True)
-    parser.add_argument("--collection", required=True)
-    parser.add_argument("--scope", required=True)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    merge_parser = subparsers.add_parser("merge")
+    merge_parser.add_argument("members", type=Path, nargs="+", help="archive edition manifest.json files")
+    merge_parser.add_argument("output", type=Path, help="new lane edition directory")
+    merge_parser.add_argument("--lane", required=True)
+    merge_parser.add_argument("--edition", required=True)
+    merge_parser.add_argument("--collection", required=True)
+    merge_parser.add_argument("--scope", required=True)
     args = parser.parse_args()
     merge(args.members, args.output, args.lane, args.edition, args.collection, args.scope)
