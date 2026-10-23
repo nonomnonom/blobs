@@ -20,6 +20,10 @@ SUPPORTED_PROJECTS = {"wikipedia", "wikisource", "wikivoyage", "stackexchange"}
 # directories and paged question listings. Only a question page is a post.
 QUESTION_PATH = re.compile(r"questions/\d+/")
 
+# Wikisource carries a work's text as one page plus subpages. Author: pages
+# are bibliographic stubs, Portal: pages are subject navigation, and the main
+# page is site chrome, so none of them is a primary text.
+
 
 def project(source_id: str) -> str:
     return str(source_id).split("-")[0]
@@ -33,6 +37,13 @@ def exclusion(document, source_project: str = ""):
         if path.startswith("tags"):
             return "Tag directory page, not a question"
         return "Site navigation or question listing, not a question"
+    if source_project == "wikisource":
+        if path.startswith("Author:"):
+            return "Author metadata page, not a primary text"
+        if path.startswith("Portal:"):
+            return "Subject portal navigation, not a primary text"
+        if path in ("Main_Page", "Main Page"):
+            return "Archive navigation page, not a primary text"
     if path.startswith("_assets_/"):
         return "Bundled support asset, not a source article"
     if path.startswith("_mw_/"):
@@ -77,6 +88,13 @@ def curate(source: Path, output: Path):
             for doc in documents(path):
                 reason = exclusion(doc, archive_project)
                 counter = "excluded_non_articles"
+                if reason is None and archive_project == "stackexchange":
+                    # A question page with no answers records a problem, not
+                    # knowledge; shipping it returns an unanswered query.
+                    normalization = doc.get("provenance", {}).get("normalization") or {}
+                    if normalization.get("answers") == 0:
+                        reason = "Unanswered question, not an answer to ship"
+                        counter = "excluded_unanswered"
                 if reason is None:
                     body_sha256 = doc.get("provenance", {}).get("body_sha256")
                     if body_sha256 and body_sha256 in seen_bodies:

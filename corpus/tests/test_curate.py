@@ -33,6 +33,29 @@ class StackExchangeReviewTests(unittest.TestCase):
         self.assertIsNone(exclusion(page("users"), "wikipedia"))
         self.assertIsNone(exclusion(page("questions"), "wikivoyage"))
 
+    def test_wikisource_keeps_works_and_drops_its_navigation(self):
+        self.assertIsNone(exclusion(page("The_Wealth_of_Nations/Book_I"), "wikisource"))
+        self.assertIsNone(exclusion(page("Authoring_a_Nation"), "wikisource"))
+        self.assertEqual(
+            exclusion(page("Author:Adam_Smith"), "wikisource"),
+            "Author metadata page, not a primary text",
+        )
+        self.assertEqual(
+            exclusion(page("Portal:American_Revolution"), "wikisource"),
+            "Subject portal navigation, not a primary text",
+        )
+        self.assertEqual(
+            exclusion(page("Main_Page"), "wikisource"),
+            "Archive navigation page, not a primary text",
+        )
+        self.assertEqual(
+            exclusion(page("Main Page"), "wikisource"),
+            "Archive navigation page, not a primary text",
+        )
+
+    def test_wikisource_chrome_rule_does_not_leak_to_other_projects(self):
+        self.assertIsNone(exclusion(page("Author:Adam_Smith"), "wikipedia"))
+
     def test_support_paths_still_exclude(self):
         self.assertIsNotNone(exclusion(page("_mw_/MathML"), "wikipedia"))
         self.assertIsNotNone(exclusion(page("_assets_/logo.png"), "wikivoyage"))

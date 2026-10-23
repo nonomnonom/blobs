@@ -323,6 +323,49 @@ class BuildTests(unittest.TestCase):
                 "Duplicate body text of an earlier record",
             )
 
+    def test_review_drops_an_unanswered_stack_exchange_question(self):
+        text = b"<p>The question text is long enough to be extracted, but no answer exists in the pinned archive.</p>"
+        unanswered = article(text, "Why is my chain slipping", "questions/1/why-is-my-chain-slipping", LOCK)
+        unanswered["provenance"]["normalization"] = {"answers": 0, "question_id": "1"}
+        answered = article(text, "How do I true a wheel", "questions/2/how-do-i-true-a-wheel", LOCK)
+        answered["provenance"]["normalization"] = {"answers": 2, "question_id": "2"}
+        with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
+            root = Path(folder)
+            shard = root / "documents.jsonl.gz"
+            write_lines(shard, [unanswered, answered])
+            info = dict(
+                name=shard.name,
+                bytes=shard.stat().st_size,
+                sha256=hashlib.sha256(shard.read_bytes()).hexdigest(),
+            )
+            manifest = dict(
+                format=1,
+                source=LOCK,
+                complete=True,
+                next_entry=2,
+                totals={"documents": 2},
+                shards=[
+                    dict(
+                        start=0,
+                        end=2,
+                        archive="stackexchange-bicycles-en-all",
+                        counts={"documents": 2},
+                        files={"documents": info},
+                    )
+                ],
+            )
+            write_json(root / "manifest.json", manifest)
+            reviewed = curate(root / "manifest.json", root / "reviewed")
+            self.assertEqual(
+                [d["title"] for d in documents(root / "reviewed/manifest.json")],
+                ["How do I true a wheel"],
+            )
+            self.assertEqual(reviewed["totals"]["excluded_unanswered"], 1)
+            self.assertEqual(
+                reviewed["curation"]["excluded_documents"][0]["reason"],
+                "Unanswered question, not an answer to ship",
+            )
+
     def test_review_excludes_support_pages_without_changing_source_shards(self):
         text = b"<p>This original text is long enough to be extracted, but its archive path determines whether it belongs to an article.</p>"
         items = [
