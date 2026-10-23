@@ -8,9 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -29,22 +28,28 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.library.Evidence
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductViewModel
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-fun ReaderScreen(source: Evidence?, model: ProductViewModel) {
+fun ReaderScreen(source: Evidence?, model: AppViewModel) {
     if (source == null) return
     var addressOpen by androidx.compose.runtime.saveable.rememberSaveable(source.id) {
         androidx.compose.runtime.mutableStateOf(false)
     }
     val packages by model.packages.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
-    val available = packages.any { source.id.startsWith(it.key + "/") }
+    val installed = packages.any {
+        it.kind == "library" && source.id.startsWith(it.key + "/")
+    }
+    val enabledForAnswers = packages.any {
+        it.kind == "library" && it.enabled && source.id.startsWith(it.key + "/")
+    }
     val large = LocalDensity.current.fontScale >= 1.5f
     val actions: @Composable (Modifier) -> Unit = { modifier ->
-        if (available) {
+        if (installed) {
             Column(modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                 if (!state.readerIsFull) {
                     TextButton(onClick = {
@@ -53,31 +58,21 @@ fun ReaderScreen(source: Evidence?, model: ProductViewModel) {
                         Text(stringResource(R.string.read_full_source))
                     }
                 }
-                PrimaryAction(R.string.ask_source) { model.askSource(source) }
-            }
-        }
-    }
-    val paragraphs = remember(source.text) {
-        source.text.split(Regex("\\n\\s*\\n")).flatMap { paragraph ->
-            buildList {
-                var remaining = paragraph
-                while (remaining.length > 2400) {
-                    val end = remaining.lastIndexOf(' ', 2400).takeIf { it > 0 } ?: 2400
-                    add(remaining.substring(0, end))
-                    remaining = remaining.substring(end).trimStart()
+                if (enabledForAnswers) {
+                    PrimaryAction(R.string.use_library_in_chat) { model.askSource(source) }
                 }
-                if (remaining.isNotBlank()) add(remaining)
             }
         }
     }
+    val paragraphs = remember(source.text) { splitReaderParagraphs(source.text) }
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 24.dp),
-            contentPadding = PaddingValues(vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = BlobsDimens.page),
+            contentPadding = PaddingValues(vertical = BlobsDimens.lg),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg)
         ) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)) {
                     Text(
                         source.publisher,
                         style = MaterialTheme.typography.bodySmall,
@@ -91,16 +86,16 @@ fun ReaderScreen(source: Evidence?, model: ProductViewModel) {
                     )
                 }
             }
-            items(paragraphs) { paragraph ->
-                if (!state.readerIsFull && paragraph == paragraphs.firstOrNull()) {
+            itemsIndexed(paragraphs) { index, paragraph ->
+                if (!state.readerIsFull && index == 0) {
                     Surface(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MaterialTheme.shapes.medium,
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         SelectionContainer {
                             Text(
                                 paragraph,
-                                Modifier.padding(16.dp),
+                                Modifier.padding(BlobsDimens.md),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -151,7 +146,7 @@ fun ReaderScreen(source: Evidence?, model: ProductViewModel) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            if (!available) {
+            if (!installed) {
                 item {
                     Text(
                         stringResource(R.string.source_unavailable),
@@ -161,7 +156,7 @@ fun ReaderScreen(source: Evidence?, model: ProductViewModel) {
             }
             if (large) item { actions(Modifier) }
         }
-        if (!large) actions(Modifier.padding(horizontal = 24.dp))
+        if (!large) actions(Modifier.padding(horizontal = BlobsDimens.page))
     }
     if (addressOpen) {
         androidx.compose.material3.AlertDialog(
@@ -189,3 +184,29 @@ private fun sourceDate(value: String): String = runCatching {
             .withLocale(java.util.Locale.ENGLISH)
     )
 }.getOrDefault(value)
+
+private fun splitReaderParagraphs(text: String): List<String> =
+    text.split(Regex("\\n\\s*\\n")).flatMap { paragraph ->
+        buildList {
+            var remaining = paragraph
+            while (remaining.length > MAX_READER_PARAGRAPH_CHARACTERS) {
+                val preferredEnd = remaining.lastIndexOf(' ', MAX_READER_PARAGRAPH_CHARACTERS)
+                    .takeIf { it > 0 } ?: MAX_READER_PARAGRAPH_CHARACTERS
+                val end = preserveSurrogatePair(remaining, preferredEnd)
+                add(remaining.substring(0, end))
+                remaining = remaining.substring(end).trimStart()
+            }
+            if (remaining.isNotBlank()) add(remaining)
+        }
+    }
+
+private fun preserveSurrogatePair(value: String, end: Int): Int =
+    if (end < value.length && end > 0 && Character.isHighSurrogate(value[end - 1]) &&
+        Character.isLowSurrogate(value[end])
+    ) {
+        end - 1
+    } else {
+        end
+    }
+
+private const val MAX_READER_PARAGRAPH_CHARACTERS = 2_400

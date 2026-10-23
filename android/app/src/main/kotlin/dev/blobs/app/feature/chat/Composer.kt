@@ -1,25 +1,25 @@
 package dev.blobs.app.feature.chat
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,9 +36,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,41 +44,70 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
+import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.ui.AppUiState
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.ModelLogo
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductState
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
+import dev.blobs.app.ui.theme.BlobsMotion
+
+@Composable
+internal fun AnswerDisclaimer(modifier: Modifier = Modifier) {
+    Text(
+        stringResource(R.string.answer_check),
+        modifier.fillMaxWidth(),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
 
 @Composable
 internal fun Composer(
-    state: ProductState,
+    state: AppUiState,
     work: WorkState,
     followUp: Boolean,
-    model: ProductViewModel,
+    model: AppViewModel,
     modifier: Modifier = Modifier,
     onFocusChange: (Boolean) -> Unit = {}
 ) {
-    var choosingModel by remember { mutableStateOf(false) }
-    val packages by model.packages.collectAsStateWithLifecycle()
     val selected = model.selectedModel()
     val modelTitle = selected?.title ?: stringResource(R.string.model_missing)
     val modelLabel = stringResource(R.string.model_choice, modelTitle)
-    val sourceCount = model.selectedScope().orEmpty().size
-    val scopeLabel = if (state.options.scope == "*") {
-        stringResource(R.string.all_sources)
-    } else {
-        pluralStringResource(R.plurals.selected_sources, sourceCount, sourceCount)
+    val selectedLibraries = model.selectedLibraryScope()
+    val libraryCount = selectedLibraries?.size ?: 0
+    val scopeLabel = when {
+        selectedLibraries == null -> stringResource(R.string.all_libraries)
+        selectedLibraries.isEmpty() -> stringResource(R.string.offline_only)
+        else -> stringResource(R.string.libraries_count, libraryCount)
     }
     val large = LocalDensity.current.fontScale >= 1.5f
+    var focused by remember { mutableStateOf(false) }
+    val outline by animateColorAsState(
+        targetValue = if (focused) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outline
+        },
+        animationSpec = tween(BlobsMotion.quick),
+        label = "composer-outline"
+    )
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        shape = RoundedCornerShape(26.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        color = if (focused) {
+            MaterialTheme.colorScheme.surfaceContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLowest
+        },
+        shape = MaterialTheme.shapes.extraLarge,
+        border = BorderStroke(1.dp, outline),
         shadowElevation = 0.dp
     ) {
-        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            Modifier.padding(BlobsDimens.xs),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.xxs)
+        ) {
             val inputLabel =
                 stringResource(if (followUp) R.string.follow_up_hint else R.string.question_hint)
             TextField(
@@ -91,7 +118,10 @@ internal fun Composer(
                     min = 94.dp,
                     max = if (large) 240.dp else 140.dp
                 )
-                    .onFocusChanged { onFocusChange(it.hasFocus) }
+                    .onFocusChanged {
+                        focused = it.isFocused
+                        onFocusChange(it.hasFocus)
+                    }
                     .semantics { contentDescription = inputLabel },
                 textStyle = MaterialTheme.typography.bodyLarge,
                 maxLines = 4,
@@ -106,33 +136,31 @@ internal fun Composer(
                 )
             )
             if (large) {
-                ModelPickerButton(
+                ModelPicker(
                     modelTitle,
                     modelLabel,
+                    selected,
+                    model,
                     !work.busy,
                     Modifier.fillMaxWidth(),
                     true
-                ) {
-                    choosingModel =
-                        true
-                }
+                )
             }
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(BlobsDimens.xxs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!large) {
-                    ModelPickerButton(
+                    ModelPicker(
                         modelTitle,
                         modelLabel,
+                        selected,
+                        model,
                         !work.busy,
                         Modifier.weight(1f),
                         false
-                    ) {
-                        choosingModel =
-                            true
-                    }
+                    )
                 }
                 TextButton(
                     onClick = { model.navigate(Page.SOURCES) },
@@ -149,11 +177,7 @@ internal fun Composer(
                         Modifier.padding(end = 6.dp).size(16.dp)
                     )
                     Text(
-                        if (state.options.scope == "*") {
-                            stringResource(R.string.sources)
-                        } else {
-                            stringResource(R.string.sources_count, sourceCount)
-                        },
+                        scopeLabel,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -181,56 +205,100 @@ internal fun Composer(
             }
         }
     }
-    if (choosingModel) {
-        AlertDialog(
-            onDismissRequest = { choosingModel = false },
-            title = { Text(stringResource(R.string.models)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(stringResource(R.string.models_help))
-                    LazyColumn {
-                        items(packages.filter { it.kind == "model" }, key = { it.key }) { pack ->
-                            Row(
-                                Modifier.fillMaxWidth().selectable(
-                                    selected = selected?.key == pack.key,
-                                    enabled = !work.busy,
-                                    role = Role.RadioButton,
-                                    onClick = {
-                                        model.selectModel(pack)
-                                        choosingModel = false
-                                    }
-                                ).padding(vertical = 12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                ModelLogo(pack.title)
-                                Column(Modifier.weight(1f)) {
-                                    Text(pack.title, style = MaterialTheme.typography.titleMedium)
-                                    Text(
-                                        fileSize(pack.bytes),
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                                RadioButton(selected = selected?.key == pack.key, onClick = null)
-                            }
+}
+
+@Composable
+private fun ModelPicker(
+    title: String,
+    label: String,
+    selected: PackageEntity?,
+    model: AppViewModel,
+    enabled: Boolean,
+    modifier: Modifier,
+    large: Boolean
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val packages by model.packages.collectAsStateWithLifecycle()
+    val catalog by model.catalogState.collectAsStateWithLifecycle()
+    val installedModels = packages.filter { it.kind == "model" }
+    val installedKeys = installedModels.mapTo(mutableSetOf()) { it.key }
+    val downloadableModels = catalog.packages.filter {
+        it.manifest.kind == "model" && it.manifest.key !in installedKeys
+    }
+
+    Box(modifier) {
+        ModelPickerButton(title, label, enabled, Modifier.fillMaxWidth(), large) {
+            expanded = true
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            installedModels.forEach { pack ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(pack.title, style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                fileSize(pack.bytes),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    choosingModel = false
-                    model.navigate(Page.MODELS)
-                }) {
-                    Text(stringResource(R.string.manage_models))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    choosingModel = false
-                }) { Text(stringResource(R.string.done)) }
+                    },
+                    leadingIcon = { ModelLogo(pack.title, 24.dp) },
+                    trailingIcon = if (pack.key == selected?.key) {
+                        {
+                            Icon(
+                                painterResource(R.drawable.ic_check),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    onClick = {
+                        expanded = false
+                        model.selectModel(pack)
+                    },
+                    enabled = enabled
+                )
             }
-        )
+            if (downloadableModels.isNotEmpty()) {
+                if (installedModels.isNotEmpty()) HorizontalDivider()
+                downloadableModels.forEach { asset ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    asset.manifest.title,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    stringResource(R.string.download_model),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        },
+                        leadingIcon = { ModelLogo(asset.manifest.title, 24.dp) },
+                        onClick = {
+                            expanded = false
+                            model.navigate(Page.MODELS)
+                        },
+                        enabled = enabled
+                    )
+                }
+            }
+            if (installedModels.isNotEmpty() || downloadableModels.isNotEmpty()) {
+                HorizontalDivider()
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.manage_models)) },
+                onClick = {
+                    expanded = false
+                    model.navigate(Page.MODELS)
+                }
+            )
+        }
     }
 }
 

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -23,19 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.ui.AppUiState
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductState
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-fun ImportReviewScreen(
-    state: ProductState,
-    packages: List<PackageEntity>,
-    model: ProductViewModel
-) {
+fun ImportReviewScreen(state: AppUiState, packages: List<PackageEntity>, model: AppViewModel) {
     val work by model.work.collectAsStateWithLifecycle()
     if (state.importUri == null) return
     val manifest = state.manifest
@@ -43,8 +39,9 @@ fun ImportReviewScreen(
     val otherEdition = packages.any { it.packageId == manifest?.id && it.key != manifest.key }
     Column(Modifier.fillMaxSize()) {
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(BlobsDimens.page),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg)
         ) {
             Heading(if (duplicate) R.string.package_already_added else R.string.review_import)
             if (manifest == null) {
@@ -52,12 +49,12 @@ fun ImportReviewScreen(
                 Body(R.string.checking_file)
             } else {
                 Surface(
-                    shape = RoundedCornerShape(24.dp),
+                    shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Column(
-                        Modifier.fillMaxWidth().padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        Modifier.fillMaxWidth().padding(BlobsDimens.lg),
+                        verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs)
                     ) {
                         Text(manifest.title, style = MaterialTheme.typography.titleLarge)
                         Text(
@@ -107,7 +104,12 @@ fun ImportReviewScreen(
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
+        Column(
+            Modifier.fillMaxWidth().padding(
+                horizontal = BlobsDimens.page,
+                vertical = BlobsDimens.sm
+            )
+        ) {
             if (duplicate) {
                 Text(
                     stringResource(R.string.already_added),

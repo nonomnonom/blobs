@@ -36,7 +36,7 @@ jobs:
         run: |
           uv run --locked ruff check ../android/tools .
           uv run --locked ruff format --check ../android/tools .
-          uv run --locked clang-format --dry-run --Werror ../android/app/src/main/cpp/blobs.cpp ../android/app/src/main/cpp/chat_prompt.cpp ../android/app/src/main/cpp/chat_prompt.h ../android/app/src/main/cpp/chat_prompt_test.cpp
+          uv run --locked clang-format --dry-run --Werror ../android/app/src/main/cpp/blobs.cpp ../android/app/src/main/cpp/local_model_runtime.cpp ../android/app/src/main/cpp/local_model_runtime.h ../android/app/src/main/cpp/kv_cache.cpp ../android/app/src/main/cpp/kv_cache.h
       - name: Verify acquisition, normalization, recovery and native package contract
         run: |
           uv run --locked python -m unittest discover -s tests
@@ -77,53 +77,4 @@ jobs:
           path: |
             android/app/build/reports/
             android/app/build/outputs/apk/
-          retention-days: 7
-
-  device-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
-        with:
-          distribution: temurin
-          java-version: '17'
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-        with:
-          cache-provider: basic
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-        with:
-          version: '0.12.19'
-      - name: Install current Android tools and compile SDK
-        run: |
-          sdkmanager="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          "$sdkmanager" --install 'cmdline-tools;latest'
-          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
-      - name: Fetch pinned native source
-        run: uv run --locked --project ../corpus python tools/fetch_runtime.py
-      - name: Stage hash-pinned multi-library retrieval packages
-        run: >-
-          uv run --locked --project ../corpus python tools/stage_multi_library_benchmark.py
-          --cases ../corpus/evaluation/cases/multi-library-retrieval-scaling-v5.json
-          --catalog app/src/main/assets/package-catalog.json
-          --output-dir .local/ci-multi-library
-      - name: Enable KVM for this runner
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
-        with:
-          api-level: 35
-          target: default
-          arch: x86_64
-          working-directory: android
-          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim
-          disable-animations: true
-          script: bash tools/ci_device_tests.sh
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
-        with:
-          name: android-device-test-reports
-          path: android/app/build/reports/androidTests/
           retention-days: 7

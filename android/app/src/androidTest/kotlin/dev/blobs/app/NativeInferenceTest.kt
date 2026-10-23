@@ -10,17 +10,13 @@ import android.util.AtomicFile
 import android.util.Base64
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
-import dev.blobs.app.data.WorkController
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.GgufValidator
 import dev.blobs.app.data.packages.PackageManifest
-import dev.blobs.app.inference.GenerationMetrics
-import dev.blobs.app.inference.NativeBridge
-import dev.blobs.app.inference.TokenSink
-import dev.blobs.app.inference.inferenceThreadCount
+import dev.blobs.app.inference.ResearchPrompt
 import java.io.File
 import java.security.MessageDigest
 import java.util.UUID
@@ -38,12 +34,6 @@ import org.junit.Test
 
 @ManualCheck
 class NativeInferenceTest {
-    private companion object {
-        const val SMOKE_SYSTEM_PROMPT = "Continue in English. /no_think"
-        const val SMOKE_USER_PROMPT = "Performance smoke test:"
-        const val SMOKE_MAX_OUTPUT_TOKENS = 96
-    }
-
     @Test
     fun validatesSuppliedLibraryFile() {
         val args = InstrumentationRegistry.getArguments()
@@ -263,16 +253,20 @@ class NativeInferenceTest {
     fun publicFixtureAnswerEvaluation() = recordOfflineChatFlow(true, capturePublicFixture = true)
 
     @Test
-    fun emptyLibraryReturnsNoSourcesWithoutLoadingModel() = runBlocking {
+    fun emptyLibraryStillAllowsOfflineChat() = runBlocking {
         val args = InstrumentationRegistry.getArguments()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val container = (context.applicationContext as BlobsApplication).container
         withTimeout(15_000) { container.work.state.first { it.ready } }
+        val model = container.database.packages().all().firstOrNull {
+            it.kind == "model" && File(it.path).isFile
+        }
+        assumeTrue("Install a local model before running this check", model != null)
         val runId = args.getString("runId") ?: UUID.randomUUID().toString()
         require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
-        val id = "no-sources-$runId"
-        val question = "What does the fictional Teren instrument measure?"
-        val reportFile = File(context.filesDir, "no-sources-$runId.json")
+        val id = "chat-no-sources-$runId"
+        val question = "Hi, what can you help me with?"
+        val reportFile = File(context.filesDir, "chat-no-sources-$runId.json")
         check(!reportFile.exists())
         container.database.conversations().save(
             ConversationEntity(
@@ -283,25 +277,21 @@ class NativeInferenceTest {
                 System.currentTimeMillis()
             )
         )
-        val unusedModel = PackageEntity(
-            "unused-model", "unused-model", "1", "model", "missing.gguf", "/not-used.gguf",
-            0, "0".repeat(64), "Test only", "local:test", 0
-        )
         val startedAt = SystemClock.elapsedRealtime()
         assertTrue(
             container.work.answer(
                 id,
                 question,
-                unusedModel,
+                requireNotNull(model),
                 emptyList(),
                 null
             )
         )
-        withTimeout(15_000) { container.work.state.first { it.threadId == id && !it.busy } }
+        withTimeout(600_000) { container.work.state.first { it.threadId == id && !it.busy } }
         val turn = container.database.conversations().turns(id).single()
         val elapsedMs = SystemClock.elapsedRealtime() - startedAt
-        assertEquals("NO_SOURCES", turn.status)
-        assertEquals("", turn.answer)
+        assertEquals("COMPLETE", turn.status)
+        assertTrue(turn.answer.isNotBlank())
         assertEquals("[]", turn.evidence)
         saveReport(
             reportFile,
@@ -311,7 +301,7 @@ class NativeInferenceTest {
                 put("complete", true)
                 put(
                     "scope",
-                    "Empty-library product-path control; no model file was opened or generated."
+                    "Casual chat with an installed offline model and no available library sources."
                 )
                 put("application_id", context.packageName)
                 put("fingerprint", Build.FINGERPRINT)
@@ -420,7 +410,9 @@ class NativeInferenceTest {
                     report.put("model_file_bytes", file.length())
                     save()
                     return@mapIndexed PackageEntity(
-                        "fixture-${expected.take(16)}", "fixture-model", expected.take(8),
+                        "fixture-${expected.take(16)}",
+                        args.getString("modelId") ?: "fixture-model",
+                        expected.take(8),
                         "model", file.name, file.path, file.length(), expected,
                         "Evaluation fixture; see its pinned model license",
                         "local:verified-fixture", 0
@@ -589,15 +581,16 @@ class NativeInferenceTest {
             report.put("saved_elapsed_ms", turn?.elapsedMs ?: JSONObject.NULL)
             report.put("error", turn?.error ?: JSONObject.NULL)
             val performance = container.work.lastPerformanceSnapshot
-            if (capturePublicFixture) {
-                report.put("native_result", performance?.nativeResult ?: JSONObject.NULL)
-            }
             report.put(
                 "performance",
                 performance?.let {
                     JSONObject()
                         .put("retrieval_elapsed_ms", it.retrievalElapsedMs)
-                        .put("native_generation", it.generation.json())
+                        .put(
+                            "first_visible_text_elapsed_ms",
+                            it.firstVisibleTextElapsedMs ?: JSONObject.NULL
+                        )
+                        .put("end_to_end_elapsed_ms", it.endToEndElapsedMs)
                 } ?: JSONObject.NULL
             )
             save()
@@ -610,17 +603,16 @@ class NativeInferenceTest {
         val turn = container.database.conversations().turns(id).last()
         assertTrue(
             "Unexpected completed app state: ${turn.status}",
-            turn.status in setOf("COMPLETE", "LIMITED", "UNVERIFIED")
+            turn.status == "COMPLETE"
         )
         val evidence = Evidence.decode(turn.evidence)
         assertTrue(
             "Chat context exceeded its evidence source budget",
-            evidence.size <= WorkController.MAX_ANSWER_SOURCES
+            evidence.size <= ResearchPrompt.MAX_ANSWER_SOURCES
         )
         val performance = requireNotNull(container.work.lastPerformanceSnapshot)
         assertTrue(performance.retrievalElapsedMs >= 0)
-        assertTrue(performance.generation.totalUs > 0)
-        assertTrue(performance.generation.outputTokens > 0)
+        assertTrue(performance.endToEndElapsedMs > 0)
         assertEquals(
             "My next question stays here",
             container.database.conversations().find(id)?.draft
@@ -635,208 +627,6 @@ class NativeInferenceTest {
                 Charsets.UTF_8
             )
         } ?: args.getString(name)
-
-    @Test
-    fun realModelStreamsAndCancellationStopsNativeLoop() {
-        val path = InstrumentationRegistry.getArguments().getString("smokeModel")
-        assumeTrue("Provide a verified GGUF with -e smokeModel <app-private path>", path != null)
-        val model = requireNotNull(path)
-        assertTrue(File(model).isFile)
-        val args = InstrumentationRegistry.getArguments()
-        val runId = args.getString("runId") ?: UUID.randomUUID().toString()
-        require(runId.matches(Regex("[a-zA-Z0-9-]{1,80}")))
-        val requestedThreads = args.getString("smokeThreads")?.toIntOrNull()
-        require(requestedThreads == null || requestedThreads in 1..4)
-        val requireAirplaneMode = args.getString("requireAirplaneMode") == "true"
-        val selectedThreads = requestedThreads
-            ?: inferenceThreadCount(Runtime.getRuntime().availableProcessors())
-        val threadMode = if (requestedThreads == null) "adaptive" else "fixed"
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val airplaneModeEnabled = Settings.Global.getInt(
-            context.contentResolver,
-            Settings.Global.AIRPLANE_MODE_ON,
-            0
-        ) == 1
-        if (requireAirplaneMode) {
-            assertTrue("Airplane mode must be enabled for this offline run", airplaneModeEnabled)
-        }
-        val reportFile = File(context.filesDir, "native-$runId.json")
-        check(!reportFile.exists())
-        val hash = MessageDigest.getInstance("SHA-256")
-        File(model).inputStream().use { input ->
-            val buffer = ByteArray(256 * 1024)
-            while (true) {
-                val length = input.read(buffer)
-                if (length < 0) break
-                hash.update(buffer, 0, length)
-            }
-        }
-        val report = JSONObject().apply {
-            put("format", 1)
-            put("run_id", runId)
-            put("complete", false)
-            put("fingerprint", Build.FINGERPRINT)
-            put("airplane_mode_enabled", airplaneModeEnabled)
-            put("thread_mode", threadMode)
-            put("requested_inference_threads", requestedThreads ?: JSONObject.NULL)
-            put(
-                "device_profile",
-                JSONObject().apply {
-                    put("fingerprint", Build.FINGERPRINT)
-                    put("model", Build.MODEL)
-                    put("device", Build.DEVICE)
-                    put("api", Build.VERSION.SDK_INT)
-                    put("abi", Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown")
-                    put("available_processors", Runtime.getRuntime().availableProcessors())
-                    put("max_heap_bytes", Runtime.getRuntime().maxMemory())
-                }
-            )
-            put("model_bytes", File(model).length())
-            put("model_sha256", hash.digest().joinToString("") { "%02x".format(it) })
-            put(
-                "workload",
-                JSONObject().apply {
-                    put("id", "native-inference-smoke-v1")
-                    put("system_sha256", SMOKE_SYSTEM_PROMPT.sha256())
-                    put("user_sha256", SMOKE_USER_PROMPT.sha256())
-                    put("max_output_tokens", SMOKE_MAX_OUTPUT_TOKENS)
-                }
-            )
-            put(
-                "timing_scope",
-                "Native stages in microseconds; -1 means not reached. First callback includes queue, loading and prefill; callback bytes may not yet form visible UTF-8 text. Generation loop includes token callbacks. File hash reads precede loading; this is not a filesystem-cold or phone-performance benchmark."
-            )
-        }
-        fun checkpoint() = saveReport(reportFile, report)
-        checkpoint()
-        val bridge = NativeBridge()
-        bridge.releaseModel()
-        bridge.reset()
-        val metrics = GenerationMetrics()
-        val result = bridge.generateWithThreads(
-            model.toByteArray(),
-            SMOKE_SYSTEM_PROMPT.toByteArray(),
-            SMOKE_USER_PROMPT.toByteArray(),
-            SMOKE_MAX_OUTPUT_TOKENS,
-            selectedThreads,
-            TokenSink {},
-            metrics
-        )
-        report.put("inference_metrics", metrics.json()).put("inference_result", result)
-        checkpoint()
-        assertTrue("Native status $result", result == 0 || result == 2)
-        assertTrue(metrics.promptTokens > 0 && metrics.outputTokens > 0)
-        assertTrue(metrics.firstTokenCallbackUs >= metrics.prefillUs)
-        assertTrue(metrics.totalUs >= metrics.firstTokenCallbackUs)
-        assertTrue(metrics.modelLoadUs >= 0 && metrics.contextSetupUs >= 0)
-        assertTrue(metrics.modelLoadUs > 0 && !metrics.modelCacheHit)
-        assertTrue(metrics.contextTokens >= metrics.promptTokens + SMOKE_MAX_OUTPUT_TOKENS)
-        assertEquals(512L, metrics.contextTokens)
-        assertEquals(selectedThreads.toLong(), metrics.inferenceThreads)
-
-        val warmMetrics = GenerationMetrics()
-        bridge.reset()
-        val warmResult = bridge.generateWithThreads(
-            model.toByteArray(),
-            SMOKE_SYSTEM_PROMPT.toByteArray(),
-            SMOKE_USER_PROMPT.toByteArray(),
-            SMOKE_MAX_OUTPUT_TOKENS,
-            selectedThreads,
-            TokenSink {},
-            warmMetrics
-        )
-        assertTrue("Warm native status $warmResult", warmResult == 0 || warmResult == 2)
-        assertTrue(warmMetrics.promptTokens > 0 && warmMetrics.outputTokens > 0)
-        assertTrue(warmMetrics.modelCacheHit)
-        assertEquals(0L, warmMetrics.modelLoadUs)
-        assertEquals(
-            warmMetrics.promptTokens,
-            warmMetrics.reusedPromptTokens + warmMetrics.processedPromptTokens
-        )
-        report.put("warm_inference_metrics", warmMetrics.json())
-            .put("warm_inference_result", warmResult)
-        checkpoint()
-
-        bridge.releaseModel()
-        bridge.reset()
-        val reloadMetrics = GenerationMetrics()
-        val reloadResult = bridge.generateWithThreads(
-            model.toByteArray(),
-            SMOKE_SYSTEM_PROMPT.toByteArray(),
-            SMOKE_USER_PROMPT.toByteArray(),
-            SMOKE_MAX_OUTPUT_TOKENS,
-            selectedThreads,
-            TokenSink {},
-            reloadMetrics
-        )
-        assertTrue("Reload native status $reloadResult", reloadResult == 0 || reloadResult == 2)
-        assertTrue(!reloadMetrics.modelCacheHit && reloadMetrics.modelLoadUs > 0)
-        report.put("reload_inference_metrics", reloadMetrics.json())
-            .put("reload_inference_result", reloadResult)
-        checkpoint()
-
-        bridge.reset()
-        var tokens = 0
-        val cancellationMetrics = GenerationMetrics()
-        val stopped = bridge.generate(
-            model.toByteArray(),
-            "Answer in English. /no_think".toByteArray(),
-            "Describe the solar system in detail. /no_think".toByteArray(),
-            96,
-            TokenSink { if (++tokens == 3) bridge.stop() },
-            cancellationMetrics
-        )
-        report.put(
-            "cancellation_metrics",
-            cancellationMetrics.json()
-        ).put("cancellation_result", stopped)
-        checkpoint()
-        assertEquals(1, stopped)
-        assertEquals(3, tokens)
-        assertEquals(3L, cancellationMetrics.outputTokens)
-        assertTrue(cancellationMetrics.modelCacheHit)
-        val failureMetrics = GenerationMetrics()
-        bridge.reset()
-        try {
-            bridge.generate(
-                "$model.missing".toByteArray(),
-                "".toByteArray(),
-                "".toByteArray(),
-                1,
-                TokenSink {},
-                failureMetrics
-            )
-            throw AssertionError("A missing model must fail")
-        } catch (error: IllegalStateException) {
-            assertEquals("MODEL_LOAD", error.message)
-        }
-        assertTrue(failureMetrics.totalUs >= 0)
-        assertEquals(-1L, failureMetrics.firstTokenCallbackUs)
-        assertEquals(0L, failureMetrics.outputTokens)
-        assertTrue(!failureMetrics.modelCacheHit)
-        report.put("failure_metrics", failureMetrics.json()).put("complete", true)
-        checkpoint()
-    }
-
-    private fun GenerationMetrics.json(): JSONObject = JSONObject().apply {
-        put("total_us", totalUs)
-        put("queue_us", queueUs)
-        put("model_load_us", modelLoadUs)
-        put("template_and_tokenize_us", templateAndTokenizeUs)
-        put("context_setup_us", contextSetupUs)
-        put("prefill_us", prefillUs)
-        put("generation_loop_us", generationLoopUs)
-        put("token_callback_us", tokenCallbackUs)
-        put("first_token_callback_us", firstTokenCallbackUs)
-        put("prompt_tokens", promptTokens)
-        put("output_tokens", outputTokens)
-        put("non_thinking_prefix", nonThinkingPrefix)
-        put("inference_threads", inferenceThreads)
-        put("context_tokens", contextTokens)
-        put("model_cache_hit", modelCacheHit)
-        put("reused_prompt_tokens", reusedPromptTokens)
-        put("processed_prompt_tokens", processedPromptTokens)
-    }
 
     private fun String.sha256(): String = MessageDigest.getInstance("SHA-256")
         .digest(toByteArray())

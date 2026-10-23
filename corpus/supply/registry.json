@@ -1,0 +1,175 @@
+{
+  "format": 1,
+  "updated": "2026-10-23",
+  "phase": "rebuild",
+  "release_admission": {
+    "required_evidence": [
+      "versioned_source_lock",
+      "retained_raw_snapshot_or_revision",
+      "rights_review",
+      "reviewed_normalized_records",
+      "records_sha256",
+      "archive_sha256",
+      "archive_receipt",
+      "retrieval_case_set",
+      "catalog_library_profile"
+    ],
+    "rule": "Only an exact entry in release_ready may be published as a library."
+  },
+  "supply_families": [
+    {
+      "id": "wikipedia-global-reference",
+      "priority": 1,
+      "tier": "core-reference",
+      "planned_package_prefix": "wikipedia-en-reference",
+      "status": "acquisition-planned",
+      "languages": ["English"],
+      "scope": "Broad encyclopaedic reference coverage from a full, pinned English source edition. Images and third-party media are out of scope until separately reviewed. The released library may use deterministic complementary shards so each Android archive remains within its package limit.",
+      "source_lock": "corpus/sources/wikipedia-en-all-nopic-2026-06.json",
+      "partition_plan": {
+        "status": "not-created",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Create the plan only from a complete reviewed source manifest. Publish only complementary volumes whose library payload does not exceed 6 GiB (6,442,450,944 bytes)."
+      },
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikipedia/wikipedia_en_all_nopic_2026-06.zim",
+        "https://dumps.wikimedia.org/",
+        "https://library.kiwix.org/"
+      ],
+      "selection_requirements": [
+        "Use one immutable edition with a verified byte digest.",
+        "Preserve canonical article URLs and contributor-attribution paths.",
+        "Publish an explicit exclusion report for redirects, non-articles, malformed pages, and removed media.",
+        "If output requires more than one archive, define deterministic complementary shard boundaries and retrieval cases for cross-shard queries before packaging."
+      ],
+      "known_limits": "A snapshot cannot provide live events or guarantee correctness of individual articles."
+    },
+    {
+      "id": "wikivoyage-global-travel",
+      "priority": 2,
+      "tier": "travel-and-regional",
+      "planned_library_id": "wikivoyage-en",
+      "status": "source-selection",
+      "languages": ["English"],
+      "scope": "A complete pinned English travel-guide edition, retaining destination and contributor history paths.",
+      "candidate_origins": ["https://library.kiwix.org/"],
+      "selection_requirements": [
+        "Resolve the existing record-count discrepancy before adopting any successor.",
+        "Do not publish a city or country subset when the same full library already supplies those records.",
+        "State that schedules, fares, safety guidance, entry rules, and opening hours may have changed."
+      ],
+      "known_limits": "No map tiles, routing, live transport, or current availability claims."
+    },
+    {
+      "id": "wikidata-structured-reference",
+      "priority": 3,
+      "tier": "structured-local-facts",
+      "planned_library_id": "wikidata-reference",
+      "status": "rights-review",
+      "languages": ["Multilingual labels", "English descriptions where available"],
+      "scope": "Reviewed, bounded entity facts selected from an immutable Wikidata source edition; not a live knowledge graph.",
+      "candidate_origins": ["https://www.wikidata.org/wiki/Wikidata:Data_access"],
+      "selection_requirements": [
+        "Define permitted properties and data transformations before acquisition.",
+        "Retain entity identifiers and revision/snapshot identity for every record.",
+        "Exclude claims whose provenance, ranking, or temporal qualifiers cannot be rendered in the reader."
+      ],
+      "known_limits": "It cannot answer unmodeled facts, resolve every entity ambiguity, or supply current values."
+    },
+    {
+      "id": "openstreetmap-regional-places",
+      "priority": 4,
+      "tier": "structured-local-facts",
+      "planned_library_id": "osm-regional-places",
+      "status": "rights-review",
+      "languages": ["Source-dependent"],
+      "scope": "Region-sharded named place snapshots with an exact query, raw snapshot digest, object URLs, source timestamp, and visible OpenStreetMap attribution.",
+      "candidate_origins": ["https://www.openstreetmap.org/copyright"],
+      "selection_requirements": [
+        "Release only a reviewed geographic shard; do not claim worldwide coverage from one query.",
+        "Preserve ODbL obligations and any database-derivative requirements before distribution.",
+        "Do not infer open-now state, distance, route, quality, safety, popularity, or recommendations."
+      ],
+      "known_limits": "Place tags and geometry are snapshots and may be incomplete, stale, or locally inconsistent."
+    },
+    {
+      "id": "primary-public-guidance",
+      "priority": 5,
+      "tier": "primary-domain",
+      "planned_library_id": "public-guidance-regional",
+      "status": "source-selection",
+      "languages": ["Source-dependent"],
+      "scope": "Separately reviewed official public guidance, grouped by jurisdiction and subject instead of mixing incompatible national advice into one global authority.",
+      "candidate_origins": [],
+      "selection_requirements": [
+        "Approve rights and reuse conditions for every publisher and page.",
+        "Keep jurisdiction, publication date, and local-authority limitations visible on every record.",
+        "Split a source into a new immutable edition when its advice or rights change."
+      ],
+      "known_limits": "Official guidance can still be jurisdiction-specific, time-sensitive, and unsuitable for emergency or professional advice without current local confirmation."
+    }
+  ],
+  "legacy_dispositions": [
+    {
+      "library_id": "wikipedia-starter",
+      "status": "development-only",
+      "reason": "Small local starter material lacks the archive-level record digest required for a new public edition."
+    },
+    {
+      "library_id": "wikipedia-top1m-mini",
+      "status": "development-only",
+      "reason": "A historical build receipt exists, but the exact public archive still needs independent manifest verification; it is superseded in priority by the full core-reference family."
+    },
+    {
+      "library_id": "wikivoyage-en",
+      "status": "development-only",
+      "reason": "Current local inventories disagree on record count; a successor must resolve the discrepancy."
+    },
+    {
+      "library_id": "nps-outdoor-safety",
+      "status": "development-only",
+      "reason": "A small regional source lock is not archive-proven for a new public edition."
+    },
+    {
+      "library_id": "ready-emergency-preparedness",
+      "status": "development-only",
+      "reason": "A small regional source lock is not archive-proven for a new public edition."
+    },
+    {
+      "library_id": "camping-safety",
+      "status": "development-only",
+      "reason": "Overlaps other focused outdoor guidance and is not archive-proven for a new public edition."
+    },
+    {
+      "library_id": "backcountry-basics",
+      "status": "development-only",
+      "reason": "Catalog and source-lock editions disagree."
+    },
+    {
+      "library_id": "weather-safety",
+      "status": "development-only",
+      "reason": "Source and record evidence exist, but no archive proof has been admitted."
+    },
+    {
+      "library_id": "earthquake-tsunami-safety",
+      "status": "development-only",
+      "reason": "Source and record evidence exist, but no archive proof has been admitted."
+    },
+    {
+      "library_id": "emergency-food",
+      "status": "development-only",
+      "reason": "One narrow record is not a standalone high-quality library and has no archive proof."
+    },
+    {
+      "library_id": "practical-living",
+      "status": "development-only",
+      "reason": "Four selected articles are not archive-proven for a new public edition."
+    },
+    {
+      "library_id": "bali-travel",
+      "status": "retired",
+      "reason": "The 30-record subset duplicates the broader Wikivoyage library and is removed from the bundled catalog."
+    }
+  ],
+  "release_ready": []
+}

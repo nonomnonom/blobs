@@ -14,7 +14,7 @@ Blobs is an offline Android research app compatible with GrapheneOS. Search a lo
 1. Download the APK from the latest release and open it on Android 9 or later. Allow installation from your browser or file manager when Android asks. ARM64 and x86_64 are supported.
 2. Open Blobs. Review the model recommended for your phone, then choose **Download**. You can compare other models before choosing.
 3. Download the starter library and finish setup. Optional collections are available from **Library → Discover more**.
-4. Ask your first question. Once a model and library are installed, chat, library search, citations, and source reading work offline.
+4. Ask your first question. The model can chat offline without a library; install a library to search saved sources and open citations.
 
 Only downloads and checking for new models or libraries need a connection. They start when you choose them. Installation verifies the package before activating it. Model and library sizes, languages, sources, and licenses are listed in the app and the [guides](https://nonomnonom.github.io/blobs/docs/library/).
 

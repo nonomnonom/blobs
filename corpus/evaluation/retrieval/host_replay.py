@@ -19,8 +19,8 @@ from blobs_corpus.names import name_key
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
 # Single-library parity compares exact passage identities and text hashes.
-LIBRARY_STORE_SHA256 = "cbe74d9ad59531205e2b396be431c6f961d592f7ed7a04c2a9d7fa43a2c4f8bf"
-QUERY_SHA256 = "c6102dc4b0b232a3da8da5bb2284f868255debaace89e507b07287db82b4a166"
+LIBRARY_STORE_SHA256 = "e838f00a8215dbdbfecf4ee5bb822af3a87b3946852ba3cb4c49a58de2ff6e2a"
+QUERY_SHA256 = "d5b63c3237dbe4126ad91b8c1d7a9d08602051e6fb0b94b249441f0d22a82baa"
 STOP_WORDS = {
     "the",
     "and",
@@ -98,6 +98,36 @@ TITLE_INTENT_STOP_WORDS = STOP_WORDS | {
     "around",
 }
 TITLE_NOISE_WORDS = {"city", "town"}
+LOW_SPECIFICITY_NUMBER_WORDS = {
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+    "twenty",
+    "hundred",
+    "thousand",
+    "times",
+    "twice",
+}
+NON_TOPICAL_WORDS = (
+    TITLE_INTENT_STOP_WORDS | TITLE_NOISE_WORDS | {"best"} | LOW_SPECIFICITY_NUMBER_WORDS
+)
 RESPONSE_LENGTH_INSTRUCTION = re.compile(
     r"(?:^|(?<=[.!?\n]))\s*(?:please\s+)?"
     r"(?:answer|respond)\s+in\s+(?:[0-9]+|one|two|three)\s+"
@@ -123,7 +153,7 @@ def unpack(package, target):
         if archive.getinfo("manifest.json").file_size > 65536:
             raise ValueError("Manifest exceeds the native bound")
         manifest = json.loads(archive.read("manifest.json"))
-        if manifest["kind"] != "library" or not 0 < manifest["bytes"] <= 40_000_000_000:
+        if manifest["kind"] != "library" or not 0 < manifest["bytes"] <= 6 * 1024**3:
             raise ValueError("Invalid library manifest")
         if archive.getinfo("library.sqlite").file_size != manifest["bytes"]:
             raise ValueError("Payload length differs from manifest")
@@ -186,9 +216,40 @@ def topic_terms(question, subjects):
     return title_terms(question) - subject_terms - TITLE_INTENT_STOP_WORDS - {"best"}
 
 
-def evidence_overlap(terms, section, text):
-    words = set(re.findall(r"[^\W_]+", f"{section} {text}".lower()))
-    return len((terms - TITLE_INTENT_STOP_WORDS - TITLE_NOISE_WORDS) & words)
+def evidence_overlap(terms, title, section, text):
+    topical_terms = terms - NON_TOPICAL_WORDS
+    words = set(re.findall(r"[^\W_]+", f"{title} {section} {text}".lower()))
+    return len(topical_terms & words)
+
+
+def minimum_evidence_overlap(question_terms):
+    count = len(question_terms - NON_TOPICAL_WORDS)
+    return None if count == 0 else 1 if count == 1 else 2
+
+
+def is_broad_title_question(question, title):
+    title_words = set(name_key(title).split())
+    question_terms = [
+        word
+        for word in name_key(question).split()
+        if len(word) >= 2 and word not in TITLE_INTENT_STOP_WORDS
+    ]
+    return bool(question_terms) and all(word in title_words for word in question_terms)
+
+
+def is_direct_title_match(question, title):
+    if is_broad_title_question(question, title):
+        return True
+    normalized_question = f" {name_key(question)} "
+    normalized_title = name_key(title)
+    title_words = normalized_title.split()
+    if len(title_words) > 1:
+        return f" {normalized_title} " in normalized_question
+    title_word = title_words[0] if title_words else ""
+    return any(
+        match.start() > 0 and match.group()[0].isupper() and name_key(match.group()) == title_word
+        for match in re.finditer(r"[^\W_]+", question, re.UNICODE)
+    )
 
 
 def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_priority_ids=None):
@@ -347,21 +408,22 @@ def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_p
                 ),
                 None,
             )
-            row["topic_overlap"] = evidence_overlap(focus_terms, row["section"], row["body"])
+            row["topic_overlap"] = evidence_overlap(focus_terms, "", "", row["body"])
             row["section_overlap"] = len(title_terms(row["section"]) & focus_terms)
-            row["section_priority"] = row["section_overlap"] if row["section_overlap"] >= 2 else 0
+            row["section_priority"] = row["section_overlap"]
+            row["direct_title_match"] = row["id"] in route_ids
             return (
                 -row["title_priority"],
                 -score,
                 -row["subject_match"],
-                -row["section_priority"],
                 -row["topic_overlap"],
-                -(row["id"] in route_ids),
+                -row["section_priority"],
+                -row["direct_title_match"],
                 index,
             )
 
         candidates = [row for _, row in sorted(enumerate(candidates), key=order_key)]
-    return select_evidence(candidates, manifest), candidates
+    return select_evidence(candidates, manifest, question=question), candidates
 
 
 def direct_title_ids(database, question, titles, *, broad_only=False):
@@ -405,21 +467,8 @@ def direct_title_ids(database, question, titles, *, broad_only=False):
         occupied.update(positions)
         title = match[0]
         if (key == name_key(title) or " " in key) and match[1] not in ids:
-            question_terms = [
-                word
-                for word in name_key(question).split()
-                if len(word) >= 2 and word not in TITLE_INTENT_STOP_WORDS
-            ]
-            title_terms = set(name_key(title).split())
-            broad = bool(question_terms) and all(word in title_terms for word in question_terms)
-            question_words = re.finditer(r"[\w]+", question, re.UNICODE)
-            explicit_proper = any(
-                match.start() > 0
-                and match.group()[0].isupper()
-                and name_key(match.group()) in title_terms
-                for match in question_words
-            )
-            direct = broad or len(name_key(title).split()) > 1 or explicit_proper or " " in key
+            broad = is_broad_title_question(question, title)
+            direct = is_direct_title_match(question, key) or is_direct_title_match(question, title)
             if broad if broad_only else direct:
                 ids.append(match[1])
     return ids
@@ -486,16 +535,40 @@ def retrieval_query(database, question):
     return retrieval_spec(database, question)[0]
 
 
-def select_evidence(candidates, manifest):
+def select_evidence(candidates, manifest, *, question=""):
     """Apply the frozen native whole-passage, document and UTF-16 budgets."""
     broad_titles = {row["title"] for row in candidates if row.get("title_priority")}
-    if broad_titles:
+    direct_subjects = [row for row in candidates if row.get("subject_match")]
+    if direct_subjects:
+        candidates = direct_subjects
+    elif broad_titles:
         candidates = [
             row
             for row in candidates
             if any(
                 row["title"] == title or row["title"].startswith(title + "/")
                 for title in broad_titles
+            )
+        ]
+    if question:
+        question_terms = title_terms(content_question(question))
+        minimum_overlap = minimum_evidence_overlap(question_terms)
+        candidates = [
+            row
+            for row in candidates
+            if (
+                row.get("direct_title_match")
+                or row.get("title_priority")
+                or (
+                    minimum_overlap is not None
+                    and evidence_overlap(
+                        question_terms,
+                        row["title"],
+                        row["section"],
+                        row["body"],
+                    )
+                    >= minimum_overlap
+                )
             )
         ]
     selected, counts, characters = [], Counter(), 0
@@ -545,6 +618,8 @@ def select_evidence(candidates, manifest):
             text=row["body"],
             edition=f"{manifest['title']} · {manifest['version']} · {manifest['sha256']}",
         )
+        if row.get("passage_id") is not None:
+            evidence["passageId"] = row["passage_id"]
         selected.append(evidence)
         if len(selected) == 6:
             break

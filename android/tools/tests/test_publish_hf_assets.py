@@ -125,6 +125,7 @@ class PublishHfAssetsTest(unittest.TestCase):
             title="Travel \u00b7 English",
             bytes=len(payload),
             sha256=hashlib.sha256(payload).hexdigest(),
+            records_sha256="a" * 64,
             license="Test",
             origin="local:test",
         )

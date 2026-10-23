@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,12 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,19 +45,21 @@ import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.DeviceProfile
 import dev.blobs.app.data.packages.DownloadablePackage
 import dev.blobs.app.data.packages.PackageRole
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.ModelLogo
 import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.SetupStep
 import dev.blobs.app.ui.WorldScene
 import dev.blobs.app.ui.fileSize
 import dev.blobs.app.ui.worldSkyColor
+import dev.blobs.app.ui.theme.BlobsComponentShapes
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScroll: ScrollState) {
+fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll: ScrollState) {
     val state by model.state.collectAsStateWithLifecycle()
     val work by model.work.collectAsStateWithLifecycle()
     val catalog by model.catalogState.collectAsStateWithLifecycle()
@@ -101,8 +102,8 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
     Column(Modifier.fillMaxSize().then(if (large) Modifier.verticalScroll(scroll) else Modifier)) {
         Column(
             (if (large) Modifier else Modifier.weight(1f).verticalScroll(scroll))
-                .fillMaxWidth().padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .fillMaxWidth().padding(BlobsDimens.page),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg)
         ) {
             if (step != SetupStep.READY) {
                 Row(
@@ -115,11 +116,12 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(BlobsDimens.xs)) {
                         repeat(3) { index ->
                             Surface(
-                                modifier = Modifier.width(30.dp).height(4.dp),
-                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier.width(BlobsDimens.setupProgressSegmentWidth)
+                                    .height(BlobsDimens.setupProgressSegmentHeight),
+                                shape = MaterialTheme.shapes.extraSmall,
                                 color = if (index <=
                                     step.ordinal
                                 ) {
@@ -136,17 +138,26 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                 SetupStep.MODEL -> {
                     Heading(R.string.setup_model_title)
                     Body(R.string.setup_model_intro)
+                    Text(
+                        pluralStringResource(
+                            R.plurals.model_device_context,
+                            model.contextWindowTokens,
+                            model.contextWindowTokens
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Surface(
-                        shape = RoundedCornerShape(24.dp),
+                        shape = MaterialTheme.shapes.large,
                         color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Column(
-                            Modifier.fillMaxWidth().padding(22.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            Modifier.fillMaxWidth().padding(BlobsDimens.lg),
+                            verticalArrangement = Arrangement.spacedBy(BlobsDimens.md)
                         ) {
                             Row(
                                 Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 ModelLogo(selected.manifest.title, 44.dp)
@@ -258,7 +269,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: ProductViewModel, readyScr
                 SetupStep.LIBRARY -> {
                     WorldScene(
                         Modifier.fillMaxWidth().height(if (large) 128.dp else 200.dp)
-                            .clip(RoundedCornerShape(28.dp)),
+                            .clip(MaterialTheme.shapes.extraLarge),
                         size = if (large) 116.dp else 180.dp
                     )
                     Heading(R.string.setup_library_title)
@@ -399,7 +410,7 @@ private fun ModelOption(
             role = Role.RadioButton,
             onClick = onClick
         ),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.medium,
         color = if (selected) {
             MaterialTheme.colorScheme.primaryContainer
         } else {
@@ -407,11 +418,11 @@ private fun ModelOption(
         }
     ) {
         Column(
-            Modifier.fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            Modifier.fillMaxWidth().padding(BlobsDimens.md),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs)
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ModelLogo(option.manifest.title)
@@ -443,9 +454,9 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
             Column(
                 Modifier.fillMaxWidth().background(
                     if (large) worldSkyColor() else Color.Transparent,
-                    RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                ).padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    BlobsComponentShapes.worldPanel
+                ).padding(BlobsDimens.page),
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.md),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -454,9 +465,7 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
                 )
                 Text(
                     stringResource(R.string.setup_ready_title),
-                    style = MaterialTheme.typography.headlineLarge.let {
-                        if (large) it.copy(fontSize = 27.sp, lineHeight = 32.sp) else it
-                    },
+                    style = MaterialTheme.typography.headlineLarge,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.semantics {
                         heading()
@@ -464,10 +473,7 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
                 )
                 Text(
                     stringResource(R.string.setup_ready_intro),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 15.sp,
-                        lineHeight = 23.sp
-                    ),
+                    style = MaterialTheme.typography.bodyLarge,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
@@ -485,30 +491,30 @@ private fun ReadyScreen(modelTitle: String, scroll: ScrollState, finish: () -> U
                 size = if (large) 170.dp else 240.dp
             )
             Column(
-                Modifier.fillMaxWidth().padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                Modifier.fillMaxWidth().padding(BlobsDimens.page),
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.md)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xEBFFFEFA),
-                    contentColor = Color(0xFF292A32)
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = .92f),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
                     Column(
-                        Modifier.fillMaxWidth().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        Modifier.fillMaxWidth().padding(BlobsDimens.md),
+                        verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
                     ) {
                         listOf(
                             modelTitle,
                             stringResource(R.string.starter_saved)
                         ).forEach { label ->
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     androidx.compose.ui.res.painterResource(R.drawable.ic_check),
                                     null,
-                                    tint = Color(0xFF145DE5)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                                 Text(label, style = MaterialTheme.typography.bodyMedium)
                             }

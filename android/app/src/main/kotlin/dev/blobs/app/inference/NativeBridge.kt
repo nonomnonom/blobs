@@ -2,36 +2,22 @@ package dev.blobs.app.inference
 
 private const val MAX_INFERENCE_THREADS = 4
 
-internal fun inferenceThreadCount(availableProcessors: Int): Int =
+internal fun inferenceThreads(availableProcessors: Int): Int =
     availableProcessors.coerceIn(1, MAX_INFERENCE_THREADS)
 
-class TokenSink(private val receive: (ByteArray) -> Unit) {
-    fun onToken(bytes: ByteArray) = receive(bytes)
+/** Receives UTF-8 token fragments from a reusable JNI buffer. */
+internal class TokenSink(private val receive: (ByteArray, Int) -> Boolean) {
+    fun onToken(bytes: ByteArray, size: Int): Boolean {
+        require(size in 0..bytes.size) { "TOKEN_SIZE" }
+        return receive(bytes, size)
+    }
 }
 
-class GenerationMetrics {
-    internal val values = LongArray(17) { -1 }
-
-    val totalUs: Long get() = values[0]
-    val queueUs: Long get() = values[1]
-    val modelLoadUs: Long get() = values[2]
-    val templateAndTokenizeUs: Long get() = values[3]
-    val contextSetupUs: Long get() = values[4]
-    val prefillUs: Long get() = values[5]
-    val generationLoopUs: Long get() = values[6]
-    val tokenCallbackUs: Long get() = values[7]
-    val firstTokenCallbackUs: Long get() = values[8]
-    val promptTokens: Long get() = values[9]
-    val outputTokens: Long get() = values[10]
-    val nonThinkingPrefix: Boolean get() = values[11] == 1L
-    val inferenceThreads: Long get() = values[12]
-    val contextTokens: Long get() = values[13]
-    val modelCacheHit: Boolean get() = values[14] == 1L
-    val reusedPromptTokens: Long get() = values[15]
-    val processedPromptTokens: Long get() = values[16]
-}
-
-class NativeBridge {
+/**
+ * The sole model boundary. It has no socket, HTTP client, API key, or agent loop.
+ * A model stays loaded until the selected model changes or the app explicitly releases it.
+ */
+internal class NativeBridge(private val backendDirectory: String = "") {
     external fun reset()
 
     external fun stop()
@@ -43,42 +29,32 @@ class NativeBridge {
         system: ByteArray,
         user: ByteArray,
         limit: Int,
-        sink: TokenSink,
-        metrics: GenerationMetrics = GenerationMetrics()
-    ): Int = generateWithThreads(
+        sink: TokenSink
+    ): Int = generateNative(
         path,
         system,
         user,
+        backendDirectory.toByteArray(Charsets.UTF_8),
         limit,
-        inferenceThreadCount(Runtime.getRuntime().availableProcessors()),
-        sink,
-        metrics
+        inferenceThreads(Runtime.getRuntime().availableProcessors()),
+        sink
     )
 
-    internal fun generateWithThreads(
+    private external fun generateNative(
         path: ByteArray,
         system: ByteArray,
         user: ByteArray,
+        backendDirectory: ByteArray,
         limit: Int,
         threads: Int,
-        sink: TokenSink,
-        metrics: GenerationMetrics
-    ): Int {
-        require(threads in 1..MAX_INFERENCE_THREADS)
-        return generateMeasured(path, system, user, limit, threads, sink, metrics.values)
-    }
-
-    private external fun generateMeasured(
-        path: ByteArray,
-        system: ByteArray,
-        user: ByteArray,
-        limit: Int,
-        threads: Int,
-        sink: TokenSink,
-        metrics: LongArray
+        sink: TokenSink
     ): Int
 
     companion object {
+        const val FINISHED = 0
+        const val CANCELLED = 1
+        const val TOKEN_LIMIT = 2
+
         init {
             System.loadLibrary("blobs")
         }

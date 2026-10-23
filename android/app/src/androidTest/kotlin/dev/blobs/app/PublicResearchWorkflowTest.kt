@@ -22,8 +22,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductViewModel
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.flow.first
@@ -66,7 +66,7 @@ class PublicResearchWorkflowTest {
         }
         val output = File(root, "ui-report.json")
         check(!output.exists())
-        val model = ViewModelProvider(context)[ProductViewModel::class.java]
+        val model = ViewModelProvider(context)[AppViewModel::class.java]
         compose.waitUntil(30_000) { model.state.value.loaded && model.work.value.ready }
         val installed = runBlocking { container.database.packages().all() }
         val selected = installed.single {
@@ -191,16 +191,12 @@ class PublicResearchWorkflowTest {
                     .put("ui_wall_elapsed_ms", SystemClock.elapsedRealtime() - started)
                     .put("first_observed_work_text_ms", firstVisible ?: JSONObject.NULL)
                 container.work.lastPerformanceSnapshot?.let {
-                    val generation = it.generation
-                    result.put("native_result", it.nativeResult)
-                        .put("retrieval_elapsed_ms", it.retrievalElapsedMs)
-                        .put("native_total_us", generation.totalUs)
-                        .put("prefill_us", generation.prefillUs)
-                        .put("model_load_us", generation.modelLoadUs)
-                        .put("prompt_tokens", generation.promptTokens)
-                        .put("output_tokens", generation.outputTokens)
-                        .put("model_cache_hit", generation.modelCacheHit)
-                        .put("reused_prompt_tokens", generation.reusedPromptTokens)
+                    result.put("retrieval_elapsed_ms", it.retrievalElapsedMs)
+                        .put(
+                            "first_visible_text_elapsed_ms",
+                            it.firstVisibleTextElapsedMs ?: JSONObject.NULL
+                        )
+                        .put("end_to_end_elapsed_ms", it.endToEndElapsedMs)
                 }
                 results.put(result)
                 save()

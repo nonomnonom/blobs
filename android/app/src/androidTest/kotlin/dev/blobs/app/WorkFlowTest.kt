@@ -54,7 +54,7 @@ class WorkFlowTest {
         assertTrue(work.answer("thread", "A question without sources", model, emptyList(), null))
         withTimeout(10_000) { work.state.first { !it.busy } }
         val original = db.conversations().turns("thread").single()
-        assertEquals("NO_SOURCES", original.status)
+        assertEquals("ERROR", original.status)
         db.conversations().saveDraft("thread", "Keep my next question")
         assertTrue(work.answer("thread", original.question, model, emptyList(), null, original.id))
         withTimeout(10_000) { work.state.first { !it.busy } }

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -149,7 +148,7 @@ fun AboutScreen() {
             Image(
                 painterResource(R.drawable.welcome_world),
                 null,
-                Modifier.size(160.dp, 130.dp).clip(RoundedCornerShape(30.dp)),
+                Modifier.size(160.dp, 130.dp).clip(MaterialTheme.shapes.extraLarge),
                 contentScale = ContentScale.Crop
             )
             Text(

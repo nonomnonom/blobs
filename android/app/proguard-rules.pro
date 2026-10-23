@@ -2,3 +2,5 @@
 -keep class dev.blobs.app.inference.TokenSink { *; }
 -dontwarn org.bouncycastle.cert.**
 -dontwarn org.bouncycastle.cms.**
+-dontwarn java.lang.management.ManagementFactory
+-dontwarn java.lang.management.RuntimeMXBean

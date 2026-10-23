@@ -87,6 +87,7 @@ class UserLibraryPackage(private val context: Context) {
         val documents = imported.mapIndexed { index, item ->
             item.document.copy(id = "document-${(index + 1).toString().padStart(4, '0')}")
         }
+        validateLibraryInput(packTitle, documents)
         val database = File.createTempFile("blobs-user-library-", ".sqlite", context.cacheDir)
         val archive = File.createTempFile("blobs-user-library-", ".blobs", archiveDirectory)
         try {
@@ -98,7 +99,7 @@ class UserLibraryPackage(private val context: Context) {
                 kind = "library",
                 title = packTitle,
                 bytes = database.length(),
-                sha256 = sha256(database),
+                sha256 = sha256(database, jobContext::ensureActive),
                 license = "User-provided documents",
                 origin = "local:user-documents"
             )
@@ -108,7 +109,7 @@ class UserLibraryPackage(private val context: Context) {
                 output.write(manifest.json().toByteArray(StandardCharsets.UTF_8))
                 output.closeEntry()
                 output.putNextEntry(ZipEntry("library.sqlite"))
-                database.inputStream().use { input -> input.copyTo(output) }
+                copyFile(database, output, jobContext::ensureActive)
                 output.closeEntry()
             }
             return archive
@@ -182,13 +183,15 @@ class UserLibraryPackage(private val context: Context) {
         require(body.codePointCount(0, body.length) <= MAX_DOCUMENT_CODEPOINTS) {
             "DOCUMENT_TOO_LARGE"
         }
-        require('\u0000' !in body) { "DOCUMENT_INVALID" }
+        require(
+            '\u0000' !in body && '\uFFFD' !in body && !body.hasUnpairedSurrogate()
+        ) { "DOCUMENT_INVALID" }
         val title = name.substringBeforeLast('.', name).trim().ifBlank { "Untitled document" }
         val now = java.time.Instant.now().toString()
         return ImportedDocument(
             document = UserDocument(
                 id = "",
-                title = title.take(300),
+                title = truncateUtf16(title, 300),
                 publisher = "Your files",
                 url = "",
                 license = "User-provided content",
@@ -225,15 +228,17 @@ class UserLibraryPackage(private val context: Context) {
             require(body.codePointCount(0, body.length) <= MAX_DOCUMENT_CODEPOINTS) {
                 "DOCUMENT_TOO_LARGE"
             }
-            require('\u0000' !in body) { "PACK_INVALID" }
+            require(
+                '\u0000' !in body && '\uFFFD' !in body && !body.hasUnpairedSurrogate()
+            ) { "PACK_INVALID" }
             UserDocument(
                 id = "",
                 title = title,
-                publisher = row.optString("publisher", collectionTitle).take(300),
-                url = row.optString("url").take(2000),
-                license = row.optString("license", "User-provided content").take(4000),
-                updated = row.optString("updated").take(80),
-                saved = row.optString("saved").take(80),
+                publisher = row.optString("publisher", collectionTitle),
+                url = row.optString("url"),
+                license = row.optString("license", "User-provided content"),
+                updated = row.optString("updated"),
+                saved = row.optString("saved"),
                 body = body
             )
         }
@@ -271,8 +276,69 @@ class UserLibraryPackage(private val context: Context) {
         .decode(ByteBuffer.wrap(bytes)).toString()
 
     private fun collectionTitle(documents: List<ImportedDocument>): String {
-        if (documents.size == 1) return documents.first().document.title.take(MAX_TITLE_LENGTH)
+        if (documents.size == 1) {
+            return truncateUtf16(documents.first().document.title, MAX_TITLE_LENGTH)
+        }
         return "Imported documents (${documents.size})"
+    }
+
+    private fun validateLibraryInput(collection: String, documents: List<UserDocument>) {
+        require(validMetadataText(collection, MAX_TITLE_LENGTH, required = true)) {
+            "DOCUMENT_INVALID"
+        }
+        documents.forEach { document ->
+            require(
+                validMetadataText(document.title, 300, required = true) &&
+                    validMetadataText(document.publisher, 300) &&
+                    validMetadataText(document.url, 2_000) &&
+                    validMetadataText(document.license, 4_000) &&
+                    validMetadataText(document.updated, 80) &&
+                    validMetadataText(document.saved, 80) &&
+                    document.body.isNotBlank() &&
+                    '\u0000' !in document.body &&
+                    '\uFFFD' !in document.body &&
+                    !document.body.hasUnpairedSurrogate()
+            ) {
+                "DOCUMENT_INVALID"
+            }
+        }
+    }
+
+    private fun validMetadataText(value: String, maximumLength: Int, required: Boolean = false): Boolean =
+        value.length <= maximumLength &&
+            '\u0000' !in value &&
+            '\uFFFD' !in value &&
+            !value.hasUnpairedSurrogate() &&
+            (!required || value.any { !it.isWhitespace() })
+
+    private fun String.hasUnpairedSurrogate(): Boolean {
+        var index = 0
+        while (index < length) {
+            when {
+                Character.isHighSurrogate(this[index]) -> {
+                    if (index + 1 == length || !Character.isLowSurrogate(this[index + 1])) {
+                        return true
+                    }
+                    index += 2
+                }
+
+                Character.isLowSurrogate(this[index]) -> return true
+                else -> index++
+            }
+        }
+        return false
+    }
+
+    private fun truncateUtf16(value: String, maximumLength: Int): String {
+        var end = minOf(value.length, maximumLength)
+        if (
+            end < value.length && end > 0 &&
+            Character.isHighSurrogate(value[end - 1]) &&
+            Character.isLowSurrogate(value[end])
+        ) {
+            end--
+        }
+        return value.substring(0, end)
     }
 
     private fun buildDatabase(
@@ -402,10 +468,23 @@ class UserLibraryPackage(private val context: Context) {
         db.prepare(sql).use { it.step() }
     }
 
-    private fun sha256(file: File): String = file.inputStream().use { input ->
+    private fun copyFile(file: File, output: OutputStream, checkActive: () -> Unit) {
+        file.inputStream().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                checkActive()
+                val count = input.read(buffer)
+                if (count < 0) break
+                output.write(buffer, 0, count)
+            }
+        }
+    }
+
+    private fun sha256(file: File, checkActive: () -> Unit): String = file.inputStream().use { input ->
         val digest = MessageDigest.getInstance("SHA-256")
         val buffer = ByteArray(64 * 1024)
         while (true) {
+            checkActive()
             val count = input.read(buffer)
             if (count < 0) break
             digest.update(buffer, 0, count)

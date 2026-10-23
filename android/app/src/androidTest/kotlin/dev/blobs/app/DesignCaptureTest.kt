@@ -22,8 +22,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.TurnEntity
 import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductViewModel
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Assume.assumeTrue
@@ -46,7 +46,7 @@ class DesignCaptureTest {
         val files = listOf("reviewModel", "reviewLibrary").map { args.getString(it)?.let(::File) }
         assumeTrue("Supply local model and starter package paths", files.all { it?.isFile == true })
         val container = (compose.activity.application as BlobsApplication).container
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         val folder = requireNotNull(compose.activity.getExternalFilesDir("ui-review"))
         val prefix = args.getString("reviewName") ?: "native"
         fun text(id: Int) = compose.activity.getString(id)
@@ -185,7 +185,6 @@ class DesignCaptureTest {
             "weather-safety",
             "earthquake-tsunami-safety",
             "emergency-food",
-            "bali-travel",
             "practical-living"
         )) {
             val asset = model.catalog.additionalLibraries.find { it.manifest.id == id } ?: continue
@@ -248,23 +247,15 @@ class DesignCaptureTest {
                 page(destination)
                 capture(destination.name.lowercase())
                 if (destination == Page.SOURCES) {
-                    compose.waitUntil(10_000) { !model.state.value.searching }
-                    val scopeTitle = model.state.value.sources.first().title
-                    compose.runOnUiThread { model.search(scopeTitle) }
-                    compose.waitUntil(10_000) {
-                        !model.state.value.searching &&
-                            model.state.value.sources.any { it.title == scopeTitle }
+                    val library = model.packages.value.first {
+                        it.kind == "library" && it.enabled
                     }
-                    val selectedSource = model.state.value.sources.first { it.title == scopeTitle }
-                    compose.onAllNodes(
-                        hasText(scopeTitle) and hasClickAction() and !hasSetTextAction()
-                    )[0]
-                        .performScrollTo().performClick()
+                    compose.onNodeWithText(library.title).performScrollTo().performClick()
                     compose.waitUntil(10_000) {
-                        model.selectedScope()?.contains(selectedSource.id) == true
+                        model.selectedLibraryScope() == setOf(library.key)
                     }
                     capture("sources-selected", waitForMarker = false)
-                    compose.onNodeWithText(text(R.string.all_sources))
+                    compose.onNodeWithText(text(R.string.all_libraries))
                         .performScrollTo().performClick()
                     compose.waitUntil(10_000) { model.selectedScope() == null }
                     capture("sources-all", waitForMarker = false)

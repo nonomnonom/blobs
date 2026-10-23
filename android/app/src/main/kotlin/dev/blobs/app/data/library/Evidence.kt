@@ -13,7 +13,8 @@ data class Evidence(
     val saved: String,
     val section: String,
     val text: String,
-    val edition: String
+    val edition: String,
+    val passageId: Long? = null
 ) {
     fun json(): JSONObject = JSONObject().apply {
         put("id", id)
@@ -26,6 +27,7 @@ data class Evidence(
         put("section", section)
         put("text", text)
         put("edition", edition)
+        if (passageId != null) put("passageId", passageId)
     }
 
     companion object {
@@ -48,7 +50,8 @@ data class Evidence(
                     it.getString(
                         "saved"
                     ),
-                    it.getString("section"), it.getString("text"), it.getString("edition")
+                    it.getString("section"), it.getString("text"), it.getString("edition"),
+                    it.optLong("passageId").takeIf { passageId -> passageId > 0L }
                 )
             }
         }

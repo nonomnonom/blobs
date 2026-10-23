@@ -1,59 +1,30 @@
 {
   "format": 1,
-  "revision": 2026102002,
+  "revision": 2026102203,
   "release_tag": "v0.3.10",
   "packages": [
     {
-      "file_name": "qwen3-integration.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/qwen3-integration.blobs",
-      "download_format": "blobs",
-      "download_bytes": 639447235,
-      "download_sha256": "0089dba9c9af05ebecb3a0110866f0716f439da2cb6d7d90a66a911062305e43",
-      "manifest": {
-        "format": 1,
-        "id": "qwen3-06b-q8",
-        "version": "23749fef",
-        "kind": "model",
-        "title": "Qwen3 0.6B Q8",
-        "bytes": 639446688,
-        "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031",
-        "license": "Apache-2.0",
-        "origin": "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/tree/23749fefcc72300e3a2ad315e1317431b06b590a"
-      },
-      "role": "model",
-      "recommended_up_to_memory_mb": 4096,
-      "description": "A compact instruction model for everyday offline questions.",
-      "language": "English",
-      "publisher": "Qwen",
-      "compatibility": {
-        "runtime": "llama.cpp",
-        "format": "GGUF",
-        "minimum_ram_mb": 2048,
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "gemma-4-E2B_q4_0-it.gguf",
-      "url": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/675cff42a74c774d6cb76f76d8eacb49b48c9b93/gemma-4-E2B_q4_0-it.gguf",
+      "file_name": "MiniCPM5-1B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/3d55fac80935ae6456986ad2384b5cbcc4d6c948/MiniCPM5-1B-Q4_K_M.gguf",
       "download_format": "gguf",
-      "download_bytes": 3349516256,
-      "download_sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+      "download_bytes": 688065920,
+      "download_sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "manifest": {
         "format": 1,
-        "id": "gemma4-e2b-q4",
-        "version": "675cff42",
+        "id": "minicpm5-1b-q4km",
+        "version": "3d55fac8",
         "kind": "model",
-        "title": "Gemma 4 E2B · Frontier",
-        "bytes": 3349516256,
-        "sha256": "fa401b55b07ee70a54c6dae3903c783a6e65064312529ea57175cb5f8dec6634",
+        "title": "MiniCPM5 1B Q4_K_M · 128k",
+        "bytes": 688065920,
+        "sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
         "license": "Apache-2.0",
-        "origin": "https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/tree/675cff42a74c774d6cb76f76d8eacb49b48c9b93"
+        "origin": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/tree/3d55fac80935ae6456986ad2384b5cbcc4d6c948"
       },
       "role": "model",
-      "recommended_up_to_memory_mb": 8192,
-      "description": "A balanced on-device model for research questions and follow-ups.",
+      "recommended_up_to_memory_mb": 16384,
+      "description": "Official OpenBMB Q4_K_M GGUF. Hybrid Think/No Think model; Blobs uses No Think by default.",
       "language": "English",
-      "publisher": "Google",
+      "publisher": "OpenBMB",
       "compatibility": {
         "runtime": "llama.cpp",
         "format": "GGUF",
@@ -62,31 +33,60 @@
       }
     },
     {
-      "file_name": "gemma-4-E4B_q4_0-it.gguf",
-      "url": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/4b4a2c1d584be7264f87aac328a1bc739ce81b6c/gemma-4-E4B_q4_0-it.gguf",
+      "file_name": "Qwen3.5-2B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf",
       "download_format": "gguf",
-      "download_bytes": 5154941280,
-      "download_sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+      "download_bytes": 1280835840,
+      "download_sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
       "manifest": {
         "format": 1,
-        "id": "gemma4-e4b-q4",
-        "version": "4b4a2c1d",
+        "id": "qwen35-2b-q4km",
+        "version": "f6d5376b",
         "kind": "model",
-        "title": "Gemma 4 E4B · Frontier",
-        "bytes": 5154941280,
-        "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee",
+        "title": "Qwen3.5 2B Q4_K_M · 262k",
+        "bytes": 1280835840,
+        "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
         "license": "Apache-2.0",
-        "origin": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/tree/4b4a2c1d584be7264f87aac328a1bc739ce81b6c"
+        "origin": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/tree/f6d5376be1edb4d416d56da11e5397a961aca8ae"
       },
       "role": "model",
-      "recommended_up_to_memory_mb": 12288,
-      "description": "A larger on-device model for phones with more available memory.",
+      "recommended_up_to_memory_mb": 32768,
+      "description": "Unsloth Q4_K_M GGUF of Qwen3.5 2B. 262k native context; non-thinking chat is used by default.",
       "language": "English",
-      "publisher": "Google",
+      "publisher": "Qwen · Unsloth GGUF",
       "compatibility": {
         "runtime": "llama.cpp",
         "format": "GGUF",
         "minimum_ram_mb": 6144,
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "Phi-4-mini-instruct-Q4_K_M.gguf",
+      "url": "https://huggingface.co/lmstudio-community/Phi-4-mini-instruct-GGUF/resolve/009f2b81869a0afd6b9aae23d29fa7b7ee2dcac9/Phi-4-mini-instruct-Q4_K_M.gguf",
+      "download_format": "gguf",
+      "download_bytes": 2491874400,
+      "download_sha256": "3c4d3cbdf3006d81444f6c7a5a56eb93d8e0f0e2ba5963b8ab62f9fd42604233",
+      "manifest": {
+        "format": 1,
+        "id": "phi4-mini-q4km",
+        "version": "009f2b81",
+        "kind": "model",
+        "title": "Phi-4 Mini Q4_K_M · 128k",
+        "bytes": 2491874400,
+        "sha256": "3c4d3cbdf3006d81444f6c7a5a56eb93d8e0f0e2ba5963b8ab62f9fd42604233",
+        "license": "MIT",
+        "origin": "https://huggingface.co/lmstudio-community/Phi-4-mini-instruct-GGUF/tree/009f2b81869a0afd6b9aae23d29fa7b7ee2dcac9"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 65536,
+      "description": "Community GGUF conversion of Microsoft Phi-4 Mini Instruct, quantized Q4_K_M. 128k native context.",
+      "language": "English",
+      "publisher": "Microsoft · LM Studio Community GGUF",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 8192,
         "minimum_app_version": "0.3.1"
       }
     },
@@ -107,10 +107,17 @@
         "license": "CC BY-SA 4.0; adapted plain text; individual article attribution included",
         "origin": "https://en.wikipedia.org/wiki/Wikipedia:Copyrights"
       },
-      "role": "starter",
+      "role": "optional",
       "description": "A small set of science and everyday reference articles to get started offline.",
       "language": "English",
       "publisher": "Blobs · Wikipedia contributors",
+      "library_profile": {
+        "record_count": 100,
+        "scope": "100 selected English Wikipedia reference articles on science and everyday topics.",
+        "source_snapshot_date": "2026-10-17",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "A small starter selection, not a general encyclopaedia or a source for current information."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -139,6 +146,13 @@
       "description": "A broader offline collection of Wikipedia introductions for optional installation.",
       "language": "English",
       "publisher": "Blobs · Wikipedia contributors",
+      "library_profile": {
+        "record_count": 997761,
+        "scope": "997,761 English Wikipedia lead-article introductions from the April 2026 Kiwix top-one-million snapshot.",
+        "source_snapshot_date": "2026-10-17",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "Lead introductions only, with images excluded. This is a selected snapshot, not all of English Wikipedia or current information."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -163,10 +177,17 @@
         "title": "Travel guides · English",
         "version": "2026-09.3"
       },
-      "role": "optional",
+      "role": "starter",
       "description": "Offline destination guides and travel basics. This snapshot is from September 2026. Opening hours, fares, visas and local safety advice can change; check current details before you travel.",
       "language": "English",
       "publisher": "Wikivoyage contributors",
+      "library_profile": {
+        "record_count": 34597,
+        "scope": "English Wikivoyage guide text worldwide from the September 2026 Kiwix snapshot; images are excluded.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "Opening hours, fares, visas, local safety advice, and other travel details can change. Verify time-sensitive details before travel."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -195,6 +216,13 @@
       "description": "Five U.S. national-park guides for hiking, outdoor emergencies, water treatment, natural-water hazards, and winter hiking. Conditions differ by place; follow current park and emergency guidance. Blobs is not affiliated with or endorsed by NPS.",
       "language": "English",
       "publisher": "National Park Service",
+      "library_profile": {
+        "record_count": 5,
+        "scope": "Five U.S. National Park Service outdoor-safety guides for hiking, outdoor emergency planning, water, hazards, and winter hiking.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "U.S. national-park guidance only. Conditions, rules, closures, and emergency instructions vary by place and can change."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -223,6 +251,13 @@
       "description": "Offline U.S. household guides for emergency plans, supply kits, evacuation, and power outages. This snapshot can become outdated; follow current local instructions in an emergency. Blobs is independent and is not endorsed by FEMA.",
       "language": "English",
       "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "library_profile": {
+        "record_count": 4,
+        "scope": "Four Ready.gov guides for U.S. household emergency planning, kits, evacuation, and power outages.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "U.S. household guidance only. Follow current local instructions and emergency authorities during an emergency."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -251,6 +286,13 @@
       "description": "A four-step U.S. National Park Service camping-safety guide: prepare, check conditions on arrival, camp safely, and close out your trip. Pages last updated in 2017–2019; check current park rules and alerts. Blobs is independent and not endorsed by NPS.",
       "language": "English",
       "publisher": "National Park Service",
+      "library_profile": {
+        "record_count": 4,
+        "scope": "Four U.S. National Park Service camping-safety guides.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "The source pages were last updated in 2017–2019. This is not current park rules, alerts, permits, or site-specific safety guidance."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -279,6 +321,13 @@
       "description": "A compact guide to planning national park trips, packing essentials, and preparing for backcountry conditions. The day and overnight trip guide does not cover multi-day backcountry travel. Rules, permits, weather, closures, and alerts can change; check current park guidance.",
       "language": "English",
       "publisher": "National Park Service",
+      "library_profile": {
+        "record_count": 3,
+        "scope": "Three U.S. National Park Service guides for trip planning and backcountry camping.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "The day and overnight trip guide does not cover multi-day backcountry travel. Rules, permits, weather, closures, and alerts can change."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -307,6 +356,13 @@
       "description": "Prepare for floods, thunderstorms, winter storms, and wildfires with four Ready.gov guides. U.S. guidance from March-August 2026. No live forecasts or alerts; follow current local instructions. Blobs is independent and not endorsed by FEMA.",
       "language": "English",
       "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "library_profile": {
+        "record_count": 4,
+        "scope": "Four Ready.gov U.S. weather and wildfire preparedness guides.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "No live forecasts, alerts, evacuation orders, or local conditions. Follow current local authorities."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -335,6 +391,13 @@
       "description": "Two Ready.gov guides for earthquake preparation, protective actions, tsunami evacuation, and hazards after shaking. U.S. guidance from May-September 2026. No live warnings or evacuation maps; follow local authorities. Blobs is independent and not endorsed by FEMA.",
       "language": "English",
       "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "library_profile": {
+        "record_count": 2,
+        "scope": "Two Ready.gov U.S. earthquake and tsunami preparedness guides.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "No live warnings, evacuation maps, or local hazard status. Follow current local authorities."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -363,6 +426,13 @@
       "description": "Plan food supplies, cook safely, and protect refrigerator and freezer food during outages with one Ready.gov guide. U.S. household guidance from March 2026; follow current local food-safety advice. Blobs is independent and not endorsed by FEMA.",
       "language": "English",
       "publisher": "Ready.gov · Federal Emergency Management Agency",
+      "library_profile": {
+        "record_count": 1,
+        "scope": "One Ready.gov U.S. household food-during-power-outages guide.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "One U.S. household guide only. Follow current local food-safety advice and authorities."
+      },
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,
@@ -391,34 +461,13 @@
       "description": "Four Appropedia guides to composting, drip irrigation, rainwater collection and solar cooking. Saved October 2026, without diagrams or videos.",
       "language": "English",
       "publisher": "Appropedia contributors",
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "bali-travel-2026-09-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/8eb5bf7f426dad543d8e3a28e00d35f357b4f5ad/packages/bali-travel-2026-09-v1.blobs",
-      "download_format": "blobs",
-      "download_bytes": 673641,
-      "download_sha256": "fae6783ac8b72040fbb13f2a6b00417c5032b5817b5da08f8c0e49d7381a6dc8",
-      "manifest": {
-        "format": 1,
-        "id": "bali-travel",
-        "version": "2026-09.1",
-        "kind": "library",
-        "title": "Bali travel guides",
-        "bytes": 1499136,
-        "sha256": "24dcc4b2747064de96a4898af0c51c96515119ee4505581e97178a8e0ad16cf1",
-        "license": "CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); Wikivoyage contributors. See each guide for its source and contributor history.",
-        "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides"
+      "library_profile": {
+        "record_count": 4,
+        "scope": "Four English Appropedia guides on garden, water, and solar-cooking concepts.",
+        "source_snapshot_date": "2026-10-20",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
+        "limitations": "Only four selected articles are included. Diagrams, videos, and hardware designs are excluded."
       },
-      "role": "optional",
-      "description": "30 guides to Bali, Ubud, Denpasar and nearby islands. Read about places and getting around. September 2026 text snapshot; no offline maps. Also in Travel guides · English.",
-      "language": "English",
-      "publisher": "Wikivoyage contributors",
       "compatibility": {
         "format": "Blobs library archive",
         "corpus_schema": 3,

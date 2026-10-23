@@ -18,12 +18,18 @@ Run `connectedDebugAndroidTest` on an emulator for platform checks. The manual H
 
 ## Sign and assemble
 
-Every update to `dev.blobs.app` must use the same Android signing key as the existing public release. Configure `BLOBS_KEYSTORE`, `BLOBS_STORE_PASSWORD`, `BLOBS_KEY_PASSWORD`, and `BLOBS_KEY_ALIAS` in the protected local release environment, then run:
+Every update to `dev.blobs.app` must use the same Android signing key as the existing public release. Configure `BLOBS_KEYSTORE`, `BLOBS_STORE_PASSWORD`, `BLOBS_KEY_PASSWORD`, `BLOBS_KEY_ALIAS`, and `BLOBS_CERT_SHA256` in the protected local release environment. `BLOBS_CERT_SHA256` is the 64-character SHA-256 fingerprint of the signer certificate from an already trusted public Blobs APK, not a fingerprint copied from the candidate being released. Then run:
 
 ```powershell
 .\gradlew.bat :app:assembleRelease
-uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs/apk/release/app-release.apk
-uv run --locked --project ../corpus python tools/package_release.py --model .\packages\qwen3-integration.blobs --library .\packages\wikipedia-starter-schema3.blobs
+uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs/apk/release/app-release.apk --certificate-sha256 $env:BLOBS_CERT_SHA256
+uv run --locked --project ../corpus python tools/prepare_model.py minicpm5
+hf download nonomnonom/blobs-catalog `
+  --type dataset `
+  --revision cae7f6c11e3bad49897dd17bb580ed5bf2da15ed `
+  --include "packages/wikivoyage-en-2026-09-v3.blobs" `
+  --local-dir .local/model-catalog-assets/wikivoyage
+uv run --locked --project ../corpus python tools/package_release.py --model .\packages\minicpm5-1b-q4km.blobs --library .\.local\model-catalog-assets\wikivoyage\packages\wikivoyage-en-2026-09-v3.blobs --certificate-sha256 $env:BLOBS_CERT_SHA256
 ```
 
 The release assembler checks APK identity and signature, exact package metadata, source archive contents, footprint, and a complete SHA-256 inventory. It creates an immutable `android/release/<version>/` folder.
@@ -46,3 +52,10 @@ The archiver first verifies the release kit, then checks every archived file aga
 Publish the APK, source archive, and complete offline ZIP to a GitHub Release matching the APK version. Publish both the ZIP SHA-256 and the `SHA256SUMS.txt` digest in the release notes. Direct users to extract the ZIP and follow its `VERIFY.md` and `INSTALL.md`; uploading only the top-level kit files omits the required license directory. ZIP byte hashes may differ across filesystem metadata or entry ordering even when the checked file contents are identical; always publish the digest of the actual uploaded ZIP.
 
 Never generate a replacement signing key for an existing application identity unless the release intentionally requires users to uninstall their current app. Android will reject an APK signed by a different key as an update; uninstalling removes private conversations and installed packages. Keep the signing key and its recoverable password outside Git and all release artifacts.
+
+`tools/release.ps1` deliberately refuses to generate or select a key for you.
+It requires all five protected settings, verifies that `BLOBS_KEYSTORE` names a
+file, and compares the candidate signer certificate to `BLOBS_CERT_SHA256`
+before assembly. The assembler repeats that certificate check, so a direct
+assembler invocation cannot bypass the update-key invariant. This makes
+accidental first-use keys impossible in the normal update workflow.

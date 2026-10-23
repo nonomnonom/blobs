@@ -3,6 +3,7 @@
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+.audit-koog/
 .DS_Store
 Thumbs.db
 /.local/

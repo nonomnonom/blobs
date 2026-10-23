@@ -15,6 +15,15 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def is_rebuildable_example_output(target, path):
+    """Keep verification focused on vendored source, not Gradle's example cache."""
+    return path.resolve().relative_to(target.resolve()).parts[:3] == (
+        "examples",
+        "llama.android",
+        ".gradle",
+    )
+
+
 def fetch(name, url, checksum):
     target = ROOT / "third_party" / name
     cache = ROOT / ".local" / (name + "-src.zip")
@@ -46,7 +55,11 @@ def fetch(name, url, checksum):
             if not member.is_dir():
                 expected.add(path)
         if target.exists():
-            actual = {p.resolve() for p in target.rglob("*") if p.is_file()}
+            actual = {
+                p.resolve()
+                for p in target.rglob("*")
+                if p.is_file() and not is_rebuildable_example_output(target, p)
+            }
             if actual != expected:
                 raise ValueError(f"Native source tree differs from its archive: {target}")
             for member in archive.infolist():

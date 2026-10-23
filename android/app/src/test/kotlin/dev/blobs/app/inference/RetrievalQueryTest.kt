@@ -65,12 +65,21 @@ class RetrievalQueryTest {
         val previous = "How do trees cool cities?"
         for (question in listOf(
             "Why?",
+            "Why did that help people exchange ideas faster?",
             "How do they do that?",
             "What about green roofs?",
             "Tell me more"
         )) {
             assertTrue(RetrievalQuery.resolve(question, listOf(previous)).endsWith(previous))
         }
+    }
+
+    @Test
+    fun savedSourcePronounFollowUpsRetainThePreviousTopic() {
+        val question = "What do my saved sources say about it?"
+        val previous = "How does photosynthesis work?"
+
+        assertEquals("$question $previous", RetrievalQuery.resolve(question, listOf(previous)))
     }
 
     @Test
@@ -178,11 +187,17 @@ class RetrievalQueryTest {
     fun directTitleMatchDoesNotPromoteOneGenericWordOverMoreSpecificSources() {
         val question = "How should I store food and behave around wildlife at a campsite?"
         assertTrue(!RetrievalQuery.isDirectTitleMatch(question, "Wildlife"))
-        assertTrue(RetrievalQuery.isDirectTitleMatch(question, "Pian Upe Wildlife Reserve"))
+        assertTrue(!RetrievalQuery.isDirectTitleMatch(question, "Pian Upe Wildlife Reserve"))
         assertTrue(
             RetrievalQuery.isDirectTitleMatch(
                 "How can I get from the airport to Bangkok city?",
                 "Bangkok"
+            )
+        )
+        assertTrue(
+            RetrievalQuery.isDirectTitleMatch(
+                "Why combine solar panels and wind turbines for useful power?",
+                "solar panels"
             )
         )
         assertTrue(RetrievalQuery.isDirectTitleMatch("What is wildlife?", "Wildlife"))
@@ -218,5 +233,32 @@ class RetrievalQueryTest {
             "Check campground rules, campsite conditions, and weather before leaving."
         )
         assertTrue(duringStay > beforeTrip)
+    }
+
+    @Test
+    fun evidenceThresholdRejectsSingleAccidentalTermButAllowsShortQueries() {
+        assertEquals(
+            2,
+            RetrievalQuery.minimumEvidenceOverlap(
+                RetrievalQuery.titleTerms("repair a quantum flux capacitor")
+            )
+        )
+        assertEquals(
+            1,
+            RetrievalQuery.minimumEvidenceOverlap(RetrievalQuery.titleTerms("capacitor"))
+        )
+        assertEquals(
+            null,
+            RetrievalQuery.minimumEvidenceOverlap(RetrievalQuery.titleTerms("best"))
+        )
+        assertEquals(
+            0,
+            RetrievalQuery.evidenceOverlap(
+                RetrievalQuery.titleTerms("best vegan restaurants in Aster"),
+                "Paris cafes",
+                "Coffee",
+                "Paris has the best coffee and pastries."
+            )
+        )
     }
 }

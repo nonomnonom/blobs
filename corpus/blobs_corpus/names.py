@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 import unicodedata
 
+from .records import valid_utf8_text
+
 
 def name_key(text: str) -> str:
     text = unicodedata.normalize("NFKC", text).lower()
@@ -52,6 +54,8 @@ def build_names(db, source: Path):
                         or not row[field]
                         or len(row[field]) > 4096
                         or "\x00" in row[field]
+                        or "\ufffd" in row[field]
+                        or not valid_utf8_text(row[field])
                         for field in ("path", "target", "title")
                     ):
                         raise ValueError("Invalid redirect record")

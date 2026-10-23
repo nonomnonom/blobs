@@ -9,8 +9,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -22,6 +24,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton as MaterialTextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -63,17 +67,19 @@ import dev.blobs.app.feature.settings.StorageScreen
 import dev.blobs.app.feature.setup.SetupScreen
 import dev.blobs.app.feature.welcome.WelcomeScreen
 import dev.blobs.app.ui.theme.BlobsTheme
+import dev.blobs.app.ui.theme.BlobsDimens
+import dev.blobs.app.ui.theme.BlobsMotion
 
 @Composable
 fun BlobsApp(container: AppContainer) {
-    val themeModel: BlobsViewModel =
+    val themeModel: ThemePreferencesViewModel =
         viewModel(
             factory = viewModelFactory {
-                initializer { BlobsViewModel(container.preferences) }
+                initializer { ThemePreferencesViewModel(container.preferences) }
             }
         )
-    val model: ProductViewModel =
-        viewModel(factory = viewModelFactory { initializer { ProductViewModel(container) } })
+    val model: AppViewModel =
+        viewModel(factory = viewModelFactory { initializer { AppViewModel(container) } })
     val theme by themeModel.uiState.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
     val work by model.work.collectAsStateWithLifecycle()
@@ -199,38 +205,34 @@ fun BlobsApp(container: AppContainer) {
                             } else {
                                 Column(
                                     Modifier.widthIn(
-                                        max = 720.dp
+                                        max = if (state.page == Page.CHAT) {
+                                            BlobsDimens.appContentWidth
+                                        } else {
+                                            BlobsDimens.homeReadingWidth
+                                        }
                                     ).fillMaxSize().safeDrawingPadding().imePadding()
                                 ) {
                                     AppHeader(state, turns.isEmpty(), model, openNavigation)
                                     if (!reviewingImport && state.page != Page.IMPORT) {
-                                        (state.notice ?: work.notice)?.let {
-                                            Notice(it, model::dismissNotice)
-                                        }
-                                        if (state.page != Page.SETUP &&
-                                            (work.transferActive || work.hasPendingTransfer)
-                                        ) {
-                                            androidx.compose.material3.TextButton(onClick = {
-                                                model.navigate(Page.IMPORT)
-                                            }, modifier = Modifier.fillMaxWidth()) {
-                                                Text(
-                                                    if (work.transferActive) {
-                                                        stringResource(
-                                                            R.string.downloading_package,
-                                                            (work.phaseProgress * 100).toInt()
-                                                        )
-                                                    } else {
-                                                        stringResource(R.string.paused_import)
-                                                    }
-                                                )
+                                        (state.notice ?: work.notice)
+                                            ?.takeUnless {
+                                                state.page == Page.CHAT &&
+                                                    it == R.string.answer_failed
                                             }
-                                        }
+                                            ?.let {
+                                                Notice(it, model::dismissNotice)
+                                            }
                                     }
                                     val holder = rememberSaveableStateHolder()
+                                    val center = Alignment.CenterVertically
+                                    val between = Arrangement.SpaceBetween
+                                    val titleStyle = MaterialTheme.typography.titleMedium
+                                    val outline = MaterialTheme.colorScheme.outlineVariant
+                                    val fillHeight = Modifier.fillMaxHeight()
                                     Crossfade(
                                         state.page to reviewingImport,
                                         animationSpec = tween(
-                                            if (lessMotion) 0 else 220
+                                            if (lessMotion) 0 else BlobsMotion.standard
                                         ),
                                         label = "page",
                                         modifier = Modifier.weight(1f)
@@ -255,12 +257,72 @@ fun BlobsApp(container: AppContainer) {
                                                 ImportReviewScreen(state, packages, model)
                                             } else {
                                                 when (page) {
-                                                    Page.CHAT -> ChatScreen(
-                                                        state,
-                                                        turns,
-                                                        work,
-                                                        model
-                                                    )
+                                                    Page.CHAT -> BoxWithConstraints(
+                                                        Modifier.fillMaxSize()
+                                                    ) {
+                                                        val askQuestion =
+                                                            stringResource(R.string.ask_question)
+                                                        val newConversation =
+                                                            model::newConversation
+                                                        if (maxWidth >= BlobsDimens.twoPaneConversationWidth) {
+                                                            Row(Modifier.fillMaxSize()) {
+                                                                Column(
+                                                                    Modifier.widthIn(
+                                                                        min = BlobsDimens.historyPaneMinWidth,
+                                                                        max = BlobsDimens.historyPaneMaxWidth
+                                                                    )
+                                                                        .fillMaxSize()
+                                                                        .padding(end = 12.dp)
+                                                                ) {
+                                                                    Row(
+                                                                        Modifier.fillMaxWidth()
+                                                                            .padding(
+                                                                                start = 24.dp,
+                                                                                end = 12.dp,
+                                                                                top = 8.dp,
+                                                                                bottom = 8.dp
+                                                                            ),
+                                                                        verticalAlignment =
+                                                                        center,
+                                                                        horizontalArrangement =
+                                                                        between
+                                                                    ) {
+                                                                        Text(
+                                                                            stringResource(
+                                                                                R.string.history
+                                                                            ),
+                                                                            style = titleStyle
+                                                                        )
+                                                                        MaterialTextButton(
+                                                                            onClick = {
+                                                                                newConversation()
+                                                                            }
+                                                                        ) {
+                                                                            Text(askQuestion)
+                                                                        }
+                                                                    }
+                                                                    HistoryScreen(
+                                                                        conversations,
+                                                                        work.busy,
+                                                                        model
+                                                                    )
+                                                                }
+                                                                VerticalDivider(
+                                                                    modifier = fillHeight,
+                                                                    color = outline
+                                                                )
+                                                                ChatScreen(
+                                                                    state,
+                                                                    turns,
+                                                                    work,
+                                                                    model,
+                                                                    Modifier.weight(1f)
+                                                                )
+                                                            }
+                                                        } else {
+                                                            ChatScreen(state, turns, work, model)
+                                                        }
+                                                    }
 
                                                     Page.WELCOME -> Unit
 
@@ -350,7 +412,7 @@ internal fun pageTitle(page: Page): Int = when (page) {
     Page.DATA -> R.string.conversation_data
     Page.LIBRARY -> R.string.library
     Page.BROWSE -> R.string.browse
-    Page.SOURCES -> R.string.sources
+    Page.SOURCES -> R.string.answer_libraries
     Page.READER -> R.string.source_details
     Page.MODELS -> R.string.models
     Page.SETTINGS -> R.string.settings

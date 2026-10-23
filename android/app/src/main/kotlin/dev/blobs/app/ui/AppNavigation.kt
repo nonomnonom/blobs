@@ -3,15 +3,12 @@ package dev.blobs.app.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -37,17 +34,18 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.data.local.ConversationEntity
+import dev.blobs.app.ui.theme.BlobsComponentShapes
+import dev.blobs.app.ui.theme.BlobsDimens
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun AppNavigation(
-    state: ProductState,
+    state: AppUiState,
     conversations: List<ConversationEntity>,
     thread: String,
-    model: ProductViewModel,
+    model: AppViewModel,
     content: @Composable (() -> Unit) -> Unit
 ) {
     val drawer = rememberDrawerState(DrawerValue.Closed)
@@ -69,12 +67,12 @@ internal fun AppNavigation(
         gesturesEnabled = state.loaded && state.options.welcomed && state.page == Page.CHAT,
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.widthIn(max = 360.dp).fillMaxHeight(),
-                drawerShape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp),
+                modifier = Modifier.widthIn(max = BlobsDimens.drawerWidth).fillMaxHeight(),
+                drawerShape = BlobsComponentShapes.drawer,
                 drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
             ) {
                 Column(
-                    Modifier.fillMaxHeight().padding(horizontal = 16.dp).then(
+                    Modifier.fillMaxHeight().padding(horizontal = BlobsDimens.md).then(
                         if (drawer.isClosed && drawer.targetValue == DrawerValue.Closed) {
                             Modifier.clearAndSetSemantics { }
                         } else {
@@ -176,9 +174,9 @@ internal fun AppNavigation(
 
 @Composable
 internal fun AppHeader(
-    state: ProductState,
+    state: AppUiState,
     home: Boolean,
-    model: ProductViewModel,
+    model: AppViewModel,
     openNavigation: () -> Unit
 ) {
     val reviewing = state.importUri != null
@@ -237,14 +235,17 @@ private fun DrawerEntry(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(28.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
         modifier = Modifier.fillMaxWidth().semantics { this.selected = selected }
     ) {
         Row(
-            Modifier.heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.heightIn(min = 56.dp).padding(
+                horizontal = BlobsDimens.md,
+                vertical = BlobsDimens.sm
+            ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(BlobsDimens.md)
         ) {
             icon()
             androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyLarge) {

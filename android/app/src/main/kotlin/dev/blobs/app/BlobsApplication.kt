@@ -12,4 +12,16 @@ class BlobsApplication : Application() {
             container.work.trimInferenceMemory()
         }
     }
+
+    @Suppress("DEPRECATION")
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (!containerDelegate.isInitialized()) return
+
+        if (level == TRIM_MEMORY_RUNNING_LOW ||
+            level == TRIM_MEMORY_RUNNING_CRITICAL
+        ) {
+            container.work.trimInferenceMemory()
+        }
+    }
 }

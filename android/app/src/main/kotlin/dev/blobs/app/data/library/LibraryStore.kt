@@ -1,11 +1,6 @@
 package dev.blobs.app.data.library
 
-import androidx.sqlite.SQLiteConnection
-import androidx.sqlite.SQLiteStatement
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dev.blobs.app.data.local.PackageEntity
-import java.io.File
-import java.util.PriorityQueue
 
 data class LibraryDocument(
     val id: String,
@@ -20,615 +15,260 @@ data class LibraryDocument(
 )
 
 class LibraryStore {
-    private data class NameMatch(val key: String, val title: String, val id: String)
+    private val validator = LibraryValidator()
+    private val reader = LibraryReader()
+    private val nameLookup = DocumentNameLookup()
+
     private data class RetrievalCandidate(
         val evidence: Evidence,
         val passageId: Long,
         val titlePriority: Boolean,
-        val titleOverlap: Int,
         val directTitleMatch: Boolean,
-        val subjectMatch: Boolean = false,
-        val namedSubject: String? = null,
-        val sectionOverlap: Int = 0,
-        val topicOverlap: Int = 0
-    ) {
-        val sectionPriority: Int get() = if (sectionOverlap >= 2) sectionOverlap else 0
-    }
+        val subject: String?,
+        val titleOverlap: Int,
+        val topicOverlap: Int,
+        val evidenceOverlap: Int,
+        val order: Int
+    )
 
-    fun validate(file: File, catalogDigestPinned: Boolean = false) {
-        open(file.path).use { db ->
-            if (!catalogDigestPinned) {
-                db.prepare("PRAGMA quick_check").use { check(it.step() && it.getText(0) == "ok") }
-            }
-            val version = version(db)
-            check(version in 1L..3L)
-            db.prepare("SELECT count(*) FROM sqlite_master WHERE type IN ('view','trigger')").use {
-                check(it.step() && it.getLong(0) == 0L)
-            }
-            db.prepare(
-                "SELECT id,title,publisher,url,license,updated,saved,body,collection FROM documents LIMIT 0"
-            ).use { }
-            val passageColumns = if (version == 3L) {
-                "SELECT id,doc_id,section,title FROM passages LIMIT 0"
-            } else {
-                "SELECT id,doc_id,body,section FROM passages LIMIT 0"
-            }
-            db.prepare(passageColumns).use { }
-            db.prepare("SELECT 1 FROM documents LIMIT 1").use { check(it.step()) }
-            db.prepare("SELECT 1 FROM passages LIMIT 1").use { check(it.step()) }
-            db.prepare("SELECT rowid FROM passages_fts LIMIT 1").use { check(it.step()) }
-            val limits = mapOf(
-                "id" to 100, "title" to 300, "publisher" to 300, "url" to 2000,
-                "license" to 4000, "updated" to 80, "saved" to 80, "collection" to 200,
-                "body" to 1_000_000
-            )
-            val invalid = limits.entries.joinToString(" OR ") { (column, limit) ->
-                "typeof($column)!='text' OR length($column)>$limit"
-            }
-            if (version == 3L) {
-                validateSpanBackedPassages(db, invalid, validateContents = !catalogDigestPinned)
-            } else if (!catalogDigestPinned) {
-                validateDocuments(db, invalid)
-            }
-            if (version == 2L) {
-                db.prepare("SELECT title,section FROM passages_fts LIMIT 1").use {
-                    check(it.step())
-                }
-            }
-            if (version == 2L && !catalogDigestPinned) {
-                db.prepare(
-                    "SELECT count(*) FROM passages p JOIN documents d ON d.id=p.doc_id WHERE typeof(p.title)!='text' OR (p.title!='' AND p.title!=d.title) OR length(p.body)>1400"
-                ).use { check(it.step() && it.getLong(0) == 0L) }
-            }
-            if (version >= 2L && hasNames(db)) {
-                db.prepare("SELECT name,doc_id FROM document_names LIMIT 0").use { }
-                if (!catalogDigestPinned) {
-                    db.prepare(
-                        "SELECT count(*),sum(CASE WHEN d.id IS NULL OR typeof(n.name)!='text' OR length(n.name) NOT BETWEEN 1 AND 300 OR instr(n.name,char(0))>0 THEN 1 ELSE 0 END) FROM document_names n LEFT JOIN documents d ON d.id=n.doc_id"
-                    ).use {
-                        check(
-                            it.step() && it.getLong(0) <= 10_000_000L && it.getLong(1) == 0L
-                        )
-                    }
-                    db.prepare(
-                        "SELECT count(*) FROM (SELECT name,doc_id FROM document_names GROUP BY name,doc_id HAVING count(*)>1)"
-                    ).use { check(it.step() && it.getLong(0) == 0L) }
-                }
-            }
-            if (version < 3L && !catalogDigestPinned) {
-                db.prepare(
-                    "SELECT count(*) FROM passages p LEFT JOIN documents d ON d.id=p.doc_id WHERE d.id IS NULL OR typeof(p.body)!='text' OR length(p.body) NOT BETWEEN 1 AND 8000 OR typeof(p.section)!='text' OR length(p.section)>300"
-                ).use { check(it.step() && it.getLong(0) == 0L) }
-            }
-        }
-    }
+    fun validate(
+        file: java.io.File,
+        catalogDigestPinned: Boolean = false,
+        recordsSha256: String = "",
+        expectedRecordCount: Long? = null
+    ) = validator.validate(file, catalogDigestPinned, recordsSha256, expectedRecordCount)
 
-    fun browse(packages: List<PackageEntity>, query: String, offset: Int = 0): List<Evidence> {
-        require(offset in 0..Int.MAX_VALUE - 51)
-        val limit = offset + 51
-        val order = compareBy<Evidence>({ it.title }, { it.id })
-        val candidates = PriorityQueue(51, order.reversed())
-        val search = "%${query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")}%"
-        packages.filter { it.kind == "library" && it.enabled }.forEach { pack ->
-            open(pack.path).use { db ->
-                db.prepare(
-                    "SELECT id,title,publisher,url,license,updated,saved,collection,substr(body,1,300) FROM documents WHERE title LIKE ? ESCAPE '\\' OR publisher LIKE ? ESCAPE '\\' ORDER BY title,id LIMIT ?"
-                ).use { statement ->
-                    statement.bindText(1, search)
-                    statement.bindText(2, search)
-                    statement.bindLong(3, limit.toLong())
-                    while (statement.step()) {
-                        val item = read(statement, pack)
-                        if (candidates.size < limit) {
-                            candidates.add(item)
-                        } else if (order.compare(item, candidates.peek()) < 0) {
-                            candidates.poll()
-                            candidates.add(item)
-                        }
-                    }
-                }
-            }
-        }
-        return candidates.sortedWith(order).drop(offset)
-    }
+    fun browse(packages: List<PackageEntity>, query: String, offset: Int = 0): List<Evidence> =
+        reader.browse(packages, query, offset)
 
-    fun readDocument(packages: List<PackageEntity>, id: String): Evidence? {
-        val pack = packages.find { id.startsWith(it.key + "/") } ?: return null
-        return open(pack.path).use { db ->
-            db.prepare(
-                "SELECT id,title,publisher,url,license,updated,saved,collection,body FROM documents WHERE id=?"
-            ).use { row ->
-                row.bindText(1, id.substringAfter('/'))
-                if (row.step()) read(row, pack) else null
-            }
-        }
-    }
+    fun readDocument(packages: List<PackageEntity>, id: String): Evidence? =
+        reader.readDocument(packages, id)
 
-    fun forEachDocument(pack: PackageEntity, consume: (LibraryDocument) -> Unit) {
-        require(pack.kind == "library")
-        open(pack.path).use { db ->
-            db.prepare(
-                "SELECT id,title,publisher,url,license,updated,saved,body,collection FROM documents ORDER BY id"
-            ).use { statement ->
-                while (statement.step()) {
-                    consume(
-                        LibraryDocument(
-                            statement.getText(0), statement.getText(1), statement.getText(2),
-                            statement.getText(3), statement.getText(4), statement.getText(5),
-                            statement.getText(6), statement.getText(7), statement.getText(8)
-                        )
-                    )
-                }
-            }
-        }
-    }
+    fun readPassage(packages: List<PackageEntity>, documentId: String, passageId: Long): Evidence? =
+        reader.readPassage(packages, documentId, passageId)
 
+    fun forEachDocument(pack: PackageEntity, consume: (LibraryDocument) -> Unit) =
+        reader.forEachDocument(pack, consume)
+
+    /**
+     * Resolves reviewed names, runs one bounded FTS query for each selected
+     * library, then applies deterministic local ranking and source limits.
+     */
     fun retrieve(
         packages: List<PackageEntity>,
         question: String,
-        scope: Set<String>?
+        scope: Set<String>?,
+        maximumResults: Int = MAX_RETRIEVAL_RESULTS
     ): List<Evidence> {
+        require(maximumResults in 1..MAX_RETRIEVAL_RESULTS)
         if (scope?.isEmpty() == true) return emptyList()
+
         val searchQuestion = RetrievalQuery.forSearch(question)
-        val terms = RetrievalQuery.match(searchQuestion)
-        if (terms.isEmpty()) return emptyList()
+        val lexicalQuery = RetrievalQuery.match(searchQuestion)
+        if (lexicalQuery.isEmpty()) return emptyList()
+
         val titleTerms = RetrievalQuery.titleTerms(searchQuestion)
         val enabledLibraries = packages.filter { it.kind == "library" && it.enabled }
-        return enabledLibraries.flatMap { pack ->
-            val ids = scope?.filter {
-                it.startsWith(pack.key + "/")
-            }?.map { it.substringAfter('/') }
-            if (ids?.isEmpty() == true) return@flatMap emptyList()
-            open(pack.path).use { db ->
-                val filter = ids?.joinToString(",", " AND d.id IN (", ")") { "?" }.orEmpty()
-                val schema = version(db)
-                val current = schema >= 2L
-                val titleMatches = if (current && hasNames(db)) {
-                    matchingTitles(db, searchQuestion, ids)
-                } else {
-                    emptyList()
-                }
-                val query = if (current && hasNames(db)) {
-                    RetrievalQuery.match(searchQuestion, titleMatches.map { it.title })
-                } else {
-                    terms
-                }
-                val excerpt = when (schema) {
-                    3L -> "substr(d.body,s.start+1,s.end-s.start)"
-                    2L -> "p.body"
-                    else -> "snippet(passages_fts,0,'','',' … ',64)"
-                }
-                val ranking = if (current) "rank" else "bm25(passages_fts)"
-                val contentFilter = if (current) {
-                    " AND (p.title!='' OR lower(trim(p.section)) NOT IN ('references','external links','see also','further reading','bibliography'))"
-                } else {
-                    ""
-                }
-                val spanJoin = if (schema == 3L) {
-                    " JOIN passage_spans s ON s.passage_id=p.id"
-                } else {
-                    ""
-                }
-                val directTitleIds = titleMatches.filter {
-                    (
-                        it.key == RetrievalQuery.nameKey(it.title) &&
-                            RetrievalQuery.isDirectTitleMatch(searchQuestion, it.title)
-                        ) || ' ' in it.key
-                }.map { it.id }.toMutableSet()
-                val titlePriorityIds = titleMatches.filter {
-                    it.id in directTitleIds &&
-                        RetrievalQuery.isBroadTitleQuestion(searchQuestion, it.title)
-                }.map { it.id }.toMutableSet()
-                val subjects = titleMatches.filter { it.id in directTitleIds }
-                    .map { it.title }.toMutableList()
-                val namedSubjects = subjects.toList()
-                val titleFlag = if (current) "CASE WHEN p.title!='' THEN 1 ELSE 0 END" else "0"
-                val candidateLimit = if (enabledLibraries.size > 1) {
-                    MULTI_LIBRARY_CANDIDATE_LIMIT
-                } else {
-                    SINGLE_LIBRARY_CANDIDATE_LIMIT
-                }
-                fun search(
-                    searchQuery: String,
-                    subjectFilter: String = "",
-                    subjectParameters: List<String> = emptyList()
-                ): List<RetrievalCandidate> {
-                    val scoped = ids != null || subjectFilter.isNotEmpty()
-                    val from = if (scoped) {
-                        "documents d CROSS JOIN passages p ON p.doc_id=d.id$spanJoin CROSS JOIN passages_fts ON passages_fts.rowid=p.id"
-                    } else {
-                        "passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin JOIN documents d ON d.id=p.doc_id"
+        val candidates = enabledLibraries.flatMap { pack ->
+            val selectedWholeLibrary = pack.key in scope.orEmpty()
+            val documentIds = when {
+                scope == null || selectedWholeLibrary -> null
+                else -> scope.filter { it.startsWith("${pack.key}/") }
+                    .map { it.substringAfter('/') }
+            }
+            if (scope != null && !selectedWholeLibrary && documentIds.isNullOrEmpty()) {
+                emptyList()
+            } else {
+                retrieveFromLibrary(
+                    pack,
+                    searchQuestion,
+                    lexicalQuery,
+                    titleTerms,
+                    documentIds,
+                    maximumResults
+                )
+            }
+        }
+        return selectEvidence(candidates, titleTerms, maximumResults)
+    }
+
+    private fun retrieveFromLibrary(
+        pack: PackageEntity,
+        searchQuestion: String,
+        lexicalQuery: String,
+        titleTerms: Set<String>,
+        documentIds: List<String>?,
+        maximumResults: Int
+    ): List<RetrievalCandidate> = LibrarySqlite.open(pack.path).use { db ->
+        val schema = LibrarySqlite.version(db)
+        val currentSchema = schema >= 2L
+        val titleMatches = if (currentSchema && LibrarySqlite.hasDocumentNames(db)) {
+            nameLookup.matchingTitles(db, searchQuestion, documentIds)
+        } else {
+            emptyList()
+        }
+        val directTitleIds = titleMatches.filter {
+            RetrievalQuery.isDirectTitleMatch(searchQuestion, it.key) ||
+                RetrievalQuery.isDirectTitleMatch(searchQuestion, it.title)
+        }.mapTo(mutableSetOf()) { it.id }
+        val priorityTitleIds = titleMatches.filter {
+            it.id in directTitleIds && RetrievalQuery.isBroadTitleQuestion(searchQuestion, it.title)
+        }.mapTo(mutableSetOf()) { it.id }
+        val subjectTitles = titleMatches.filter { it.id in directTitleIds }.map { it.title }
+        val topicTerms = RetrievalQuery.topicTerms(searchQuestion, subjectTitles)
+        val query = if (titleMatches.isEmpty()) {
+            lexicalQuery
+        } else {
+            RetrievalQuery.match(searchQuestion, titleMatches.map { it.title })
+        }
+        val excerpt = when (schema) {
+            3L -> "substr(d.body,s.start+1,s.end-s.start)"
+            2L -> "p.body"
+            else -> "snippet(passages_fts,0,'','',' … ',64)"
+        }
+        val spanJoin = if (schema == 3L) " JOIN passage_spans s ON s.passage_id=p.id" else ""
+        val documentFilter = documentIds?.joinToString(",", " AND d.id IN (", ")") { "?" }
+            .orEmpty()
+        val contentFilter = if (currentSchema) {
+            " AND (p.title!='' OR lower(trim(p.section)) NOT IN " +
+                "('references','external links','see also','further reading','bibliography'))"
+        } else {
+            ""
+        }
+        val scoped = documentIds != null
+        val from = if (scoped) {
+            "documents d CROSS JOIN passages p ON p.doc_id=d.id$spanJoin " +
+                "CROSS JOIN passages_fts ON passages_fts.rowid=p.id"
+        } else {
+            "passages_fts JOIN passages p ON p.id=passages_fts.rowid$spanJoin " +
+                "JOIN documents d ON d.id=p.doc_id"
+        }
+        val ranking = if (currentSchema) "rank" else "bm25(passages_fts)"
+        val order = if (scoped && currentSchema) "+rank, p.id" else ranking
+        val titleFlag = if (currentSchema) "CASE WHEN p.title!='' THEN 1 ELSE 0 END" else "0"
+        val limit = (maximumResults * CANDIDATES_PER_RESULT).toLong()
+
+        db.prepare(
+            "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section," +
+                "$excerpt,$titleFlag,p.id FROM $from WHERE passages_fts MATCH ?$documentFilter" +
+                "$contentFilter ORDER BY $order LIMIT ?"
+        ).use { statement ->
+            statement.bindText(1, query)
+            documentIds?.forEachIndexed { index, id -> statement.bindText(index + 2, id) }
+            statement.bindLong((documentIds?.size ?: 0) + 2, limit)
+            buildList {
+                var orderIndex = 0
+                while (statement.step()) {
+                    val localId = statement.getText(0)
+                    val title = statement.getText(1)
+                    val evidence = LibrarySqlite.readEvidence(statement, pack)
+                    val subject = subjectTitles.firstOrNull {
+                        title == it || title.startsWith("$it/")
                     }
-                    // Keep configured rank, but sort only after the scoped rowid lookups.
-                    val order = if (scoped && current) "+rank, p.id" else ranking
-                    return db.prepare(
-                        "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$excerpt,$titleFlag,p.id FROM $from WHERE passages_fts MATCH ?$filter$contentFilter$subjectFilter ORDER BY $order LIMIT ?"
-                    ).use { statement ->
-                        statement.bindText(1, searchQuery)
-                        var parameter = 2
-                        ids?.forEach { id -> statement.bindText(parameter++, id) }
-                        subjectParameters.forEach { statement.bindText(parameter++, it) }
-                        statement.bindLong(parameter, candidateLimit.toLong())
-                        buildList {
-                            while (statement.step()) {
-                                add(
-                                    RetrievalCandidate(
-                                        evidence = read(statement, pack),
-                                        passageId = statement.getLong(10),
-                                        titlePriority = statement.getLong(9) != 0L &&
-                                            statement.getText(0) in titlePriorityIds,
-                                        titleOverlap = 0,
-                                        directTitleMatch = statement.getText(0) in directTitleIds
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-                val ranked = search(query)
-                if (current) {
-                    val subjectNames = subjects.map(RetrievalQuery::nameKey)
-                    ranked.distinctBy { it.evidence.id }.forEach { candidate ->
-                        val title = candidate.evidence.title
-                        val words = RetrievalQuery.titleTerms(title)
-                        val name = " ${RetrievalQuery.nameKey(title)} "
-                        if (
-                            words.size >= 2 && titleTerms.containsAll(words) &&
-                            (subjectNames.isEmpty() || subjectNames.any { " $it " in name })
-                        ) {
-                            val id = candidate.evidence.id.substringAfter('/')
-                            directTitleIds.add(id)
-                            if (title !in subjects) subjects.add(title)
-                            if (RetrievalQuery.isBroadTitleQuestion(searchQuestion, title)) {
-                                titlePriorityIds.add(id)
-                            }
-                        }
-                    }
-                }
-                val topicTerms = RetrievalQuery.topicTerms(searchQuestion, subjects)
-                val topical = if (subjects.isNotEmpty() && topicTerms.isNotEmpty()) {
-                    val subjectFilter = subjects.joinToString(
-                        " OR ",
-                        " AND d.id IN (SELECT id FROM documents WHERE ",
-                        ")"
-                    ) { "(title=? OR title LIKE ? ESCAPE '\\')" }
-                    val parameters = subjects.flatMap { title ->
-                        val escaped = title.replace("\\", "\\\\")
-                            .replace("%", "\\%").replace("_", "\\_")
-                        listOf(title, "$escaped/%")
-                    }
-                    search(
-                        RetrievalQuery.match(topicTerms.joinToString(" ")),
-                        subjectFilter,
-                        parameters
-                    )
-                } else {
-                    emptyList()
-                }
-                val routed = if (current && directTitleIds.isNotEmpty()) {
-                    val routeFilter = directTitleIds.joinToString(",", "d.id IN (", ")") { "?" }
-                    val routeExcerpt = if (schema == 3L) {
-                        "substr(d.body,s.start+1,s.end-s.start)"
-                    } else {
-                        "p.body"
-                    }
-                    db.prepare(
-                        "SELECT d.id,d.title,d.publisher,d.url,d.license,d.updated,d.saved,p.section,$routeExcerpt,p.id FROM passages p$spanJoin JOIN documents d ON d.id=p.doc_id WHERE $routeFilter AND p.title!='' ORDER BY p.id LIMIT 8"
-                    ).use { statement ->
-                        directTitleIds.forEachIndexed { index, id ->
-                            statement.bindText(index + 1, id)
-                        }
-                        buildList {
-                            while (statement.step()) {
-                                val id = statement.getText(0)
-                                add(
-                                    RetrievalCandidate(
-                                        evidence = read(statement, pack),
-                                        passageId = statement.getLong(9),
-                                        titlePriority = id in titlePriorityIds,
-                                        titleOverlap = 0,
-                                        directTitleMatch = id in directTitleIds
-                                    )
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    emptyList()
-                }
-                val overlapByTitle = mutableMapOf<String, Int>()
-                val ordered = buildList {
-                    addAll(routed.filter { it.titlePriority })
-                    addAll(topical)
-                    ranked.firstOrNull()?.let(::add)
-                    addAll(routed.filterNot { it.titlePriority })
-                    addAll(ranked.drop(1))
-                }.distinctBy { it.passageId }
-                    .map { candidate ->
-                        candidate.copy(
-                            directTitleMatch = candidate.evidence.id.substringAfter('/') in
-                                directTitleIds,
-                            titleOverlap = overlapByTitle.getOrPut(candidate.evidence.title) {
-                                RetrievalQuery.titleOverlap(titleTerms, candidate.evidence.title)
-                            },
-                            subjectMatch = subjects.any {
-                                candidate.evidence.title == it ||
-                                    candidate.evidence.title.startsWith("$it/")
-                            },
-                            namedSubject = namedSubjects.firstOrNull {
-                                candidate.evidence.title == it ||
-                                    candidate.evidence.title.startsWith("$it/")
-                            }?.let(RetrievalQuery::nameKey),
-                            sectionOverlap = RetrievalQuery.titleTerms(candidate.evidence.section)
-                                .intersect(topicTerms).size,
+                    add(
+                        RetrievalCandidate(
+                            evidence = evidence,
+                            passageId = statement.getLong(10),
+                            titlePriority = statement.getLong(9) != 0L && localId in priorityTitleIds,
+                            directTitleMatch = localId in directTitleIds,
+                            subject = subject,
+                            titleOverlap = RetrievalQuery.titleOverlap(titleTerms, title),
                             topicOverlap = RetrievalQuery.evidenceOverlap(
                                 topicTerms,
-                                "",
-                                candidate.evidence.section,
-                                candidate.evidence.text
-                            )
+                                title,
+                                evidence.section,
+                                evidence.text
+                            ),
+                            evidenceOverlap = RetrievalQuery.evidenceOverlap(
+                                titleTerms,
+                                title,
+                                evidence.section,
+                                evidence.text
+                            ),
+                            order = orderIndex++
                         )
-                    }
-                    .withIndex()
-                    .sortedWith(
-                        compareByDescending<IndexedValue<RetrievalCandidate>> {
-                            it.value.titlePriority
-                        }.thenByDescending {
-                            it.value.titleOverlap
-                        }.thenByDescending {
-                            it.value.subjectMatch
-                        }.thenByDescending {
-                            it.value.sectionPriority
-                        }.thenByDescending {
-                            it.value.topicOverlap
-                        }.thenByDescending {
-                            it.value.directTitleMatch
-                        }.thenBy {
-                            it.index
-                        }
                     )
-                    .map { it.value }
-                ordered
-            }
-        }.let { matched ->
-            val indexed = matched.withIndex()
-            val ranked = if (enabledLibraries.size > 1) {
-                indexed.sortedWith(
-                    compareByDescending<IndexedValue<RetrievalCandidate>> {
-                        it.value.titlePriority
-                    }.thenByDescending {
-                        it.value.subjectMatch
-                    }.thenByDescending {
-                        it.value.sectionPriority
-                    }.thenByDescending {
-                        it.value.topicOverlap
-                    }.thenByDescending {
-                        it.value.directTitleMatch
-                    }.thenByDescending {
-                        val evidence = it.value.evidence
-                        RetrievalQuery.evidenceOverlap(
-                            titleTerms,
-                            evidence.title,
-                            evidence.section,
-                            evidence.text
-                        )
-                    }.thenBy {
-                        it.index
-                    }
-                )
-            } else {
-                indexed
-            }
-            ranked.map { it.value }
-        }.let { matched ->
-            val broadTitles = matched.filter {
-                it.titlePriority
-            }.map { it.evidence.title }.distinct()
-            val focused = if (broadTitles.isEmpty()) {
-                matched
-            } else {
-                matched.filter { candidate ->
-                    broadTitles.any {
-                        candidate.evidence.title == it ||
-                            candidate.evidence.title.startsWith("$it/")
-                    }
-                }
-            }
-
-            // Regional packs can contain the same reviewed article as a larger collection.
-            fun documentKey(evidence: Evidence) = Triple(
-                evidence.url,
-                evidence.id.substringAfter('/'),
-                evidence.title
-            )
-            val candidates = if (enabledLibraries.size > 1) {
-                focused.distinctBy {
-                    Triple(documentKey(it.evidence), it.evidence.section, it.evidence.text)
-                }
-            } else {
-                focused
-            }
-            val selected = mutableListOf<Evidence>()
-            val selectedPassages = mutableSetOf<Pair<String, Long>>()
-            val perDocument = mutableMapOf<Triple<String, String, String>, Int>()
-            var characters = 0
-            fun append(candidate: RetrievalCandidate) {
-                val evidence = candidate.evidence
-                val passageKey = evidence.id to candidate.passageId
-                if (
-                    selected.size < 6 &&
-                    perDocument.getOrDefault(documentKey(evidence), 0) < 3 &&
-                    characters + evidence.text.length <= 6000 &&
-                    selectedPassages.add(passageKey)
-                ) {
-                    selected += evidence
-                    val key = documentKey(evidence)
-                    perDocument[key] = perDocument.getOrDefault(key, 0) + 1
-                    characters += evidence.text.length
-                }
-            }
-            val named = candidates.filter { it.namedSubject != null }.distinctBy { it.namedSubject }
-            if (named.size > 1) named.forEach(::append)
-            candidates.groupBy {
-                Triple(
-                    it.titlePriority,
-                    if (it.subjectMatch) it.titleOverlap else 0,
-                    it.subjectMatch
-                )
-            }.values.forEach { group ->
-                group.distinctBy { documentKey(it.evidence) }.forEach(::append)
-                group.forEach(::append)
-            }
-            selected
-        }
-    }
-
-    private fun hasNames(db: SQLiteConnection): Boolean = db.prepare(
-        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='document_names'"
-    ).use { it.step() && it.getLong(0) == 1L }
-
-    private fun validateDocuments(db: SQLiteConnection, invalid: String) {
-        db.prepare(
-            "SELECT count(*),count(DISTINCT id),sum(CASE WHEN $invalid OR length(id)=0 OR id GLOB '*[^a-zA-Z0-9_-]*' OR instr(body,char(0))>0 THEN 1 ELSE 0 END) FROM documents"
-        ).use {
-            check(
-                it.step() &&
-                    it.getLong(0) in 1L..5_000_000L &&
-                    it.getLong(0) == it.getLong(1) &&
-                    it.getLong(2) == 0L
-            )
-        }
-    }
-
-    private fun validateSpanBackedPassages(
-        db: SQLiteConnection,
-        invalid: String,
-        validateContents: Boolean
-    ) {
-        db.prepare("PRAGMA table_info(passages)").use { columns ->
-            val names = buildList {
-                while (columns.step()) add(columns.getText(1))
-            }
-            check(names == listOf("id", "doc_id", "section", "title"))
-        }
-        db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='passages_fts'").use {
-            check(it.step() && it.getText(0).replace(" ", "").contains("content=''"))
-        }
-        db.prepare("SELECT passage_id,start,end,section_path FROM passage_spans LIMIT 0").use { }
-        if (!validateContents) return
-        db.prepare(
-            """
-            WITH docs AS MATERIALIZED (
-                SELECT id,title,length(body) AS body_length,
-                       CASE WHEN $invalid OR length(id)=0 OR id GLOB '*[^a-zA-Z0-9_-]*'
-                                 OR instr(body,char(0))>0
-                            THEN 1 ELSE 0 END AS invalid
-                FROM documents
-            ),
-            document_status AS (
-                SELECT count(*),count(DISTINCT id),sum(invalid) FROM docs
-            ),
-            passage_status AS (
-                SELECT count(*),sum(CASE
-                    WHEN d.id IS NULL OR s.passage_id IS NULL OR f.rowid IS NULL
-                      OR typeof(p.title)!='text' OR (p.title!='' AND p.title!=d.title)
-                      OR typeof(p.section)!='text' OR length(p.section)>300
-                      OR typeof(s.start)!='integer' OR typeof(s.end)!='integer'
-                      OR s.start<0 OR s.end<=s.start OR s.end>d.body_length
-                      OR s.end-s.start NOT BETWEEN 1 AND 1400
-                      OR typeof(s.section_path)!='text'
-                      OR length(s.section_path) NOT BETWEEN 1 AND 4000
-                      OR instr(s.section_path,char(0))>0
-                    THEN 1 ELSE 0 END)
-                FROM passages p
-                LEFT JOIN docs d ON d.id=p.doc_id
-                LEFT JOIN passage_spans s ON s.passage_id=p.id
-                LEFT JOIN passages_fts f ON f.rowid=p.id
-            )
-            SELECT document_status.*,passage_status.*
-            FROM document_status,passage_status
-            """.trimIndent()
-        ).use {
-            check(
-                it.step() &&
-                    it.getLong(0) in 1L..5_000_000L &&
-                    it.getLong(0) == it.getLong(1) &&
-                    it.getLong(2) == 0L &&
-                    it.getLong(3) > 0L &&
-                    it.getLong(4) == 0L
-            )
-        }
-        db.prepare(
-            "SELECT count(*) FROM passage_spans s LEFT JOIN passages p ON p.id=s.passage_id WHERE p.id IS NULL"
-        ).use { check(it.step() && it.getLong(0) == 0L) }
-        db.prepare(
-            "SELECT count(*) FROM passages_fts LEFT JOIN passages p ON p.id=passages_fts.rowid WHERE p.id IS NULL"
-        ).use { check(it.step() && it.getLong(0) == 0L) }
-    }
-
-    private fun matchingTitles(
-        db: SQLiteConnection,
-        question: String,
-        scope: List<String>?
-    ): List<NameMatch> {
-        val candidates = RetrievalQuery.names(question)
-        val keys = candidates.map { it.key }.distinct()
-        if (keys.isEmpty()) return emptyList()
-        val placeholders = keys.joinToString(",") { "?" }
-        val matches = db.prepare(
-            "SELECT n.name,min(d.title),min(d.id) FROM document_names n JOIN documents d ON d.id=n.doc_id WHERE n.name IN ($placeholders) GROUP BY n.name HAVING count(*)=1"
-        ).use { statement ->
-            keys.forEachIndexed { index, key -> statement.bindText(index + 1, key) }
-            buildMap {
-                while (statement.step()) {
-                    if (scope == null || statement.getText(2) in scope) {
-                        put(
-                            statement.getText(0),
-                            NameMatch(
-                                key = statement.getText(0),
-                                title = statement.getText(1),
-                                id = statement.getText(2)
-                            )
-                        )
-                    }
                 }
             }
         }
-        val occupied = mutableSetOf<Int>()
-        val titles = linkedMapOf<String, NameMatch>()
-        for (candidate in candidates) {
-            val match = matches[candidate.key] ?: continue
-            if (candidate.words.any { it in occupied }) continue
-            occupied.addAll(candidate.words)
-            titles.putIfAbsent(match.id, match)
-            if (titles.size == 4) break
-        }
-        return titles.values.toList()
     }
 
-    private fun version(db: SQLiteConnection): Long = db.prepare("PRAGMA user_version").use {
-        check(it.step())
-        it.getLong(0)
-    }
-
-    private fun read(row: SQLiteStatement, pack: PackageEntity) = Evidence(
-        "${pack.key}/${row.getText(0)}", row.getText(1), row.getText(2), row.getText(3),
-        row.getText(4), row.getText(5), row.getText(6), row.getText(7), row.getText(8),
-        "${pack.title} · ${pack.version} · ${pack.sha256}"
-    )
-
-    private fun open(path: String): SQLiteConnection =
-        BundledSQLiteDriver().open(path, 1).also { db ->
-            db.prepare("PRAGMA trusted_schema=OFF").use { it.step() }
-            db.prepare("PRAGMA query_only=ON").use { it.step() }
+    private fun selectEvidence(
+        candidates: List<RetrievalCandidate>,
+        titleTerms: Set<String>,
+        maximumResults: Int
+    ): List<Evidence> {
+        val ranked = candidates.sortedWith(
+            compareByDescending<RetrievalCandidate> { it.titlePriority }
+                .thenByDescending { if (it.subject != null) 1 else 0 }
+                .thenByDescending { it.topicOverlap }
+                .thenByDescending { it.evidenceOverlap }
+                .thenByDescending { it.titleOverlap }
+                .thenByDescending { it.directTitleMatch }
+                .thenBy { it.order }
+        )
+        val directSubjects = ranked.filter { it.subject != null }
+        val broadTitles = ranked.filter { it.titlePriority }.map { it.evidence.title }.distinct()
+        val focused = when {
+            directSubjects.isNotEmpty() -> directSubjects
+            broadTitles.isEmpty() -> ranked
+            else -> ranked.filter { candidate ->
+                broadTitles.any {
+                    candidate.evidence.title == it || candidate.evidence.title.startsWith("$it/")
+                }
+            }
         }
+        val minimumOverlap = RetrievalQuery.minimumEvidenceOverlap(titleTerms)
+        val relevant = focused.filter { candidate ->
+            candidate.titlePriority || candidate.directTitleMatch || candidate.subject != null ||
+                minimumOverlap == null ||
+                candidate.evidenceOverlap >= minimumOverlap
+        }
+
+        fun documentKey(evidence: Evidence) = Triple(
+            evidence.url,
+            evidence.id.substringAfter('/'),
+            evidence.title
+        )
+        val unique = relevant.distinctBy {
+            Triple(documentKey(it.evidence), it.evidence.section, it.evidence.text)
+        }
+        val selected = mutableListOf<Evidence>()
+        val selectedPassages = mutableSetOf<Pair<String, Long>>()
+        val perDocument = mutableMapOf<Triple<String, String, String>, Int>()
+        var characters = 0
+        fun append(candidate: RetrievalCandidate) {
+            val evidence = candidate.evidence
+            val document = documentKey(evidence)
+            val evidenceCost = minOf(evidence.text.length, MAX_EVIDENCE_CHARACTERS_PER_SOURCE)
+            if (
+                selected.size < maximumResults &&
+                perDocument.getOrDefault(document, 0) < MAX_PASSAGES_PER_DOCUMENT &&
+                characters + evidenceCost <= MAX_EVIDENCE_CHARACTERS &&
+                selectedPassages.add(evidence.id to candidate.passageId)
+            ) {
+                selected += evidence.copy(passageId = candidate.passageId)
+                perDocument[document] = perDocument.getOrDefault(document, 0) + 1
+                characters += evidenceCost
+            }
+        }
+
+        val namedSubjects = unique.filter { it.subject != null }.distinctBy { it.subject }
+        if (namedSubjects.size > 1) namedSubjects.forEach(::append)
+        unique.distinctBy { documentKey(it.evidence) }.forEach(::append)
+        unique.forEach(::append)
+        return selected
+    }
 
     companion object {
-        private const val MULTI_LIBRARY_CANDIDATE_LIMIT = 8
-        private const val SINGLE_LIBRARY_CANDIDATE_LIMIT = 48
+        private const val MAX_RETRIEVAL_RESULTS = 6
+        private const val CANDIDATES_PER_RESULT = 4
+        private const val MAX_PASSAGES_PER_DOCUMENT = 3
+        private const val MAX_EVIDENCE_CHARACTERS = 6000
+        private const val MAX_EVIDENCE_CHARACTERS_PER_SOURCE = 2000
 
         internal val multiLibraryCandidateLimit: Int
-            get() = MULTI_LIBRARY_CANDIDATE_LIMIT
+            get() = MAX_RETRIEVAL_RESULTS * CANDIDATES_PER_RESULT
 
         fun searchTerms(question: String): String =
             RetrievalQuery.match(RetrievalQuery.forSearch(question))

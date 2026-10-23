@@ -79,21 +79,10 @@
     </plurals>
     <string name="setup_all_set">ALL SET</string>
     <string name="continue_later">Continue later</string>
-    <string name="choose_sources">Choose sources</string>
     <string name="download_saved_body">Your file is saved and ready offline.</string>
     <string name="verified_saved">Verified and saved</string>
     <string name="download_error_keeps_files">Your existing models, files, and conversations are unchanged.</string>
     <string name="download_interrupted">Download interrupted</string>
-    <string name="transfer_paused_label">Paused</string>
-    <string name="individual_sources">Or select individual sources</string>
-    <plurals name="sources_selected">
-        <item quantity="one">%1$d selected</item>
-        <item quantity="other">%1$d selected</item>
-    </plurals>
-    <plurals name="done_sources">
-        <item quantity="one">Done · %1$d selected</item>
-        <item quantity="other">Done · %1$d selected</item>
-    </plurals>
     <string name="source_address">Source address</string>
     <string name="source_license">License</string>
     <string name="use_collection_for_answers">Use %1$s for answers</string>

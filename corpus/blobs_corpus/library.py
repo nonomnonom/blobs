@@ -10,8 +10,9 @@ import shutil
 import sqlite3
 import tempfile
 
-from .records import documents
+from .records import documents, provenance_json
 from .names import build_names
+from .partition import PartitionSelection
 
 
 def passage_spans(body: str, title: str, limit: int = 1400):
@@ -62,7 +63,12 @@ def passages(body: str, title: str):
         yield row["section"], row["body"]
 
 
-def build_library(source: Path, target: Path, schema: int = 3):
+def build_library(
+    source: Path,
+    target: Path,
+    schema: int = 3,
+    partition: PartitionSelection | None = None,
+):
     if schema not in {1, 2, 3}:
         raise ValueError("Unsupported library schema")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -112,7 +118,8 @@ def build_library(source: Path, target: Path, schema: int = 3):
                     "INSERT INTO passages_fts(passages_fts,rank) VALUES ('rank','bm25(1.0,6.0,2.0)')"
                 )
             db.execute("PRAGMA temp_store_directory='" + folder.replace("'", "''") + "'")
-            for item in documents(source):
+            record_stream = partition.iter_documents(source) if partition else documents(source)
+            for item in record_stream:
                 fields = [
                     "id",
                     "title",
@@ -129,6 +136,7 @@ def build_library(source: Path, target: Path, schema: int = 3):
                 )
                 body_hash = hashlib.sha256(item["body"].encode()).hexdigest()
                 provenance = item.get("provenance", {})
+                serialized_provenance = provenance_json(item)
                 if provenance.get("body_sha256", body_hash) != body_hash:
                     raise ValueError(f"Body hash mismatch: {item['id']}")
                 db.execute(
@@ -136,7 +144,7 @@ def build_library(source: Path, target: Path, schema: int = 3):
                     (
                         item["id"],
                         body_hash,
-                        json.dumps(provenance, sort_keys=True, ensure_ascii=False),
+                        serialized_provenance,
                     ),
                 )
                 logical.update(
@@ -146,6 +154,11 @@ def build_library(source: Path, target: Path, schema: int = 3):
                     ).encode()
                 )
                 for position, span in enumerate(passage_spans(item["body"], item["title"])):
+                    section_path = json.dumps(span["path"], ensure_ascii=False)
+                    if len(section_path) > 4000:
+                        raise ValueError(
+                            f"Section path exceeds Android import limit: {item['id']}"
+                        )
                     if schema >= 2:
                         # Title-only matches route to the article's opening, not
                         # short references/footers that gain a length advantage.
@@ -179,7 +192,7 @@ def build_library(source: Path, target: Path, schema: int = 3):
                             cursor.lastrowid,
                             span["start"],
                             span["end"],
-                            json.dumps(span["path"], ensure_ascii=False),
+                            section_path,
                         ),
                     )
                     passage_count += 1
@@ -219,6 +232,8 @@ def build_library(source: Path, target: Path, schema: int = 3):
                 name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
                 for name in ("library.py", "names.py", "records.py")
             }
+            if partition is not None:
+                report["partition"] = partition.metadata()
             if names is not None:
                 report["document_names"] = names
             db.execute(

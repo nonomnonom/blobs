@@ -17,5 +17,7 @@ data class PackageEntity(
     val license: String,
     val origin: String,
     val installedAt: Long,
-    @ColumnInfo(defaultValue = "1") val enabled: Boolean = true
+    @ColumnInfo(defaultValue = "1") val enabled: Boolean = true,
+    @ColumnInfo(defaultValue = "''") val recordsSha256: String = "",
+    @ColumnInfo(defaultValue = "''") val libraryProfile: String = ""
 )

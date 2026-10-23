@@ -8,6 +8,7 @@ import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.UserLibraryPackage
 import dev.blobs.app.data.local.PackageDao
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.inference.LOCAL_RESEARCH_CONTEXT_TOKENS
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -26,6 +27,9 @@ import org.json.JSONObject
 
 data class PendingImport(val uri: Uri, val manifest: PackageManifest)
 
+private const val MAX_PENDING_IMPORT_BYTES = 64L * 1024L
+private const val MAX_INSTALLED_PAYLOAD_BYTES = 48_000_000_000L
+
 class PackageInstaller(
     private val context: Context,
     private val dao: PackageDao,
@@ -39,6 +43,7 @@ class PackageInstaller(
 
     fun pending(): PendingImport? {
         if (!journal.baseFile.exists()) return null
+        require(journal.baseFile.length() <= MAX_PENDING_IMPORT_BYTES) { "PENDING_IMPORT" }
         val json = JSONObject(journal.openRead().bufferedReader().use { it.readText() })
         return PendingImport(
             Uri.parse(json.getString("uri")),
@@ -47,14 +52,14 @@ class PackageInstaller(
     }
 
     private fun record(uri: Uri, manifest: PackageManifest) {
+        val bytes = JSONObject().put(
+            "uri",
+            uri.toString()
+        ).put("manifest", manifest.json()).toString().toByteArray()
+        require(bytes.size.toLong() <= MAX_PENDING_IMPORT_BYTES) { "PENDING_IMPORT" }
         val output = journal.startWrite()
         try {
-            output.write(
-                JSONObject().put(
-                    "uri",
-                    uri.toString()
-                ).put("manifest", manifest.json()).toString().toByteArray()
-            )
+            output.write(bytes)
             journal.finishWrite(output)
         } catch (error: Exception) {
             journal.failWrite(output)
@@ -98,8 +103,11 @@ class PackageInstaller(
         uri: Uri,
         expected: PackageManifest,
         catalogDigestPinned: Boolean = false,
+        libraryProfile: LibraryProfile? = null,
         progress: (Long) -> Unit
     ): PackageEntity = withContext(Dispatchers.IO) {
+        expected.validate()
+        require(expected.kind == "library" || libraryProfile == null) { "LIBRARY_PROFILE_KIND" }
         mutations.withLock {
             dao.all().find { it.key == expected.key }?.let { return@withContext it }
             val rawModel =
@@ -112,7 +120,9 @@ class PackageInstaller(
             }
             val storage = context.getSystemService(StorageManager::class.java)
             val volume = storage.getUuidForPath(root)
-            check(dao.all().sumOf { it.bytes } + expected.bytes < 48_000_000_000L) { "FOOTPRINT" }
+            check(dao.all().sumOf { it.bytes } + expected.bytes < MAX_INSTALLED_PAYLOAD_BYTES) {
+                "FOOTPRINT"
+            }
             val staging = File(root, "${expected.key}.partial")
             val target = File(root, expected.key)
             var activated = false
@@ -181,16 +191,23 @@ class PackageInstaller(
                     require(hash.digest().joinToString("") { "%02x".format(it) } == expected.sha256)
                 }
                 if (expected.kind == "library") {
-                    library.validate(staging, catalogDigestPinned)
+                    library.validate(
+                        staging,
+                        catalogDigestPinned,
+                        expected.recordsSha256,
+                        libraryProfile?.recordCount
+                    )
                 } else {
-                    GgufValidator.validate(staging)
+                    GgufValidator.validate(staging, LOCAL_RESEARCH_CONTEXT_TOKENS)
                 }
                 currentCoroutineContext().ensureActive()
                 val installed = PackageEntity(
                     expected.key, expected.id, expected.version, expected.kind, expected.title,
                     target.path,
                     expected.bytes, expected.sha256, expected.license, expected.origin,
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
+                    recordsSha256 = expected.recordsSha256,
+                    libraryProfile = libraryProfile?.storageJson().orEmpty()
                 )
                 withContext(NonCancellable) {
                     if (target.exists()) check(target.delete())

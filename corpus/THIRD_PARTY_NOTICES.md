@@ -8,7 +8,14 @@ Wikipedia text remains attributed to Wikipedia contributors under the applicable
 
 The optional English travel library contains text from Wikivoyage contributors under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). It uses the September 2026 Kiwix snapshot; article-history links are retained for contributor attribution, and images are excluded. See the [Wikivoyage reuse guide](https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides) before reusing the data.
 
-The Bali travel library selects 30 articles from that same reviewed Wikivoyage edition. It retains each article's text, contributor credit, history URL and original snapshot provenance under CC BY-SA 4.0. Its selection lock pins the input record manifest and every selected article's identity, URL and text hash. It contains text guides to places and transport, without map tiles or route calculation.
+Any future OpenStreetMap place library must identify **© OpenStreetMap
+contributors**, name the **Open Data Commons Open Database License 1.0
+(ODbL)**, and link to [OpenStreetMap's copyright and licence notice](https://www.openstreetmap.org/copyright)
+in both the package metadata and offline source reader. The place extractor
+keeps the original object URL, query digest, snapshot digest, and OSM base time
+per record. It does not import map tiles, photos, commercial reviews, or a
+ranking. A changed map snapshot or selection query is a new immutable edition,
+not an update to a published package.
 
 The practical-living library contains four Appropedia articles: Composting, Drip irrigation, Rainwater harvesting and Solar cooker. Although Appropedia's general footer names CC BY-SA 4.0, each included article specifies **CC BY-SA 3.0**. The pack preserves that article-specific license, source URLs and contributor-history links. The [license text](licenses/CC-BY-SA-3.0.txt) is included in this repository and the Android app's offline notices. Blobs pins individual revisions, removes navigation, images and embedded media, and reformats the remaining text. External linked resources and hardware designs are not included. See [Appropedia's intellectual-property policy](https://www.appropedia.org/Appropedia:Intellectual_property). This community reference collection does not imply Appropedia's endorsement.
 

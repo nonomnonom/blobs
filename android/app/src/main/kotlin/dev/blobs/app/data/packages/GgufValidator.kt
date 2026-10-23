@@ -4,7 +4,42 @@ import java.io.File
 import java.io.RandomAccessFile
 
 object GgufValidator {
-    fun validate(file: File) = RandomAccessFile(file, "r").use { input ->
+    private const val MAX_DECLARED_CONTEXT_TOKENS = 1_000_000
+
+    private data class ContextLengthCache(
+        val path: String,
+        val length: Long,
+        val lastModified: Long,
+        val contextLength: Int
+    )
+
+    @Volatile
+    private var contextLengthCache: ContextLengthCache? = null
+
+    fun validate(file: File, minimumContextTokens: Int = 1) {
+        require(minimumContextTokens in 1..MAX_DECLARED_CONTEXT_TOKENS)
+        val declaredContextTokens = inspect(file)
+        require(declaredContextTokens in minimumContextTokens.toLong()..
+            MAX_DECLARED_CONTEXT_TOKENS.toLong()) { "GGUF_CONTEXT_LENGTH" }
+    }
+
+    @Synchronized
+    fun contextLength(file: File): Int {
+        val path = file.canonicalPath
+        val length = file.length()
+        val lastModified = file.lastModified()
+        contextLengthCache?.takeIf {
+            it.path == path && it.length == length && it.lastModified == lastModified
+        }?.let { return it.contextLength }
+
+        val contextLength = inspect(file).also {
+            require(it in 1..MAX_DECLARED_CONTEXT_TOKENS.toLong()) { "GGUF_CONTEXT_LENGTH" }
+        }.toInt()
+        contextLengthCache = ContextLengthCache(path, length, lastModified, contextLength)
+        return contextLength
+    }
+
+    private fun inspect(file: File): Long = RandomAccessFile(file, "r").use { input ->
         fun u32(): Long = Integer.toUnsignedLong(Integer.reverseBytes(input.readInt()))
         fun u64(): Long = java.lang.Long.reverseBytes(input.readLong()).also { require(it >= 0) }
         fun skip(bytes: Long) {
@@ -49,30 +84,35 @@ object GgufValidator {
         var alignment = 32L
         var architecture = ""
         var template = false
+        var contextLength = 0L
         repeat(metadata.toInt()) {
             val key = text(1024)
             val type = u32()
-            when (key) {
-                "general.architecture" -> {
-                    require(type == 8L)
-                    architecture = text(128)
-                }
+            if (key.endsWith(".context_length")) {
+                require(type == 4L)
+                contextLength = u32()
+            } else {
+                when (key) {
+                    "general.architecture" -> {
+                        require(type == 8L)
+                        architecture = text(128)
+                    }
 
-                "general.alignment" -> {
-                    require(type == 4L)
-                    alignment = u32()
-                }
+                    "general.alignment" -> {
+                        require(type == 4L)
+                        alignment = u32()
+                    }
 
-                "tokenizer.chat_template" -> {
-                    require(type == 8L)
-                    skip(u64())
-                    template = true
-                }
+                    "tokenizer.chat_template" -> {
+                        require(type == 8L) { "GGUF_TEMPLATE" }
+                        template = text(64 * 1024).isNotBlank()
+                    }
 
-                else -> value(type)
+                    else -> value(type)
+                }
             }
         }
-        require(architecture.isNotBlank() && template)
+        require(architecture.isNotBlank() && template) { "GGUF_TEMPLATE" }
         require(alignment in 1..4096 && alignment and (alignment - 1) == 0L)
         val extents = ArrayList<Pair<Long, Long>>(tensors.toInt())
         repeat(tensors.toInt()) {
@@ -113,5 +153,6 @@ object GgufValidator {
             require(end <= input.length() - dataStart)
             previousEnd = end
         }
+        contextLength
     }
 }

@@ -48,6 +48,17 @@ class AnswerTextTest {
     }
 
     @Test
+    fun answerWithoutSourcesRemainsVisible() {
+        assertEquals(
+            "A useful local-model answer without a citation.",
+            AnswerText.validSourceCitations(
+                "A useful local-model answer without a citation.",
+                0
+            )
+        )
+    }
+
+    @Test
     fun groupedNamespacedCitationsKeepOnlyAvailableSources() {
         assertEquals(
             "Supported [S1, S2]. Unsupported .",

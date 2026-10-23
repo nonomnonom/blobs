@@ -17,8 +17,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.library.RetrievalQuery
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductViewModel
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -40,14 +40,14 @@ class FirstRunJourneyTest {
     fun reopeningAPausedLibraryDownloadRestoresItsContext() {
         val expected = InstrumentationRegistry.getArguments().getString("pausedPackageId")
         assumeTrue(expected != null)
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         fun text(id: Int) = compose.activity.getString(id)
         compose.waitUntil(15_000) { model.state.value.loaded && model.work.value.ready }
         assertEquals(expected, model.work.value.download?.manifest?.id)
         assertEquals(512L, model.work.value.progress)
         assertFalse(model.work.value.transferActive)
         assertEquals(Page.CHAT, model.state.value.page)
-        compose.onNodeWithText(text(R.string.paused_import)).performClick()
+        compose.onNodeWithText(text(R.string.import_title)).performClick()
         compose.waitUntil(10_000) { model.state.value.page == Page.IMPORT }
         compose.onNodeWithText(text(R.string.resume_download)).performScrollTo().assertIsDisplayed()
         val image = compose.onRoot().captureToImage().asAndroidBitmap()
@@ -59,7 +59,7 @@ class FirstRunJourneyTest {
         compose.waitForIdle()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitUntil(10_000) { model.state.value.page == Page.CHAT }
-        compose.onNodeWithText(text(R.string.paused_import)).performClick()
+        compose.onNodeWithText(text(R.string.import_title)).performClick()
         compose.onNodeWithText(text(R.string.discard_download)).performScrollTo().performClick()
         compose.onNodeWithText(text(R.string.discard_download_title)).assertIsDisplayed()
         val discardButtons = compose.onAllNodesWithText(text(R.string.discard_download))
@@ -71,7 +71,7 @@ class FirstRunJourneyTest {
     @Test
     fun welcomeThroughDownloadsFirstQuestionAndInAppSource() {
         assumeTrue(InstrumentationRegistry.getArguments().getString("firstRun") == "true")
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         fun text(id: Int) = compose.activity.getString(id)
         fun tap(id: Int) {
             val button = compose.onNodeWithText(text(id))
@@ -137,8 +137,11 @@ class FirstRunJourneyTest {
         tap(R.string.read_full_source)
         compose.waitUntil(10_000) { model.state.value.readerIsFull }
         capture("full-source")
-        tap(R.string.ask_source)
+        tap(R.string.use_library_in_chat)
         compose.waitUntil(10_000) { model.state.value.page == Page.CHAT }
-        assertEquals(setOf(source.id), model.selectedScope())
+        val sourceLibrary = model.packages.value.first {
+            it.kind == "library" && source.id.startsWith("${it.key}/")
+        }
+        assertEquals(setOf(sourceLibrary.key), model.selectedScope())
     }
 }

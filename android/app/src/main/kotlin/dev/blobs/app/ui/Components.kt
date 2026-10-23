@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -40,14 +39,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
+import dev.blobs.app.ui.theme.BlobsDimens
 import kotlin.math.roundToInt
 
 @Composable
@@ -57,7 +60,11 @@ fun GlyphButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(52.dp)) {
+    IconButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.size(BlobsDimens.touchTarget)
+    ) {
         Icon(painterResource(icon), stringResource(label), modifier = Modifier.size(24.dp))
     }
 }
@@ -72,8 +79,8 @@ fun PrimaryAction(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
-        shape = RoundedCornerShape(28.dp)
+        modifier = Modifier.fillMaxWidth().heightIn(min = BlobsDimens.primaryAction),
+        shape = MaterialTheme.shapes.extraLarge
     ) {
         Text(label, modifier = Modifier.padding(vertical = 6.dp))
     }
@@ -85,7 +92,7 @@ fun SetupProgress(progress: Float) {
     Box(
         Modifier.fillMaxWidth()
             .heightIn(min = 8.dp, max = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.extraSmall)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .semantics { progressBarRangeInfo = ProgressBarRangeInfo(fraction, 0f..1f) }
     ) {
@@ -136,8 +143,8 @@ fun Body(@StringRes text: Int) {
 @Composable
 fun ScrollPage(content: @Composable ColumnScope.() -> Unit) {
     Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(BlobsDimens.page),
+        verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg),
         content = content
     )
 }
@@ -157,7 +164,7 @@ fun Scene(@DrawableRes image: Int, height: Int = 220) {
         painterResource(image),
         null,
         modifier = Modifier.fillMaxWidth().heightIn(min = height.dp, max = height.dp)
-            .clip(RoundedCornerShape(28.dp)),
+            .clip(MaterialTheme.shapes.extraLarge),
         contentScale = ContentScale.Crop
     )
 }
@@ -176,8 +183,8 @@ fun MenuRow(
         color = Color.Transparent
     ) {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(vertical = BlobsDimens.md),
+            horizontalArrangement = Arrangement.spacedBy(BlobsDimens.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             icon?.let { Icon(painterResource(it), null, Modifier.size(24.dp)) }
@@ -203,12 +210,39 @@ fun MenuRow(
 
 @Composable
 fun Notice(@StringRes text: Int, dismiss: () -> Unit) {
+    val error = text in setOf(
+        R.string.answer_failed,
+        R.string.data_unavailable,
+        R.string.document_invalid,
+        R.string.document_too_large,
+        R.string.download_failed,
+        R.string.download_source_failed,
+        R.string.import_failed,
+        R.string.import_recovery_failed,
+        R.string.model_context_incompatible,
+        R.string.pdf_no_text,
+        R.string.pdf_password,
+        R.string.pdf_unsupported_encryption,
+        R.string.save_failed,
+        R.string.storage_failed,
+        R.string.unsupported_document
+    )
     Surface(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.primaryContainer
+        modifier = Modifier.padding(horizontal = BlobsDimens.md, vertical = BlobsDimens.xs)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        shape = MaterialTheme.shapes.large,
+        color = if (error) {
+            MaterialTheme.colorScheme.errorContainer
+        } else {
+            MaterialTheme.colorScheme.primaryContainer
+        },
+        contentColor = if (error) {
+            MaterialTheme.colorScheme.onErrorContainer
+        } else {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        }
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(BlobsDimens.md)) {
             Text(stringResource(text), style = MaterialTheme.typography.bodyMedium)
             TextButton(onClick = dismiss) { Text(stringResource(R.string.dismiss)) }
         }
@@ -219,7 +253,7 @@ fun Notice(@StringRes text: Int, dismiss: () -> Unit) {
 fun SectionLabel(@StringRes title: Int) {
     Text(
         stringResource(title),
-        Modifier.padding(top = 12.dp, bottom = 4.dp).semantics { heading() },
+        Modifier.padding(top = BlobsDimens.sm, bottom = BlobsDimens.xxs).semantics { heading() },
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -237,26 +271,38 @@ fun SearchField(value: String, @StringRes hint: Int, onValueChange: (String) -> 
             contentDescription = label
         },
         singleLine = true,
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.medium,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            unfocusedBorderColor = Color.Transparent
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            focusedBorderColor = MaterialTheme.colorScheme.primary
         )
     )
 }
 
 @Composable
-fun SourceRow(number: Int, title: String, description: String, onClick: () -> Unit) {
+fun SourceRow(
+    number: Int,
+    title: String,
+    description: String,
+    metadata: String = "",
+    detail: String = "",
+    onClick: () -> Unit
+) {
     Surface(onClick = onClick, color = Color.Transparent) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(vertical = 8.dp)
-                .semantics(mergeDescendants = true) { contentDescription = description },
+                .semantics(mergeDescendants = true) {
+                    contentDescription = listOf(description, metadata, detail)
+                        .filter(String::isNotBlank)
+                        .joinToString(". ")
+                },
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = MaterialTheme.shapes.small,
                 color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Text(
@@ -267,7 +313,32 @@ fun SourceRow(number: Int, title: String, description: String, onClick: () -> Un
                 )
             }
             Spacer(Modifier.width(12.dp))
-            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    title,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (metadata.isNotBlank()) {
+                    Text(
+                        metadata,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (detail.isNotBlank()) {
+                    Text(
+                        detail,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             Icon(
                 painterResource(R.drawable.ic_arrow_forward),
                 null,

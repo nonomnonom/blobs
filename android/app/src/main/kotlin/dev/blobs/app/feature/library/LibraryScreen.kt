@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -23,13 +22,16 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -39,30 +41,45 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.data.packages.DeviceProfile
+import dev.blobs.app.data.packages.LibraryProfile
 import dev.blobs.app.data.packages.PackageRole
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.MenuRow
 import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.Scene
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
 fun LibraryScreen(
     packages: List<PackageEntity>,
-    model: ProductViewModel,
+    model: AppViewModel,
     pickFile: () -> Unit,
     pickDocuments: () -> Unit,
     exportCollection: (PackageEntity) -> Unit
 ) {
     val work by model.work.collectAsStateWithLifecycle()
     val catalog by model.catalogState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var discover by rememberSaveable { mutableStateOf(false) }
+    var freeStorageBytes by remember { mutableStateOf<Long?>(null) }
     val collectionScroll = rememberScrollState()
     val discoverScroll = rememberScrollState()
     val libraries = packages.filter { it.kind == "library" }
+    LaunchedEffect(catalog.packages, work.importComplete) {
+        freeStorageBytes = runCatching {
+            DeviceProfile.inspect(context, model.catalog).freeStorageBytes
+        }.getOrNull()
+    }
+    LaunchedEffect(work.importComplete, work.inAppDownload, work.packageKind) {
+        if (work.importComplete && work.inAppDownload && work.packageKind == "library") {
+            discover = false
+        }
+    }
     val available = catalog.packages.filter { asset ->
         asset.manifest.kind == "library" && libraries.none { it.key == asset.manifest.key }
     }.sortedWith(
@@ -70,6 +87,11 @@ fun LibraryScreen(
             if (it.role == PackageRole.STARTER) 0 else 1
         }.thenBy { it.downloadBytes }
     )
+    val starter = model.catalog.starterLibrary
+    val starterRequiredStorageBytes = model.catalog.requiredStorageBytes(starter)
+    val starterFitsStorage = freeStorageBytes?.let {
+        model.catalog.packageFitsStorage(starter, it)
+    } ?: true
     Column {
         PrimaryTabRow(selectedTabIndex = if (discover) 1 else 0) {
             Tab(selected = !discover, onClick = {
@@ -82,15 +104,36 @@ fun LibraryScreen(
         Column(
             Modifier.weight(
                 1f
-            ).verticalScroll(if (discover) discoverScroll else collectionScroll).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            ).verticalScroll(if (discover) discoverScroll else collectionScroll).padding(BlobsDimens.page),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg)
         ) {
             if (!discover) {
                 if (libraries.isEmpty()) {
                     Scene(R.drawable.library_world, 160)
                     Heading(R.string.library_empty_heading)
                     Body(R.string.library_empty_description)
-                    PrimaryAction(R.string.download_starter, !work.busy) {
+                    Text(
+                        stringResource(
+                            R.string.library_storage_requirement,
+                            fileSize(starterRequiredStorageBytes)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    freeStorageBytes?.takeIf { !starterFitsStorage }?.let { availableBytes ->
+                        Text(
+                            stringResource(
+                                R.string.library_space_to_free,
+                                fileSize(
+                                    (starterRequiredStorageBytes - availableBytes)
+                                        .coerceAtLeast(0)
+                                )
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    PrimaryAction(R.string.download_starter, !work.busy && starterFitsStorage) {
                         model.downloadPackage(model.catalog.starterLibrary)
                     }
                 }
@@ -124,7 +167,18 @@ fun LibraryScreen(
                     Body(R.string.library_small_downloads)
                 }
                 available.forEach { asset ->
-                    LibraryDownloadCard(asset, !work.busy) { model.downloadPackage(asset) }
+                    val requiredStorageBytes = model.catalog.requiredStorageBytes(asset)
+                    val fitsStorage = freeStorageBytes?.let {
+                        model.catalog.packageFitsStorage(asset, it)
+                    } ?: true
+                    LibraryDownloadCard(
+                        asset,
+                        !work.busy && fitsStorage,
+                        requiredStorageBytes,
+                        freeStorageBytes
+                    ) {
+                        model.downloadPackage(asset)
+                    }
                 }
             }
         }
@@ -136,15 +190,20 @@ private fun CollectionCard(
     pack: PackageEntity,
     index: Int,
     busy: Boolean,
-    model: ProductViewModel,
+    model: AppViewModel,
     export: () -> Unit
 ) {
     val catalog by model.catalogState.collectAsStateWithLifecycle()
     val metadata = catalog.packages.find { it.manifest.key == pack.key }
+    val storedProfile = remember(pack.key, pack.libraryProfile) {
+        pack.libraryProfile.takeIf(String::isNotBlank)?.let { value ->
+            runCatching { LibraryProfile.fromStorageJson(value) }.getOrNull()
+        }
+    }
     var options by rememberSaveable { mutableStateOf(false) }
     val large = LocalDensity.current.fontScale >= 1.5f
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
@@ -165,10 +224,10 @@ private fun CollectionCard(
                     contentScale = ContentScale.Crop
                 )
                 Surface(
-                    modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = androidx.compose.ui.graphics.Color(0xFFFFFEFA),
-                    contentColor = androidx.compose.ui.graphics.Color(0xFF292A32)
+                    modifier = Modifier.align(Alignment.BottomStart).padding(BlobsDimens.sm),
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
                     Text(
                         stringResource(R.string.saved_offline),
@@ -177,7 +236,10 @@ private fun CollectionCard(
                     )
                 }
             }
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(
+                Modifier.padding(BlobsDimens.lg),
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         pack.title,
@@ -228,6 +290,8 @@ private fun CollectionCard(
                 if (metadata != null) {
                     Text(metadata.description, style = MaterialTheme.typography.bodyMedium)
                     LibraryDetails(metadata)
+                } else if (storedProfile != null) {
+                    InstalledLibraryDetails(pack, storedProfile)
                 }
                 OutlinedButton(onClick = {
                     model.browseCollection(pack)

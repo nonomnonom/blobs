@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "id": "wikipedia-en-all-nopic",
+  "edition": "2026-06",
+  "filename": "wikipedia_en_all_nopic_2026-06.zim",
+  "url": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_all_nopic_2026-06.zim",
+  "bytes": 52690706555,
+  "sha256": "441a56d9e05b2d98f8ae9acb7986a513ed47904d73852c92dc6b7d50baa122e5",
+  "checksum_source": "https://lb.download.kiwix.org/zim/wikipedia/wikipedia_en_all_nopic_2026-06.zim.meta4",
+  "metadata_source": "https://lb.download.kiwix.org/zim/wikipedia/wikipedia_en_all_nopic_2026-06.zim.meta4",
+  "verified_date": "2026-10-23",
+  "allowed_hosts": [
+    "download.kiwix.org",
+    "lb.download.kiwix.org",
+    "mirror.download.kiwix.org",
+    "mirrors.dotsrc.org",
+    "ftp.nluug.nl",
+    "wi.mirror.driftle.ss",
+    "dumps.wikimedia.org"
+  ],
+  "publisher": "Wikipedia contributors",
+  "collection": "Wikipedia · English full text without images",
+  "license": "CC BY-SA 4.0; see each article's attribution and applicable notices. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "scope": "English Wikipedia full article text without images; Kiwix snapshot 2026-06. This is a source input for a future reviewed reference library, not an installed Blobs package."
+}

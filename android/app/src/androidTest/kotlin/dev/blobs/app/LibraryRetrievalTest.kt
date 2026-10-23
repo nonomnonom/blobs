@@ -16,6 +16,94 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LibraryRetrievalTest {
+    @Test
+    fun naturalQuestionsFindRelevantPassagesAcrossEnabledLibraries() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
+        try {
+            val libraries = listOf(
+                searchableLibrary(
+                    File(folder, "coffee"),
+                    "coffee",
+                    "Coffee",
+                    "Latte basics",
+                    "A coffee latte is made with espresso and steamed milk, then finished with foam."
+                ),
+                searchableLibrary(
+                    File(folder, "history"),
+                    "history",
+                    "History",
+                    "Printing and ideas",
+                    "Movable-type printing lowered the cost of books and helped ideas spread between readers."
+                ),
+                searchableLibrary(
+                    File(folder, "paris"),
+                    "paris",
+                    "Paris travel",
+                    "Public transport",
+                    "Paris public transport includes the Metro, buses, trams, and regional rail."
+                ),
+                searchableLibrary(
+                    File(folder, "science"),
+                    "science",
+                    "Science",
+                    "Photosynthesis",
+                    "Photosynthesis uses light, carbon dioxide, and water to produce sugars and oxygen."
+                ),
+                searchableLibrary(
+                    File(folder, "gardening"),
+                    "gardening",
+                    "Gardening",
+                    "Tomato soil",
+                    "Prepare soil for tomatoes with mature compost, loosen it, remove weeds, and ensure good drainage."
+                )
+            )
+            val store = LibraryStore()
+            val cases = listOf(
+                "How do I make a coffee latte?" to "coffee",
+                "How did printing change the spread of ideas?" to "history",
+                "How can I get around Paris using public transport?" to "paris",
+                "What does photosynthesis use and produce?" to "science",
+                "How should I prepare soil for tomatoes?" to "gardening"
+            )
+            for ((question, expectedLibrary) in cases) {
+                val evidence = store.retrieve(libraries, question, null)
+                assertTrue("No evidence found for: $question", evidence.isNotEmpty())
+                assertTrue(
+                    "Wrong library returned for: $question -> ${evidence.map { it.id }}",
+                    evidence.all { it.id.startsWith("$expectedLibrary/") }
+                )
+                val scoped = store.retrieve(
+                    libraries.filter { it.key == expectedLibrary },
+                    question,
+                    null
+                )
+                assertTrue("Scoped passage search failed for: $question", scoped.isNotEmpty())
+            }
+            assertTrue(
+                store.retrieve(libraries, "How do I repair a quantum flux capacitor?", null)
+                    .isEmpty()
+            )
+            val hit = store.retrieve(
+                libraries.filter {
+                    it.key == "coffee"
+                },
+                "coffee latte",
+                null
+            ).single()
+            val passageId = requireNotNull(hit.passageId)
+            val fullPassage = requireNotNull(store.readPassage(libraries, hit.id, passageId))
+            assertEquals(hit.id, fullPassage.id)
+            assertEquals(
+                "A coffee latte is made with espresso and steamed milk, then finished with foam.",
+                fullPassage.text
+            )
+            assertEquals(null, store.readPassage(libraries, hit.id, passageId + 100))
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
     @ManualCheck
     @Test
     fun installedLibrariesRetrieveOneQuestion() = runBlocking {
@@ -284,6 +372,47 @@ class LibraryRetrievalTest {
     }
 
     @Test
+    fun specificPassageContentOutranksGenericMatchingSectionHeadings() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
+        try {
+            val pack = topicLibrary(folder)
+            BundledSQLiteDriver().open(pack.path).use { db ->
+                repeat(10) { index ->
+                    db.prepare(
+                        "INSERT INTO passages(doc_id,body,section,title) VALUES ('aster',?,?, '')"
+                    ).use {
+                        it.bindText(1, "Visitors can use trains and buses to travel around Aster.")
+                        it.bindText(2, "Public transport $index")
+                        it.step()
+                    }
+                }
+                db.prepare(
+                    "INSERT INTO passages(doc_id,body,section,title) VALUES ('aster',?,'Tickets','')"
+                ).use {
+                    it.bindText(
+                        1,
+                        "Visitors can buy a day ticket for zones A and B to use the U-Bahn."
+                    )
+                    it.step()
+                }
+                db.prepare("INSERT INTO passages_fts(passages_fts) VALUES ('rebuild')").use {
+                    it.step()
+                }
+            }
+            val result = LibraryStore().retrieve(
+                listOf(pack),
+                "How can a visitor use public transport in Aster, including tickets and the U-Bahn?",
+                null
+            ).take(6)
+            assertTrue(result.any { it.section == "Tickets" })
+            assertTrue(result.first().section == "Tickets")
+        } finally {
+            folder.deleteRecursively()
+        }
+    }
+
+    @Test
     fun namedSubjectRetrievalKeepsTopicPassagesInsideTheAnswerBudget() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val folder = File(context.cacheDir, UUID.randomUUID().toString()).apply { mkdirs() }
@@ -397,6 +526,51 @@ class LibraryRetrievalTest {
         }
         return PackageEntity(
             "topics", "topics", "1", "library", "Topics", file.path, file.length(),
+            "0".repeat(64), "CC0", "local:test", 1
+        )
+    }
+
+    private fun searchableLibrary(
+        folder: File,
+        key: String,
+        libraryTitle: String,
+        articleTitle: String,
+        body: String
+    ): PackageEntity {
+        folder.mkdirs()
+        val file = File(folder, "$key.sqlite")
+        BundledSQLiteDriver().open(file.path).use { db ->
+            listOf(
+                "PRAGMA user_version=3",
+                "CREATE TABLE documents(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,publisher TEXT NOT NULL,url TEXT NOT NULL,license TEXT NOT NULL,updated TEXT NOT NULL,saved TEXT NOT NULL,body TEXT NOT NULL,collection TEXT NOT NULL)",
+                "CREATE TABLE passages(id INTEGER PRIMARY KEY,doc_id TEXT NOT NULL,section TEXT NOT NULL,title TEXT NOT NULL)",
+                "CREATE TABLE passage_spans(passage_id INTEGER PRIMARY KEY,start INTEGER NOT NULL,end INTEGER NOT NULL,section_path TEXT NOT NULL)",
+                "CREATE VIRTUAL TABLE passages_fts USING fts5(body,title,section,content='',tokenize='unicode61')",
+                "INSERT INTO passages_fts(passages_fts,rank) VALUES ('rank','bm25(1.0,6.0,2.0)')"
+            ).forEach { sql -> db.prepare(sql).use { it.step() } }
+            db.prepare(
+                "INSERT INTO documents VALUES ('article',?,'Author','local:test','CC0','today','today',?,'Test')"
+            ).use {
+                it.bindText(1, articleTitle)
+                it.bindText(2, body)
+                it.step()
+            }
+            db.prepare("INSERT INTO passages VALUES (1,'article',?,'')").use {
+                it.bindText(1, articleTitle)
+                it.step()
+            }
+            db.prepare("INSERT INTO passage_spans VALUES (1,0,?,'[]')").use {
+                it.bindLong(1, body.codePointCount(0, body.length).toLong())
+                it.step()
+            }
+            db.prepare("INSERT INTO passages_fts(rowid,body,title,section) VALUES (1,?,'',?)").use {
+                it.bindText(1, body)
+                it.bindText(2, articleTitle)
+                it.step()
+            }
+        }
+        return PackageEntity(
+            key, key, "1", "library", libraryTitle, file.path, file.length(),
             "0".repeat(64), "CC0", "local:test", 1
         )
     }

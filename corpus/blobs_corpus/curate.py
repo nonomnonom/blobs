@@ -12,6 +12,7 @@ from .extract import verified_shards, write_json, write_lines
 from .records import documents
 
 SUPPORTED_SOURCES = {
+    "wikipedia-en-all-nopic",
     "wikipedia-en-top",
     "wikipedia-en-top1m-mini",
     "wikivoyage-en-all-nopic",

@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,11 +25,12 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.blobs.app.R
 import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.WorldScene
 import dev.blobs.app.ui.worldSkyColor
+import dev.blobs.app.ui.theme.BlobsComponentShapes
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
 fun WelcomeScreen(
@@ -51,10 +50,10 @@ fun WelcomeScreen(
             Column(
                 Modifier.fillMaxWidth().background(
                     if (large) worldSkyColor() else Color.Transparent,
-                    RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-                ).padding(horizontal = 24.dp, vertical = 24.dp),
+                    BlobsComponentShapes.worldPanel
+                ).padding(horizontal = BlobsDimens.page, vertical = BlobsDimens.lg),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg)
             ) {
                 Text(
                     stringResource(R.string.app_wordmark),
@@ -63,17 +62,12 @@ fun WelcomeScreen(
                 Text(
                     stringResource(R.string.welcome_headline),
                     Modifier.semantics { heading() },
-                    style = MaterialTheme.typography.headlineLarge.let {
-                        if (large) it.copy(fontSize = 27.sp, lineHeight = 32.sp) else it
-                    },
+                    style = MaterialTheme.typography.headlineLarge,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     stringResource(R.string.welcome_description),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 15.sp,
-                        lineHeight = 23.sp
-                    ),
+                    style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center
                 )
             }
@@ -84,7 +78,7 @@ fun WelcomeScreen(
                     } else {
                         Modifier.weight(1f).heightIn(min = 240.dp)
                     }
-                ).padding(bottom = 24.dp),
+                ).padding(bottom = BlobsDimens.lg),
                 fullWorld = true,
                 size = if (large) 170.dp else 240.dp
             )
@@ -92,9 +86,9 @@ fun WelcomeScreen(
                 Modifier.fillMaxWidth().background(
                     Brush.verticalGradient(listOf(floor.copy(alpha = 0f), floor))
                 )
-                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                    .padding(horizontal = BlobsDimens.page, vertical = BlobsDimens.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
             ) {
                 if (preferencesUnavailable) {
                     Text(

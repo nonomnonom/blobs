@@ -108,7 +108,9 @@ class PackageTests(unittest.TestCase):
                 patch.object(package_release, "verify_catalog_packages"),
                 patch.object(package_release, "sdk_directory", return_value=root),
                 patch.object(
-                    package_release.subprocess, "check_output", return_value="Fixture certificate"
+                    package_release.subprocess,
+                    "check_output",
+                    return_value="Signer #1 certificate SHA-256 digest: " + "a" * 64,
                 ),
                 patch.object(
                     package_release, "write_source_archive", side_effect=fixture_source_archive
@@ -116,7 +118,15 @@ class PackageTests(unittest.TestCase):
                 patch.object(
                     sys,
                     "argv",
-                    ["package_release.py", "--model", str(inputs[0]), "--library", str(inputs[1])],
+                    [
+                        "package_release.py",
+                        "--model",
+                        str(inputs[0]),
+                        "--library",
+                        str(inputs[1]),
+                        "--certificate-sha256",
+                        "a" * 64,
+                    ],
                 ),
             ):
                 package_release.main()
@@ -190,7 +200,7 @@ class PackageTests(unittest.TestCase):
                 file="model.gguf",
             )
             (root / "models.lock.json").write_text(json.dumps({"small": pin}))
-            output = root / "packages/qwen3-small.blobs"
+            output = root / "packages/model.blobs"
             output.parent.mkdir()
             output.touch()
             manifest = dict(
@@ -271,7 +281,15 @@ class PackageTests(unittest.TestCase):
                 patch.object(
                     sys,
                     "argv",
-                    ["package_release.py", "--model", "model.blobs", "--library", "library.blobs"],
+                    [
+                        "package_release.py",
+                        "--model",
+                        "model.blobs",
+                        "--library",
+                        "library.blobs",
+                        "--certificate-sha256",
+                        "a" * 64,
+                    ],
                 ),
             ):
                 with self.assertRaises(FileExistsError):
@@ -290,7 +308,15 @@ class PackageTests(unittest.TestCase):
             patch.object(
                 sys,
                 "argv",
-                ["package_release.py", "--model", "model.blobs", "--library", "library.blobs"],
+                [
+                    "package_release.py",
+                    "--model",
+                    "model.blobs",
+                    "--library",
+                    "library.blobs",
+                    "--certificate-sha256",
+                    "a" * 64,
+                ],
             ),
         ):
             with self.assertRaisesRegex(ValueError, "production application ID"):
@@ -348,7 +374,9 @@ class PackageTests(unittest.TestCase):
                 ),
                 patch.object(package_release, "sdk_directory", return_value=root),
                 patch.object(
-                    package_release.subprocess, "check_output", return_value="Fixture certificate"
+                    package_release.subprocess,
+                    "check_output",
+                    return_value="Signer #1 certificate SHA-256 digest: " + "a" * 64,
                 ),
                 patch.object(
                     sys,
@@ -359,6 +387,8 @@ class PackageTests(unittest.TestCase):
                         "model/Package.blobs",
                         "--library",
                         "library/package.blobs",
+                        "--certificate-sha256",
+                        "a" * 64,
                     ],
                 ),
             ):

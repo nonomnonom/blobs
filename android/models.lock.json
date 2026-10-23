@@ -1,32 +1,32 @@
 {
-  "standard": {
-    "id": "qwen3-4b-q4km",
-    "title": "Qwen3 4B Q4",
-    "revision": "bc640142c66e1fdd12af0bd68f40445458f3869b",
-    "repository": "Qwen/Qwen3-4B-GGUF",
-    "file": "Qwen3-4B-Q4_K_M.gguf",
-    "bytes": 2497280256,
-    "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
+  "minicpm5": {
+    "id": "minicpm5-1b-q4km",
+    "title": "MiniCPM5 1B Q4_K_M",
+    "revision": "3d55fac80935ae6456986ad2384b5cbcc4d6c948",
+    "repository": "openbmb/MiniCPM5-1B-GGUF",
+    "file": "MiniCPM5-1B-Q4_K_M.gguf",
+    "bytes": 688065920,
+    "sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
     "license": "Apache-2.0"
   },
-  "small": {
-    "id": "qwen3-17b-q8",
-    "title": "Qwen3 1.7B Q8",
-    "revision": "90862c4b9d2787eaed51d12237eafdfe7c5f6077",
-    "repository": "Qwen/Qwen3-1.7B-GGUF",
-    "file": "Qwen3-1.7B-Q8_0.gguf",
-    "bytes": 1834426016,
-    "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+  "qwen35": {
+    "id": "qwen35-2b-q4km",
+    "title": "Qwen3.5 2B Q4_K_M",
+    "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+    "repository": "unsloth/Qwen3.5-2B-GGUF",
+    "file": "Qwen3.5-2B-Q4_K_M.gguf",
+    "bytes": 1280835840,
+    "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
     "license": "Apache-2.0"
   },
-  "integration": {
-    "id": "qwen3-06b-q8",
-    "title": "Qwen3 0.6B Q8",
-    "revision": "23749fefcc72300e3a2ad315e1317431b06b590a",
-    "repository": "Qwen/Qwen3-0.6B-GGUF",
-    "file": "Qwen3-0.6B-Q8_0.gguf",
-    "bytes": 639446688,
-    "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031",
-    "license": "Apache-2.0"
+  "phi4": {
+    "id": "phi4-mini-q4km",
+    "title": "Phi-4 Mini Q4_K_M",
+    "revision": "009f2b81869a0afd6b9aae23d29fa7b7ee2dcac9",
+    "repository": "lmstudio-community/Phi-4-mini-instruct-GGUF",
+    "file": "Phi-4-mini-instruct-Q4_K_M.gguf",
+    "bytes": 2491874400,
+    "sha256": "3c4d3cbdf3006d81444f6c7a5a56eb93d8e0f0e2ba5963b8ab62f9fd42604233",
+    "license": "MIT"
   }
 }

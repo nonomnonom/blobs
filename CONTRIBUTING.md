@@ -19,21 +19,36 @@ The [architecture guide](docs/architecture.md) explains app ownership and data f
 
 Use UTF-8, LF, and four-space indentation; XML, JSON, and YAML use two spaces. Follow `android/.editorconfig`, existing Kotlin/Python names, and the package directory layout. Open Python text files with an explicit encoding.
 
+Blobs is a global product: source code, identifiers, comments, developer
+documentation, release metadata, catalog metadata, package metadata, and new
+default UI copy are written in English. Preserve the original language of
+quoted source evidence, titles, URLs, licences, attribution, and user-provided
+content. Do not scatter language-specific runtime branches; future
+internationalisation needs an explicit locale and resource design.
+
 Dependency versions belong in `android/gradle/libs.versions.toml` or `corpus/pyproject.toml`, with their lockfiles. Gradle verifies dependency hashes in `android/gradle/verification-metadata.xml`. Review publisher checksums when updating those entries; generating verification metadata alone does not authenticate an artifact.
 
 Keep models, generated packages, signing keys, caches, experiment reports, and internal review notes out of Git. Reviewed record shards use Git LFS; source locks and authored test cases belong in the repository.
 
 ## Verification
 
+The active rebuild phase in [`goal.md`](goal.md) defers builds, tests,
+benchmarks, and evaluators until the owner explicitly re-enables validation.
+The normal guidance below applies after that decision. Do not report a check as
+run or use static inspection as runtime evidence while this restriction holds.
+
 Run checks relevant to your change. From `android/`, the [build guide](android/README.md#build-and-verify) prepares dependencies and runs `.\gradlew.bat verify`: ktlint, Android lint, JVM tests, debug/release assembly, and instrumentation-test compilation. Apply Kotlin formatting with `.\gradlew.bat ktlintFormat`.
 
 With a device or emulator connected, run the base Android suite from `android/`:
 
 ```powershell
-.\gradlew.bat -Pandroid.testInstrumentationRunnerArguments.notClass=dev.blobs.app.MultiLibraryRetrievalScalingTest connectedDebugAndroidTest
+.\gradlew.bat connectedDebugAndroidTest
 ```
 
-`ManualCheck` tests are excluded by default. The multi-library test needs staged packages; [optional evaluation tools](corpus/evaluation/README.md) explain how. Ordinary application checks do not require grading model-generated answers.
+`ManualCheck` tests are excluded by default. They are manual device-evidence
+captures, never emulator-performance gates; [the device evidence guide](corpus/evaluation/device/README.md)
+defines their explicit inputs and report requirements. Ordinary application
+checks do not require grading model-generated answers.
 
 For Python tooling, run from `corpus/`:
 

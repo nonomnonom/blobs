@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -17,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,18 +24,19 @@ import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.DeviceProfile
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.ModelLogo
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
 fun ModelsScreen(
     packages: List<PackageEntity>,
     work: WorkState,
-    model: ProductViewModel,
+    model: AppViewModel,
     pickFile: () -> Unit
 ) {
     val catalog by model.catalogState.collectAsStateWithLifecycle()
@@ -46,6 +47,15 @@ fun ModelsScreen(
     val installed = packages.filter { it.kind == "model" }
     ScrollPage {
         Body(R.string.models_help)
+        Text(
+            pluralStringResource(
+                R.plurals.model_device_context,
+                model.contextWindowTokens,
+                model.contextWindowTokens
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         catalog.packages.filter { it.manifest.kind == "model" }.forEach { asset ->
             val pack = installed.find { it.key == asset.manifest.key }
             ModelCard(
@@ -126,17 +136,17 @@ private fun ModelCard(
     action: @Composable () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Column(
-            Modifier.fillMaxWidth().padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            Modifier.fillMaxWidth().padding(BlobsDimens.lg),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.md)
         ) {
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ModelLogo(title, 44.dp)
