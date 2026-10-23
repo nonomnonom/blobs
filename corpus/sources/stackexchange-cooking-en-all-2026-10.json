@@ -14,7 +14,8 @@
     "lb.download.kiwix.org",
     "mirror.download.kiwix.org",
     "mirrors.dotsrc.org",
-    "ftp.nluug.nl"
+    "ftp.nluug.nl",
+    "wi.mirror.driftle.ss"
   ],
   "publisher": "Stack Exchange network contributors",
   "collection": "Stack Exchange \u00b7 Cooking questions and answers",

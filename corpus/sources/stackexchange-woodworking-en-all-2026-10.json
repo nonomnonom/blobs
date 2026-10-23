@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "id": "stackexchange-woodworking-en-all",
+  "edition": "2026-10",
+  "filename": "woodworking.stackexchange.com_en_all_2026-10.zim",
+  "url": "https://download.kiwix.org/zim/stack_exchange/woodworking.stackexchange.com_en_all_2026-10.zim",
+  "bytes": 106657287,
+  "sha256": "2ba925d1028f9442c153569701868b5b7abc6dbb2551c620680a92be9272b062",
+  "checksum_source": "https://download.kiwix.org/zim/stack_exchange/woodworking.stackexchange.com_en_all_2026-10.zim.sha256",
+  "metadata_source": "https://download.kiwix.org/zim/stack_exchange/woodworking.stackexchange.com_en_all_2026-10.zim.meta4",
+  "verified_date": "2026-10-24",
+  "allowed_hosts": [
+    "download.kiwix.org",
+    "lb.download.kiwix.org",
+    "mirror.download.kiwix.org",
+    "mirrors.dotsrc.org",
+    "ftp.nluug.nl",
+    "wi.mirror.driftle.ss"
+  ],
+  "publisher": "Stack Exchange network contributors",
+  "collection": "Stack Exchange \u00b7 Woodworking questions and answers",
+  "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post's revision history for attribution. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "scope": "English Woodworking site questions and answers through the pinned archive snapshot; community advice, not professional or safety authority.",
+  "wiki_host": "woodworking.stackexchange.com"
+}

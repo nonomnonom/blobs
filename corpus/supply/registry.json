@@ -22,7 +22,7 @@
     "release_ready_count": 0,
     "local_candidates_are_not_admissions": true,
     "keep_history": "Retire unnecessary packs from the active portfolio and catalog; preserve source locks, reviewed records, receipts, and prior editions needed for reproduction.",
-    "product_rule": "Prefer a small number of complementary, broad libraries with measured retrieval over overlapping topical fragments. Never infer freshness, rights, or quality from availability or package size. A second library over the same project universe in the same language is a duplicate and is rejected, whatever its size. All published supply is English knowledge: do not prepare a per-language or per-region edition of one project, because categories grow by subject. The exporter refuses an edition whose archive language is not English."
+    "product_rule": "Prefer a small number of complementary, broad libraries with measured retrieval over overlapping topical fragments. Never infer freshness, rights, or quality from availability or package size. A second library over the same project universe in the same language is a duplicate and is rejected, whatever its size. All published supply is English knowledge: do not prepare a per-language or per-region edition of one project, because categories grow by subject. The exporter refuses an edition whose archive language is not English. Daily-use English categories only: general reference, practical how-to, repair and fixing, named places, history and primary texts, and travel. Programming and software-documentation lanes are out of scope."
   },
   "local_candidate_portfolio": [
     {
@@ -161,6 +161,101 @@
         "Refresh a moved page set with `python -m blobs_corpus.web_pages refresh`, which keeps the reviewed selector and identity and records the changed sources in refreshed_from lineage."
       ],
       "known_limits": "Official guidance can still be jurisdiction-specific, time-sensitive, and unsuitable for emergency or professional advice without current local confirmation."
+    },
+    {
+      "id": "practical-howto-daily-life",
+      "priority": 8,
+      "tier": "everyday-practice",
+      "planned_library_id": "howto-practical",
+      "status": "acquisition-planned",
+      "languages": ["English"],
+      "scope": "Everyday practical questions answered by English Stack Exchange sites outside programming: cooking, money, travel, gardening, and home life. Pinned archives total 2,831,425,701 bytes and project to a 4,983,309,285-byte installed payload at the measured 1.76 ratio, so one volume is planned.",
+      "source_lock": "corpus/sources/stackexchange-cooking-en-all-2026-10.json",
+      "archive_locks": [
+        "corpus/sources/stackexchange-cooking-en-all-2026-10.json",
+        "corpus/sources/stackexchange-money-en-all-2026-10.json",
+        "corpus/sources/stackexchange-travel-en-all-2026-10.json",
+        "corpus/sources/stackexchange-diy-en-all-2026-10.json"
+      ],
+      "partition_plan": {
+        "status": "not-required",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Recompute the projected payload from the reviewed merged manifest before packaging; split into complementary volumes if it exceeds 6,442,450,944 bytes."
+      },
+      "candidate_origins": ["https://download.kiwix.org/zim/stack_exchange/"],
+      "selection_requirements": [
+        "Exclude programming and software-development sites: the owner scoped supply to daily-use knowledge, and code documentation is a separate profession-specific product decision.",
+        "Implement the reviewed multi-archive edition before packaging, so one library spans these archives with per-archive lineage instead of shipping a pack per site.",
+        "Keep post-level attribution: every record must retain its canonical question URL and the CC BY-SA 4.0 licence string.",
+        "Measure canonical URL and body-hash overlap against the repair lane; the same site cannot be published in both libraries."
+      ],
+      "known_limits": "Community answers are not professional, legal, medical, or safety advice, and a snapshot cannot show whether an accepted answer still applies to a newer product, law, or price."
+    },
+    {
+      "id": "repair-and-fixing",
+      "priority": 9,
+      "tier": "everyday-practice",
+      "planned_library_id": "howto-repair",
+      "status": "acquisition-planned",
+      "archive_locks": [
+        "corpus/sources/stackexchange-mechanics-en-all-2026-10.json",
+        "corpus/sources/stackexchange-bicycles-en-all-2026-10.json",
+        "corpus/sources/stackexchange-aviation-en-all-2026-10.json",
+        "corpus/sources/stackexchange-robotics-en-all-2026-10.json",
+        "corpus/sources/stackexchange-3dprinting-en-all-2026-10.json",
+        "corpus/sources/stackexchange-woodworking-en-all-2026-10.json"
+      ],
+      "languages": ["English"],
+      "scope": "Fix-it knowledge from six English Stack Exchange repair communities: vehicle mechanics, bicycles, aviation maintenance, robotics, 3D printing, and woodworking. Pinned archives total 1,821,805,944 bytes and project to a 2,993,578,461-byte installed payload at the measured 1.76 ratio, so one volume is planned.",
+      "candidate_origins": ["https://download.kiwix.org/zim/stack_exchange/"],
+      "selection_requirements": [
+        "Reject the iFixit archive as a supply source unless the owner accepts a non-commercial licence: iFixit content is CC BY-NC-SA 3.0, and its guides depend on photographs that the text-only pipeline does not carry.",
+        "Decide whether electronics joins this lane as two volumes or is deferred, because 4,00 GB of archive projects past the 6 GiB installed-payload limit.",
+        "Do not overlap with the practical how-to lane; the exporter refuses repeated canonical URLs."
+      ],
+      "known_limits": "Repair instructions carry safety risk, model coverage is partial, and a text extraction loses the photographs and disassembly diagrams that make a guide usable."
+    },
+    {
+      "id": "history-and-primary-texts",
+      "priority": 10,
+      "tier": "reference",
+      "planned_library_id": "wikisource-en",
+      "status": "acquisition-planned",
+      "languages": ["English"],
+      "scope": "Historical and primary texts in English: treaties, speeches, constitutions, court opinions, letters, and published works, so an answer can quote the document instead of summarising an article about it.",
+      "candidate_origins": ["https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-08.zim"],
+      "partition_plan": {
+        "status": "required-before-packaging",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "The 11 GB nopic archive projects past one 6 GiB volume. Create the plan only from a complete reviewed manifest and publish complementary volumes with cross-volume retrieval cases."
+      },
+      "selection_requirements": [
+        "Separate public-domain works from still-copyrighted texts and record the status per work.",
+        "Keep sub-page structure as the document identity, because a work spans many pages.",
+        "State that a transcription is not a critical edition and can carry source errors."
+      ],
+      "known_limits": "Transcriptions preserve historical spelling and errors, provide no commentary or sourcing apparatus, and cannot answer questions about works that were never transcribed."
+    },
+    {
+      "id": "wikipedia-top1m-fulltext",
+      "priority": 11,
+      "tier": "core-reference",
+      "planned_library_id": "wikipedia-en-top1m",
+      "status": "acquisition-planned",
+      "languages": ["English"],
+      "scope": "Full article text of the most-read English Wikipedia selection, which is the largest honest general-knowledge jump: 16 GB of archive projects to 26 to 34 GB of installed payload, published as complementary volumes.",
+      "candidate_origins": ["https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_nopic_2026-05.zim"],
+      "partition_plan": {
+        "status": "required-before-packaging",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Plan at least six 6 GiB volumes, and only start after a capacity plan shows the archive, extraction shards, normalized records, SQLite staging, and a rollback margin fit on one volume with at least 1 GiB free at every step."
+      },
+      "selection_requirements": [
+        "This family is a successor to wikipedia-top1m-mini: admitting it retires the lead-section candidate instead of installing beside it.",
+        "Publish an explicit exclusion report and cross-volume retrieval cases before any volume enters release_ready.",
+        "Record measured per-volume install and retrieval cost on a phone, because a six-volume reference changes aggregate storage near the 48 GB safeguard."
+      ],
+      "known_limits": "Six volumes are six downloads and six installs on a phone; a snapshot cannot provide live events or guarantee article correctness."
     }
   ],
   "legacy_dispositions": [
