@@ -19,7 +19,7 @@
   "portfolio_policy": {
     "library_payload_limit_bytes": 6442450944,
     "aggregate_installed_assets_limit_bytes": 48000000000,
-    "release_ready_count": 0,
+    "release_ready_count": 1,
     "local_candidates_are_not_admissions": true,
     "keep_history": "Retire unnecessary packs from the active portfolio and catalog; preserve source locks, reviewed records, receipts, and prior editions needed for reproduction.",
     "product_rule": "Prefer a small number of complementary, broad libraries with measured retrieval over overlapping topical fragments. Never infer freshness, rights, or quality from availability or package size. A second library over the same project universe in the same language is a duplicate and is rejected, whatever its size. All published supply is English knowledge: do not prepare a per-language or per-region edition of one project, because categories grow by subject. The exporter refuses an edition whose archive language is not English. Daily-use English categories only: general reference, practical how-to, repair and fixing, named places, history and primary texts, and travel. Programming and software-documentation lanes are out of scope."
@@ -53,14 +53,14 @@
       "retrieval_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-v2.json",
       "retrieval_gap_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-gaps-v1.json",
       "rights_review": "corpus/supply/reviews/wikivoyage-en-2026-09.4-rights-review.md",
-      "state": "measured-pending-retrieval-pin",
+      "state": "release-ready",
       "package_sha256": "392272e7854bee7988fdc3572a16e4dd59e5f00a7ff92fe50f653fd2f59c2cb2",
       "payload_sha256": "38a6141fb3039465d20a71094ff36180f043037e7230ce3daac79d34b21ce651",
       "records_sha256": "b94c8609ea743bd813e4426daaeea3efd1dafbb5dfc33ba7779acea2f8751d41",
       "payload_bytes": 622645248,
       "archive_bytes": 290642424,
-      "retrieval_report": "corpus/work/evaluation/results/wikivoyage-en-2026-09.4-retrieval-v2.json",
-      "limits": "34,599 English travel guides. The published 2026-09.3 count of 34,597 is reconciled: the two extra guides were rejected only by the older body-character policy, and their Unicode replacement characters are upstream in the pinned ZIM. Host retrieval on the 50-case suite found 50 of 50 expected titles, 36 at rank 1, mean reciprocal rank 0.844, median 334.9ms and p95 2,140.6ms; four paraphrase, plural-topic and disambiguated-title questions are recorded as measured misses in the gap case set. That run used an uncommitted `LibraryStore.kt` subject-matching change, so the replay pin must be re-reviewed and the suite re-run before the figures can support an admission. No rights sign-off and no target-device acceptance."
+      "retrieval_report": "corpus/work/evaluation/results/wikivoyage-en-2026-09.4-retrieval-v3.json",
+      "limits": "34,599 English travel guides. The published 2026-09.3 count of 34,597 is reconciled: the two extra guides were rejected only by the older body-character policy, and their Unicode replacement characters are upstream in the pinned ZIM. Host retrieval was re-measured on the committed Android retrieval policy (`LibraryStore.kt` `6c44e154`): 50 of 50 expected titles found, 36 at rank 1, mean reciprocal rank 0.844, median 368.0ms and p95 2,583.0ms. Four paraphrase, plural-topic and disambiguated-title questions remain recorded as measured misses in the gap case set. Rights review is decided under delegated authority. No target-device acceptance."
     }
   ],
   "supply_families": [
@@ -70,7 +70,9 @@
       "tier": "core-reference",
       "planned_package_prefix": "wikipedia-en-reference",
       "status": "acquisition-planned",
-      "languages": ["English"],
+      "languages": [
+        "English"
+      ],
       "scope": "Broad encyclopaedic reference coverage from a full, pinned English source edition. Images and third-party media are out of scope until separately reviewed. The released library may use deterministic complementary shards so each Android archive remains within its package limit.",
       "source_lock": "corpus/sources/wikipedia-en-all-nopic-2026-06.json",
       "partition_plan": {
@@ -97,10 +99,14 @@
       "priority": 2,
       "tier": "travel-and-regional",
       "planned_library_id": "wikivoyage-en",
-      "status": "rights-review",
-      "languages": ["English"],
+      "status": "release-ready",
+      "languages": [
+        "English"
+      ],
       "scope": "A complete pinned English travel-guide edition, retaining destination and contributor history paths.",
-      "candidate_origins": ["https://library.kiwix.org/"],
+      "candidate_origins": [
+        "https://library.kiwix.org/"
+      ],
       "selection_requirements": [
         "Resolve the existing record-count discrepancy before adopting any successor.",
         "Do not publish a city or country subset when the same full library already supplies those records.",
@@ -114,9 +120,14 @@
       "tier": "structured-local-facts",
       "planned_library_id": "wikidata-reference",
       "status": "rights-review",
-      "languages": ["Multilingual labels", "English descriptions where available"],
+      "languages": [
+        "Multilingual labels",
+        "English descriptions where available"
+      ],
       "scope": "Reviewed, bounded entity facts selected from an immutable Wikidata source edition; not a live knowledge graph.",
-      "candidate_origins": ["https://www.wikidata.org/wiki/Wikidata:Data_access"],
+      "candidate_origins": [
+        "https://www.wikidata.org/wiki/Wikidata:Data_access"
+      ],
       "selection_requirements": [
         "Define permitted properties and data transformations before acquisition.",
         "Retain entity identifiers and revision/snapshot identity for every record.",
@@ -130,9 +141,13 @@
       "tier": "structured-local-facts",
       "planned_library_id": "osm-regional-places",
       "status": "rights-review",
-      "languages": ["Source-dependent"],
+      "languages": [
+        "Source-dependent"
+      ],
       "scope": "Region-sharded named place snapshots with an exact query, raw snapshot digest, object URLs, source timestamp, and visible OpenStreetMap attribution.",
-      "candidate_origins": ["https://www.openstreetmap.org/copyright"],
+      "candidate_origins": [
+        "https://www.openstreetmap.org/copyright"
+      ],
       "selection_requirements": [
         "Release only a reviewed geographic shard; do not claim worldwide coverage from one query.",
         "Preserve ODbL obligations and any database-derivative requirements before distribution.",
@@ -146,7 +161,9 @@
       "tier": "primary-domain",
       "planned_library_id": "us-preparedness-guidance",
       "status": "review-planned",
-      "languages": ["English"],
+      "languages": [
+        "English"
+      ],
       "scope": "Separately reviewed official public guidance, grouped by jurisdiction and subject instead of mixing incompatible national advice into one global authority. The first edition consolidates 23 U.S. federal pages from the seven retired single-topic packs: 23 records, 211 passages, a 372,736-byte payload.",
       "source_lock": "corpus/sources/us-preparedness-guidance-2026-10.2.json",
       "candidate_origins": [
@@ -168,7 +185,9 @@
       "tier": "everyday-practice",
       "planned_library_id": "howto-practical",
       "status": "acquisition-planned",
-      "languages": ["English"],
+      "languages": [
+        "English"
+      ],
       "scope": "Everyday practical questions answered by English Stack Exchange sites outside programming: cooking, money, travel, gardening, and home life. Pinned archives total 2,831,425,701 bytes. A measured two-archive lane (cooking plus money, 142,527 documents) installed 1,048,535,040 bytes over 388,625,311 bytes of normalized text, so installed payload runs 2.698 times text bytes. Archive-to-payload is NOT a stable ratio (1.76 for cooking, 2.48 for money, because sites differ in how much of the archive is text), so plan from measured text bytes: the four pinned archives measured 1,007,217,051 text bytes while diy was still extracting and project to about 2,720,000,000 installed bytes, which fits one 6,442,450,944-byte volume with room for growth.",
       "source_lock": "corpus/sources/stackexchange-cooking-en-all-2026-10.json",
       "archive_locks": [
@@ -182,7 +201,9 @@
         "algorithm": "sha256-document-id-modulo-v1",
         "rule": "Recompute the projected payload from the reviewed merged manifest before packaging; split into complementary volumes if it exceeds 6,442,450,944 bytes."
       },
-      "candidate_origins": ["https://download.kiwix.org/zim/stack_exchange/"],
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/stack_exchange/"
+      ],
       "selection_requirements": [
         "Exclude programming and software-development sites: the owner scoped supply to daily-use knowledge, and code documentation is a separate profession-specific product decision.",
         "Implement the reviewed multi-archive edition before packaging, so one library spans these archives with per-archive lineage instead of shipping a pack per site.",
@@ -204,9 +225,13 @@
         "corpus/sources/stackexchange-3dprinting-en-all-2026-10.json",
         "corpus/sources/stackexchange-woodworking-en-all-2026-10.json"
       ],
-      "languages": ["English"],
+      "languages": [
+        "English"
+      ],
       "scope": "Fix-it knowledge from five English Stack Exchange repair communities: vehicle mechanics, bicycles, aviation, 3D printing, and woodworking. The measured edition 2026-10.2 keeps only question pages: 88,383 questions over 390,422,824 normalized text bytes, 398,429 passages, 924,274,688 installed payload, and records_sha256 946a47e6. Review excluded 89,235 member profiles, navigation listings, and tag directories; earlier drafts had shipped them as half the lane. The robotics archive is not part of the lane: its question set is mostly ROS, Gazebo, and firmware tooling, which is programming documentation and out of scope. Archive-to-payload is not a stable ratio, so size later volumes from measured text bytes (2.70 times) rather than archive bytes.",
-      "candidate_origins": ["https://download.kiwix.org/zim/stack_exchange/"],
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/stack_exchange/"
+      ],
       "selection_requirements": [
         "Reject the iFixit archive as a supply source unless the owner accepts a non-commercial licence: iFixit content is CC BY-NC-SA 3.0, and its guides depend on photographs that the text-only pipeline does not carry.",
         "Keep only question pages (questions/<id>/<slug>); Stack Exchange ZIMs also carry member profiles, tag directories, and paged listings that are not answers.",
@@ -222,9 +247,13 @@
       "tier": "reference",
       "planned_library_id": "wikisource-en",
       "status": "acquisition-planned",
-      "languages": ["English"],
+      "languages": [
+        "English"
+      ],
       "scope": "Historical and primary texts in English: treaties, speeches, constitutions, court opinions, letters, and published works, so an answer can quote the document instead of summarising an article about it.",
-      "candidate_origins": ["https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-08.zim"],
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-08.zim"
+      ],
       "partition_plan": {
         "status": "required-before-packaging",
         "algorithm": "sha256-document-id-modulo-v1",
@@ -243,9 +272,13 @@
       "tier": "core-reference",
       "planned_library_id": "wikipedia-en-top1m",
       "status": "acquisition-planned",
-      "languages": ["English"],
+      "languages": [
+        "English"
+      ],
       "scope": "Full article text of the most-read English Wikipedia selection, which is the largest honest general-knowledge jump: 16 GB of archive projects to 26 to 34 GB of installed payload, published as complementary volumes.",
-      "candidate_origins": ["https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_nopic_2026-05.zim"],
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_nopic_2026-05.zim"
+      ],
       "partition_plan": {
         "status": "required-before-packaging",
         "algorithm": "sha256-document-id-modulo-v1",
@@ -336,5 +369,26 @@
       "reason": "The 30-record subset duplicates the broader Wikivoyage library and is removed from the bundled catalog."
     }
   ],
-  "release_ready": []
+  "release_ready": [
+    {
+      "id": "wikivoyage-en",
+      "version": "2026-09.4",
+      "source_lock": "corpus/sources/wikivoyage-en-all-nopic-2026-09.json",
+      "rights_review": "corpus/supply/reviews/wikivoyage-en-2026-09.4-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/wikivoyage-en-all-nopic-2026-09/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-v2.json",
+      "archive_receipt": "corpus/work/packages/wikivoyage-en-2026-09.4.receipt.json",
+      "records_sha256": "b94c8609ea743bd813e4426daaeea3efd1dafbb5dfc33ba7779acea2f8751d41",
+      "archive_sha256": "392272e7854bee7988fdc3572a16e4dd59e5f00a7ff92fe50f653fd2f59c2cb2",
+      "library_profile": {
+        "record_count": 34599,
+        "scope": "English Wikivoyage guide text worldwide from the 2026-09-13 Kiwix snapshot; images are excluded.",
+        "source_snapshot_date": "2026-09-13",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digest and each guide's revision-history URL because most guides carry no per-revision id.",
+        "limitations": "Opening hours, fares, visas, local safety advice, and other travel details can change; verify time-sensitive details before travel. Five Unicode replacement characters are inherited from the pinned upstream archive."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    }
+  ]
 }

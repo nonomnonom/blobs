@@ -4,6 +4,16 @@
   "libraries": [
     {
       "id": "wikivoyage-en",
+      "version": "2026-09.4",
+      "documents": 34599,
+      "records_revision": "e72b9f311dc74e664208d33f32462d7c8bb594cc",
+      "records_path": "records/wikivoyage-en-all-nopic-2026-09.4",
+      "manifest_sha256": "80a5fa527c7ae9ba3e874a4d66b9fecc065a21b0f917e7c2f1b3ad04dcbf95b1",
+      "records_sha256": "b94c8609ea743bd813e4426daaeea3efd1dafbb5dfc33ba7779acea2f8751d41",
+      "source_lock": "corpus/sources/wikivoyage-en-all-nopic-2026-09.json"
+    },
+    {
+      "id": "wikivoyage-en",
       "version": "2026-09.3",
       "documents": 34597,
       "records_revision": "698ab323d165b46128b000ecbe06367380906c10",

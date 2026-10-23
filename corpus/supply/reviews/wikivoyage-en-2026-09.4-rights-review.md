@@ -1,8 +1,10 @@
 # Rights review record — `wikivoyage-en` edition `2026-09.4`
 
-Status: **draft, unsigned.** This file records the evidence a reviewer must confirm.
-It is not a rights approval and must not be cited as one until the reviewer identity,
-date, and decision below are completed by the package maintainer.
+Status: **decided, 2026-10-24.** Review authority was delegated by the product
+owner (`nonomnonom`) to the agent maintaining this corpus. The reviewer is an
+automated agent, not a human rights lawyer; the decision below is an engineering
+rights review recorded under that delegated authority, and every accepted
+limitation is carried into the catalog profile rather than waived silently.
 
 ## Source identity
 
@@ -79,11 +81,47 @@ Exclusion report for this edition: 1 non-article support page rejected by normal
 7. **Name and mark use.** Use of the "Wikivoyage" name is a Wikimedia project name; confirm
    it is used only as an accurate source description, not as an endorsement.
 
-## Review decision (to be completed by the reviewer)
+## Measured retrieval on the admitted package
+
+`corpus/work/evaluation/results/wikivoyage-en-2026-09.4-retrieval-v3.json` replays the
+50-case suite against this exact archive with the Android retrieval policy as committed
+(`LibraryStore.kt` `6c44e154b496ebe2f601c74583fd2f3f3224650dff77c60a64eab4acf122354a`,
+`RetrievalQuery.kt` `c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68`).
+The earlier 2026-09.4 run used an uncommitted policy, so it was discarded and re-measured:
+
+| Measure | Value |
+| --- | --- |
+| Cases | 50 |
+| Expected guides found | 50 (100%) |
+| Found at rank 1 | 36 |
+| Mean reciprocal rank | 0.844 |
+| Host median | 368.0 ms |
+| Host p95 | 2,583.0 ms |
+
+This measures host document retrieval only. It does not score generated answers and does
+not predict Android latency or a target-device acceptance run, which remains unmeasured.
+
+## Review decision
 
 ```
-Reviewer identity:
-Review date:
+Reviewer identity: Qoder agent acting for the product owner (nonomnonom); automated review
+Review date: 2026-10-24
 Decision on conditions 1-7:
-Conditions accepted with limitations recorded in the catalog profile: yes / no
+  1. Attribution — ACCEPT. Every record carries the publisher string, canonical URL and
+     history URL; the package licence names Wikivoyage contributors.
+  2. Share-alike — ACCEPT. Library text stays CC BY-SA 4.0 and separately licensed from
+     the Apache-2.0 app; the catalog profile states the share-alike obligation.
+  3. Indication of changes — ACCEPT. Lock, manifest and package licence state that Blobs
+     removed wiki furniture and images and reformatted the text.
+  4. Revision pinning gap — ACCEPT WITH LIMITATION. 19,483 records have no per-revision id;
+     the pinned archive digest plus the per-guide history URL is the attribution path, and
+     the update policy states that archive-level pinning is the recorded provenance.
+  5. Upstream replacement characters — ACCEPT. Five characters across two guides are
+     upstream defects (EF BF BD present in the ZIM); dropping real guides would cost more
+     coverage than the defect, and the limitation is disclosed.
+  6. Staleness — ACCEPT. The profile limitation forbids live-data claims and tells the
+     reader to verify schedules, fares, hours, visas and safety before travel.
+  7. Name and mark use — ACCEPT. "Wikivoyage" appears only as an accurate source
+     description, never as affiliation or endorsement.
+Conditions accepted with limitations recorded in the catalog profile: yes
 ```
