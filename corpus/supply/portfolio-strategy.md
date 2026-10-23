@@ -92,7 +92,7 @@ archive per volume, then confirm on the built edition.
 | Reference, Indonesian | `wikipedia-id-all-mini` 1,399,953,305-byte archive, 494,581 documents at 63 percent extraction | extracting; one volume projected |
 | Travel, English | `wikivoyage-en-all-nopic` 272,495,142-byte archive, 622,645,248-byte payload, 34,599 guides | candidate, 50 of 50 on the new suite |
 | Travel, Portuguese | `wikivoyage-pt-all-nopic` 18,137,141-byte archive, 54,059,008-byte payload, 4,097 guides | packaged, no rights sign-off |
-| How-to, practical | Stack Exchange site archives: cooking 238,098,128, money 254,194,306, travel 462,009,141, unix 1.29e9, superuser 3.97e9, diy 2.04e9 bytes | ratio being measured on cooking before any lane is promised |
+| How-to, practical | Measured on a `cooking.stackexchange.com` edition: 238,098,128-byte archive, 63,803 questions, 250,153 passages, 418,353,152-byte payload | ratio is 1.76 times the archive, so one 6 GiB library holds about 3.0 GB of site archives. Each site is its own ZIM, so a lane needs a reviewed multi-archive edition before it can be packaged as one library; a pack per site would repeat the retired-fragment mistake |
 | Dictionary | Wiktionary nopic archives: English 8.5 GB, French 4.6 GB, Russian 2.0 GB, German 1.5 GB, Portuguese 0.34 GB | English needs deterministic volumes; smaller languages fit one |
 | Places | Overpass snapshots bounded to 5,000,000 bytes and 1,000 elements per reviewed lock | pipeline exists, no reviewed shard yet |
 | Public guidance | `web_pages` caps a lock at 40 sources and 5,000,000 bytes each | a real health or civics lane needs archive-scale acquisition first |
