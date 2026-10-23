@@ -6,11 +6,7 @@ import androidx.sqlite.SQLiteConnection
 internal class DocumentNameLookup {
     data class Match(val key: String, val title: String, val id: String)
 
-    fun matchingTitles(
-        db: SQLiteConnection,
-        question: String,
-        scope: List<String>?
-    ): List<Match> {
+    fun matchingTitles(db: SQLiteConnection, question: String, scope: List<String>?): List<Match> {
         val candidates = RetrievalQuery.names(question)
         val keys = candidates.map { it.key }.distinct()
         if (keys.isEmpty()) return emptyList()

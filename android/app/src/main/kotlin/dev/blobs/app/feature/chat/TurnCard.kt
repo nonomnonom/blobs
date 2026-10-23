@@ -61,8 +61,11 @@ internal fun TurnCard(
     )
     val grounding = when (turn.groundingKind) {
         TurnGrounding.GROUNDED -> TurnGrounding.GROUNDED
+
         TurnGrounding.NOT_REQUESTED -> TurnGrounding.NOT_REQUESTED
+
         TurnGrounding.UNVERIFIED -> TurnGrounding.UNVERIFIED
+
         else -> if (hasCompleteCitationCoverage) {
             TurnGrounding.GROUNDED
         } else {

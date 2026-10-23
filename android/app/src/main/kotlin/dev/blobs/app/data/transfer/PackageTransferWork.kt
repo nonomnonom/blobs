@@ -58,13 +58,14 @@ internal class PackageTransferWork(
         var asset: DownloadablePackage? = null
         val reserved = session.reserve { current ->
             val pending = current.pendingImport
+            val currentDownload = current.download
             if ((pending != null && pending.manifest.key != manifest.key) ||
-                (current.download != null && current.download?.manifest != manifest)
+                (currentDownload != null && currentDownload.manifest != manifest)
             ) {
                 return@reserve null
             }
             discardRequested = false
-            asset = current.download?.takeIf { it.manifest == manifest }
+            asset = currentDownload?.takeIf { it.manifest == manifest }
             WorkState(
                 ready = true,
                 busy = true,
@@ -153,14 +154,21 @@ internal class PackageTransferWork(
                         ready = true,
                         notice = when (error.message) {
                             "STORAGE" -> R.string.storage_failed
+
                             "PDF_NO_TEXT" -> R.string.pdf_no_text
+
                             "PDF_PASSWORD" -> R.string.pdf_password
+
                             "PDF_UNSUPPORTED_ENCRYPTION" -> R.string.pdf_unsupported_encryption
+
                             "PDF_PAGE_COUNT", "DOCUMENT_TOO_LARGE", "COLLECTION_TOO_LARGE",
                             "IMPORT_TOO_LARGE" -> R.string.document_too_large
+
                             "UNSUPPORTED_DOCUMENT" -> R.string.unsupported_document
+
                             "DOCUMENT_INVALID", "PACK_INVALID", "PACK_VERSION" ->
                                 R.string.document_invalid
+
                             else -> R.string.import_failed
                         }
                     )

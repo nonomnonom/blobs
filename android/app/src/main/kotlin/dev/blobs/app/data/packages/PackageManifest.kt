@@ -72,6 +72,7 @@ data class PackageManifest(
                     }
 
                     Character.isLowSurrogate(this[index]) -> return true
+
                     else -> index++
                 }
             }

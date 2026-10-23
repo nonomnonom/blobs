@@ -28,9 +28,9 @@ import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.WorldScene
-import dev.blobs.app.ui.worldSkyColor
 import dev.blobs.app.ui.theme.BlobsComponentShapes
 import dev.blobs.app.ui.theme.BlobsDimens
+import dev.blobs.app.ui.worldSkyColor
 
 @Composable
 fun WelcomeScreen(

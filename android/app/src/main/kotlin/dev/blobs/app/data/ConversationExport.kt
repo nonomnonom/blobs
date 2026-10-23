@@ -46,8 +46,12 @@ internal object ConversationExport {
                             "Model: ${turn.model}\n" +
                             "Scope: ${formatScope(turn.scope)}\n" +
                             "Library scope snapshot: " +
-                                "${turn.libraryScope.ifBlank { "legacy turn" }}\n" +
-                            "Grounding: ${groundingLabel(modelAnswer, sourceData, turn.grounding)}\n" +
+                            "${turn.libraryScope.ifBlank { "legacy turn" }}\n" +
+                            "Grounding: ${groundingLabel(
+                                modelAnswer,
+                                sourceData,
+                                turn.grounding
+                            )}\n" +
                             "Finish: ${finishLabel(turn.finishReason)}\n" +
                             "Elapsed: ${turn.elapsedMs} ms\n" +
                             turn.error.takeIf { it.isNotBlank() }?.let { "Error: $it\n" }
@@ -63,7 +67,10 @@ internal object ConversationExport {
                         writer.appendLine("No local sources returned.\n")
                     }
                     val evidenceItems = sources.orEmpty()
-                    val citedIndices = AnswerText.citedSourceIndices(modelAnswer, evidenceItems.size)
+                    val citedIndices = AnswerText.citedSourceIndices(
+                        modelAnswer,
+                        evidenceItems.size
+                    )
                     val cited = evidenceItems.withIndex().filter { indexed ->
                         indexed.index in citedIndices
                     }
@@ -85,11 +92,7 @@ internal object ConversationExport {
         }
     }
 
-    private fun writeEvidence(
-        writer: java.io.BufferedWriter,
-        label: String,
-        evidence: Evidence
-    ) {
+    private fun writeEvidence(writer: java.io.BufferedWriter, label: String, evidence: Evidence) {
         writer.appendLine(
             "$label: ${evidence.title}\n" +
                 "Document: ${evidence.id}\n" +
@@ -150,6 +153,7 @@ internal object ConversationExport {
 
     private fun formatScope(scope: String): String = when (scope) {
         "*" -> "all enabled libraries"
+
         else -> scope.lineSequence().filter(String::isNotBlank).joinToString(", ")
             .ifBlank { "no libraries" }
     }

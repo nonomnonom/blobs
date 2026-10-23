@@ -4,9 +4,7 @@ import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 
 /** Sole Room owner for conversation browsing, edits, exports, and turn lifecycle. */
-internal class ConversationStore(
-    private val conversations: ConversationDao
-) {
+internal class ConversationStore(private val conversations: ConversationDao) {
     fun observeConversations(): Flow<List<ConversationEntity>> =
         conversations.observeConversations()
 
@@ -34,7 +32,8 @@ internal class ConversationStore(
 
     suspend fun all(): List<ConversationEntity> = conversations.all()
 
-    suspend fun turns(conversationId: String): List<TurnEntity> = conversations.turns(conversationId)
+    suspend fun turns(conversationId: String): List<TurnEntity> =
+        conversations.turns(conversationId)
 
     suspend fun recoverInterrupted() = conversations.recoverInterrupted()
 

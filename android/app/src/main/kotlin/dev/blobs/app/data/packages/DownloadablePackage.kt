@@ -38,12 +38,12 @@ data class DownloadablePackage(
                         (
                             url.startsWith("https://huggingface.co/") &&
                                 url.contains(Regex("/resolve/[a-f0-9]{40}/"))
-                        )
+                            )
                 } else {
                     url.startsWith("https://huggingface.co/") &&
                         url.contains(Regex("/resolve/[a-f0-9]{40}/"))
                 }
-            )
+                )
         )
         require((manifest.kind == "model") == (role == PackageRole.MODEL))
         require(recommendedUpToMemoryMb > 0)
@@ -105,6 +105,7 @@ internal fun String.isSafeCatalogText(limit: Int): Boolean {
             }
 
             Character.isLowSurrogate(this[index]) -> return false
+
             else -> index++
         }
     }

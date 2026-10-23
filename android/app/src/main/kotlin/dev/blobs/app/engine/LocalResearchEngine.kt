@@ -143,7 +143,9 @@ internal class LocalResearchEngine(
                                 renderAnswer()
                             }
                             true
-                        } else false
+                        } else {
+                            false
+                        }
                     }
                 )
             }

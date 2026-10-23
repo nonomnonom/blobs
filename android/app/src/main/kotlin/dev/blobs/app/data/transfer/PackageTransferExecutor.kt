@@ -35,10 +35,8 @@ internal class PackageTransferExecutor(
         return installed
     }
 
-    suspend fun importDocuments(
-        uris: List<Uri>,
-        onProgress: (Long, Long) -> Unit
-    ): PackageEntity = installer.importDocuments(uris, onProgress)
+    suspend fun importDocuments(uris: List<Uri>, onProgress: (Long, Long) -> Unit): PackageEntity =
+        installer.importDocuments(uris, onProgress)
 
     suspend fun downloadAndInstall(
         asset: DownloadablePackage,

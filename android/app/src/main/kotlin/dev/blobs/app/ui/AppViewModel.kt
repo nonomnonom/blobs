@@ -50,7 +50,9 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
     private val backStack = ArrayDeque<Page>()
     private var searchJob: Job? = null
     private var inspectionJob: Job? = null
-    val conversations = conversationStore.observeConversations().catch { fail(R.string.data_unavailable) }
+    val conversations = conversationStore.observeConversations().catch {
+        fail(R.string.data_unavailable)
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val packages = packageStore.observe().onEach { installed ->
         reconcileLibraryScope(mutable.value.options.scope, installed)
@@ -316,6 +318,7 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
                 }
                 when {
                     replacement == null -> selection
+
                     selection == previous.key -> {
                         changed = true
                         replacement.key
@@ -549,7 +552,13 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         if (work.value.busy) return@action
         draftLock.withLock {
             container.work.mutate {
-                if (item == null) conversationStore.deleteAll() else conversationStore.delete(item.id)
+                if (item ==
+                    null
+                ) {
+                    conversationStore.deleteAll()
+                } else {
+                    conversationStore.delete(item.id)
+                }
                 if (item == null || item.id == conversation.value) {
                     createConversation()
                     goHome()

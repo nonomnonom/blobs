@@ -27,11 +27,7 @@ import dev.blobs.app.R
 import kotlinx.coroutines.delay
 
 @Composable
-internal fun TurnActions(
-    turnId: String,
-    answer: String,
-    modelName: String
-) {
+internal fun TurnActions(turnId: String, answer: String, modelName: String) {
     val context = LocalContext.current
     val appName = stringResource(R.string.app_name)
     var copied by rememberSaveable(turnId) { mutableStateOf(false) }

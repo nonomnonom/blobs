@@ -11,7 +11,6 @@ internal object AnswerText {
     private val containsNamespacedReference = Regex("(?i)(?:^|[,;]\\s*)S\\d+(?:\\b|[,;])")
     private val numericReferenceList = Regex("^\\s*\\d+(?:\\s*[,;]\\s*\\d+)*\\s*$")
     private val namespacedSourceId = Regex("(?i)\\bS(\\d+)\\b")
-    private val numericSourceId = Regex("\\d+")
     private val textSubscript = Regex(
         """```[\s\S]*?(?:```|$)|`[^`\n]*`|\$(?:\\text|\\mathrm)\{([A-Za-z]+)}_(?:\{([0-9]+)}|([0-9]+))\$"""
     )
@@ -75,14 +74,11 @@ internal object AnswerText {
         bracketedReference.replace(text) { match ->
             val contents = match.groupValues[1]
             val namespaced = containsNamespacedReference.containsMatchIn(contents)
-            if (!namespaced && !numericReferenceList.matches(contents)) {
-                match.value
+            if (!namespaced) {
+                if (numericReferenceList.matches(contents)) "" else match.value
             } else {
-                val ids = (if (namespaced) {
-                    namespacedSourceId.findAll(contents).map { it.groupValues[1] }
-                } else {
-                    numericSourceId.findAll(contents).map { it.value }
-                }).mapNotNull { it.toIntOrNull() }
+                val ids = namespacedSourceId.findAll(contents)
+                    .mapNotNull { it.groupValues[1].toIntOrNull() }
                     .filter { it in 1..count }
                     .distinct()
                     .toList()
@@ -172,11 +168,7 @@ internal object AnswerText {
         return covered(text.length) && foundProse
     }
 
-    private fun validCitationMarkerEnd(
-        text: String,
-        start: Int,
-        citations: List<Citation>
-    ): Int? {
+    private fun validCitationMarkerEnd(text: String, start: Int, citations: List<Citation>): Int? {
         if (start >= text.length || text[start] != '[') return null
         val end = text.indexOf(']', start + 1)
         if (end < 0) return null

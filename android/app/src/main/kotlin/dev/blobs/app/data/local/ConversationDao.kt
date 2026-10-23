@@ -122,7 +122,7 @@ interface ConversationDao {
     }
 }
 
-internal data class ConversationHistory(val question: String, val answer: String)
+data class ConversationHistory(val question: String, val answer: String)
 
 private fun truncateUtf16(value: String, maximumLength: Int): String {
     var end = minOf(value.length, maximumLength)

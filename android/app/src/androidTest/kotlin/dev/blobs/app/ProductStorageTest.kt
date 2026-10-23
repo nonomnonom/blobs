@@ -45,11 +45,35 @@ class ProductStorageTest {
             val dao = db.conversations()
             assertEquals("Keep my draft", dao.find("a")?.draft)
             dao.saveTurn(
-                TurnEntity("turn", "a", "Why?", "Partial", "RUNNING", "model", "*", "[]", 3)
+                TurnEntity(
+                    "turn",
+                    "a",
+                    "Why?",
+                    "Partial",
+                    "RUNNING",
+                    "model",
+                    "*",
+                    "[]",
+                    3,
+                    grounding = "PENDING",
+                    finishReason = "PENDING"
+                )
             )
             dao.recoverInterrupted()
             assertEquals("INTERRUPTED", dao.turns("a").single().status)
-            assertEquals(0, dao.updateAnswer("turn", "late result", "[]", "COMPLETE", 10, ""))
+            assertEquals(
+                0,
+                dao.updateAnswer(
+                    "turn",
+                    "late result",
+                    "[]",
+                    "COMPLETE",
+                    10,
+                    "",
+                    "GROUNDED",
+                    "STOP"
+                )
+            )
             assertEquals("Partial", dao.turns("a").single().answer)
             assertEquals("Keep my draft", dao.find("a")?.draft)
         } finally {
@@ -72,16 +96,30 @@ class ProductStorageTest {
                     "source-v1", "[]", 3
                 )
             )
-            dao.saveDraft("a", "Next question")
+            dao.saveDraft("a", "Next question", 4)
             dao.updateAnswer(
                 "request",
                 "Saved [1]",
                 "[{\"title\":\"Original\"}]",
                 "STOPPED",
                 100,
-                ""
+                "",
+                "UNVERIFIED",
+                "CANCELLED"
             )
-            assertEquals(0, dao.updateAnswer("request", "Late output", "[]", "COMPLETE", 101, ""))
+            assertEquals(
+                0,
+                dao.updateAnswer(
+                    "request",
+                    "Late output",
+                    "[]",
+                    "COMPLETE",
+                    101,
+                    "",
+                    "GROUNDED",
+                    "STOP"
+                )
+            )
             assertEquals("Next question", dao.find("a")?.draft)
             assertEquals("Other draft", dao.find("b")?.draft)
             assertEquals("[{\"title\":\"Original\"}]", dao.turns("a").single().evidence)

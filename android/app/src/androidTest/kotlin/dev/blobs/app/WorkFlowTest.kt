@@ -7,12 +7,17 @@ import dev.blobs.app.data.WorkController
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.BlobsDatabase
 import dev.blobs.app.data.local.ConversationEntity
+import dev.blobs.app.data.local.ConversationStore
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.DownloadablePackage
+import dev.blobs.app.data.packages.LibraryProfile
 import dev.blobs.app.data.packages.PackageDownloader
 import dev.blobs.app.data.packages.PackageInstaller
 import dev.blobs.app.data.packages.PackageRole
+import dev.blobs.app.data.transfer.PackageTransferExecutor
+import dev.blobs.app.data.transfer.PackageTransferRecovery
+import dev.blobs.app.engine.LocalResearchEngine
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
@@ -36,15 +41,8 @@ class WorkFlowTest {
             installer,
             root
         ->
-        val work =
-            WorkController(
-                db,
-                LibraryStore(),
-                installer,
-                PackageDownloader(root, {
-                    Long.MAX_VALUE
-                })
-            )
+        val downloader = PackageDownloader(root, { Long.MAX_VALUE })
+        val work = workController(db, installer, downloader)
         withTimeout(10_000) { work.state.first { it.ready } }
         db.conversations().save(ConversationEntity("thread", "", "", 1, 1))
         val model = PackageEntity(
@@ -55,7 +53,7 @@ class WorkFlowTest {
         withTimeout(10_000) { work.state.first { !it.busy } }
         val original = db.conversations().turns("thread").single()
         assertEquals("ERROR", original.status)
-        db.conversations().saveDraft("thread", "Keep my next question")
+        db.conversations().saveDraft("thread", "Keep my next question", 2)
         assertTrue(work.answer("thread", original.question, model, emptyList(), null, original.id))
         withTimeout(10_000) { work.state.first { !it.busy } }
         val retried = db.conversations().turns("thread").single()
@@ -90,7 +88,14 @@ class WorkFlowTest {
                 DownloadFormat.BLOBS,
                 manifest,
                 PackageRole.OPTIONAL,
-                Long.MAX_VALUE
+                Long.MAX_VALUE,
+                libraryProfile = LibraryProfile(
+                    recordCount = 1,
+                    scope = "Fixture library",
+                    sourceSnapshotDate = "2026-01-01",
+                    updatePolicy = "Static test fixture",
+                    limitations = "Not production data"
+                )
             )
         var requests = 0
         var range: String? = null
@@ -136,7 +141,7 @@ class WorkFlowTest {
                 }
             }
         }
-        val work = WorkController(db, LibraryStore(), installer, downloader)
+        val work = workController(db, installer, downloader)
         withTimeout(10_000) { work.state.first { it.ready } }
         assertTrue(work.downloadAndInstall(asset))
         val paused = withTimeout(10_000) { work.state.first { !it.busy && it.hasPendingTransfer } }
@@ -145,7 +150,7 @@ class WorkFlowTest {
         assertFalse(paused.transferActive)
         assertEquals(R.string.download_failed, paused.notice)
         assertEquals(null, downloader.pending(listOf(asset.copy(downloadSha256 = "0".repeat(64)))))
-        val restarted = WorkController(db, LibraryStore(), installer, downloader, listOf(asset))
+        val restarted = workController(db, installer, downloader, listOf(asset))
         withTimeout(10_000) { restarted.state.first { it.ready } }
         assertEquals(asset, restarted.state.value.download)
         assertEquals(512L, restarted.state.value.progress)
@@ -202,7 +207,7 @@ class WorkFlowTest {
                 }
             }
         }
-        val work = WorkController(db, LibraryStore(), installer, downloader)
+        val work = workController(db, installer, downloader)
         withTimeout(10_000) { work.state.first { it.ready } }
         val unrelated = File(root.parentFile, "keep.txt").apply { writeText("Keep this file") }
         assertTrue(work.downloadAndInstall(asset))
@@ -240,4 +245,24 @@ class WorkFlowTest {
                 folder.deleteRecursively()
             }
         }
+
+    private fun workController(
+        database: BlobsDatabase,
+        installer: PackageInstaller,
+        downloader: PackageDownloader,
+        availableDownloads: List<DownloadablePackage> = emptyList()
+    ): WorkController {
+        val library = LibraryStore()
+        return WorkController(
+            ConversationStore(database.conversations()),
+            LocalResearchEngine(library),
+            PackageTransferExecutor(installer, downloader),
+            PackageTransferRecovery(
+                installer,
+                downloader,
+                database.packages(),
+                availableDownloads
+            )
+        )
+    }
 }

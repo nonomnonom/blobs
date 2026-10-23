@@ -23,8 +23,8 @@ import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /** Owns one durable research-turn lifecycle from validation through final persistence. */
@@ -162,16 +162,23 @@ internal class ResearchWork(
                         TurnFinishReason.CANCELLED
 
                     outcome.finish == ResearchFinish.TOKEN_LIMIT -> TurnFinishReason.TOKEN_LIMIT
+
                     outcome.finish == ResearchFinish.FINISHED && answer.isNotBlank() ->
                         TurnFinishReason.STOP
 
                     else -> TurnFinishReason.ERROR
                 }
                 val grounding = terminalGrounding(answer, outcome.evidence.size, finishReason)
+                val permitsCompletion = answer.isNotBlank()
                 val status = when {
                     stopped || outcome.finish == ResearchFinish.CANCELLED -> TurnStatus.STOPPED
-                    outcome.finish == ResearchFinish.TOKEN_LIMIT && answer.isNotBlank() -> TurnStatus.COMPLETE
-                    outcome.finish == ResearchFinish.FINISHED && answer.isNotBlank() -> TurnStatus.COMPLETE
+
+                    outcome.finish == ResearchFinish.TOKEN_LIMIT && permitsCompletion ->
+                        TurnStatus.COMPLETE
+
+                    outcome.finish == ResearchFinish.FINISHED && permitsCompletion ->
+                        TurnStatus.COMPLETE
+
                     else -> TurnStatus.ERROR
                 }
                 checkpoint?.join()
@@ -287,23 +294,21 @@ internal class ResearchWork(
 
     fun trimInferenceMemory() = releaseModelInBackground()
 
-    private fun reserveAnswer(id: String, thread: String): Boolean {
-        return session.reserve { current ->
-            engine.reset()
-            stopped = false
-            interrupted = false
-            current.copy(
-                busy = true,
-                turnId = id,
-                threadId = thread,
-                text = "",
-                evidence = "[]",
-                researchStage = ResearchStage.PREPARING_MODEL,
-                startedAt = SystemClock.elapsedRealtime(),
-                transferActive = false,
-                notice = null
-            )
-        }
+    private fun reserveAnswer(id: String, thread: String): Boolean = session.reserve { current ->
+        engine.reset()
+        stopped = false
+        interrupted = false
+        current.copy(
+            busy = true,
+            turnId = id,
+            threadId = thread,
+            text = "",
+            evidence = "[]",
+            researchStage = ResearchStage.PREPARING_MODEL,
+            startedAt = SystemClock.elapsedRealtime(),
+            transferActive = false,
+            notice = null
+        )
     }
 
     private fun releaseModelInBackground() {
@@ -313,7 +318,9 @@ internal class ResearchWork(
     private fun validQuestion(value: String): Boolean {
         if (value.isBlank() || value.length > ResearchPrompt.MAX_QUESTION_CHARACTERS ||
             '\u0000' in value
-        ) return false
+        ) {
+            return false
+        }
         var index = 0
         while (index < value.length) {
             when {
@@ -325,6 +332,7 @@ internal class ResearchWork(
                 }
 
                 Character.isLowSurrogate(value[index]) -> return false
+
                 else -> index++
             }
         }

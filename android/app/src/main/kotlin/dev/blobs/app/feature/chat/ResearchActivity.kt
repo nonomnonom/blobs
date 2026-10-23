@@ -24,13 +24,17 @@ import dev.blobs.app.data.ResearchStage
 internal fun ResearchActivity(stage: ResearchStage?, evidenceCount: Int) {
     val label = when (stage) {
         ResearchStage.PREPARING_MODEL -> stringResource(R.string.research_preparing)
+
         ResearchStage.SEARCHING_LIBRARY -> stringResource(R.string.research_searching)
+
         ResearchStage.REVIEWING_SOURCES -> pluralStringResource(
             R.plurals.research_reviewing,
             evidenceCount,
             evidenceCount
         )
+
         ResearchStage.WRITING_ANSWER -> stringResource(R.string.research_writing)
+
         null -> stringResource(R.string.working)
     }
     val icon = when (stage) {

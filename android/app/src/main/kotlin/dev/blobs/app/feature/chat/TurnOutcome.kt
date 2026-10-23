@@ -62,9 +62,13 @@ internal fun TurnOutcome(
         }
 
         status == TurnStatus.COMPLETE -> R.string.status_complete
+
         status == TurnStatus.CONTEXT_FULL -> R.string.context_full
+
         status == TurnStatus.NO_SOURCES -> R.string.status_no_sources
+
         status == TurnStatus.UNVERIFIED -> R.string.status_unverified
+
         else -> R.string.status_error
     }
     val trustLabel = when {
@@ -110,10 +114,12 @@ internal fun TurnOutcome(
                 }
             }
         }
-    } else if (latest && (limited || status !in setOf(
-            TurnStatus.COMPLETE,
-            TurnStatus.RUNNING
-        ))
+    } else if (latest && (
+            limited || status !in setOf(
+                TurnStatus.COMPLETE,
+                TurnStatus.RUNNING
+            )
+            )
     ) {
         Button(onClick = onRetry, enabled = !busy) {
             Text(stringResource(R.string.retry))

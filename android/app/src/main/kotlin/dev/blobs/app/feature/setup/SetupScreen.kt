@@ -54,9 +54,9 @@ import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.SetupStep
 import dev.blobs.app.ui.WorldScene
 import dev.blobs.app.ui.fileSize
-import dev.blobs.app.ui.worldSkyColor
 import dev.blobs.app.ui.theme.BlobsComponentShapes
 import dev.blobs.app.ui.theme.BlobsDimens
+import dev.blobs.app.ui.worldSkyColor
 
 @Composable
 fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll: ScrollState) {

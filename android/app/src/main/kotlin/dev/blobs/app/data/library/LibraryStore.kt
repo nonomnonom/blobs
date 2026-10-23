@@ -73,6 +73,7 @@ class LibraryStore {
             val selectedWholeLibrary = pack.key in scope.orEmpty()
             val documentIds = when {
                 scope == null || selectedWholeLibrary -> null
+
                 else -> scope.filter { it.startsWith("${pack.key}/") }
                     .map { it.substringAfter('/') }
             }
@@ -169,7 +170,8 @@ class LibraryStore {
                         RetrievalCandidate(
                             evidence = evidence,
                             passageId = statement.getLong(10),
-                            titlePriority = statement.getLong(9) != 0L && localId in priorityTitleIds,
+                            titlePriority =
+                                statement.getLong(9) != 0L && localId in priorityTitleIds,
                             directTitleMatch = localId in directTitleIds,
                             subject = subject,
                             titleOverlap = RetrievalQuery.titleOverlap(titleTerms, title),
@@ -211,7 +213,9 @@ class LibraryStore {
         val broadTitles = ranked.filter { it.titlePriority }.map { it.evidence.title }.distinct()
         val focused = when {
             directSubjects.isNotEmpty() -> directSubjects
+
             broadTitles.isEmpty() -> ranked
+
             else -> ranked.filter { candidate ->
                 broadTitles.any {
                     candidate.evidence.title == it || candidate.evidence.title.startsWith("$it/")

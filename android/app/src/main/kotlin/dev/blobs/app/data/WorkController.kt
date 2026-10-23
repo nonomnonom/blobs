@@ -59,7 +59,8 @@ internal class WorkController(
     fun importDocuments(uris: List<Uri>, title: String): Boolean =
         transferWork.importDocuments(uris, title)
 
-    fun downloadAndInstall(asset: DownloadablePackage): Boolean = transferWork.downloadAndInstall(asset)
+    fun downloadAndInstall(asset: DownloadablePackage): Boolean =
+        transferWork.downloadAndInstall(asset)
 
     fun stop(background: Boolean = false) {
         if (state.value.busy && state.value.turnId.isNotEmpty()) {

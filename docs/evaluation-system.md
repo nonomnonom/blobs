@@ -5,12 +5,14 @@ server, model judge, or host completion. The product has one assessed path:
 local FTS, bounded prompt, one JNI completion, turn persistence, then UI and
 source reader.
 
-## Rebuild status
+## Validation status
 
-The product decision currently prohibits builds, tests, benchmarks, and
-evaluators during the rebuild. This document defines evidence for the phase
-after the owner re-enables validation; it is not a claim that the current
-checkout has passed.
+Validation is active. Builds, tests, benchmarks, evaluators, and device
+acceptance may run when their prerequisites are available. This is permission
+to gather evidence, not a claim that the current checkout has passed.
+Preserve existing processes and data preparation. Record unavailable devices,
+packages, toolchains, credentials, or reproduction inputs as blockers; do not
+substitute synthetic evidence for a product result.
 
 ## Evidence owners
 
@@ -47,9 +49,9 @@ device/OS/ABI, inference configuration, UTC time, raw output, status/exception,
 and skip reason. An observation without reproducible input, executable, corpus,
 or device is **historical**.
 
-## Gates after rebuild
+## Evidence gates
 
-| Change | Minimum evidence after validation is enabled |
+| Change | Minimum evidence |
 | --- | --- |
 | UI or turn state | Relevant state test and affected accessibility inspection |
 | FTS or evidence selection | Same retrieval cases, same package hash, and coverage report |

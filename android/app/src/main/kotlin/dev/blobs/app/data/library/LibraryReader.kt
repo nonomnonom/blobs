@@ -60,11 +60,7 @@ internal class LibraryReader {
         }
     }
 
-    fun readPassage(
-        packages: List<PackageEntity>,
-        documentId: String,
-        passageId: Long
-    ): Evidence? {
+    fun readPassage(packages: List<PackageEntity>, documentId: String, passageId: Long): Evidence? {
         if (passageId <= 0L) return null
         val pack = packages.singleOrNull {
             it.kind == "library" && documentId.startsWith("${it.key}/")

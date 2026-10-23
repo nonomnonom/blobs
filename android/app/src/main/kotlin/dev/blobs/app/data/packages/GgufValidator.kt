@@ -19,8 +19,12 @@ object GgufValidator {
     fun validate(file: File, minimumContextTokens: Int = 1) {
         require(minimumContextTokens in 1..MAX_DECLARED_CONTEXT_TOKENS)
         val declaredContextTokens = inspect(file)
-        require(declaredContextTokens in minimumContextTokens.toLong()..
-            MAX_DECLARED_CONTEXT_TOKENS.toLong()) { "GGUF_CONTEXT_LENGTH" }
+        require(
+            declaredContextTokens in
+                minimumContextTokens.toLong()..MAX_DECLARED_CONTEXT_TOKENS.toLong()
+        ) {
+            "GGUF_CONTEXT_LENGTH"
+        }
     }
 
     @Synchronized

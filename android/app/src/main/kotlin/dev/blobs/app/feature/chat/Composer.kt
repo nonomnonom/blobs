@@ -1,8 +1,8 @@
 package dev.blobs.app.feature.chat
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.animation.core.animateColorAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -90,7 +90,7 @@ internal fun Composer(
         } else {
             MaterialTheme.colorScheme.outline
         },
-        animationSpec = tween(BlobsMotion.quick),
+        animationSpec = tween(BlobsMotion.QUICK),
         label = "composer-outline"
     )
     Surface(

@@ -14,34 +14,47 @@ internal data class LibraryScopeSnapshot(
         put("format", FORMAT)
         put("allReady", allReady)
         put("requested", JSONArray(requested))
-        put("searched", JSONArray().apply {
-            searched.forEach { library ->
-                put(JSONObject().apply {
-                    put("key", library.key)
-                    put("id", library.id)
-                    put("version", library.version)
-                    put("sha256", library.sha256)
-                    put("title", library.title)
-                    if (library.recordsSha256.isNotBlank()) {
-                        put("records_sha256", library.recordsSha256)
-                    }
-                })
+        put(
+            "searched",
+            JSONArray().apply {
+                searched.forEach { library ->
+                    put(
+                        JSONObject().apply {
+                            put("key", library.key)
+                            put("id", library.id)
+                            put("version", library.version)
+                            put("sha256", library.sha256)
+                            put("title", library.title)
+                            if (library.recordsSha256.isNotBlank()) {
+                                put("records_sha256", library.recordsSha256)
+                            }
+                        }
+                    )
+                }
             }
-        })
-        put("unavailable", JSONArray().apply {
-            unavailable.forEach { library ->
-                put(JSONObject().apply {
-                    put("selection", library.selection)
-                    put("reason", library.reason)
-                })
+        )
+        put(
+            "unavailable",
+            JSONArray().apply {
+                unavailable.forEach { library ->
+                    put(
+                        JSONObject().apply {
+                            put("selection", library.selection)
+                            put("reason", library.reason)
+                        }
+                    )
+                }
             }
-        })
+        )
     }.toString()
 
     companion object {
         private const val FORMAT = 1
 
-        fun capture(requestedScope: Set<String>?, packages: List<PackageEntity>): LibraryScopeSnapshot {
+        fun capture(
+            requestedScope: Set<String>?,
+            packages: List<PackageEntity>
+        ): LibraryScopeSnapshot {
             val requested = requestedScope.orEmpty().sorted()
             val libraries = packages.filter { it.kind == "library" }
             fun selected(pack: PackageEntity): Boolean = requestedScope == null || requested.any {

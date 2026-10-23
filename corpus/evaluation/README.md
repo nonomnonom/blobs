@@ -1,15 +1,17 @@
 # Evidence, not a test suite
 
-This directory holds inputs and tools for recording evidence after validation is
-re-enabled. It does not replace application contract tests and does not permit a
-host HTTP server, agent loop, model judge, or generated answer to become a
-product baseline.
+This directory holds inputs and tools for recording product evidence while
+validation is active. It does not replace application contract tests and does
+not permit a host HTTP server, agent loop, model judge, or generated answer to
+become a product baseline.
 
-## Rebuild status
+## Validation status
 
-No evaluator, build, benchmark, or test runs during the current rebuild. The
-commands and cases here are evidence contracts for the phase after the local
-vertical slice is complete, not proof for an unvalidated checkout.
+Builds, tests, benchmarks, and evaluators may run when their prerequisites are
+available. The commands and cases here define evidence contracts, not proof
+that the current checkout has passed. Preserve active processes and data
+preparation; record missing devices, packages, toolchains, credentials, and
+reproduction inputs as blockers.
 
 ## Ownership
 

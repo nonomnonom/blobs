@@ -14,11 +14,7 @@ import androidx.compose.ui.unit.dp
 import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-internal fun InlineCitation(
-    number: Int,
-    description: String,
-    onClick: () -> Unit
-) {
+internal fun InlineCitation(number: Int, description: String, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.size(BlobsDimens.inlineCitationTarget).semantics {

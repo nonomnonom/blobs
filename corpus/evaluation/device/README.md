@@ -1,9 +1,9 @@
 # Manual Android evidence capture
 
-Use this document only after the owner re-enables validation. Do not run a
-capture on an emulator to make a performance claim. Use the target Android
-device and record serial/fingerprint, ABI, and OS version. This activity is
-never a CI gate.
+Validation is active, but this capture requires a connected target Android
+device and verified model/library inputs. Do not run a capture on an emulator
+to make a performance claim. Record serial/fingerprint, ABI, and OS version.
+This activity is never a CI gate.
 
 ## Preparation
 

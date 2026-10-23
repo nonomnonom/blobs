@@ -28,8 +28,8 @@ internal object BlobsDimens {
 }
 
 internal object BlobsMotion {
-    const val quick = 160
-    const val standard = 220
+    const val QUICK = 160
+    const val STANDARD = 220
 }
 
 internal object BlobsComponentShapes {

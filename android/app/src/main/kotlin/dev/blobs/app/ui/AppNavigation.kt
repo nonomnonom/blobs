@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.ui.theme.BlobsComponentShapes

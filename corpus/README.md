@@ -40,9 +40,9 @@ uv sync --locked
 ```
 
 Python and dependency versions are pinned in `pyproject.toml` and `uv.lock`.
-The current repository-wide rebuild phase does not run tests or package builds.
-Keep the test suite for the later validation phase and run commands below only
-when the rebuild contract explicitly reaches package acceptance.
+The active production-validation phase permits focused tests and package builds.
+Run the smallest relevant checks for the change; a package build is candidate
+evidence only until source, rights, retrieval, and release-admission gates pass.
 
 ## Fetch reviewed records
 

@@ -304,12 +304,15 @@ class UserLibraryPackage(private val context: Context) {
         }
     }
 
-    private fun validMetadataText(value: String, maximumLength: Int, required: Boolean = false): Boolean =
-        value.length <= maximumLength &&
-            '\u0000' !in value &&
-            '\uFFFD' !in value &&
-            !value.hasUnpairedSurrogate() &&
-            (!required || value.any { !it.isWhitespace() })
+    private fun validMetadataText(
+        value: String,
+        maximumLength: Int,
+        required: Boolean = false
+    ): Boolean = value.length <= maximumLength &&
+        '\u0000' !in value &&
+        '\uFFFD' !in value &&
+        !value.hasUnpairedSurrogate() &&
+        (!required || value.any { !it.isWhitespace() })
 
     private fun String.hasUnpairedSurrogate(): Boolean {
         var index = 0
@@ -323,6 +326,7 @@ class UserLibraryPackage(private val context: Context) {
                 }
 
                 Character.isLowSurrogate(this[index]) -> return true
+
                 else -> index++
             }
         }
@@ -480,17 +484,18 @@ class UserLibraryPackage(private val context: Context) {
         }
     }
 
-    private fun sha256(file: File, checkActive: () -> Unit): String = file.inputStream().use { input ->
-        val digest = MessageDigest.getInstance("SHA-256")
-        val buffer = ByteArray(64 * 1024)
-        while (true) {
-            checkActive()
-            val count = input.read(buffer)
-            if (count < 0) break
-            digest.update(buffer, 0, count)
+    private fun sha256(file: File, checkActive: () -> Unit): String =
+        file.inputStream().use { input ->
+            val digest = MessageDigest.getInstance("SHA-256")
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                checkActive()
+                val count = input.read(buffer)
+                if (count < 0) break
+                digest.update(buffer, 0, count)
+            }
+            digest.digest().joinToString("") { "%02x".format(it) }
         }
-        digest.digest().joinToString("") { "%02x".format(it) }
-    }
 
     private data class ImportedDocument(
         val document: UserDocument,

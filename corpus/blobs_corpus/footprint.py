@@ -283,6 +283,7 @@ def catalog_storage_values(
             installed_payload_cap_bytes=installed_payload_cap_bytes,
             installed_payload_margin_bytes=installed_payload_cap_bytes - payload_bytes,
             installed_payload_cap_passes=payload_bytes < installed_payload_cap_bytes,
+            importer_payload_cap_passes=payload_bytes < installed_payload_cap_bytes,
         ),
     )
 

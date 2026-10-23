@@ -545,7 +545,11 @@ class NativeInferenceTest {
             assertTrue(container.work.answer(id, question, model, installed, null))
             report.put("generation_started", true)
             save()
-            container.database.conversations().saveDraft(id, "My next question stays here")
+            container.database.conversations().saveDraft(
+                id,
+                "My next question stays here",
+                System.currentTimeMillis()
+            )
             finished = withTimeoutOrNull(timeoutMs) {
                 container.work.state.first { !it.busy }
             } != null

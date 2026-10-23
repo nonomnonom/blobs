@@ -1,0 +1,96 @@
+{
+  "format": 1,
+  "id": "wikipedia-en-top-50k-retrieval-v1",
+  "library": {
+    "id": "wikipedia-en-top-50k",
+    "version": "2026-09.1",
+    "records_sha256": "b3018252dca61d9a6c06a467078e0272ea9ea9c00fc35324adaae4dff53cb994",
+    "payload_sha256": "74a7b8d152bad679f0c1a67c5473725b17dc27ed4b9ec34fc4fe5ed41f64df85"
+  },
+  "cases": [
+    {
+      "id": "photosynthesis-energy",
+      "question": "How do plants convert light into chemical energy?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-6a61ac687d4058d4ee4c4eb6d4db7a40"],
+      "expected_document_titles": ["Photosynthesis"]
+    },
+    {
+      "id": "earthquake-causes",
+      "question": "How does the sudden release of energy in Earth's crust cause an earthquake?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-f309732925c818d2c34eb304a7260185"],
+      "expected_document_titles": ["Earthquake"]
+    },
+    {
+      "id": "dna-structure",
+      "question": "What is DNA, and how are its two chains arranged?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-2fff187f6c9ba066bc8283a8f1f2feac"],
+      "expected_document_titles": ["DNA"]
+    },
+    {
+      "id": "inflation-purchasing-power",
+      "question": "Why does inflation reduce the purchasing power of money?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-454a6f88b5ae325cb3160425c12997f4"],
+      "expected_document_titles": ["Inflation"]
+    },
+    {
+      "id": "climate-change",
+      "question": "What is present-day climate change and how has Earth's temperature changed?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-24ef1a588aa8242ed43193766154fd5f"],
+      "expected_document_titles": ["Climate change"]
+    },
+    {
+      "id": "artificial-intelligence",
+      "question": "What capabilities are associated with artificial intelligence?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-aef977fc2141d0a33cb702dadf489df7"],
+      "expected_document_titles": ["Artificial intelligence"]
+    },
+    {
+      "id": "machine-learning",
+      "question": "How can algorithms learn from data without being explicitly programmed?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-ce155af0fb1cae77bb3c831bcd50375e"],
+      "expected_document_titles": ["Machine learning"]
+    },
+    {
+      "id": "vaccine-immunity",
+      "question": "How does a vaccine help the immune system recognize a disease?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-c95c1b3c81a49f92b2978566e4d42e08"],
+      "expected_document_titles": ["Vaccine"]
+    },
+    {
+      "id": "water-cycle",
+      "question": "How does water move between reservoirs on Earth?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-a9405e312481190c19987c8a6a1a55fb"],
+      "expected_document_titles": ["Water cycle"]
+    },
+    {
+      "id": "solar-cell",
+      "question": "How does a photovoltaic cell turn light into electricity?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-03823aae214296489d43e52e78bec9c3"],
+      "expected_document_titles": ["Solar cell"]
+    },
+    {
+      "id": "roman-empire",
+      "question": "When did the Western Roman Empire fall, and how long did the Eastern Empire continue?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-834db4f335ade0f8381e3e0cb8cbdf68"],
+      "expected_document_titles": ["Roman Empire"]
+    },
+    {
+      "id": "indonesia-geography",
+      "question": "Where is Indonesia and what makes it an archipelagic state?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-7b4adfcf1c6b9a147d01663455f580ea"],
+      "expected_document_titles": ["Indonesia"]
+    }
+  ]
+}

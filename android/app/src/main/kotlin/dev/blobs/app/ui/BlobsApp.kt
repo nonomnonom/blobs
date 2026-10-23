@@ -66,9 +66,9 @@ import dev.blobs.app.feature.settings.SettingsScreen
 import dev.blobs.app.feature.settings.StorageScreen
 import dev.blobs.app.feature.setup.SetupScreen
 import dev.blobs.app.feature.welcome.WelcomeScreen
-import dev.blobs.app.ui.theme.BlobsTheme
 import dev.blobs.app.ui.theme.BlobsDimens
 import dev.blobs.app.ui.theme.BlobsMotion
+import dev.blobs.app.ui.theme.BlobsTheme
 
 @Composable
 fun BlobsApp(container: AppContainer) {
@@ -232,7 +232,7 @@ fun BlobsApp(container: AppContainer) {
                                     Crossfade(
                                         state.page to reviewingImport,
                                         animationSpec = tween(
-                                            if (lessMotion) 0 else BlobsMotion.standard
+                                            if (lessMotion) 0 else BlobsMotion.STANDARD
                                         ),
                                         label = "page",
                                         modifier = Modifier.weight(1f)
@@ -264,16 +264,18 @@ fun BlobsApp(container: AppContainer) {
                                                             stringResource(R.string.ask_question)
                                                         val newConversation =
                                                             model::newConversation
-                                                        if (maxWidth >= BlobsDimens.twoPaneConversationWidth) {
+                                                        val twoPaneColumn = Modifier
+                                                            .widthIn(
+                                                                BlobsDimens.historyPaneMinWidth,
+                                                                BlobsDimens.historyPaneMaxWidth
+                                                            )
+                                                            .fillMaxSize()
+                                                            .padding(end = 12.dp)
+                                                        if (maxWidth >=
+                                                            BlobsDimens.twoPaneConversationWidth
+                                                        ) {
                                                             Row(Modifier.fillMaxSize()) {
-                                                                Column(
-                                                                    Modifier.widthIn(
-                                                                        min = BlobsDimens.historyPaneMinWidth,
-                                                                        max = BlobsDimens.historyPaneMaxWidth
-                                                                    )
-                                                                        .fillMaxSize()
-                                                                        .padding(end = 12.dp)
-                                                                ) {
+                                                                Column(twoPaneColumn) {
                                                                     Row(
                                                                         Modifier.fillMaxWidth()
                                                                             .padding(
