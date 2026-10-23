@@ -64,20 +64,20 @@ class CopyDensityTest {
     }
 
     @Test
-    fun `target surfaces keep the explanation off the first screen`() {
+    fun `every surface keeps the explanation off the first screen`() {
         val offenders = mutableListOf<String>()
-        TARGET_SURFACES.forEach { path ->
-            val file = File(moduleDir(), "src/main/kotlin/dev/blobs/app/$path")
-            assertTrue("missing target surface: $path", file.isFile)
+        sourceFiles().forEach { file ->
             val source = file.readText()
-            val rendered = source.replace(SET_OF, "")
+            val controls = CONTROL.findAll(source).count()
+            if (controls == 0) return@forEach
+            val rendered = source.replace(SET_OF, "").replace(COMPARISON, "")
             val words = Strings.refs(rendered)
                 .filterNot { it.endsWith("_detail") }
                 .sumOf { words(strings[it] ?: "") }
-            val controls = CONTROL.findAll(source).count()
-            val ratio = if (controls == 0) Double.MAX_VALUE else words.toDouble() / controls
+            val ratio = words.toDouble() / controls
             if (ratio > MAX_WORDS_PER_CONTROL) {
-                offenders += "$path: $words words / $controls controls = ${"%.1f".format(ratio)}"
+                val detail = "$words words / $controls controls = ${"%.1f".format(ratio)}"
+                offenders += "${file.name}: $detail"
             }
         }
         val report = offenders.joinToString("\n")
@@ -137,13 +137,6 @@ class CopyDensityTest {
         const val MAX_HEADING_WORDS = 4
         const val MAX_LABEL_WORDS = 3
         const val MAX_WORDS_PER_CONTROL = 8.0
-        val TARGET_SURFACES = listOf(
-            "feature/settings/InfoScreens.kt",
-            "feature/library/ImportScreen.kt",
-            "feature/setup/SetupScreen.kt",
-            "feature/chat/TurnOutcome.kt",
-            "feature/chat/GroundingChain.kt"
-        )
         val COMMENT = Regex("<!--[\\s\\S]*?-->")
         val STRING = Regex("<string name=\"([^\"]+)\"[^>]*>([\\s\\S]*?)</string>")
         val PLURALS = Regex("<plurals name=\"([^\"]+)\">([\\s\\S]*?)</plurals>")
@@ -159,6 +152,9 @@ class CopyDensityTest {
                 "TextField|onClick =)"
         )
         val SET_OF = Regex("setOf\\([\\s\\S]*?\\)")
+
+        /** An equality against a resource is classification, not copy the reader sees. */
+        val COMPARISON = Regex("[!=]= R\\.(?:string|plurals)\\.[a-z0-9_]+")
 
         fun words(value: String): Int = value
             .replace("\\n", " ")

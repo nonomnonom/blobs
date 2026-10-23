@@ -227,6 +227,26 @@ internal fun AppHeader(
     }
 }
 
+private fun pageTitle(page: Page): Int = when (page) {
+    Page.CHAT -> R.string.chat_title
+    Page.WELCOME -> R.string.app_wordmark
+    Page.SETUP -> R.string.setup_progress_title
+    Page.IMPORT -> R.string.import_header
+    Page.HISTORY -> R.string.history
+    Page.DATA -> R.string.conversation_data
+    Page.LIBRARY -> R.string.library
+    Page.BROWSE -> R.string.browse
+    Page.SOURCES -> R.string.answer_libraries
+    Page.READER -> R.string.source_details
+    Page.MODELS -> R.string.models
+    Page.SETTINGS -> R.string.settings
+    Page.APPEARANCE -> R.string.appearance
+    Page.STORAGE -> R.string.storage
+    Page.PRIVACY -> R.string.privacy
+    Page.HELP -> R.string.help
+    Page.ABOUT -> R.string.about
+}
+
 @Composable
 private fun DrawerEntry(
     label: @Composable () -> Unit,

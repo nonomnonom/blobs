@@ -12,6 +12,8 @@ delegates to so research steps, evidence, and grounding expand identically. Stri
 this way are named `*_detail`.
 
 Grounding becomes one line ("Sourced · 3 cited") instead of a titled panel; its chain is
-unchanged and still contains only what the turn recorded. Copy is now budgeted by
+unchanged and still contains only what the turn recorded. The empty chat, welcome, import
+review, and settings/data screens follow the same shape: a state line, the numbers, one
+action, and a disclosure where a paragraph used to sit. Copy is now budgeted by
 `CopyDensityTest`: no string over 25 words, headings at most 4 words, labels at most 3, and
-at most 8 visible words per control on the five densest surfaces.
+at most 8 visible words per control in every source file that renders a control.

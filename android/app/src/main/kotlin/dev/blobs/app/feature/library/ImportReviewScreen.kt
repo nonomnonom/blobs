@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,6 +27,7 @@ import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.ui.AppUiState
 import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.fileSize
@@ -37,6 +40,7 @@ fun ImportReviewScreen(state: AppUiState, packages: List<PackageEntity>, model: 
     val manifest = state.manifest
     val duplicate = packages.any { it.key == manifest?.key }
     val otherEdition = packages.any { it.packageId == manifest?.id && it.key != manifest.key }
+    var checksOpen by rememberSaveable(manifest?.key) { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
@@ -90,16 +94,33 @@ fun ImportReviewScreen(state: AppUiState, packages: List<PackageEntity>, model: 
                     Text(manifest.license, style = MaterialTheme.typography.bodyLarge)
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Text(
-                    stringResource(R.string.import_trust),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (!duplicate && otherEdition) {
+                DetailDisclosure(
+                    open = checksOpen,
+                    onOpenChange = { checksOpen = it },
+                    summary = {
+                        Text(
+                            stringResource(R.string.import_checks),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                ) {
                     Text(
-                        stringResource(R.string.older_editions_kept),
-                        style = MaterialTheme.typography.bodyMedium
+                        stringResource(R.string.import_trust_detail),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (duplicate) {
+                        Text(
+                            stringResource(R.string.already_added_detail),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else if (otherEdition) {
+                        Text(
+                            stringResource(R.string.older_editions_detail),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
@@ -110,13 +131,6 @@ fun ImportReviewScreen(state: AppUiState, packages: List<PackageEntity>, model: 
                 vertical = BlobsDimens.sm
             )
         ) {
-            if (duplicate) {
-                Text(
-                    stringResource(R.string.already_added),
-                    modifier = Modifier.padding(bottom = 12.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
             PrimaryAction(
                 R.string.add,
                 manifest != null && !duplicate && !work.busy,

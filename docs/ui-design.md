@@ -53,7 +53,8 @@ whose body is the sentences that used to be paragraphs.
   contract: it keeps explanation out of the visible copy budget.
 - The budget is enforced by `CopyDensityTest`, not by review: no shipped string
   over 25 words, headings at most 4 words, primary and icon labels at most 3
-  words, and at most 8 visible words per control on the densest surfaces.
+  words, and at most 8 visible words per control on every source file that
+  renders a control.
 - Labels are verbs and sentences are not: "Start chatting", not "Get started
   with your first question".
 

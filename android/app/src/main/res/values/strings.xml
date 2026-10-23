@@ -2,5 +2,5 @@
 <resources>
   <string name="app_name">Blobs</string>
   <string name="app_wordmark" translatable="false">blobs</string>
-  <string name="preferences_unavailable">Your appearance settings couldn’t be loaded. Using your phone’s theme for now.</string>
+  <string name="preferences_unavailable">Appearance could not load.</string>
 </resources>

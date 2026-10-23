@@ -13,6 +13,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +27,7 @@ import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.ui.AppUiState
 import dev.blobs.app.ui.AppViewModel
-import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Mascot
 import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.PrimaryAction
@@ -36,6 +38,8 @@ internal fun HomeContent(state: AppUiState, work: WorkState, ready: Boolean, mod
     var focused by androidx.compose.runtime.remember {
         androidx.compose.runtime.mutableStateOf(false)
     }
+    var howOpen by rememberSaveable { mutableStateOf(false) }
+    var whyOpen by rememberSaveable { mutableStateOf(false) }
     Column(
         Modifier.fillMaxWidth().padding(
             horizontal = BlobsDimens.page,
@@ -62,22 +66,11 @@ internal fun HomeContent(state: AppUiState, work: WorkState, ready: Boolean, mod
         Composer(state, work, false, model, onFocusChange = { focused = it })
         if (ready) {
             Column(verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs)) {
-                androidx.compose.foundation.layout.FlowRow(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs)
-                ) {
-                    Text(
-                        stringResource(R.string.home_questions),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        stringResource(R.string.offline_ready),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    stringResource(R.string.offline_ready),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 listOf(R.string.question_printing, R.string.question_heat).forEach { questionId ->
                     val question = stringResource(questionId)
                     Surface(
@@ -106,19 +99,41 @@ internal fun HomeContent(state: AppUiState, work: WorkState, ready: Boolean, mod
                         }
                     }
                 }
-                Text(
-                    stringResource(R.string.home_sources_hint),
-                    Modifier.padding(top = 12.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                DetailDisclosure(
+                    open = howOpen,
+                    onOpenChange = { howOpen = it },
+                    summary = {
+                        Text(
+                            stringResource(R.string.home_how),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                ) {
+                    Text(
+                        stringResource(R.string.home_sources_detail),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         } else {
             Text(
                 stringResource(R.string.setup_missing),
                 style = MaterialTheme.typography.titleLarge
             )
-            Body(R.string.setup_missing_body)
+            DetailDisclosure(
+                open = whyOpen,
+                onOpenChange = { whyOpen = it },
+                summary = {
+                    Text(
+                        stringResource(R.string.home_why_model),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            ) {
+                Text(stringResource(R.string.setup_missing_detail))
+            }
             PrimaryAction(R.string.setup_library) { model.navigate(Page.SETUP) }
         }
     }

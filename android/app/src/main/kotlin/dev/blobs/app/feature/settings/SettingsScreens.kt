@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import dev.blobs.app.data.preferences.ThemeMode
 import dev.blobs.app.ui.AppUiState
 import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.MenuRow
 import dev.blobs.app.ui.Page
@@ -119,7 +121,6 @@ fun SettingsScreen(model: AppViewModel, themeMode: ThemeMode) {
 @Composable
 fun AppearanceScreen(state: AppUiState, theme: ThemeMode, model: AppViewModel) {
     ScrollPage {
-        Body(R.string.appearance_body)
         val themes = listOf(
             ThemeMode.LIGHT to R.string.theme_light,
             ThemeMode.DARK to R.string.theme_dark,
@@ -169,7 +170,6 @@ fun AppearanceScreen(state: AppUiState, theme: ThemeMode, model: AppViewModel) {
             Text(stringResource(R.string.less_motion), Modifier.weight(1f))
             Switch(checked = state.options.reducedMotion, onCheckedChange = null)
         }
-        Body(R.string.less_motion_body)
     }
 }
 
@@ -279,9 +279,9 @@ private fun ThemeOption(
 @Composable
 fun DataScreen(busy: Boolean, model: AppViewModel, export: () -> Unit) {
     var deleting by remember { mutableStateOf(false) }
+    var exportOpen by rememberSaveable { mutableStateOf(false) }
     ScrollPage {
         Heading(R.string.data_heading)
-        Body(R.string.export_body)
         val conversations by model.conversations.collectAsStateWithLifecycle()
         val count = conversations.count { it.title.isNotBlank() || it.draft.isNotBlank() }
         Surface(
@@ -307,6 +307,23 @@ fun DataScreen(busy: Boolean, model: AppViewModel, export: () -> Unit) {
             }
         }
         if (busy) Body(R.string.busy_help)
+        DetailDisclosure(
+            open = exportOpen,
+            onOpenChange = { exportOpen = it },
+            summary = {
+                Text(
+                    stringResource(R.string.export_holds),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        ) {
+            Text(
+                stringResource(R.string.export_detail),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         PrimaryAction(R.string.export, count > 0, onClick = export)
         HorizontalDivider(Modifier.padding(top = 20.dp))
         Text(

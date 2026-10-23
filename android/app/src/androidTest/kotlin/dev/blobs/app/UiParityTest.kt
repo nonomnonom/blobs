@@ -108,7 +108,7 @@ class UiParityTest {
             compose.waitUntil(10_000) { model.state.value.manifest != null }
             fontScale.set(2f)
             compose.onNodeWithText(
-                text(R.string.already_added)
+                text(R.string.package_already_added)
             ).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.add)).assertIsNotEnabled()
             compose.onNodeWithText(text(R.string.cancel)).performClick()

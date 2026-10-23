@@ -29,7 +29,8 @@
     <string name="library_update_policy">Updates: %1$s</string>
     <string name="library_limitations">Limits: %1$s</string>
     <string name="library_source_origin">Source: %1$s</string>
-    <string name="home_sources_hint">Blobs uses your libraries when they help. You can also chat without one.</string>
+    <string name="home_sources_detail">Blobs uses your libraries when they help. You can also chat without one.</string>
+    <string name="home_how">How answers work</string>
     <string name="collection_export_saved">Your collection has been exported.</string>
     <string name="setup_ready_title">A world of ideas.\nNow in your pocket.</string>
     <string name="import_title">Adding it</string>
@@ -51,7 +52,7 @@
     <string name="import_cancel_action">Stop adding</string>
     <string name="return_setup">Continue setup</string>
     <string name="view_import">Continue setup</string>
-    <string name="older_editions_kept">An earlier edition is already saved. It will stay here.</string>
+    <string name="older_editions_detail">An earlier edition is already saved. It will stay here.</string>
     <string name="setup_progress_title">Set up Blobs</string>
     <string name="setup_model_step">Your model</string>
     <string name="setup_library_step">Your source library</string>
@@ -75,12 +76,12 @@
     <string name="home_title">What are you\ncurious about?</string>
     <string name="question_hint">Ask a question…</string>
     <string name="follow_up_hint">Ask a follow-up…</string>
-    <string name="home_questions">Try a little wondering</string>
-    <string name="question_printing">How did printing change the spread of ideas?</string>
-    <string name="question_heat">Trees or cool roofs: what helps a hot neighbourhood?</string>
+    <string name="question_printing">How did printing change ideas?</string>
+    <string name="question_heat">Do trees cool a hot street?</string>
     <string name="offline_ready">On-device chat · works without a library</string>
     <string name="setup_missing">Choose a model to get started.</string>
-    <string name="setup_missing_body">Libraries add passages and citations to answers, and can be added any time.</string>
+    <string name="setup_missing_detail">Libraries add passages and citations to answers, and can be added any time.</string>
+    <string name="home_why_model">Why a model?</string>
     <string name="setup_library">Explore libraries</string>
     <string name="chat_title">Chat</string>
     <string name="latest">Latest</string>
@@ -214,7 +215,6 @@
     <string name="keep_model">Keep at least one model. Add another before removing this one.</string>
     <string name="settings">Settings</string>
     <string name="appearance">Appearance</string>
-    <string name="appearance_body">Choose how Blobs looks and feels.</string>
     <string name="model_memory_warning">A smaller model is a better fit for this phone.</string>
     <string name="model_context_incompatible">This model does not support Blobs’ 4,096-token reading context. Choose a model with at least 4,096 context tokens.</string>
     <string name="model_incompatible_detail">This model does not include a usable chat template. Choose a model packaged for chat.</string>
@@ -223,7 +223,6 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="less_motion">Less motion</string>
-    <string name="less_motion_body">Keep page changes still and simple.</string>
     <string name="storage">Storage &amp; setup</string>
     <string name="storage_body">Your models and sources stay on this phone.</string>
     <string name="checking_file">Checking your file…</string>
@@ -237,12 +236,13 @@
     <string name="review_import">Ready to add?</string>
     <string name="review_package">Review file</string>
     <string name="package_already_added">Already in your library</string>
-    <string name="import_trust">Only add files from sources you trust. Blobs checks that a file has not changed, but cannot verify who made it.</string>
+    <string name="import_trust_detail">Only add files from sources you trust. Blobs checks that a file has not changed, but cannot verify who made it.</string>
+    <string name="import_checks">What Blobs checks</string>
     <string name="installed_size">Installed size</string>
-    <string name="install_space">Keep at least %1$s free to install. Existing files stay in place.</string>
+    <string name="install_space">Keep %1$s free to install.</string>
     <string name="package_edition">Version %1$s</string>
     <string name="package_license">License &amp; credits</string>
-    <string name="already_added">This exact file is already saved.</string>
+    <string name="already_added_detail">This exact file is already saved.</string>
     <string name="add">Add to Blobs</string>
     <string name="cancel">Cancel</string>
     <string name="pause_import">Pause adding</string>
@@ -251,13 +251,14 @@
     <string name="delete_conversation">Delete this conversation?</string>
     <string name="delete_conversation_body">Its questions, answers, sources, and draft will be removed from this phone. This cannot be undone.</string>
     <string name="delete_all">Delete all conversations</string>
-    <string name="delete_all_body">Every conversation and draft will be removed. Your models, library, and appearance stay. Export a copy first if you want to keep your words.</string>
+    <string name="delete_all_body">Conversations and drafts will be removed. Models and library stay.</string>
     <string name="delete">Delete</string>
     <string name="rename">Rename</string>
     <string name="conversation_title">Conversation name</string>
     <string name="save">Save</string>
     <string name="export">Export conversations</string>
-    <string name="export_body">Save a readable Markdown file with your answers and source credits. Choose a local folder to keep the export on this phone.</string>
+    <string name="export_detail">Save a readable Markdown file with your answers and source credits. Choose a local folder to keep the export on this phone.</string>
+    <string name="export_holds">What the export holds</string>
     <string name="privacy">Privacy</string>
     <string name="help">Help</string>
     <string name="about">About Blobs</string>
@@ -280,7 +281,8 @@
     <string name="dismiss">Dismiss</string>
     <string name="loading">Opening your space…</string>
     <string name="recovery_copy">Save a copy</string>
-    <string name="recovery_copy_body">Save the original conversation and settings files for recovery. This copy contains your private data. Blobs will not reset anything.</string>
+    <string name="recovery_copy_detail">Save the original conversation and settings files for recovery. This copy contains your private data. Blobs will not reset anything.</string>
+    <string name="recovery_copy_holds">What the copy holds</string>
     <string name="import_recovery_failed">This file could not be restored. Your conversations and saved models are still here.</string>
-    <string name="busy_help">Let the current answer or download finish before changing these files.</string>
+    <string name="busy_help">Finish the current task first.</string>
 </resources>

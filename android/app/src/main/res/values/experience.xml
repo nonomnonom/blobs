@@ -7,9 +7,9 @@
     <string name="setup_header">Set up Blobs</string>
     <string name="setup_step">Step %1$d of 3</string>
     <string name="welcome_headline">Stay curious.\nGo anywhere.</string>
-    <string name="welcome_description">A world of knowledge, right here on your phone. Ready whenever curiosity finds you.</string>
+    <string name="welcome_description">Every answer stays on your phone.</string>
     <string name="welcome_start">Get started</string>
-    <string name="welcome_footer">Offline answers. Your questions stay yours.</string>
+    <string name="welcome_footer">Offline. Private. Yours.</string>
     <string name="compare_models">Compare other models</string>
     <string name="hide_models">Hide other models</string>
     <string name="your_choice">Your choice</string>

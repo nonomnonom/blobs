@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -89,6 +90,7 @@ fun BlobsApp(container: AppContainer) {
     val conversations by model.conversations.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var exportingCollection by remember { mutableStateOf<String?>(null) }
+    var recoveryOpen by rememberSaveable { mutableStateOf(false) }
     val documentContract = remember {
         object : ActivityResultContracts.OpenDocument() {
             override fun createIntent(context: Context, input: Array<String>): Intent =
@@ -190,7 +192,15 @@ fun BlobsApp(container: AppContainer) {
                                         Notice(it, model::dismissNotice)
                                     }
                                     if (state.notice != null || work.notice != null) {
-                                        Body(R.string.recovery_copy_body)
+                                        DetailDisclosure(
+                                            open = recoveryOpen,
+                                            onOpenChange = { recoveryOpen = it },
+                                            summary = {
+                                                Text(stringResource(R.string.recovery_copy_holds))
+                                            }
+                                        ) {
+                                            Text(stringResource(R.string.recovery_copy_detail))
+                                        }
                                         PrimaryAction(R.string.recovery_copy) {
                                             recoveryExporter.launch("blobs-recovery.zip")
                                         }
@@ -403,26 +413,6 @@ fun BlobsApp(container: AppContainer) {
             }
         }
     }
-}
-
-internal fun pageTitle(page: Page): Int = when (page) {
-    Page.CHAT -> R.string.chat_title
-    Page.WELCOME -> R.string.app_wordmark
-    Page.SETUP -> R.string.setup_progress_title
-    Page.IMPORT -> R.string.import_header
-    Page.HISTORY -> R.string.history
-    Page.DATA -> R.string.conversation_data
-    Page.LIBRARY -> R.string.library
-    Page.BROWSE -> R.string.browse
-    Page.SOURCES -> R.string.answer_libraries
-    Page.READER -> R.string.source_details
-    Page.MODELS -> R.string.models
-    Page.SETTINGS -> R.string.settings
-    Page.APPEARANCE -> R.string.appearance
-    Page.STORAGE -> R.string.storage
-    Page.PRIVACY -> R.string.privacy
-    Page.HELP -> R.string.help
-    Page.ABOUT -> R.string.about
 }
 
 private class LocalCreateDocument(mimeType: String) :

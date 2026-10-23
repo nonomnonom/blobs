@@ -95,7 +95,7 @@ class DesignCaptureTest {
 
                 "help" -> text(R.string.help_heading)
 
-                "about" -> text(R.string.about_description)
+                "about" -> text(R.string.about_how)
 
                 else -> text(R.string.models)
             }
