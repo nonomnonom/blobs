@@ -8,7 +8,7 @@ from urllib.parse import quote, urlsplit, unquote
 
 from .records import validate_document
 
-EXTRACTOR_VERSION = "4"
+EXTRACTOR_VERSION = "5"
 FURNITURE = (
     "script,style,nav,footer,form,.navbox,.vertical-navbox,.mw-editsection,"
     ".mw-jump-link,.toc,.catlinks,.printfooter,.mw-cite-backlink,.noprint,"
@@ -177,6 +177,69 @@ def _leading_infoboxes(root):
     return details
 
 
+def _stackexchange_signature(post):
+    """Author name and posting date of one Stack Exchange post."""
+    signature = post.css_first(".post-signature")
+    if signature is None:
+        return "", ""
+    link = signature.css_first(".s-user-card--link")
+    stamp = signature.css_first("time[datetime]")
+    return (clean(link.text()) if link is not None else ""), (
+        clean(stamp.text()) if stamp is not None else ""
+    )
+
+
+def _stackexchange_post(post):
+    body = post.css_first(".js-post-body")
+    if body is None:
+        return ""
+    return "\n\n".join(text for text in _blocks(body) if text.strip())
+
+
+def _stackexchange_body(tree):
+    """Question and answers with per-post attribution instead of site chrome."""
+    question = tree.css_first("#question")
+    if question is None:
+        raise ValueError("Missing Stack Exchange question page")
+    question_id = question.attributes.get("data-questionid", "") or ""
+    if not re.fullmatch(r"\d+", question_id):
+        raise ValueError("Missing Stack Exchange question identity")
+    question_text = _stackexchange_post(question)
+    if not question_text:
+        raise ValueError("Missing Stack Exchange question body")
+    answers = tree.css(".answer")
+    asker, asked = _stackexchange_signature(question)
+    header = ["Asked" + (f" by {asker}" if asker else "")]
+    if asked:
+        header.append(asked)
+    header.append(f"{len(answers)} answer" + ("" if len(answers) == 1 else "s"))
+    score = question.attributes.get("data-score", "") or ""
+    if re.fullmatch(r"-?\d+", score):
+        header.append(f"question score {score}")
+    parts = [" · ".join(header), question_text]
+    for index, answer in enumerate(answers, start=1):
+        text = _stackexchange_post(answer)
+        if not text:
+            continue
+        heading = [f"Answer {index}"]
+        score = answer.attributes.get("data-score", "") or ""
+        if re.fullmatch(r"-?\d+", score):
+            heading.append(f"score {score}")
+        if "accepted-answer" in (answer.attributes.get("class") or "").split():
+            heading.append("accepted")
+        author, date = _stackexchange_signature(answer)
+        if author:
+            heading.append(f"by {author}")
+        if date:
+            heading.append(date)
+        answer_id = answer.attributes.get("data-answerid", "") or ""
+        if re.fullmatch(r"\d+", answer_id):
+            heading.append(f"a/{answer_id}")
+        parts.append("== " + " · ".join(heading) + " ==")
+        parts.append(text)
+    return "\n\n".join(parts), dict(question_id=question_id, answers=len(answers))
+
+
 def article(html: bytes, title: str, path: str, lock: dict) -> dict:
     from selectolax.lexbor import LexborHTMLParser
 
@@ -214,39 +277,61 @@ def article(html: bytes, title: str, path: str, lock: dict) -> dict:
         node.replace_with(annotation.text() if annotation else node.text())
     for node in tree.css("img.mwe-math-fallback-image-inline,img.mwe-math-fallback-image-display"):
         node.replace_with(node.attributes.get("alt", ""))
-    root = tree.css_first(".mw-parser-output")
-    if root is None:
-        root = tree.css_first("#mw-content-text")
-    if root is None:
-        root = tree.body
-    if root is None:
-        raise ValueError("Missing article body")
-    details = _leading_infoboxes(root)
-    moved_infoboxes = len(details)
+    project = str(lock.get("id", "")).split("-")[0]
+    moved_infoboxes = 0
+    exchange = None
+    if project == "stackexchange":
+        body, exchange = _stackexchange_body(tree)
+    else:
+        root = tree.css_first(".mw-parser-output")
+        if root is None:
+            root = tree.css_first("#mw-content-text")
+        if root is None:
+            root = tree.body
+        if root is None:
+            raise ValueError("Missing article body")
+        details = _leading_infoboxes(root)
+        moved_infoboxes = len(details)
 
-    def ordered_blocks():
-        yield from _blocks(root, details=details)
-        if details:
-            yield "== Article details =="
-            yield from details
+        def ordered_blocks():
+            yield from _blocks(root, details=details)
+            if details:
+                yield "== Article details =="
+                yield from details
 
-    body = bounded_join((text for text in ordered_blocks() if text.strip()), "\n\n")
+        body = bounded_join((text for text in ordered_blocks() if text.strip()), "\n\n")
     # A stable URL identifies the article; the lock + ZIM path identify its
     # actual snapshot. Do not invent a per-article revision or modified date.
     article_path = path[2:] if path.startswith("A/") else path
     wiki_host = lock.get("wiki_host", "en.wikipedia.org")
-    url = f"https://{wiki_host}/wiki/" + quote(article_path, safe="/()_,:-")
-    parsed = urlsplit(canonical_url)
-    if parsed.scheme == "https" and parsed.netloc == wiki_host and parsed.path.startswith("/wiki/"):
-        url = canonical_url
+    if project == "stackexchange":
+        # Stack Exchange has no /wiki/ path; the archive path is the site path.
+        url = f"https://{wiki_host}/" + quote(article_path, safe="/()_,:-")
+        history_url = f"https://{wiki_host}/posts/{exchange['question_id']}/revisions"
+    else:
+        url = f"https://{wiki_host}/wiki/" + quote(article_path, safe="/()_,:-")
+        parsed = urlsplit(canonical_url)
+        if (
+            parsed.scheme == "https"
+            and parsed.netloc == wiki_host
+            and parsed.path.startswith("/wiki/")
+        ):
+            url = canonical_url
+        history_url = url + "?action=history"
     revision = config.get("wgCurRevisionId")
     revision = revision if isinstance(revision, int) and revision > 0 else None
+    normalization = dict(
+        aria_navigation_nodes_removed=navigation_count,
+        leading_infoboxes_moved=moved_infoboxes,
+    )
+    if exchange:
+        normalization.update(answers=exchange["answers"], question_id=exchange["question_id"])
     item = dict(
         id="wiki-" + hashlib.sha256(url.encode()).hexdigest()[:32],
         title=clean(title),
         publisher=lock["publisher"],
         url=url,
-        license=lock["license"] + " Attribution/history: " + url + "?action=history",
+        license=lock["license"] + " Attribution/history: " + history_url,
         updated="Snapshot " + lock["edition"],
         saved=lock["verified_date"],
         collection=lock["collection"],
@@ -257,14 +342,11 @@ def article(html: bytes, title: str, path: str, lock: dict) -> dict:
             html_sha256=hashlib.sha256(html).hexdigest(),
             body_sha256=hashlib.sha256(body.encode()).hexdigest(),
             extractor=EXTRACTOR_VERSION,
-            normalization=dict(
-                aria_navigation_nodes_removed=navigation_count,
-                leading_infoboxes_moved=moved_infoboxes,
-            ),
+            normalization=normalization,
             revision_id=revision,
             revision_url=f"https://{wiki_host}/w/index.php?oldid={revision}" if revision else None,
             categories=config.get("wgCategories", []),
-            history_url=url + "?action=history",
+            history_url=history_url,
             date_precision="archive edition; per-article modification date unavailable",
         ),
     )

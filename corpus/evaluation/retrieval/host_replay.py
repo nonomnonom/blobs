@@ -19,7 +19,7 @@ from blobs_corpus.names import name_key
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
 # Single-library parity compares exact passage identities and text hashes.
-LIBRARY_STORE_SHA256 = "3a1d7f167f0e09ebdc7fb4c45b536b8ef7da2f20e6875c24f7047b18491fdd12"
+LIBRARY_STORE_SHA256 = "6c44e154b496ebe2f601c74583fd2f3f3224650dff77c60a64eab4acf122354a"
 QUERY_SHA256 = "c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68"
 STOP_WORDS = {
     "the",
