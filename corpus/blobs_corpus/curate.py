@@ -11,12 +11,13 @@ from .acquire import digest
 from .extract import verified_shards, write_json, write_lines
 from .records import documents
 
-SUPPORTED_SOURCES = {
-    "wikipedia-en-all-nopic",
-    "wikipedia-en-top",
-    "wikipedia-en-top1m-mini",
-    "wikivoyage-en-all-nopic",
-}
+# The review policy is path-based and language-agnostic, so it is approved per
+# source project, not per individual archive edition.
+SUPPORTED_PROJECTS = {"wikipedia", "wikisource", "wikivoyage", "stackexchange"}
+
+
+def project(source_id: str) -> str:
+    return str(source_id).split("-")[0]
 
 
 def exclusion(document):
@@ -34,7 +35,12 @@ def curate(source: Path, output: Path):
     original = verified_shards(source)
     if not original["complete"]:
         raise ValueError("Finish extraction before review")
-    if original["source"]["id"] not in SUPPORTED_SOURCES or original.get("curation"):
+    reviewed_projects = [entry["id"] for entry in original.get("archives", [])] or [
+        original["source"]["id"]
+    ]
+    if any(project(name) not in SUPPORTED_PROJECTS for name in reviewed_projects) or original.get(
+        "curation"
+    ):
         raise ValueError(
             "This review policy applies once to a supported raw Kiwix article extraction"
         )

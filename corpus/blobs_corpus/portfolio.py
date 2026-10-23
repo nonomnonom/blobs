@@ -38,6 +38,10 @@ def install_identity(manifest: dict) -> tuple[str, str]:
             f"Supply language policy: Blobs publishes English knowledge only, and this edition is "
             f"{tag!r}. Categories grow by subject, not by a per-language edition of one project."
         )
+    lane = manifest.get("lane")
+    if isinstance(lane, str) and lane:
+        # A subject lane spans several archives, so the lane itself holds the slot.
+        return lane, "eng"
     return source_id.split("-")[0], "eng"
 
 
