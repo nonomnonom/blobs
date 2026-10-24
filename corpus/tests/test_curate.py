@@ -88,7 +88,8 @@ class StackExchangeReviewTests(unittest.TestCase):
             exclusion(
                 page(
                     "A_History",
-                    "The text begins in earnest.\n\n" + "x" * 600
+                    "The text begins in earnest.\n\n"
+                    + "x" * 600
                     + " Versions of this work include: a later printing.",
                 ),
                 "wikisource",

@@ -164,10 +164,14 @@ def validate_retrieval_cases(entry: dict, path: Path) -> None:
             raise ValueError(f"Retrieval case is invalid: {path}")
         ids.add(case_id)
         document_ids = case.get("expected_document_ids", [])
-        if not isinstance(document_ids, list) or len(document_ids) > 16 or any(
-            not isinstance(document_id, str)
-            or not re.fullmatch(r"[a-zA-Z0-9_-]{1,100}", document_id)
-            for document_id in document_ids
+        if (
+            not isinstance(document_ids, list)
+            or len(document_ids) > 16
+            or any(
+                not isinstance(document_id, str)
+                or not re.fullmatch(r"[a-zA-Z0-9_-]{1,100}", document_id)
+                for document_id in document_ids
+            )
         ):
             raise ValueError(f"Retrieval case has invalid document IDs: {path}")
         if (expectation == "hit") != bool(document_ids):
@@ -197,9 +201,7 @@ def verify_staged_package(path: Path, item: dict) -> None:
     if manifest["kind"] == "library" and not re.fullmatch(
         r"[a-f0-9]{64}", manifest.get("records_sha256", "")
     ):
-        raise ValueError(
-            f"New library package lacks a normalized records SHA-256: {path.name}"
-        )
+        raise ValueError(f"New library package lacks a normalized records SHA-256: {path.name}")
 
 
 def read_release_admissions(path: Path = SUPPLY_REGISTRY) -> dict[tuple[str, str], dict]:
@@ -267,7 +269,9 @@ def supply_evidence_path(relative_path: str) -> Path:
     try:
         candidate.relative_to(repository)
     except ValueError as error:
-        raise ValueError(f"Knowledge supply evidence escapes the repository: {relative_path}") from error
+        raise ValueError(
+            f"Knowledge supply evidence escapes the repository: {relative_path}"
+        ) from error
     return candidate
 
 
@@ -300,7 +304,9 @@ def validate_archive_receipt(entry: dict, receipt_path: Path, source_lock: Path)
         or build["documents"] != entry["library_profile"]["record_count"]
         or build.get("records_sha256") != entry["records_sha256"]
     ):
-        raise ValueError(f"Archive receipt build metadata differs from supply admission: {receipt_path}")
+        raise ValueError(
+            f"Archive receipt build metadata differs from supply admission: {receipt_path}"
+        )
     partition_plan = entry.get("partition_plan")
     if partition_plan is None:
         return
@@ -356,9 +362,7 @@ def require_release_admissions(catalog: dict, admissions: dict[tuple[str, str], 
             raise ValueError(
                 f"Library profile differs from its supply admission: {package_id} {version}"
             )
-        evidence = {
-            field: supply_evidence_path(entry[field]) for field in ADMISSION_EVIDENCE_PATHS
-        }
+        evidence = {field: supply_evidence_path(entry[field]) for field in ADMISSION_EVIDENCE_PATHS}
         partition_plan = entry.get("partition_plan")
         if partition_plan is not None:
             evidence["partition_plan"] = supply_evidence_path(partition_plan)

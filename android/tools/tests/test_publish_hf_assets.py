@@ -191,8 +191,7 @@ class PublishHfAssetsTest(unittest.TestCase):
                 "source": {"id": "howto-repair", "edition": "2026-10.3"},
                 "identity": {},
                 "archives": [
-                    dict(archive_lock(index), lock_sha256=f"{index + 9:064x}")
-                    for index in (0, 1)
+                    dict(archive_lock(index), lock_sha256=f"{index + 9:064x}") for index in (0, 1)
                 ],
             }
             records_path = root / "records.json"

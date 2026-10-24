@@ -308,9 +308,7 @@ def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_p
                 (
                     name
                     for name in subjects
-                    if title == name
-                    or title.startswith(name + "/")
-                    or title.endswith(" " + name)
+                    if title == name or title.startswith(name + "/") or title.endswith(" " + name)
                 ),
                 None,
             )
@@ -319,9 +317,7 @@ def retrieve(database, manifest, query, *, question="", priority_ids=(), broad_p
             row["title_priority"] = bool(row["opening_title"]) and row["id"] in title_priority
             row["direct_title_match"] = row["id"] in route_ids
             row["title_overlap"] = title_overlap(question_terms, title)
-            row["topic_overlap"] = evidence_overlap(
-                focus_terms, title, row["section"], row["body"]
-            )
+            row["topic_overlap"] = evidence_overlap(focus_terms, title, row["section"], row["body"])
             row["evidence_overlap"] = evidence_overlap(
                 question_terms, title, row["section"], row["body"]
             )
@@ -454,9 +450,7 @@ def select_evidence(candidates, manifest, *, question=""):
         ),
     )
     direct_subjects = [row for row in ranked if row.get("subject_match")]
-    broad_titles = list(
-        dict.fromkeys(row["title"] for row in ranked if row.get("title_priority"))
-    )
+    broad_titles = list(dict.fromkeys(row["title"] for row in ranked if row.get("title_priority")))
     if direct_subjects:
         focused = direct_subjects
     elif not broad_titles:

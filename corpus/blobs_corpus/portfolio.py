@@ -32,9 +32,7 @@ def install_identity(manifest: dict) -> tuple[str, str]:
         raise ValueError("A portfolio edition must name its pinned source identity")
     source_id = str(source["id"])
     metadata = manifest.get("archive_metadata") or {}
-    tag = str(
-        source.get("language") or metadata.get("Language") or source_id.split("-")[1]
-    ).lower()
+    tag = str(source.get("language") or metadata.get("Language") or source_id.split("-")[1]).lower()
     if tag not in ENGLISH_TAGS:
         raise ValueError(
             f"Supply language policy: Blobs publishes English knowledge only, and this edition is "
@@ -94,12 +92,12 @@ def retained_manifests(root: Path | None = None) -> list[Path]:
     return found
 
 
-def _peers(manifest_path: Path, root: Path | None, cache: Path | None) -> tuple[dict, list[tuple[Path, dict]]]:
+def _peers(
+    manifest_path: Path, root: Path | None, cache: Path | None
+) -> tuple[dict, list[tuple[Path, dict]]]:
     subject = fingerprint(manifest_path, cache)
     others = [
-        path
-        for path in retained_manifests(root)
-        if path.resolve() != Path(manifest_path).resolve()
+        path for path in retained_manifests(root) if path.resolve() != Path(manifest_path).resolve()
     ]
     if not others:
         return subject, []
@@ -122,6 +120,7 @@ def findings(manifest_path: Path, root: Path | None = None, cache: Path | None =
             repeated.append(counts)
         elif peer["identity"] == subject["identity"]:
             same_slot.append(counts)
+
     def rank(row):
         return row["shared_canonical_urls"] + row["shared_body_hashes"]
 
@@ -135,7 +134,9 @@ def findings(manifest_path: Path, root: Path | None = None, cache: Path | None =
     }
 
 
-def assert_distinct(manifest_path: Path, root: Path | None = None, cache: Path | None = None) -> dict:
+def assert_distinct(
+    manifest_path: Path, root: Path | None = None, cache: Path | None = None
+) -> dict:
     result = findings(manifest_path, root, cache)
     repeated = result["repeated_supply"]
     if repeated:

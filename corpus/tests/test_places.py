@@ -19,7 +19,8 @@ class SelectionTest(unittest.TestCase):
         selection = read_selection({"amenities": ["pharmacy", "hospital"]})
         self.assertEqual(selection["amenities"], ["hospital", "pharmacy"])
         self.assertEqual(
-            place_indicator({"amenity": "pharmacy", "name": "Wellcare"}, selection), "amenity=pharmacy"
+            place_indicator({"amenity": "pharmacy", "name": "Wellcare"}, selection),
+            "amenity=pharmacy",
         )
         self.assertIsNone(place_indicator({"amenity": "restaurant", "name": "Warung"}, selection))
 
@@ -36,9 +37,15 @@ class SelectionTest(unittest.TestCase):
         )
         self.assertIsNone(place_indicator({"amenity": "cafe", "diet:vegetarian": "yes"}, selection))
         self.assertEqual(
-            place_indicator({"amenity": "restaurant", "cuisine": "italian;vegan"},
-                            read_selection({"amenities": ["restaurant"],
-                                            "tag_any": [{"key": "cuisine", "values": ["vegan"]}]})),
+            place_indicator(
+                {"amenity": "restaurant", "cuisine": "italian;vegan"},
+                read_selection(
+                    {
+                        "amenities": ["restaurant"],
+                        "tag_any": [{"key": "cuisine", "values": ["vegan"]}],
+                    }
+                ),
+            ),
             "cuisine includes vegan",
         )
 
@@ -47,8 +54,24 @@ class SelectionTest(unittest.TestCase):
             None,
             {"amenities": []},
             {"amenities": ["Pharmacy"]},
-            {"amenities": ["pharmacy", "pharmacy", "cafe", "hospital", "clinic", "dentist", "bank",
-                           "atm", "fuel", "water_point", "shelter", "toilets", "kindergarten", "school"]},
+            {
+                "amenities": [
+                    "pharmacy",
+                    "pharmacy",
+                    "cafe",
+                    "hospital",
+                    "clinic",
+                    "dentist",
+                    "bank",
+                    "atm",
+                    "fuel",
+                    "water_point",
+                    "shelter",
+                    "toilets",
+                    "kindergarten",
+                    "school",
+                ]
+            },
             {"amenities": ["pharmacy"], "tag_any": [{"key": "diet:vegan"}]},
             {"amenities": ["pharmacy"], "tag_any": [{"key": "diet:vegan", "values": []}]},
             {"amenities": ["pharmacy"], "tag_any": [{"key": "bad key", "values": ["yes"]}]},

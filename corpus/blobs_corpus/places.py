@@ -185,7 +185,10 @@ def _validated_snapshot_source(value: object) -> dict[str, Any]:
     snapshot_digest = value.get("snapshot_sha256")
     if not isinstance(snapshot_digest, str) or not _SHA256.fullmatch(snapshot_digest):
         raise ValueError("Invalid snapshot digest")
-    if type(value.get("snapshot_bytes")) is not int or not 1 <= value["snapshot_bytes"] <= MAX_SNAPSHOT_BYTES:
+    if (
+        type(value.get("snapshot_bytes")) is not int
+        or not 1 <= value["snapshot_bytes"] <= MAX_SNAPSHOT_BYTES
+    ):
         raise ValueError("Invalid snapshot byte count")
     if not isinstance(value.get("osm_base"), str) or not _OSM_TIME.fullmatch(value["osm_base"]):
         raise ValueError("Invalid OpenStreetMap base timestamp")
@@ -440,9 +443,7 @@ def _address(tags: dict[str, str]) -> str | None:
     street = " ".join(
         part for part in (tags.get("addr:housenumber"), tags.get("addr:street")) if part
     )
-    locality = ", ".join(
-        part for part in (tags.get("addr:suburb"), tags.get("addr:city")) if part
-    )
+    locality = ", ".join(part for part in (tags.get("addr:suburb"), tags.get("addr:city")) if part)
     postcode = tags.get("addr:postcode")
     parts = [part for part in (street, locality, postcode) if part]
     return ", ".join(parts) if parts else None
@@ -594,9 +595,7 @@ def extract(lock_path: Path, snapshot_path: Path, output: Path) -> Path:
         manifest = dict(
             format=1,
             identity=dict(
-                lock_sha256=hashlib.sha256(
-                    json.dumps(lock, sort_keys=True).encode()
-                ).hexdigest(),
+                lock_sha256=hashlib.sha256(json.dumps(lock, sort_keys=True).encode()).hexdigest(),
                 extractor="blobs_corpus.places/1",
                 extractor_sha256=_digest(Path(__file__)),
                 python=platform.python_version(),
@@ -621,9 +620,7 @@ def extract(lock_path: Path, snapshot_path: Path, output: Path) -> Path:
                     counts=dict(
                         documents=len(documents),
                         text_characters=text_characters,
-                        text_utf8_bytes=sum(
-                            len(item["body"].encode()) for item in documents
-                        ),
+                        text_utf8_bytes=sum(len(item["body"].encode()) for item in documents),
                     ),
                 )
             ],
@@ -659,7 +656,9 @@ def main() -> None:
     capture_parser.add_argument("query", type=Path)
     capture_parser.add_argument("output", type=Path)
     capture_parser.add_argument("amenities", help="comma-separated OSM amenity values")
-    capture_parser.add_argument("--tag-any", type=Path, help="JSON file with [{key, values}] rules that must also match")
+    capture_parser.add_argument(
+        "--tag-any", type=Path, help="JSON file with [{key, values}] rules that must also match"
+    )
     extract_parser = commands.add_parser("extract")
     extract_parser.add_argument("lock", type=Path)
     extract_parser.add_argument("snapshot", type=Path)
