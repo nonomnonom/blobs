@@ -279,6 +279,8 @@ def write_release(destination, apk, version, report, signature, packages, manife
         "Allow additional space for the APK, app data and at least 64 MiB import headroom. "
         "After a successful import, the original package may be moved off the phone if a safe reinstall copy exists. "
         "To update an existing installation, install an APK signed with the same key over it. "
+        "Releases 0.3.14 and older used a different key, so Android refuses to install this APK "
+        "over them: export conversations, uninstall Blobs, then install it fresh. "
         "Uninstalling the app removes its private conversations and packages; export conversations first.\n\n"
         "Android 9+ on ARM64 or x86_64 is the API/ABI boundary. Model performance depends on the device. "
         "PACKAGES.json and SHA256SUMS.txt identify these exact files. "
