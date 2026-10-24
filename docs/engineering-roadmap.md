@@ -228,7 +228,12 @@ what is missing there is a phone-class device, not a patch:
   is the APK: `release.ps1` and `android/tools/package_release.py` stop by design because no
   release keystore or `BLOBS_*` values exist on this host, so no build can be signed as an update
   for `dev.blobs.app`. Installed 0.3.14 builds also trust only `catalog-public-key-v2.pem`, so
-  they will reject the v3-signed catalog until a v3-trusting APK ships.
+  they will reject the v3-signed catalog until a v3-trusting APK ships. The
+  `wikivoyage-en@2026-09.3` archive their bundled catalog offers is one of the editions this
+  rebuild replaced because the installer rejects it, so that one download fails for installed
+  users until a new APK ships. Nothing already downloaded breaks: all twelve package URLs pinned
+  by the 0.3.14 catalog still answer at their original commit, even though main no longer lists
+  those files.
 - `UiParityTest#readingControlsKeepDraftAndOpenSavedSourcesAtDoubleText` is the one
 
   red standard check and it is not a tap-delivery problem. At 2x font scale on the
