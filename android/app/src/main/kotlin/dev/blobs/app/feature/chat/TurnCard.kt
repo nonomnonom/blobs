@@ -106,12 +106,14 @@ internal fun TurnCard(
                         onRetry = { model.retry(turn) }
                     )
                     if (evidence == null && !running) Body(R.string.sources_unavailable)
-                    TurnSources(
-                        turnId = turn.id,
-                        groups = groups,
-                        citedSourceIndices = response.citedSourceIndices,
-                        onRead = model::read
-                    )
+                    if (!running) {
+                        TurnSources(
+                            turnId = turn.id,
+                            groups = groups,
+                            citedSourceIndices = response.citedSourceIndices,
+                            onRead = model::read
+                        )
+                    }
                     if (response.suggestions.isNotEmpty()) {
                         Suggestions(response.suggestions.map { it.text }, busy) { model.send(it) }
                     }
