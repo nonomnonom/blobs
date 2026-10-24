@@ -20,6 +20,8 @@ Only downloads and checking for new models or libraries need a connection. They 
 
 You can install a newer APK over an existing version signed with the same certificate. Keep the app installed to preserve private conversations and downloaded libraries. Release checksums and the signing certificate fingerprint accompany every APK.
 
+Blobs 0.4.0 uses a new signing certificate, so Android refuses to install it over 0.3.14 or older. Export the conversations you want to keep, uninstall the old app, then install 0.4.0; later releases install in place again.
+
 ## What you can do
 
 - Ask questions using downloaded libraries and follow citations to saved articles.
