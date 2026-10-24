@@ -76,4 +76,3 @@ signed as an update for the existing dev.blobs.app install. Installed users on
 0.3.14 trust only catalog-public-key-v2.pem and therefore cannot accept the
 v3-signed catalog until a v3-trusting APK ships. Their current downloads remain
 available because no previously published package was deleted.
-
