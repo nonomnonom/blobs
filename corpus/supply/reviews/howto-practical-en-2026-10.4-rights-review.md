@@ -69,7 +69,7 @@ and not a rights change.
 | `records_sha256` | `23877c5b9107b35f838f25f8903404265a5d42b40534b324fae8eda20e5b223b` |
 | Installed payload | 1,454,772,224 bytes (22.6% of the 6,442,450,944-byte limit), SHA-256 `9efdf2ee28db79d05ff8c2e933073fbf6c7a9bbbac20b304c8e985af0d68d481` |
 | Archive | `howto-practical-2026-10.4.blobs`, 567,686,098 bytes, SHA-256 `2c5d4867931a14fd9220990090fb21375e0fdc9255670abaeee78d0c1167d028` |
-| Receipt | `corpus/work/packages/howto-practical-2026-10.4.receipt.json` |
+| Receipt | `corpus/supply/receipts/howto-practical-2026-10.4.receipt.json` |
 | Builder sources | `records.py 554a4182…`, `library.py 6407e406…`, `names.py a137dac8…` (schema 3, SQLite 3.50.4) |
 | Retrieval cases | `corpus/evaluation/cases/howto-practical-retrieval-v3.json` (36 cases, pinned to the digests above) |
 

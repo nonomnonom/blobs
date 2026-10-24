@@ -75,7 +75,7 @@ a rights change.
 | `records_sha256` | `091df84e82a5dc332c1caad5be3dc86e51ba73b48e7032215b2f200abb2f9b2c` |
 | Installed payload | 647,237,632 bytes (10.0% of the 6,442,450,944-byte limit), SHA-256 `06eadac68eb498fac2789e71b56a2c4205a3f5a2776923237307013038e37287` |
 | Archive | `howto-repair-2026-10.4.blobs`, 256,576,414 bytes, SHA-256 `0b395e6eade09525f87ff61acd6a76e107fb13688be9a0a99c1b730c8e089a5c` |
-| Receipt | `corpus/work/packages/howto-repair-2026-10.4.receipt.json` |
+| Receipt | `corpus/supply/receipts/howto-repair-2026-10.4.receipt.json` |
 | Builder sources | `records.py 554a4182…`, `library.py 6407e406…`, `names.py a137dac8…` (schema 3, SQLite 3.50.4) |
 | Retrieval cases | `corpus/evaluation/cases/howto-repair-retrieval-v3.json` (48 cases, pinned to the digests above) |
 

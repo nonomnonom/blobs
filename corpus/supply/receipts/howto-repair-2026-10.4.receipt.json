@@ -1,0 +1,51 @@
+{
+  "build": {
+    "audit_schema": 1,
+    "builder_sources": {
+      "library.py": "6407e406b0b5b69cda6d019afc164a4994d1fcf841ef1226ba49f74997e928b0",
+      "names.py": "a137dac8d2c912905b002b8a0817921fa3b4ed77b694b07b3d768f97e3670d58",
+      "records.py": "554a41821d92b5d4b602717e0cfa456942b86e2b717e1d66e6d1b5718b3eba23"
+    },
+    "document_names": {
+      "ambiguous_names": 66631,
+      "format": 1,
+      "maximum_resolution_passes": 32,
+      "name_document_pairs": 318435,
+      "normalization": "NFKC, lowercase, Unicode letters/numbers separated by spaces",
+      "redirects": 253383,
+      "resolved_redirects": 239809,
+      "unresolved_redirects": 13574
+    },
+    "documents": 78626,
+    "exact_duplicate_bodies": 0,
+    "format": 1,
+    "offsets": "Unicode code points, half-open into normalized documents.body",
+    "passage_storage": "document spans + contentless FTS",
+    "passages": 300571,
+    "records_sha256": "091df84e82a5dc332c1caad5be3dc86e51ba73b48e7032215b2f200abb2f9b2c",
+    "schema": 3,
+    "sqlite_version": "3.50.4",
+    "title_index": "opening passage only"
+  },
+  "format": 1,
+  "input_sha256": "0cda50f5ea69b04df2f81b2c6a1433e41d92cd1fc66860d311109aca9db93e28",
+  "manifest": {
+    "bytes": 647237632,
+    "format": 1,
+    "id": "howto-repair",
+    "kind": "library",
+    "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post revision history for attribution",
+    "origin": "https://stackexchange.com",
+    "records_sha256": "091df84e82a5dc332c1caad5be3dc86e51ba73b48e7032215b2f200abb2f9b2c",
+    "sha256": "06eadac68eb498fac2789e71b56a2c4205a3f5a2776923237307013038e37287",
+    "title": "Repair and fixing · vehicles, bicycles, aviation, printing, woodworking",
+    "version": "2026-10.4"
+  },
+  "package": {
+    "bytes": 256576414,
+    "file": "howto-repair-2026-10.4.blobs",
+    "sha256": "0b395e6eade09525f87ff61acd6a76e107fb13688be9a0a99c1b730c8e089a5c"
+  },
+  "platform": "Windows",
+  "python": "3.13.12"
+}

@@ -128,7 +128,7 @@ refuses every `2026-09.3` volume.
 The four per-volume document counts sum to exactly 622,014. Each volume's receipt also carries the
 plan SHA-256 above and its own `document_ids_sha256`, and all four were built by
 `records.py 554a4182…`, `library.py 6407e406…`, `names.py a137dac8…` (schema 3, SQLite 3.50.4).
-Receipts: `corpus/work/packages/wikisource-en-history-p00{0,1,2,3}-2026-09.3.receipt.json`.
+Receipts: `corpus/supply/receipts/wikisource-en-history-p00{0,1,2,3}-2026-09.3.receipt.json`.
 
 ## Measured evidence accepted with this decision
 

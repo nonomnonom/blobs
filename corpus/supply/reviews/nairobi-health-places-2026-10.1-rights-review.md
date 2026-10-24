@@ -56,7 +56,7 @@ is translated, inferred, or merged.
 | Archive SHA-256 | `2e99d33710ffb39502da6632ac230a7554e271d4f60dfab4b09258633fb79036` |
 | Installed payload bytes | 503,808 |
 | Payload SHA-256 | `b4dcb40d70e7a8e88bd3df0e004fa804e5a268739ad03ebbb90605adf7c8438a` |
-| Build receipt | `corpus/work/packages/nairobi-health-places-2026-10.1.receipt.json` |
+| Build receipt | `corpus/supply/receipts/nairobi-health-places-2026-10.1.receipt.json` |
 
 ## Duplicate-supply proof
 

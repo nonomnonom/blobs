@@ -53,7 +53,7 @@ as `2026-09.4` minus exactly those two documents (0 added, verified id by id).
 | `records_sha256` | `9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b` |
 | Installed payload | 622,776,320 bytes, SHA-256 `380896b48d45f1d2e586d7d0f793ef57c79f861083867d68058d9b1e92631226` |
 | Archive | `wikivoyage-en-2026-09.5.blobs`, 290,811,362 bytes, SHA-256 `f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc` |
-| Receipt | `corpus/work/packages/wikivoyage-en-2026-09.5.receipt.json` |
+| Receipt | `corpus/supply/receipts/wikivoyage-en-2026-09.5.receipt.json` |
 | Retrieval cases | `corpus/evaluation/cases/wikivoyage-en-retrieval-v3.json` (48 cases, pinned to the digests above) |
 | Retrieval report | `corpus/work/evaluation/results/wikivoyage-en-2026-09.5-retrieval-v3.json` |
 

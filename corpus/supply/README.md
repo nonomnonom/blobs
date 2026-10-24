@@ -41,6 +41,11 @@ rights-review record, reviewed-record manifest, case set, archive receipt,
 record digest, archive digest, and the exact `library_profile` to show in the
 catalog.
 
+The archive receipt is a small JSON file, so an admitted edition's receipt is
+kept in Git at `corpus/supply/receipts/` and `archive_receipt` points there.
+Record manifests stay release-machine build inputs beside the records, not in
+Git; only the receipt that binds an archive to an admission is tracked.
+
 For a complementary volume, the same entry must also name its immutable
 `partition_plan` and `partition_id`. Publication recomputes the plan and source
 lock digests, then compares them with the archive receipt's build metadata. A

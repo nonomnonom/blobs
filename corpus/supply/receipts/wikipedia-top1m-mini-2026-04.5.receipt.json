@@ -1,0 +1,51 @@
+{
+  "build": {
+    "audit_schema": 1,
+    "builder_sources": {
+      "library.py": "6407e406b0b5b69cda6d019afc164a4994d1fcf841ef1226ba49f74997e928b0",
+      "names.py": "a137dac8d2c912905b002b8a0817921fa3b4ed77b694b07b3d768f97e3670d58",
+      "records.py": "554a41821d92b5d4b602717e0cfa456942b86e2b717e1d66e6d1b5718b3eba23"
+    },
+    "document_names": {
+      "ambiguous_names": 10511,
+      "format": 1,
+      "maximum_resolution_passes": 32,
+      "name_document_pairs": 5123103,
+      "normalization": "NFKC, lowercase, Unicode letters/numbers separated by spaces",
+      "redirects": 4919306,
+      "resolved_redirects": 4883803,
+      "unresolved_redirects": 35503
+    },
+    "documents": 997714,
+    "exact_duplicate_bodies": 0,
+    "format": 1,
+    "offsets": "Unicode code points, half-open into normalized documents.body",
+    "passage_storage": "document spans + contentless FTS",
+    "passages": 2126742,
+    "records_sha256": "2459f398597c3f6dd617badd58833ab99d8dfea41e40d6d8288fd97e383edf3e",
+    "schema": 3,
+    "sqlite_version": "3.50.4",
+    "title_index": "opening passage only"
+  },
+  "format": 1,
+  "input_sha256": "99ca4cfc1eec41ddc0f916a9d4da2144cd380129b5c4a3a407f9efe95db60c9a",
+  "manifest": {
+    "bytes": 4980006912,
+    "format": 1,
+    "id": "wikipedia-top1m-mini",
+    "kind": "library",
+    "license": "CC BY-SA 4.0; Wikipedia contributors; see per-article attribution and applicable notices",
+    "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim",
+    "records_sha256": "2459f398597c3f6dd617badd58833ab99d8dfea41e40d6d8288fd97e383edf3e",
+    "sha256": "f850f7d0b78196309caefc4b6add5459321fa13f7a363f7a0744de20807a0243",
+    "title": "Wikipedia English Top 1M introductions",
+    "version": "2026-04.5"
+  },
+  "package": {
+    "bytes": 1787025308,
+    "file": "wikipedia-top1m-mini-2026-04.5.blobs",
+    "sha256": "a751510e64b1c845016d293e9d9af00bc393f87cdbeb01bec22f3268a5972528"
+  },
+  "platform": "Windows",
+  "python": "3.13.12"
+}

@@ -66,7 +66,7 @@ candidate for a future escaped-representation design; it is not solved by this e
 | `records_sha256` | `2459f398597c3f6dd617badd58833ab99d8dfea41e40d6d8288fd97e383edf3e` |
 | Installed payload | 4,980,006,912 bytes (77.3% of the 6,442,450,944-byte limit), SHA-256 `f850f7d0b78196309caefc4b6add5459321fa13f7a363f7a0744de20807a0243` |
 | Archive | `wikipedia-top1m-mini-2026-04.5.blobs`, 1,787,025,308 bytes, SHA-256 `a751510e64b1c845016d293e9d9af00bc393f87cdbeb01bec22f3268a5972528` |
-| Receipt | `corpus/work/packages/wikipedia-top1m-mini-2026-04.5.receipt.json` |
+| Receipt | `corpus/supply/receipts/wikipedia-top1m-mini-2026-04.5.receipt.json` |
 | Builder sources | `records.py 554a4182…`, `library.py 6407e406…`, `names.py a137dac8…` (schema 3, SQLite 3.50.4) |
 | Retrieval cases | `corpus/evaluation/cases/wikipedia-top1m-mini-retrieval-v3.json` (12 cases, pinned to the digests above) |
 

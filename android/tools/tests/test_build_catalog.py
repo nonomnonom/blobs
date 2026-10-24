@@ -14,9 +14,22 @@ from build_catalog import (
     library_description,
     library_language,
 )
-from publish_hf_assets import ASSET_PREFIX, read_release_admissions
+from publish_hf_assets import ASSET_PREFIX, supply_evidence_path, read_release_admissions
 
 REVISION = "0" * 40
+
+
+def missing_release_evidence() -> list[str]:
+    """Record manifests are release-machine inputs, so CI cannot build the real portfolio."""
+    missing = []
+    for (package_id, version), admission in read_release_admissions(REGISTRY).items():
+        for field in build_catalog.ADMISSION_EVIDENCE_PATHS:
+            if not supply_evidence_path(admission[field]).is_file():
+                missing.append(f"{package_id}@{version} {field}")
+    return missing
+
+
+MISSING_RELEASE_EVIDENCE = missing_release_evidence()
 
 
 def entry(package_id: str, **changes: object) -> dict:
@@ -90,6 +103,33 @@ class DriftReportTest(unittest.TestCase):
         )
 
 
+class ShippedCatalogTest(unittest.TestCase):
+    """Bind the bundled catalog to the tracked admissions where CI has no build artifacts."""
+
+    def test_advertises_exactly_the_admitted_identities_and_digests(self):
+        admissions = read_release_admissions(REGISTRY)
+        shipped = json.loads(build_catalog.CATALOG.read_text(encoding="utf-8"))
+        libraries = {
+            f"{item['manifest']['id']}@{item['manifest']['version']}": item
+            for item in shipped["packages"]
+            if item["role"] != "model"
+        }
+        self.assertEqual(
+            {f"{package_id}@{version}" for package_id, version in admissions},
+            set(libraries),
+        )
+        for key, item in libraries.items():
+            admission = admissions[tuple(key.split("@"))]
+            self.assertEqual(admission["records_sha256"], item["manifest"]["records_sha256"])
+            self.assertEqual(admission["archive_sha256"], item["download_sha256"])
+            self.assertEqual(admission["library_profile"], item["library_profile"])
+        self.assertEqual(1, sum(1 for item in libraries.values() if item["role"] == "starter"))
+
+
+@unittest.skipIf(
+    MISSING_RELEASE_EVIDENCE,
+    "release-machine evidence is absent: " + ", ".join(MISSING_RELEASE_EVIDENCE),
+)
 class ReviewedPortfolioTest(unittest.TestCase):
     """The reviewed admissions must compile into a catalog the existing publisher accepts."""
 
