@@ -1,0 +1,34 @@
+{
+  "collection": "Nairobi central named health places",
+  "edition": "2026-10.1",
+  "format": 1,
+  "id": "nairobi-health-places",
+  "language": "en",
+  "license": "ODbL 1.0; © OpenStreetMap contributors; https://www.openstreetmap.org/copyright",
+  "origin": "https://www.openstreetmap.org/copyright",
+  "publisher": "OpenStreetMap contributors",
+  "review": {
+    "notes": "Reviewed the exact 84,264-byte snapshot captured from the Overpass JSON endpoint at base time 2026-10-24T03:15:54Z: query scope is the declared 0.06 x 0.06 degree Nairobi box; every matching element carries amenity clinic, hospital or pharmacy plus a non-empty name; three unnamed elements are excluded; ways are returned whole so their computed centres may fall a few metres outside the box; duplicate names are distinct OSM objects with distinct coordinates; no replacement characters or replacement of source tags; recording raw OSM tags only, with no opening-hours, distance, safety, quality or recommendation inference; ODbL attribution and licence text are carried in every record and must remain visible in the pack and app. The app-facing record text is English; place names remain source strings.",
+    "reviewed": "2026-10-24",
+    "reviewer": "Qoder agent acting for the product owner (nonomnonom); automated review"
+  },
+  "saved": "2026-10-24",
+  "source": {
+    "elements": 203,
+    "endpoint": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "matching_elements": 200,
+    "osm_base": "2026-10-24T03:15:54Z",
+    "query": "[out:json][timeout:60];\n// Named health places inside the Nairobi central-business-area bounding box.\n// Bounded on purpose: one reviewed lock pins one small snapshot, and the capture\n// rejects a response over 1,000 elements or 5,000,000 bytes.\n(\n  node[\"amenity\"~\"^(pharmacy|hospital|clinic)$\"](-1.300,36.800,-1.240,36.860);\n  way[\"amenity\"~\"^(pharmacy|hospital|clinic)$\"](-1.300,36.800,-1.240,36.860);\n);\nout center tags;\n",
+    "query_sha256": "2f532c8dc621bc8a055113529be9df80bf878b81b0007b0944967c45e89cd10c",
+    "selection": {
+      "amenities": [
+        "clinic",
+        "hospital",
+        "pharmacy"
+      ],
+      "tag_any": []
+    },
+    "snapshot_bytes": 84264,
+    "snapshot_sha256": "8dcb739f1f1f424c3a8172a4679124cde4dbbf16765d9a306c2b47307bf8264b"
+  }
+}

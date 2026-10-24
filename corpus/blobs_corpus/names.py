@@ -44,7 +44,10 @@ def build_names(db, source: Path):
         path = provenance.get("entry_path")
         if path:
             scope = scope_by_digest.get(provenance.get("source_sha256"))
-            db.execute("INSERT INTO name_paths VALUES (?,?)", (f"{scope}:{path}" if scope else path, doc_id))
+            db.execute(
+                "INSERT INTO name_paths VALUES (?,?)",
+                (f"{scope}:{path}" if scope else path, doc_id),
+            )
     if manifest is not None:
         for shard in manifest["shards"]:
             if "aliases" not in shard["files"]:

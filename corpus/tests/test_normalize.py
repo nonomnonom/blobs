@@ -39,7 +39,12 @@ PAGE = b"""<html><body>
 
 class StackExchangeArticleTests(unittest.TestCase):
     def test_question_keeps_site_url_and_post_history(self):
-        document = article(PAGE, "How do I replace a brake pad?", "questions/42/how-do-i-replace-a-brake-pad", STACK_EXCHANGE_LOCK)
+        document = article(
+            PAGE,
+            "How do I replace a brake pad?",
+            "questions/42/how-do-i-replace-a-brake-pad",
+            STACK_EXCHANGE_LOCK,
+        )
         self.assertEqual(
             document["url"],
             "https://mechanics.stackexchange.com/questions/42/how-do-i-replace-a-brake-pad",
@@ -51,12 +56,19 @@ class StackExchangeArticleTests(unittest.TestCase):
         self.assertIn("https://mechanics.stackexchange.com/posts/42/revisions", document["license"])
 
     def test_answers_keep_attribution_and_leave_site_chrome_out(self):
-        document = article(PAGE, "How do I replace a brake pad?", "questions/42/how-do-i-replace-a-brake-pad", STACK_EXCHANGE_LOCK)
+        document = article(
+            PAGE,
+            "How do I replace a brake pad?",
+            "questions/42/how-do-i-replace-a-brake-pad",
+            STACK_EXCHANGE_LOCK,
+        )
         body = document["body"]
         self.assertNotIn("Questions Tags", body)
         self.assertIn("Asked by Asker", body)
         self.assertIn("2 answers", body)
-        self.assertIn("== Answer 1 · score 12 · accepted · by Helper · answered Jan 2 · a/9 ==", body)
+        self.assertIn(
+            "== Answer 1 · score 12 · accepted · by Helper · answered Jan 2 · a/9 ==", body
+        )
         self.assertIn("Remove the caliper bolt", body)
         self.assertIn("== Answer 2 · score 1 ·", body)
         self.assertIn("Check the rotor thickness first.", body)

@@ -150,7 +150,6 @@ def derive_source(raw: bytes, source: dict) -> dict:
     return refreshed
 
 
-
 def refresh(lock_path: Path, directory: Path, output: Path, edition: str, saved: str) -> dict:
     prior = read_lock(lock_path)
     if output.exists():
@@ -187,7 +186,6 @@ def refresh(lock_path: Path, directory: Path, output: Path, edition: str, saved:
         flush=True,
     )
     return lock
-
 
 
 def _remove_furniture(root):
@@ -268,7 +266,6 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
     if parsed["body_sha256"] != source["body_sha256"]:
         raise ValueError(f"Reviewed source text changed: {source['id']}")
     return parsed["title"], parsed["body"]
-
 
 
 def extract(lock_path: Path, snapshots: Path, output: Path) -> Path:

@@ -1,0 +1,123 @@
+{
+ "format": 1,
+ "library": {
+  "id": "wikisource-en-history-p000",
+  "version": "2026-09.2",
+  "records_sha256": "5f062b528ef257abc496e59f64fd22fb0d09ffe4803132313fda609fd30d859d",
+  "payload_sha256": "db592c9e0d80c595f97abf73bf8cd5cc9ca2eeccf89ccda5c6ebe018aaaa3efb"
+ },
+ "id": "wikisource-en-history-p000-retrieval-v2",
+ "notes": "Questions name the work, as a researcher asking about a known text would. The v1 set paraphrased each work without its title and measured title-free lexical recall; it remains as a documented retrieval gap, not an admission gate. The Social Contract parent page holds only front matter, so the case expects Book 1 where the argument opens. The Canterbury case expects the prose rendering of the Prologue; Skeat's Middle English edition is an equally valid answer to the question.",
+ "cases": [
+  {
+   "id": "magna-carta-limits",
+   "question": "What limits did King John accept on the power of the English crown in Magna Carta in 1215?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-80791d8599080b60a13987d2a9235588"
+   ],
+   "expected_document_titles": [
+    "Magna Carta (trans. Davis)"
+   ]
+  },
+  {
+   "id": "dred-scott-citizenship",
+   "question": "In Dred Scott v. Sandford, could a Black man whose ancestors were brought to America as slaves claim federal citizenship?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-77a232c726ddc88c526846fa3192f27c"
+   ],
+   "expected_document_titles": [
+    "Dred Scott v. Sandford"
+   ]
+  },
+  {
+   "id": "marbury-judicial-review",
+   "question": "In Marbury v. Madison, which 1803 ruling established that courts can declare an act of Congress unconstitutional?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-dab908f12733f6b9d766356589731166"
+   ],
+   "expected_document_titles": [
+    "Marbury v. Madison"
+   ]
+  },
+  {
+   "id": "guadalupe-hidalgo-terms",
+   "question": "What territory did Mexico cede to the United States under the Treaty of Guadalupe Hidalgo?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-eeaaaa00dced429d18ca66d8d3cc154f"
+   ],
+   "expected_document_titles": [
+    "Treaty of Guadalupe Hidalgo (original)"
+   ]
+  },
+  {
+   "id": "geneva-1864-neutrality",
+   "question": "What protections did the First Geneva Convention of 1864 give to wounded soldiers and medical workers on the battlefield?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-a7bc7fa0b614a28105089c00186081ec"
+   ],
+   "expected_document_titles": [
+    "First Geneva Convention (1864)"
+   ]
+  },
+  {
+   "id": "bill-of-rights-1689",
+   "question": "What did the Bill of Rights 1689 declare about cruel punishments and excessive bail?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-5360edb0b3459dcc96c563d6b333c5ca"
+   ],
+   "expected_document_titles": [
+    "Bill of Rights 1689"
+   ]
+  },
+  {
+   "id": "social-contract-opening",
+   "question": "How does The Social Contract begin its argument that people are born free yet everywhere live in chains?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-ecb87e45b8ed9868582b3f70a1c8ab42"
+   ],
+   "expected_document_titles": [
+    "The Social Contract (tr. Cole)/Book 1"
+   ]
+  },
+  {
+   "id": "canterbury-tales-prologue",
+   "question": "Which pilgrims gather at the Tabard Inn in the Prologue to The Canterbury Tales?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-27ddc8d1c91977fb294651fd7f6defa4"
+   ],
+   "expected_document_titles": [
+    "Tales from Chaucer/Prologue to the Canterbury Tales"
+   ]
+  },
+  {
+   "id": "jackson-farewell",
+   "question": "What warning did Andrew Jackson give about paper money and the national bank in his Farewell Address?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-3615a8fb5bc8b51fa15ffbe35a661fcf"
+   ],
+   "expected_document_titles": [
+    "Andrew Jackson's Farewell Address"
+   ]
+  },
+  {
+   "id": "texas-constitution",
+   "question": "What rules did the Constitution of the Republic of Texas set for its congress, courts, and voting?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-8c302228ffbebdce99f1e94fb139d00b"
+   ],
+   "expected_document_titles": [
+    "Constitution of the Republic of Texas"
+   ]
+  }
+ ]
+}

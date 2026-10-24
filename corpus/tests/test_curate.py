@@ -3,8 +3,8 @@ import unittest
 from blobs_corpus.curate import exclusion
 
 
-def page(path):
-    return {"provenance": {"entry_path": path}}
+def page(path, body=""):
+    return {"provenance": {"entry_path": path}, "body": body}
 
 
 class StackExchangeReviewTests(unittest.TestCase):
@@ -51,6 +51,48 @@ class StackExchangeReviewTests(unittest.TestCase):
         self.assertEqual(
             exclusion(page("Main Page"), "wikisource"),
             "Archive navigation page, not a primary text",
+        )
+
+    def test_wikisource_navigation_pages_are_excluded(self):
+        self.assertEqual(
+            exclusion(
+                page("First_Geneva_Convention", "First Geneva Convention may refer to:\n\n* 1864"),
+                "wikisource",
+            ),
+            "Disambiguation page, not a primary text",
+        )
+        self.assertEqual(
+            exclusion(
+                page(
+                    "The_Canterbury_Tales",
+                    "For works with similar titles, see Canterbury Tales.\n\n"
+                    "Versions of The Canterbury Tales include:\n\n* Skeat",
+                ),
+                "wikisource",
+            ),
+            "Version index page, not a primary text",
+        )
+
+    def test_wikisource_works_with_hatnotes_and_late_lists_are_kept(self):
+        self.assertIsNone(
+            exclusion(
+                page(
+                    "First_Geneva_Convention_(1864)",
+                    "For works with similar titles, see First Geneva Convention.\n\n"
+                    "AMELIORATION OF THE CONDITION OF THE WOUNDED",
+                ),
+                "wikisource",
+            )
+        )
+        self.assertIsNone(
+            exclusion(
+                page(
+                    "A_History",
+                    "The text begins in earnest.\n\n" + "x" * 600
+                    + " Versions of this work include: a later printing.",
+                ),
+                "wikisource",
+            )
         )
 
     def test_wikisource_chrome_rule_does_not_leak_to_other_projects(self):

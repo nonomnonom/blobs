@@ -54,9 +54,7 @@ def read_package_payload_limits(path: Path):
 
 
 def package_payload_limits_text(text: str, source_sha256: str):
-    model = re.findall(
-        r"internal const val MAX_MODEL_PAYLOAD_BYTES = ([\d_]+)L", text
-    )
+    model = re.findall(r"internal const val MAX_MODEL_PAYLOAD_BYTES = ([\d_]+)L", text)
     library = re.findall(
         r"internal const val MAX_LIBRARY_PAYLOAD_BYTES = "
         r"([\d_]+)L \* ([\d_]+)L \* ([\d_]+)L \* ([\d_]+)L",
@@ -221,10 +219,7 @@ def catalog_storage_values(
             library_count += 1
         else:
             raise ValueError(f"Unsupported package kind in catalog: {name}")
-        if (
-            download_bytes > maximum_payload_bytes
-            or manifest["bytes"] > maximum_payload_bytes
-        ):
+        if download_bytes > maximum_payload_bytes or manifest["bytes"] > maximum_payload_bytes:
             raise ValueError(f"Package exceeds its catalog size limit: {name}")
         if download_format == "gguf" and download_bytes != manifest["bytes"]:
             raise ValueError(f"Raw GGUF download and installed payload sizes differ: {name}")
@@ -350,16 +345,12 @@ def calculate(
                     ],
                     payload_bytes=item["manifest"]["bytes"],
                     margin_bytes=(
-                        effective_payload_limits[
-                            f"{item['manifest']['kind']}_payload_cap_bytes"
-                        ]
+                        effective_payload_limits[f"{item['manifest']['kind']}_payload_cap_bytes"]
                         - item["manifest"]["bytes"]
                     ),
                     passes=(
                         item["manifest"]["bytes"]
-                        <= effective_payload_limits[
-                            f"{item['manifest']['kind']}_payload_cap_bytes"
-                        ]
+                        <= effective_payload_limits[f"{item['manifest']['kind']}_payload_cap_bytes"]
                     ),
                 )
                 for item in packages

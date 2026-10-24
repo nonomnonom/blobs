@@ -14,9 +14,9 @@ portfolio, deduplication policy, and current local candidate state.
 2. It records whether a legacy catalog package is retired, development-only, or
    blocked pending a new admission.
 3. It supplies the release allow-list used by `android/tools/publish_hf_assets.py`.
-   The list is empty until each admission gate is satisfied. A publisher cannot turn an
-   old local package into a public package merely by adding it to the Android
-   catalog.
+   An entry joins the list only after each admission gate is satisfied; the list
+   now holds the nine released libraries. A publisher cannot turn an old local
+   package into a public package merely by adding it to the Android catalog.
 
 ## Status meanings
 

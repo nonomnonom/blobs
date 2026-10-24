@@ -74,7 +74,8 @@ def verify_package(path: Path):
             raise ValueError("Invalid package identity or payload size")
         records_sha256 = manifest.get("records_sha256")
         if "records_sha256" in manifest and (
-            manifest["kind"] != "library" or not isinstance(records_sha256, str)
+            manifest["kind"] != "library"
+            or not isinstance(records_sha256, str)
             or not re.fullmatch("[a-f0-9]{64}", records_sha256)
         ):
             raise ValueError("Invalid package records digest")
@@ -110,9 +111,7 @@ def create_package(
     """Write a new archive atomically and return its immutable manifest."""
     if kind not in {"model", "library"}:
         raise ValueError("Invalid package kind")
-    if not re.fullmatch("[a-z0-9-]{1,64}", id) or not re.fullmatch(
-        "[a-zA-Z0-9.-]{1,40}", version
-    ):
+    if not re.fullmatch("[a-z0-9-]{1,64}", id) or not re.fullmatch("[a-zA-Z0-9.-]{1,40}", version):
         raise ValueError("Invalid package identity")
     if not all(
         valid_metadata_text(text, limit)

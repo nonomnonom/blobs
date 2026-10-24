@@ -1,0 +1,51 @@
+{
+  "build": {
+    "audit_schema": 1,
+    "builder_sources": {
+      "library.py": "982a35ead1b810f20cf270f4383dfac21ce96f63fcadf53c1cd705fd278e2464",
+      "names.py": "5392fdc1e5f921246d5e235d0f09505bcfa26a5db4e0498cd8cef58ef80af6d4",
+      "records.py": "3f504ac9274bca4592451741ddccad7624ce545380d504f11ed4b491041ee715"
+    },
+    "document_names": {
+      "ambiguous_names": 142634,
+      "format": 1,
+      "maximum_resolution_passes": 32,
+      "name_document_pairs": 799599,
+      "normalization": "NFKC, lowercase, Unicode letters/numbers separated by spaces",
+      "redirects": 591247,
+      "resolved_redirects": 586382,
+      "unresolved_redirects": 4865
+    },
+    "documents": 213217,
+    "exact_duplicate_bodies": 0,
+    "format": 1,
+    "offsets": "Unicode code points, half-open into normalized documents.body",
+    "passage_storage": "document spans + contentless FTS",
+    "passages": 878267,
+    "records_sha256": "e35fa824470758b5409f7daa6ef5d1086de2ec4bc11a004e56fc8ff618dc4fd0",
+    "schema": 3,
+    "sqlite_version": "3.50.4",
+    "title_index": "opening passage only"
+  },
+  "format": 1,
+  "input_sha256": "8ff8456a2f392e863bb44e7ce1eeb797c49fd2b0fbe35eb3569e289b6e091fd2",
+  "manifest": {
+    "bytes": 2086854656,
+    "format": 1,
+    "id": "howto-practical",
+    "kind": "library",
+    "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post revision history for attribution",
+    "origin": "https://stackexchange.com",
+    "records_sha256": "e35fa824470758b5409f7daa6ef5d1086de2ec4bc11a004e56fc8ff618dc4fd0",
+    "sha256": "910ddaf549fa5425d564b3049af0ab1a781926cbfe26636f03b73f12cfb6ba7d",
+    "title": "Practical how-to · cooking, money, travel, home",
+    "version": "2026-10.2"
+  },
+  "package": {
+    "bytes": 883723495,
+    "file": "howto-practical-2026-10.2.blobs",
+    "sha256": "4b970a1569f8b0ee8d1f150203e41916f08f63c5eae81513584d9f4406c65ab1"
+  },
+  "platform": "Windows",
+  "python": "3.13.12"
+}

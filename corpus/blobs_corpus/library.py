@@ -166,9 +166,7 @@ def build_library(
                 for position, span in enumerate(passage_spans(item["body"], item["title"])):
                     section_path = json.dumps(span["path"], ensure_ascii=False)
                     if len(section_path) > 4000:
-                        raise ValueError(
-                            f"Section path exceeds Android import limit: {item['id']}"
-                        )
+                        raise ValueError(f"Section path exceeds Android import limit: {item['id']}")
                     if schema >= 2:
                         # Title-only matches route to the article's opening, not
                         # short references/footers that gain a length advantage.

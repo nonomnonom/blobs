@@ -54,7 +54,12 @@ def write_member(root: Path, slug: str, language: str, records, identity=None):
         "archive_metadata": {"Language": language},
         "totals": {"documents": len(records), "text_characters": sum(len(b) for _, b in records)},
         "shards": [
-            dict(start=0, end=len(records), counts={"documents": len(records)}, files={"documents": info})
+            dict(
+                start=0,
+                end=len(records),
+                counts={"documents": len(records)},
+                files={"documents": info},
+            )
         ],
     }
     write_json(edition / "manifest.json", manifest)
@@ -70,8 +75,18 @@ class FamilyTest(unittest.TestCase):
         self.temporary.cleanup()
 
     def merge_two(self, **kwargs):
-        first = write_member(self.root, "cooking", "eng", [("https://cooking.stackexchange.com/q/1", "one body text")])
-        second = write_member(self.root, "money", "eng", [("https://money.stackexchange.com/q/2", "another body text")])
+        first = write_member(
+            self.root,
+            "cooking",
+            "eng",
+            [("https://cooking.stackexchange.com/q/1", "one body text")],
+        )
+        second = write_member(
+            self.root,
+            "money",
+            "eng",
+            [("https://money.stackexchange.com/q/2", "another body text")],
+        )
         return merge([first, second], self.root / "lane", **kwargs)
 
     def test_lane_manifest_offsets_lineage_and_totals(self):
@@ -87,21 +102,34 @@ class FamilyTest(unittest.TestCase):
         self.assertEqual(lane["totals"]["documents"], 2)
         self.assertEqual([s["start"] for s in lane["shards"]], [0, 1])
         self.assertEqual([s["end"] for s in lane["shards"]], [1, 2])
-        self.assertEqual({s["archive"] for s in lane["shards"]}, {
-            "stackexchange-cooking-en-all",
-            "stackexchange-money-en-all",
-        })
-        self.assertEqual({a["id"] for a in lane["archives"]}, {
-            "stackexchange-cooking-en-all",
-            "stackexchange-money-en-all",
-        })
+        self.assertEqual(
+            {s["archive"] for s in lane["shards"]},
+            {
+                "stackexchange-cooking-en-all",
+                "stackexchange-money-en-all",
+            },
+        )
+        self.assertEqual(
+            {a["id"] for a in lane["archives"]},
+            {
+                "stackexchange-cooking-en-all",
+                "stackexchange-money-en-all",
+            },
+        )
         self.assertTrue(all(len(a["lock_sha256"]) == 64 for a in lane["archives"]))
         self.assertIn("CC BY-SA 4.0", lane["source"]["license"])
         self.assertEqual(len(lane["source"]["origins"]), 2)
 
     def test_refuses_the_same_source_work_twice(self):
-        first = write_member(self.root, "cooking", "eng", [("https://cooking.stackexchange.com/q/1", "one body text")])
-        dupe = write_member(self.root, "money", "eng", [("https://cooking.stackexchange.com/q/1", "different text")])
+        first = write_member(
+            self.root,
+            "cooking",
+            "eng",
+            [("https://cooking.stackexchange.com/q/1", "one body text")],
+        )
+        dupe = write_member(
+            self.root, "money", "eng", [("https://cooking.stackexchange.com/q/1", "different text")]
+        )
         with self.assertRaisesRegex(ValueError, "Duplicate"):
             merge(
                 [first, dupe],
@@ -113,7 +141,12 @@ class FamilyTest(unittest.TestCase):
             )
 
     def test_refuses_a_different_extractor_identity(self):
-        first = write_member(self.root, "cooking", "eng", [("https://cooking.stackexchange.com/q/1", "one body text")])
+        first = write_member(
+            self.root,
+            "cooking",
+            "eng",
+            [("https://cooking.stackexchange.com/q/1", "one body text")],
+        )
         other = write_member(
             self.root,
             "money",
@@ -137,8 +170,15 @@ class FamilyTest(unittest.TestCase):
             )
 
     def test_refuses_a_non_english_member(self):
-        first = write_member(self.root, "cooking", "eng", [("https://cooking.stackexchange.com/q/1", "one body text")])
-        spanish = write_member(self.root, "money", "spa", [("https://money.stackexchange.com/q/2", "otro texto")])
+        first = write_member(
+            self.root,
+            "cooking",
+            "eng",
+            [("https://cooking.stackexchange.com/q/1", "one body text")],
+        )
+        spanish = write_member(
+            self.root, "money", "spa", [("https://money.stackexchange.com/q/2", "otro texto")]
+        )
         with self.assertRaisesRegex(ValueError, "Supply language policy"):
             merge(
                 [first, spanish],
@@ -150,10 +190,30 @@ class FamilyTest(unittest.TestCase):
             )
 
     def test_lanes_hold_their_own_install_slots(self):
-        practical = install_identity({"source": {"id": "howto-practical"}, "lane": "howto-practical", "archive_metadata": {"Language": "eng"}})
-        repair = install_identity({"source": {"id": "howto-repair"}, "lane": "howto-repair", "archive_metadata": {"Language": "en"}})
-        successor = install_identity({"source": {"id": "howto-practical"}, "lane": "howto-practical", "archive_metadata": {"Language": "eng"}})
-        single = install_identity({"source": {"id": "wikivoyage-en-all-nopic"}, "archive_metadata": {"Language": "eng"}})
+        practical = install_identity(
+            {
+                "source": {"id": "howto-practical"},
+                "lane": "howto-practical",
+                "archive_metadata": {"Language": "eng"},
+            }
+        )
+        repair = install_identity(
+            {
+                "source": {"id": "howto-repair"},
+                "lane": "howto-repair",
+                "archive_metadata": {"Language": "en"},
+            }
+        )
+        successor = install_identity(
+            {
+                "source": {"id": "howto-practical"},
+                "lane": "howto-practical",
+                "archive_metadata": {"Language": "eng"},
+            }
+        )
+        single = install_identity(
+            {"source": {"id": "wikivoyage-en-all-nopic"}, "archive_metadata": {"Language": "eng"}}
+        )
         self.assertNotEqual(practical, repair)
         self.assertEqual(practical, successor)
         self.assertEqual(single, ("wikivoyage", "eng"))

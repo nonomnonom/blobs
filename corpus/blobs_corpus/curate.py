@@ -22,7 +22,18 @@ QUESTION_PATH = re.compile(r"questions/\d+/")
 
 # Wikisource carries a work's text as one page plus subpages. Author: pages
 # are bibliographic stubs, Portal: pages are subject navigation, and the main
-# page is site chrome, so none of them is a primary text.
+# page is site chrome, so none of them is a primary text. Version and
+# disambiguation pages only link to the works; they are navigation too, and
+# they outrank the works they list whenever a question names a work.
+
+
+def navigation_page(body: str):
+    head = body[:600]
+    if " may refer to:" in body[:300]:
+        return "Disambiguation page, not a primary text"
+    if "Versions of " in head and "include:" in head:
+        return "Version index page, not a primary text"
+    return None
 
 
 def project(source_id: str) -> str:
@@ -44,6 +55,8 @@ def exclusion(document, source_project: str = ""):
             return "Subject portal navigation, not a primary text"
         if path in ("Main_Page", "Main Page"):
             return "Archive navigation page, not a primary text"
+        if not path.startswith(("_assets_/", "_mw_/")) and path != "index":
+            return navigation_page(document.get("body", ""))
     if path.startswith("_assets_/"):
         return "Bundled support asset, not a source article"
     if path.startswith("_mw_/"):
@@ -87,7 +100,11 @@ def curate(source: Path, output: Path):
             archive_project = project(shard.get("archive") or original["source"]["id"])
             for doc in documents(path):
                 reason = exclusion(doc, archive_project)
-                counter = "excluded_non_articles"
+                counter = {
+                    "Unanswered question, not an answer to ship": "excluded_unanswered",
+                    "Disambiguation page, not a primary text": "excluded_disambiguation_pages",
+                    "Version index page, not a primary text": "excluded_version_pages",
+                }.get(reason, "excluded_non_articles")
                 if reason is None and archive_project == "stackexchange":
                     # A question page with no answers records a problem, not
                     # knowledge; shipping it returns an unanswered query.
@@ -140,7 +157,7 @@ def curate(source: Path, output: Path):
             totals.update(counts)
         manifest["totals"] = dict(totals)
         manifest["curation"] = dict(
-            policy="Kiwix article-only review v2",
+            policy="Kiwix article-only review v3",
             source_id=original["source"]["id"],
             policy_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             input_manifest_sha256=digest(source),

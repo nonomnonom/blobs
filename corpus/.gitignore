@@ -11,3 +11,6 @@ artifacts/.build-*/
 # corpus/published-records.json pointers instead of the bytes.
 artifacts/records/
 artifacts/records/.export-*/
+# Superseded edition bytes stay out of git; their receipts remain as pointers.
+retired/packages/*.blobs
+retired/records/

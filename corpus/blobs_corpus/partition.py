@@ -163,10 +163,12 @@ class PartitionSelection:
             count += 1
             _digest_id(identities, document["id"])
             yield document
-        if count != self.expected_documents or identities.hexdigest() != self.expected_document_ids_sha256:
+        if (
+            count != self.expected_documents
+            or identities.hexdigest() != self.expected_document_ids_sha256
+        ):
             raise ValueError(
-                "Reviewed records no longer match the selected partition plan: "
-                f"{self.partition_id}"
+                f"Reviewed records no longer match the selected partition plan: {self.partition_id}"
             )
 
     def metadata(self) -> dict:

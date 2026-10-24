@@ -325,7 +325,9 @@ class BuildTests(unittest.TestCase):
 
     def test_review_drops_an_unanswered_stack_exchange_question(self):
         text = b"<p>The question text is long enough to be extracted, but no answer exists in the pinned archive.</p>"
-        unanswered = article(text, "Why is my chain slipping", "questions/1/why-is-my-chain-slipping", LOCK)
+        unanswered = article(
+            text, "Why is my chain slipping", "questions/1/why-is-my-chain-slipping", LOCK
+        )
         unanswered["provenance"]["normalization"] = {"answers": 0, "question_id": "1"}
         answered = article(text, "How do I true a wheel", "questions/2/how-do-i-true-a-wheel", LOCK)
         answered["provenance"]["normalization"] = {"answers": 2, "question_id": "2"}
@@ -414,7 +416,9 @@ class BuildTests(unittest.TestCase):
                 export_records(root / "reviewed/manifest.json", exported, portfolio_root=root)
             with patch("blobs_corpus.export.MAX_FILE_BYTES", 1):
                 with self.assertRaisesRegex(ValueError, "artifact budget"):
-                    export_records(root / "reviewed/manifest.json", root / "oversized", portfolio_root=root)
+                    export_records(
+                        root / "reviewed/manifest.json", root / "oversized", portfolio_root=root
+                    )
             self.assertFalse((root / "oversized").exists())
             with self.assertRaises(FileExistsError):
                 curate(root / "manifest.json", root / "reviewed")

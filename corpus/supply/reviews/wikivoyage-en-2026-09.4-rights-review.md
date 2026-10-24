@@ -83,20 +83,25 @@ Exclusion report for this edition: 1 non-article support page rejected by normal
 
 ## Measured retrieval on the admitted package
 
-`corpus/work/evaluation/results/wikivoyage-en-2026-09.4-retrieval-v3.json` replays the
+`corpus/work/evaluation/results/wikivoyage-en-2026-09.4-retrieval-v4.json` replays the
 50-case suite against this exact archive with the Android retrieval policy as committed
 (`LibraryStore.kt` `6c44e154b496ebe2f601c74583fd2f3f3224650dff77c60a64eab4acf122354a`,
 `RetrievalQuery.kt` `c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68`).
-The earlier 2026-09.4 run used an uncommitted policy, so it was discarded and re-measured:
+The v3 run reported 50 of 50, but its harness promoted incidental ranked titles into
+subjects and issued a second topical query. v4 mirrors the app's single bounded FTS query
+and supersedes those numbers:
 
 | Measure | Value |
 | --- | --- |
 | Cases | 50 |
-| Expected guides found | 50 (100%) |
-| Found at rank 1 | 36 |
-| Mean reciprocal rank | 0.844 |
-| Host median | 368.0 ms |
-| Host p95 | 2,583.0 ms |
+| Expected guides found | 47 (94%) |
+| Found at rank 1 | 30 |
+| Mean reciprocal rank | 0.743 |
+| Host median | 229.8 ms |
+| Host p95 | 548.1 ms |
+
+Missed cases: `bali-scooter-permit`, `paris-first-stay`, and `tokyo-rail-network`; each
+returns a related guide rather than the expected canonical title.
 
 This measures host document retrieval only. It does not score generated answers and does
 not predict Android latency or a target-device acceptance run, which remains unmeasured.

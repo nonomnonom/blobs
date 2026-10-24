@@ -14,12 +14,14 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
 import re
+import tempfile
 from typing import Any
 import urllib.parse
 import urllib.request
 
-from .extract import write_lines
+from .extract import write_json, write_lines
 from .records import validate_document
 
 
@@ -202,6 +204,10 @@ def read_lock(path: Path) -> dict[str, Any]:
         raise ValueError("Invalid place-source lock identity")
     if not _EDITION.fullmatch(lock.get("edition", "")):
         raise ValueError("Invalid place-source lock edition")
+    if lock.get("language") is not None and not re.fullmatch(
+        r"[a-z]{2,3}", lock.get("language", "")
+    ):
+        raise ValueError("Invalid place-source lock language")
     for field, limit in (
         ("publisher", 300),
         ("license", 4_000),
@@ -374,6 +380,7 @@ def make_lock(
     reviewer: str,
     reviewed: str,
     notes: str,
+    language: str = "",
 ) -> dict[str, Any]:
     """Turn a reviewed capture receipt into the lock accepted by extraction."""
     receipt = read_capture_receipt(receipt_path)
@@ -399,6 +406,8 @@ def make_lock(
         source=source,
         review=dict(reviewer=reviewer, reviewed=reviewed, notes=notes),
     )
+    if language:
+        lock["language"] = language
     # Validate the exact future extraction contract before the immutable lock is written.
     temporary = output.with_name(output.name + ".validation.json")
     if temporary.exists():
@@ -493,6 +502,7 @@ def _place_document(
             f"Snapshot base time: {lock['source']['osm_base']}",
         )
     )
+    body = "\n".join(lines)
     document = dict(
         id=f"osm-{element_type}-{element_id}",
         title=name,
@@ -502,7 +512,7 @@ def _place_document(
         updated=updated,
         saved=lock["saved"],
         collection=lock["collection"],
-        body="\n".join(lines),
+        body=body,
         provenance=dict(
             source_id=lock["id"],
             edition=lock["edition"],
@@ -517,6 +527,7 @@ def _place_document(
             place_indicator=indicator,
             latitude=latitude,
             longitude=longitude,
+            body_sha256=hashlib.sha256(body.encode()).hexdigest(),
             extractor="blobs_corpus.places/1",
         ),
     )
@@ -525,7 +536,7 @@ def _place_document(
 
 
 def extract(lock_path: Path, snapshot_path: Path, output: Path) -> Path:
-    """Validate one locked OSM snapshot and write normalized place records."""
+    """Validate one locked OSM snapshot and write a reviewed records edition."""
     lock = read_lock(lock_path)
     if output.exists():
         raise FileExistsError(output)
@@ -548,6 +559,7 @@ def extract(lock_path: Path, snapshot_path: Path, output: Path) -> Path:
         raise ValueError("Place snapshot element count differs from the lock")
 
     documents = []
+    excluded = []
     identities: set[tuple[str, int]] = set()
     for element in elements:
         if not isinstance(element, dict):
@@ -559,12 +571,84 @@ def extract(lock_path: Path, snapshot_path: Path, output: Path) -> Path:
         document = _place_document(lock, element, snapshot_sha256)
         if document is not None:
             documents.append(document)
+        else:
+            tags = element.get("tags") or {}
+            name = tags.get("name", "").strip() if isinstance(tags, dict) else ""
+            excluded.append(
+                dict(
+                    id=f"osm-{identity[0]}-{identity[1]}",
+                    title=name,
+                    reason="Unnamed element, not a named place",
+                )
+            )
     if len(documents) != lock["source"]["matching_elements"]:
         raise ValueError("Place snapshot matching count differs from the lock")
     documents.sort(key=lambda item: (item["title"].casefold(), item["id"]))
     output.parent.mkdir(parents=True, exist_ok=True)
-    write_lines(output, documents)
-    return output
+    with tempfile.TemporaryDirectory(prefix=".places-", dir=output.parent) as folder:
+        staged = Path(folder) / "edition"
+        staged.mkdir()
+        records_path = staged / "documents.jsonl.gz"
+        write_lines(records_path, documents)
+        text_characters = sum(len(item["body"]) for item in documents)
+        manifest = dict(
+            format=1,
+            identity=dict(
+                lock_sha256=hashlib.sha256(
+                    json.dumps(lock, sort_keys=True).encode()
+                ).hexdigest(),
+                extractor="blobs_corpus.places/1",
+                extractor_sha256=_digest(Path(__file__)),
+                python=platform.python_version(),
+                dependencies={},
+            ),
+            source=lock,
+            complete=True,
+            total_entries=len(elements),
+            next_entry=len(documents),
+            shards=[
+                dict(
+                    start=0,
+                    end=len(documents),
+                    archive=lock["id"],
+                    files={
+                        "documents": dict(
+                            name=records_path.name,
+                            bytes=records_path.stat().st_size,
+                            sha256=_digest(records_path),
+                        )
+                    },
+                    counts=dict(
+                        documents=len(documents),
+                        text_characters=text_characters,
+                        text_utf8_bytes=sum(
+                            len(item["body"].encode()) for item in documents
+                        ),
+                    ),
+                )
+            ],
+            totals=dict(
+                documents=len(documents),
+                text_characters=text_characters,
+                text_utf8_bytes=sum(len(item["body"].encode()) for item in documents),
+            ),
+            curation=dict(
+                policy="OpenStreetMap named-place review v1",
+                source_id=lock["id"],
+                policy_sha256=_digest(Path(__file__)),
+                input_snapshot_sha256=snapshot_sha256,
+                input_query_sha256=lock["source"]["query_sha256"],
+                osm_base=lock["source"]["osm_base"],
+                deduplication=(
+                    "exact OSM element identity; a repeated element stops extraction "
+                    "rather than shipping two records for one object"
+                ),
+                excluded_documents=excluded,
+            ),
+        )
+        write_json(staged / "manifest.json", manifest)
+        os.rename(staged, output)
+    return output / "manifest.json"
 
 
 def main() -> None:
@@ -594,6 +678,10 @@ def main() -> None:
     lock_parser.add_argument("--reviewer", required=True)
     lock_parser.add_argument("--reviewed", required=True)
     lock_parser.add_argument("--notes", required=True)
+    lock_parser.add_argument(
+        "--language",
+        help="ISO 639 code for the app-facing record text; required by the portfolio policy",
+    )
     args = parser.parse_args()
     if args.command == "capture":
         tag_any = []
@@ -623,6 +711,7 @@ def main() -> None:
                     reviewer=args.reviewer,
                     reviewed=args.reviewed,
                     notes=args.notes,
+                    language=args.language or "",
                 ),
                 ensure_ascii=False,
                 indent=2,

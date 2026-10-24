@@ -65,7 +65,7 @@ def validate_document(item: dict):
             raise ValueError(
                 f"Invalid {field}: must be nonempty text of at most {limit} characters"
             )
-        if field != "body" and "\ufffd" in value:
+        if "\ufffd" in value:
             raise ValueError(f"Invalid {field}: contains a Unicode replacement character")
     if not re.fullmatch(r"[a-zA-Z0-9_-]{1,100}", item["id"]):
         raise ValueError("Invalid source ID")

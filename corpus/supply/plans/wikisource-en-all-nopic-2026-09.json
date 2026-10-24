@@ -1,0 +1,34 @@
+{
+  "algorithm": "sha256-document-id-modulo-v1",
+  "format": 1,
+  "partitions": [
+    {
+      "document_ids_sha256": "e144c8cd6ec34d250abb54fec19a7b7003794620b3286f903661d083527c029a",
+      "documents": 158944,
+      "id": "p000",
+      "index": 0
+    },
+    {
+      "document_ids_sha256": "0242995eb7b43c84a266f0221fd3057c1bc5a74a9ff32a6e3effc0812625cb5b",
+      "documents": 159069,
+      "id": "p001",
+      "index": 1
+    },
+    {
+      "document_ids_sha256": "ad214da6b3da911c4b6f2108cbb2e8ad1a178c1cd0362bd544175e5e18d43ab5",
+      "documents": 158753,
+      "id": "p002",
+      "index": 2
+    },
+    {
+      "document_ids_sha256": "95bc20c1e8083e8e1cd218acbdd2b4c63d9fe570a8d1048026a69edca1707b0e",
+      "documents": 158760,
+      "id": "p003",
+      "index": 3
+    }
+  ],
+  "source_edition": "2026-09",
+  "source_id": "wikisource-en-all-nopic",
+  "source_lock_sha256": "4231ed3b6c4e38d4a236640c7d42ed332f6a1fd505785c21d4070318198db440",
+  "source_manifest_sha256": "5fa2cb042000108b6cc25174eb264b7af53ca8e5a7fc60cc5e38f2cef6b84901"
+}

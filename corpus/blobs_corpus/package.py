@@ -8,6 +8,7 @@ import tempfile
 
 from .archive import create_package, package, verify_package
 from .library import build_library
+from .runtime_contract import assert_installable
 
 __all__ = ["create_package", "package", "verify_package"]
 
@@ -55,6 +56,7 @@ def main():
         with tempfile.TemporaryDirectory(prefix=".build-", dir=work) as folder:
             database = Path(folder) / "library.sqlite"
             build = build_library(source, database, schema=schema, partition=partition)
+            assert_installable(database)
             manifest = create_package(
                 database,
                 output,
@@ -66,6 +68,8 @@ def main():
         if work is not None or partition_plan is not None or partition_id is not None:
             parser.error("--work-directory and partition options apply to library builds only")
         build = None
+        if kind == "database":
+            assert_installable(source)
         manifest = create_package(
             source,
             output,

@@ -32,7 +32,9 @@ def install_identity(manifest: dict) -> tuple[str, str]:
         raise ValueError("A portfolio edition must name its pinned source identity")
     source_id = str(source["id"])
     metadata = manifest.get("archive_metadata") or {}
-    tag = str(metadata.get("Language") or source_id.split("-")[1]).lower()
+    tag = str(
+        source.get("language") or metadata.get("Language") or source_id.split("-")[1]
+    ).lower()
     if tag not in ENGLISH_TAGS:
         raise ValueError(
             f"Supply language policy: Blobs publishes English knowledge only, and this edition is "

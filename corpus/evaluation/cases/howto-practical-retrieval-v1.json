@@ -1,0 +1,409 @@
+{
+  "format": 1,
+  "id": "howto-practical-retrieval-v1",
+  "notes": "Held-out everyday questions spread over the four reviewed sites in the lane (cooking, money, travel, home improvement). Questions paraphrase the source post rather than copying its title, so a title-only match is not sufficient.",
+  "library": {
+    "id": "howto-practical",
+    "version": "2026-10.2",
+    "records_sha256": "e35fa824470758b5409f7daa6ef5d1086de2ec4bc11a004e56fc8ff618dc4fd0",
+    "payload_sha256": "910ddaf549fa5425d564b3049af0ab1a781926cbfe26636f03b73f12cfb6ba7d"
+  },
+  "cases": [
+    {
+      "id": "slow-roast-chicken",
+      "question": "Is it safe to slow-roast a whole chicken for four or five hours on low heat?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-c4aef888d338a5c4291ed05bb09e1764"
+      ],
+      "expected_document_titles": [
+        "Can I safely roast a chicken for 4 to 5 hours on a low heat?"
+      ]
+    },
+    {
+      "id": "fluffy-rice",
+      "question": "How do I cook rice so it comes out fluffy instead of sticky?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-311e7b6a462eff482ced1ce338d335c7"
+      ],
+      "expected_document_titles": [
+        "How (or is there) a way to make my rice more fluffy than sticky? Given my current approach"
+      ]
+    },
+    {
+      "id": "cold-kitchen-sourdough",
+      "question": "How do I keep a sourdough starter alive in a cold kitchen?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-84e28dfa9c8697ab6b7e630bb036e094"
+      ],
+      "expected_document_titles": [
+        "Techniques for making sourdough starter in cold/altitude"
+      ]
+    },
+    {
+      "id": "chefs-knife",
+      "question": "What should I look for when buying a good all-purpose chef's knife?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-6fefd14139064ca13aba299c42ae10bd"
+      ],
+      "expected_document_titles": [
+        "What should I look for in a good, multi-purpose chef's knife?"
+      ]
+    },
+    {
+      "id": "tomato-sauce-acidity",
+      "question": "How can I make a tomato sauce less acidic?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-7088eb9a822b57d108c22f8de5cdfb5b"
+      ],
+      "expected_document_titles": [
+        "In a tomato sauce recipe, how can I cut the acidity?"
+      ]
+    },
+    {
+      "id": "first-pancake",
+      "question": "Why does the first pancake in a batch always turn out bad?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-18e1edddde97d83e28d5cc99379d7983"
+      ],
+      "expected_document_titles": [
+        "Pancakes: Avoiding the \"spider batch\""
+      ]
+    },
+    {
+      "id": "full-freezer-energy",
+      "question": "Does keeping the freezer full really save energy?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-462eeaf4cce829540ba6af3c3123a6f5"
+      ],
+      "expected_document_titles": [
+        "Does keeping a fridge/freezer full significantly help energy efficiency?"
+      ]
+    },
+    {
+      "id": "home-canned-beans-botulism",
+      "question": "Are home-canned green beans a botulism risk?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-be648c4c58bdb552509803a67f14b1c6"
+      ],
+      "expected_document_titles": [
+        "Botulinum Toxin in Home-Canned Green Beans"
+      ]
+    },
+    {
+      "id": "credit-score-debt",
+      "question": "Does a good credit score encourage people to take on more debt?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-716efe002c1b5c64395ecde56d4f1e5c"
+      ],
+      "expected_document_titles": [
+        "Shouldn't the \"credit score\" prevent Americans from going deeper and deeper into personal debt?"
+      ]
+    },
+    {
+      "id": "house-cash-or-mortgage",
+      "question": "Should I buy a house with cash or take a mortgage and invest the rest?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-e6099f8c4f7bba6dcd785c183bc5c35e"
+      ],
+      "expected_document_titles": [
+        "Should I buy my house in cash, or with a mortgage and invest the rest of my money?"
+      ]
+    },
+    {
+      "id": "tax-refund-zero",
+      "question": "Should my tax refund be as close to zero as possible?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-14e8ce67e0c05df66e9b368f475b1b11"
+      ],
+      "expected_document_titles": [
+        "Does my tax refund need to be as close to zero dollars as possible?"
+      ]
+    },
+    {
+      "id": "retirement-de-risking",
+      "question": "Why should someone close to retirement make their portfolio less risky?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-29a145323120000b82b6c45e724f0834"
+      ],
+      "expected_document_titles": [
+        "Why should a person approaching retirement age make their portfolio less risky?"
+      ]
+    },
+    {
+      "id": "budget-without-budget",
+      "question": "Can I get financially stable without tracking a budget?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-1c7ffdfd253f22277e771d49d010c3b5"
+      ],
+      "expected_document_titles": [
+        "Can I become financially free without budgeting?"
+      ]
+    },
+    {
+      "id": "index-funds",
+      "question": "Are index funds really as good as people say?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-0b16d3ec4a0142502e05e3a577abe227"
+      ],
+      "expected_document_titles": [
+        "Are Index Funds really as good as \"experts\" claim?"
+      ]
+    },
+    {
+      "id": "debt-or-bankruptcy",
+      "question": "Should I keep paying off debt or file for bankruptcy?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-9c76440b1cad28cc6da6013efa9a8c06"
+      ],
+      "expected_document_titles": [
+        "Can I become debt free or should I file for bankruptcy? How do I manage my debt and finances?"
+      ]
+    },
+    {
+      "id": "teen-loan-support",
+      "question": "How can a 17-year-old support themselves with a loan?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-3a65bf3bce6576f66bec65e195092641"
+      ],
+      "expected_document_titles": [
+        "How can I support myself financially as a 17 year old with a loan?"
+      ]
+    },
+    {
+      "id": "self-insure-wealthy",
+      "question": "Does it make sense for wealthy people to skip insurance?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-0a9f19d048c1185beae85995ebfd104d"
+      ],
+      "expected_document_titles": [
+        "For very high-net worth individuals, does it make sense to not have insurance?"
+      ]
+    },
+    {
+      "id": "savings-for-car",
+      "question": "Should I spend most of my savings on a car that costs a year of salary?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-fd05ba6c9110d9026cc5efa98770a1d3"
+      ],
+      "expected_document_titles": [
+        "Should I spend 3/4 of my savings to buy a new car that costs about a year of my annual salary?"
+      ]
+    },
+    {
+      "id": "expired-passport-flight",
+      "question": "Can an airline refuse to board me for a flight home because my passport expired?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-3fde8f587b0b62e2593b10532d4d3560"
+      ],
+      "expected_document_titles": [
+        "Why would airlines not let a US citizen with an expired passport board a plane back to the US?"
+      ]
+    },
+    {
+      "id": "visa-requirements",
+      "question": "Why do rich countries still require visas from citizens of other developed countries?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-36135b997ade162b22df27b804459d37"
+      ],
+      "expected_document_titles": [
+        "Why do many countries in the world still require citizens of states with a high HDI to get visas?"
+      ]
+    },
+    {
+      "id": "flight-waste",
+      "question": "How do I minimise waste when flying?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-c842bbb1efc4d6b4ef79fba18a246286"
+      ],
+      "expected_document_titles": [
+        "How do I minimise waste on a flight?"
+      ]
+    },
+    {
+      "id": "luggage-theft",
+      "question": "How do I stop someone stealing my checked luggage at the airport?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-0c8e2abf0ab15748624e731bdc07ae68"
+      ],
+      "expected_document_titles": [
+        "How do you prevent somebody from stealing your luggage when traveling by air?"
+      ]
+    },
+    {
+      "id": "hotel-wifi",
+      "question": "What can I do about painfully slow hotel Wi-Fi?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-b2da7d9592e038da037a33988732b6fa"
+      ],
+      "expected_document_titles": [
+        "How to cope with too slow Wi-Fi at hotel?"
+      ]
+    },
+    {
+      "id": "jet-lag-direction",
+      "question": "Does it matter which direction I fly for jet lag when the time difference is twelve hours?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-770b03886da947a52c73724657cbca59"
+      ],
+      "expected_document_titles": [
+        "Does the direction of travel matter for jet lag, when the time difference is 12 hours?"
+      ]
+    },
+    {
+      "id": "train-seat-reservation",
+      "question": "Do European train bookings include a reserved seat on a specific departure?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-7a98dafcb8b00f27f06e5b004a37b93b"
+      ],
+      "expected_document_titles": [
+        "Do European train bookings include reserved seats on a specific train departure?"
+      ]
+    },
+    {
+      "id": "closest-airport",
+      "question": "Which airport is the closest to the city centre it serves?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-ab2b407019aa10bbfe26d7761176727b"
+      ],
+      "expected_document_titles": [
+        "What is the closest airport to the center of the city it serves?"
+      ]
+    },
+    {
+      "id": "airline-refund",
+      "question": "The airline went out of business; can I get my ticket refunded?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-fba88d6a5d7e471a477c0bbde89b6ae3"
+      ],
+      "expected_document_titles": [
+        "WOW air has ceased operation, can I get my tickets refunded?"
+      ]
+    },
+    {
+      "id": "breaker-damage",
+      "question": "Can switching things off at the circuit breaker damage appliances in the house?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-42e3a815c216452a109fc617a87eaf15"
+      ],
+      "expected_document_titles": [
+        "What items in a house can potentially be damaged by shutting them off at the circuit breaker?"
+      ]
+    },
+    {
+      "id": "lead-paint-dust",
+      "question": "I released a lot of lead paint dust in the house, what should I do?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-69262a2dc1928448a96052014a4b11b2"
+      ],
+      "expected_document_titles": [
+        "I've released a lot of lead-paint dust in our house. What to do?"
+      ]
+    },
+    {
+      "id": "water-damaged-drywall",
+      "question": "How do I repair water-damaged drywall behind bathroom tile?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-efc1b91dd4bd6e92a9a48bd03abe4a4b"
+      ],
+      "expected_document_titles": [
+        "Expedient repair for water damaged drywall behind tile"
+      ]
+    },
+    {
+      "id": "toilet-venting",
+      "question": "Is poor toilet drainage caused by bad venting?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-a75596670be70e652e16beed17b95512"
+      ],
+      "expected_document_titles": [
+        "Does my toilet drain poorly because of bad venting?"
+      ]
+    },
+    {
+      "id": "faucet-heat-source",
+      "question": "Why would bathroom faucets use a different hot-water source from the radiators?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-a044385d5d6b14c9b2c01f60f7c8689b"
+      ],
+      "expected_document_titles": [
+        "Why would water faucets use a different energy source from the radiators?"
+      ]
+    },
+    {
+      "id": "outlet-pigtails",
+      "question": "When wiring outlets, should I use pigtails or both sets of screws?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-8958de2d00cb54ac8e1f59e09613e760"
+      ],
+      "expected_document_titles": [
+        "When wiring outlets should I use pigtails or both sets of outlet screws?"
+      ]
+    },
+    {
+      "id": "pipe-leaks-winter",
+      "question": "How do I prepare the house to stop pipes freezing and leaking in a winter storm?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-b8ecfe207e7fbe1bc9fdfd292831e6d3"
+      ],
+      "expected_document_titles": [
+        "How to prepare home to prevent pipe leaks during a severe winter storm?"
+      ]
+    },
+    {
+      "id": "attic-insulation-deck",
+      "question": "Does spray insulation under the roof deck keep a hot attic cooler?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-eebda89a797299cebb0c093461f16ff3"
+      ],
+      "expected_document_titles": [
+        "Would sprayed insulation under the roof deck cool down a hot attic?"
+      ]
+    },
+    {
+      "id": "window-insulation",
+      "question": "Is there a real benefit to plastic window insulation all year?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-5fe4fd6709fca7536ae99c21c5b488c6"
+      ],
+      "expected_document_titles": [
+        "Is there a significant benefit to using plastic window insulation year round?"
+      ]
+    }
+  ]
+}

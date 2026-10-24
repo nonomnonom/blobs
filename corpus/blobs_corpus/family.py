@@ -24,7 +24,9 @@ def _language(manifest: dict) -> str:
     return str((manifest.get("archive_metadata") or {}).get("Language", "")).lower()
 
 
-def _build_source(manifests: list[dict], lane: str, edition: str, collection: str, scope: str) -> dict:
+def _build_source(
+    manifests: list[dict], lane: str, edition: str, collection: str, scope: str
+) -> dict:
     """Describe the lane as one source whose licence and publisher stay per record."""
     licenses = sorted({manifest["source"]["license"] for manifest in manifests})
     publishers = sorted({manifest["source"]["publisher"] for manifest in manifests})
@@ -60,10 +62,14 @@ def merge(
                 f"{path.parent.name} is {language!r}"
             )
         if base_identity is None:
-            base_identity = {k: identity[k] for k in ("extractor", "extractor_sha256", "python", "dependencies")}
+            base_identity = {
+                k: identity[k] for k in ("extractor", "extractor_sha256", "python", "dependencies")
+            }
             base_language = language
         else:
-            current = {k: identity[k] for k in ("extractor", "extractor_sha256", "python", "dependencies")}
+            current = {
+                k: identity[k] for k in ("extractor", "extractor_sha256", "python", "dependencies")
+            }
             if current != base_identity:
                 raise ValueError(
                     f"Archive edition {path.parent.name} was extracted by a different builder; "
@@ -74,11 +80,15 @@ def merge(
         for record in member_records(manifest, path.parent):
             key = record["id"]
             if key in seen_ids:
-                raise ValueError(f"Duplicate document {key} in {path.parent.name} and {seen_ids[key]}")
+                raise ValueError(
+                    f"Duplicate document {key} in {path.parent.name} and {seen_ids[key]}"
+                )
             seen_ids[key] = path.parent.name
             url = record["url"]
             if url in seen_urls:
-                raise ValueError(f"Duplicate source URL {url} in {path.parent.name} and {seen_urls[url]}")
+                raise ValueError(
+                    f"Duplicate source URL {url} in {path.parent.name} and {seen_urls[url]}"
+                )
             seen_urls[url] = path.parent.name
         members.append({"manifest": manifest, "path": path})
     if not members:
@@ -142,9 +152,7 @@ def merge(
         "next_entry": offset,
         "total_entries": offset,
         "identity": dict(base_identity),
-        "source": _build_source(
-            [m["manifest"] for m in members], lane, edition, collection, scope
-        ),
+        "source": _build_source([m["manifest"] for m in members], lane, edition, collection, scope),
         "archives": archive_rows,
         "archive_metadata": dict(members[0]["manifest"].get("archive_metadata") or {}),
         "totals": dict(totals),
@@ -177,7 +185,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     merge_parser = subparsers.add_parser("merge")
-    merge_parser.add_argument("members", type=Path, nargs="+", help="archive edition manifest.json files")
+    merge_parser.add_argument(
+        "members", type=Path, nargs="+", help="archive edition manifest.json files"
+    )
     merge_parser.add_argument("output", type=Path, help="new lane edition directory")
     merge_parser.add_argument("--lane", required=True)
     merge_parser.add_argument("--edition", required=True)

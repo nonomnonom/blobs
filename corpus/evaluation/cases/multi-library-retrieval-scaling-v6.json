@@ -1,0 +1,125 @@
+{
+  "format": 1,
+  "id": "multi-library-retrieval-scaling-v6",
+  "libraries": [
+    {
+      "file": "wikivoyage-en-2026-09.5.blobs",
+      "id": "wikivoyage-en",
+      "version": "2026-09.5",
+      "payload_sha256": "380896b48d45f1d2e586d7d0f793ef57c79f861083867d68058d9b1e92631226"
+    },
+    {
+      "file": "howto-repair-2026-10.4.blobs",
+      "id": "howto-repair",
+      "version": "2026-10.4",
+      "payload_sha256": "06eadac68eb498fac2789e71b56a2c4205a3f5a2776923237307013038e37287"
+    },
+    {
+      "file": "howto-practical-2026-10.4.blobs",
+      "id": "howto-practical",
+      "version": "2026-10.4",
+      "payload_sha256": "9efdf2ee28db79d05ff8c2e933073fbf6c7a9bbbac20b304c8e985af0d68d481"
+    },
+    {
+      "file": "wikipedia-top1m-mini-2026-04.5.blobs",
+      "id": "wikipedia-top1m-mini",
+      "version": "2026-04.5",
+      "payload_sha256": "f850f7d0b78196309caefc4b6add5459321fa13f7a363f7a0744de20807a0243"
+    },
+    {
+      "file": "wikisource-en-history-p000-2026-09.3.blobs",
+      "id": "wikisource-en-history-p000",
+      "version": "2026-09.3",
+      "payload_sha256": "4d986fb42ce83a1b535b002dced995cca0b7b5084667070b6cf6de4acfb8f706"
+    },
+    {
+      "file": "wikisource-en-history-p001-2026-09.3.blobs",
+      "id": "wikisource-en-history-p001",
+      "version": "2026-09.3",
+      "payload_sha256": "5d94af5e93ddfa4978b7971d0405ae665a16ecda2501f71c4ac91b548c723394"
+    },
+    {
+      "file": "wikisource-en-history-p002-2026-09.3.blobs",
+      "id": "wikisource-en-history-p002",
+      "version": "2026-09.3",
+      "payload_sha256": "18a5cbcacb5a30e8ae597f9e6beacacf1341779ccd60b77cf7a0dad9ca6751ef"
+    },
+    {
+      "file": "wikisource-en-history-p003-2026-09.3.blobs",
+      "id": "wikisource-en-history-p003",
+      "version": "2026-09.3",
+      "payload_sha256": "289f4e6545651215958d7179a5167544402c68cd5ed8701930a500a099c78368"
+    },
+    {
+      "file": "nairobi-health-places-2026-10.1.blobs",
+      "id": "nairobi-health-places",
+      "version": "2026-10.1",
+      "payload_sha256": "b4dcb40d70e7a8e88bd3df0e004fa804e5a268739ad03ebbb90605adf7c8438a"
+    }
+  ],
+  "cases": [
+    {
+      "id": "wikivoyage-en-amsterdam-canal-district",
+      "question": "Which canal-ring neighbourhood in Amsterdam suits a slow first day?",
+      "expected_library_id": "wikivoyage-en",
+      "expected_document_title": "Amsterdam/Canal District",
+      "source_case": "corpus/evaluation/cases/wikivoyage-en-retrieval-v2.json#amsterdam-canal-district"
+    },
+    {
+      "id": "howto-repair-coasting-brake-accelerator",
+      "question": "What happens to a car when you release both the accelerator and the brake?",
+      "expected_library_id": "howto-repair",
+      "expected_document_title": "Does a Car Keep Moving If Neither Accelerator, Nor Brake Is Pressed?",
+      "source_case": "corpus/evaluation/cases/howto-repair-retrieval-v2.json#coasting-brake-accelerator"
+    },
+    {
+      "id": "howto-practical-slow-roast-chicken",
+      "question": "Is it safe to slow-roast a whole chicken for four or five hours on low heat?",
+      "expected_library_id": "howto-practical",
+      "expected_document_title": "Can I safely roast a chicken for 4 to 5 hours on a low heat?",
+      "source_case": "corpus/evaluation/cases/howto-practical-retrieval-v2.json#slow-roast-chicken"
+    },
+    {
+      "id": "wikipedia-top1m-mini-photosynthesis",
+      "question": "What is photosynthesis, and how do plants turn light into chemical energy?",
+      "expected_library_id": "wikipedia-top1m-mini",
+      "expected_document_title": "Photosynthesis",
+      "source_case": "corpus/evaluation/cases/wikipedia-top1m-mini-retrieval-v2.json#photosynthesis"
+    },
+    {
+      "id": "wikisource-en-history-p000-magna-carta-limits",
+      "question": "What limits did King John accept on the power of the English crown in Magna Carta in 1215?",
+      "expected_library_id": "wikisource-en-history-p000",
+      "expected_document_title": "Magna Carta (trans. Davis)",
+      "source_case": "corpus/evaluation/cases/wikisource-en-history-p000-retrieval-v2.json#magna-carta-limits"
+    },
+    {
+      "id": "wikisource-en-history-p001-gettysburg-nicolay",
+      "question": "In the Nicolay draft of the Gettysburg Address, what did Lincoln say the nation was testing?",
+      "expected_library_id": "wikisource-en-history-p001",
+      "expected_document_title": "Gettysburg Address (Nicolay draft)",
+      "source_case": "corpus/evaluation/cases/wikisource-en-history-p001-retrieval-v2.json#gettysburg-nicolay"
+    },
+    {
+      "id": "wikisource-en-history-p002-rough-draught-declaration",
+      "question": "What wording did Jefferson use in the \"Original Rough Draught\" of the Declaration of Independence about human events and consent of the governed?",
+      "expected_library_id": "wikisource-en-history-p002",
+      "expected_document_title": "\"Original Rough Draught\" of the Declaration of Independence",
+      "source_case": "corpus/evaluation/cases/wikisource-en-history-p002-retrieval-v2.json#rough-draught-declaration"
+    },
+    {
+      "id": "wikisource-en-history-p003-gettysburg-bancroft",
+      "question": "Which draft of the Gettysburg Address says the nation was conceived in liberty and dedicated to equality?",
+      "expected_library_id": "wikisource-en-history-p003",
+      "expected_document_title": "Gettysburg Address (Bancroft draft)",
+      "source_case": "corpus/evaluation/cases/wikisource-en-history-p003-retrieval-v2.json#gettysburg-bancroft"
+    },
+    {
+      "id": "nairobi-health-places-kenyatta-national-hospital",
+      "question": "Where is Kenyatta National Hospital in Nairobi?",
+      "expected_library_id": "nairobi-health-places",
+      "expected_document_title": "Kenyatta National Hospital",
+      "source_case": "corpus/evaluation/cases/nairobi-health-places-2026-10.1-retrieval-v1.json#kenyatta-national-hospital"
+    }
+  ]
+}

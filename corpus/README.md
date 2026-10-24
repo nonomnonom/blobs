@@ -46,30 +46,26 @@ evidence only until source, rights, retrieval, and release-admission gates pass.
 
 ## Fetch reviewed records
 
-App builds and unit tests do not need large record shards. Follow the [source-only clone instructions](../android/README.md#build-and-verify). For a package rebuild, fetch only the edition you need from the repository root:
+App builds and unit tests do not need large record shards. Follow the [source-only clone instructions](../android/README.md#build-and-verify). Reviewed records are not stored in this repository: they live in the `nonomnomon/blobs-catalog` dataset, and [published-records.json](published-records.json) records each edition's path, manifest digest, record digest, and the immutable Hugging Face revision that hosts it.
 
-```powershell
-git lfs pull --include="corpus/artifacts/records/nps-outdoor-safety-2026-10.2/**" --exclude=""
-```
+### Download reviewed records from Hugging Face
 
-Package builders require hydrated files, not LFS pointers. Current travel, regional, and focused preparedness records are also available at immutable Hugging Face revisions in [published-records.json](published-records.json). It records paths, digests, and package identities, without requiring you to download a source archive again.
-
-### Download reviewed travel records from Hugging Face
-
-With the `hf` CLI installed:
+With the `hf` CLI installed, take the edition's `records_revision` and `records_path` from [published-records.json](published-records.json):
 
 ```powershell
 hf download nonomnonom/blobs-catalog --type dataset `
-  --revision 698ab323d165b46128b000ecbe06367380906c10 `
-  --include "records/wikivoyage-en-all-nopic-2026-09.3/*" `
+  --revision <records_revision> `
+  --include "<records_path>/*" `
   --local-dir work/hf-records
-
-uv run --locked python -m blobs_corpus.export `
-  work/hf-records/records/wikivoyage-en-all-nopic-2026-09.3/manifest.json `
-  work/verified-records/wikivoyage-en-all-nopic-2026-09.3
 ```
 
-Export validates shard sizes, SHA-256, and each document, then writes to a new directory. Use its `manifest.json` to build a package. Reproducing the byte-identical published travel archive requires builder commit `64fa8e0`; newer builders can produce a different database checksum from the same records.
+Export validates shard sizes, SHA-256, and each document, then writes to a new directory. Use its `manifest.json` to build a package:
+
+```powershell
+uv run --locked python -m blobs_corpus.export `
+  work/hf-records/<records_path>/manifest.json `
+  work/verified-records/<edition>
+```
 
 ## Prepare a source edition
 

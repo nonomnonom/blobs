@@ -23,7 +23,7 @@ class DocumentValidationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, f"Invalid {field}.*replacement character"):
                     validate_document(record)
 
-    def test_accepts_a_literal_replacement_character_in_source_body(self):
+    def test_rejects_a_replacement_character_in_a_document_body(self):
         record = {
             "id": "source-1",
             "title": "Character encodings",
@@ -32,11 +32,14 @@ class DocumentValidationTests(unittest.TestCase):
             "license": "CC0",
             "updated": "2026-01-01",
             "saved": "2026-01-01",
-            "body": "A valid source may discuss the Unicode replacement character \ufffd.",
+            "body": "Upstream corruption leaves the Unicode replacement character \ufffd here.",
             "collection": "Test collection",
         }
 
-        validate_document(record)
+        # LibraryValidator on Android refuses to install any library whose documents.body carries
+        # U+FFFD, so the record contract cannot admit one either.
+        with self.assertRaisesRegex(ValueError, "Invalid body.*replacement character"):
+            validate_document(record)
 
 
 if __name__ == "__main__":
