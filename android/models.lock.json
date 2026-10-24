@@ -18,5 +18,15 @@
     "bytes": 2491874400,
     "sha256": "3c4d3cbdf3006d81444f6c7a5a56eb93d8e0f0e2ba5963b8ab62f9fd42604233",
     "license": "MIT"
+  },
+  "lfm2": {
+    "id": "lfm2-1b2-q4km",
+    "title": "LFM2 1.2B Q4_K_M",
+    "revision": "5399e76c648f4eb8c053feb1ab747277dea5bf8b",
+    "repository": "LiquidAI/LFM2-1.2B-GGUF",
+    "file": "LFM2-1.2B-Q4_K_M.gguf",
+    "bytes": 730893248,
+    "sha256": "55175400e3f509a9616227afeffd58d87e80b9f628a5d3d54ada884d85221fed",
+    "license": "LFM-Open-License-1.0"
   }
 }

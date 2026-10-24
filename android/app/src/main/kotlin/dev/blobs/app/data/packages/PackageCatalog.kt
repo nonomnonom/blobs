@@ -48,7 +48,13 @@ class PackageCatalog internal constructor(
         ),
         endpoint = URL(CATALOG_URL),
         openConnection = { it.openConnection() as HttpURLConnection },
-        hasInternet = { context.hasValidatedInternet() }
+        hasInternet = { context.hasValidatedInternet() },
+        // v2 stays trusted so a catalog signed before the key rotation still verifies.
+        additionalPublicKeys = listOf(
+            CatalogCodec.loadPublicKey(
+                context.assets.open(LEGACY_PUBLIC_KEY_FILE).bufferedReader().use { it.readText() }
+            )
+        )
     )
 
     private val bundledPackages = CatalogCodec.parseCatalog(fallbackCatalog)
@@ -278,7 +284,8 @@ class PackageCatalog internal constructor(
 
     companion object {
         const val FILE_NAME = "package-catalog.json"
-        const val PUBLIC_KEY_FILE = "catalog-public-key-v2.pem"
+        const val PUBLIC_KEY_FILE = "catalog-public-key-v3.pem"
+        const val LEGACY_PUBLIC_KEY_FILE = "catalog-public-key-v2.pem"
         const val CATALOG_URL =
             "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/main/catalog.signed.json"
         private const val TAG = "PackageCatalog"

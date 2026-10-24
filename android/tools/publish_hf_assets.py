@@ -51,6 +51,49 @@ def read_json_evidence(path: Path, label: str) -> object:
         raise ValueError(f"{label} is invalid JSON: {path}") from error
 
 
+LANE_ARCHIVE_IDENTITY = ("id", "edition", "filename", "bytes", "sha256")
+
+
+def validate_lane_archives(lock: dict, records: dict, source_lock: Path) -> None:
+    """Rebuild every merged archive identity from the lane lock and its member locks."""
+    archives, recorded = lock.get("archives"), records.get("archives")
+    if (
+        not isinstance(archives, list)
+        or not archives
+        or not isinstance(recorded, list)
+        or len(archives) != len(recorded)
+    ):
+        raise ValueError("Lane source lock and reviewed records disagree on archives")
+    members = {}
+    for item in recorded:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            raise ValueError("Reviewed records list malformed lane archives")
+        if item["id"] in members:
+            raise ValueError("Reviewed records repeat a lane archive")
+        members[item["id"]] = item
+    for entry in archives:
+        if not isinstance(entry, dict) or entry.get("id") not in members:
+            raise ValueError("Lane source lock names an archive the records do not retain")
+        member = members.pop(entry["id"])
+        if any(entry.get(field) != member.get(field) for field in LANE_ARCHIVE_IDENTITY):
+            raise ValueError(f"Lane source lock differs from records for {entry['id']}")
+        if entry.get("manifest_sha256") != member.get("lock_sha256"):
+            raise ValueError(f"Lane archive manifest digest differs for {entry['id']}")
+        relative = entry.get("lock")
+        if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
+            raise ValueError(f"Lane archive lock path is invalid for {entry['id']}")
+        member_lock = (source_lock.parent / relative).resolve()
+        if member_lock.parent != source_lock.parent.resolve() or not member_lock.is_file():
+            raise ValueError(f"Lane archive lock is missing for {entry['id']}")
+        admitted = read_json_evidence(member_lock, "Archive source lock")
+        if (
+            not isinstance(admitted, dict)
+            or any(admitted.get(field) != member.get(field) for field in LANE_ARCHIVE_IDENTITY)
+            or entry.get("lock_sha256") != source_lock_sha256(member_lock)
+        ):
+            raise ValueError(f"Lane archive lock does not identify {entry['id']}")
+
+
 def validate_source_and_records(source_lock: Path, reviewed_records: Path) -> None:
     """Require one reviewed record manifest to identify the admitted source lock."""
     lock = read_json_evidence(source_lock, "Source lock")
@@ -70,8 +113,13 @@ def validate_source_and_records(source_lock: Path, reviewed_records: Path) -> No
         or records["source"].get("id") != source_id
         or records["source"].get("edition") != edition
         or not isinstance(records.get("identity"), dict)
-        or records["identity"].get("lock_sha256") != source_lock_sha256(source_lock)
     ):
+        raise ValueError(
+            "Reviewed records do not identify the complete, curated admitted source lock"
+        )
+    if "archives" in lock:
+        validate_lane_archives(lock, records, source_lock)
+    elif records["identity"].get("lock_sha256") != source_lock_sha256(source_lock):
         raise ValueError(
             "Reviewed records do not identify the complete, curated admitted source lock"
         )

@@ -5,5 +5,10 @@ Downloaded unchanged on 22 October 2026 from official GitHub organization avatar
 - MiniCPM / OpenBMB: https://github.com/OpenBMB — https://avatars.githubusercontent.com/u/89920203?v=4
 - Microsoft (Phi): https://github.com/microsoft — https://avatars.githubusercontent.com/u/6154722?v=4
 - Qwen: https://github.com/QwenLM — https://avatars.githubusercontent.com/u/141221163?v=4
+- Liquid AI (LFM2): https://github.com/Liquid4All — https://avatars.githubusercontent.com/u/134113674?v=4
+  (downloaded unchanged on 24 October 2026, 10,237 bytes, SHA-256
+  beda0502f09589f4080f9ffb9e4243deabf40e217663f549d7f1b14a88652654; the organization
+  record names itself "Liquid AI, Inc." and links https://liquid.ai, which is the
+  publisher linked from the LFM2 model card and from www.liquid.ai)
 
 These are brand identifiers, not Blobs artwork. Original colors and proportions are preserved on a white backing, including in dark mode. Trademarks remain with their respective owners; upstream repository software licenses do not transfer trademark rights. Used to identify the installed/available model family, without implying endorsement. No remote image requests at runtime.

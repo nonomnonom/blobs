@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "revision": 2026102401,
-  "release_tag": "v0.3.10",
+  "revision": 2026102404,
+  "release_tag": "v0.4.0",
   "packages": [
     {
       "file_name": "Qwen3.5-2B-Q4_K_M.gguf",
@@ -62,102 +62,62 @@
       }
     },
     {
-      "file_name": "wikipedia-starter-schema3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/wikipedia-starter-schema3.blobs",
-      "download_format": "blobs",
-      "download_bytes": 3828868,
-      "download_sha256": "d893c8b5c21596d11db3260b77b8be88cf3cab813e34065f4c0a1bfeacfe0ff9",
+      "file_name": "LFM2-1.2B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/LiquidAI/LFM2-1.2B-GGUF/resolve/5399e76c648f4eb8c053feb1ab747277dea5bf8b/LFM2-1.2B-Q4_K_M.gguf",
+      "download_format": "gguf",
+      "download_bytes": 730893248,
+      "download_sha256": "55175400e3f509a9616227afeffd58d87e80b9f628a5d3d54ada884d85221fed",
       "manifest": {
         "format": 1,
-        "id": "wikipedia-starter",
-        "version": "2026-10-17.5",
-        "kind": "library",
-        "title": "Science and everyday questions",
-        "bytes": 8757248,
-        "sha256": "141b449c10fc5a76428f616c413f7066633b5fe426f84a9d5d2f45612b989a54",
-        "license": "CC BY-SA 4.0; adapted plain text; individual article attribution included",
-        "origin": "https://en.wikipedia.org/wiki/Wikipedia:Copyrights"
+        "id": "lfm2-1b2-q4km",
+        "version": "5399e76c",
+        "kind": "model",
+        "title": "LFM2 1.2B Q4_K_M · 128k",
+        "bytes": 730893248,
+        "sha256": "55175400e3f509a9616227afeffd58d87e80b9f628a5d3d54ada884d85221fed",
+        "license": "LFM-Open-License-1.0",
+        "origin": "https://huggingface.co/LiquidAI/LFM2-1.2B-GGUF/tree/5399e76c648f4eb8c053feb1ab747277dea5bf8b"
       },
-      "role": "optional",
-      "description": "A small set of science and everyday reference articles to get started offline.",
+      "role": "model",
+      "recommended_up_to_memory_mb": 32768,
+      "description": "Liquid AI LFM2-1.2B, a hybrid conv/attention model built for on-device use, official Q4_K_M GGUF. 128k native context. Licensed under the LFM Open License 1.0, which caps commercial use below 10M USD annual revenue and requires shipping the license text with the model.",
       "language": "English",
-      "publisher": "Blobs · Wikipedia contributors",
-      "library_profile": {
-        "record_count": 100,
-        "scope": "100 selected English Wikipedia reference articles on science and everyday topics.",
-        "source_snapshot_date": "2026-10-17",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "A small starter selection, not a general encyclopaedia or a source for current information."
-      },
+      "publisher": "Liquid AI · official GGUF",
       "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 4096,
         "minimum_app_version": "0.3.1"
       }
     },
     {
-      "file_name": "wikipedia-en-top1m-mini-2026-04.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/wikipedia-en-top1m-mini-2026-04.blobs",
+      "file_name": "wikivoyage-en-2026-09.5.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikivoyage-en-2026-09.5.blobs",
       "download_format": "blobs",
-      "download_bytes": 1804630820,
-      "download_sha256": "b22a95c9c759f82341b53e94b883a6adcf4d6e2cb2fe56182de25cad6a53c4d7",
+      "download_bytes": 290811362,
+      "download_sha256": "f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc",
       "manifest": {
-        "format": 1,
-        "id": "wikipedia-top1m-mini",
-        "version": "2026-04.1",
-        "kind": "library",
-        "title": "Wikipedia Top 1M introductions",
-        "bytes": 5011431424,
-        "sha256": "4ae8d2b3315ffab81bef6968ff84934a987d28843d15caa3a2d920756228e395",
-        "license": "CC BY-SA 4.0; Wikipedia contributors; text adapted by Blobs",
-        "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim"
-      },
-      "role": "optional",
-      "description": "A broader offline collection of Wikipedia introductions for optional installation.",
-      "language": "English",
-      "publisher": "Blobs · Wikipedia contributors",
-      "library_profile": {
-        "record_count": 997761,
-        "scope": "997,761 English Wikipedia lead-article introductions from the April 2026 Kiwix top-one-million snapshot.",
-        "source_snapshot_date": "2026-10-17",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "Lead introductions only, with images excluded. This is a selected snapshot, not all of English Wikipedia or current information."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "wikivoyage-en-2026-09-v3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/cae7f6c11e3bad49897dd17bb580ed5bf2da15ed/packages/wikivoyage-en-2026-09-v3.blobs",
-      "download_format": "blobs",
-      "download_bytes": 295304448,
-      "download_sha256": "2ff792457b81790fdba6c9f5118b15294448b3d96f934dca1844868c912bfdf8",
-      "manifest": {
-        "bytes": 628633600,
+        "bytes": 622776320,
         "format": 1,
         "id": "wikivoyage-en",
         "kind": "library",
-        "license": "CC BY-SA 4.0; Wikivoyage contributors; each guide links to its article history for author attribution",
-        "origin": "https://en.wikivoyage.org/wiki/Wikivoyage:How_to_re-use_Wikivoyage_guides",
-        "sha256": "da61f4c387b8fc439c081841b78526368e4639534292362d072f8ee20b85d773",
-        "title": "Travel guides · English",
-        "version": "2026-09.3"
+        "license": "CC BY-SA 4.0; Wikivoyage contributors; per-article attribution and applicable notices",
+        "origin": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_en_all_nopic_2026-09.zim",
+        "records_sha256": "9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b",
+        "sha256": "380896b48d45f1d2e586d7d0f793ef57c79f861083867d68058d9b1e92631226",
+        "title": "Wikivoyage English travel guides",
+        "version": "2026-09.5"
       },
       "role": "starter",
-      "description": "Offline destination guides and travel basics. This snapshot is from September 2026. Opening hours, fares, visas and local safety advice can change; check current details before you travel.",
+      "description": "34,597 records. English Wikivoyage guide text worldwide from the 2026-09-13 Kiwix snapshot; images are excluded. Opening hours, fares, visas, entry rules, local safety advice, and other travel details can change; verify time-sensitive details before travel. Two guides whose bodies carried upstream U+FFFD are excluded, so a question only they answered returns no match. Attribution rests on the pinned archive digest and each guide's revision-history URL because most guides carry no per-revision id. No target-device acceptance; the install-and-answer run is an emulator observation.",
       "language": "English",
       "publisher": "Wikivoyage contributors",
       "library_profile": {
         "record_count": 34597,
-        "scope": "English Wikivoyage guide text worldwide from the September 2026 Kiwix snapshot; images are excluded.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "Opening hours, fares, visas, local safety advice, and other travel details can change. Verify time-sensitive details before travel."
+        "scope": "English Wikivoyage guide text worldwide from the 2026-09-13 Kiwix snapshot; images are excluded.",
+        "source_snapshot_date": "2026-09-13",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digest and each guide's revision-history URL because most guides carry no per-revision id.",
+        "limitations": "Opening hours, fares, visas, entry rules, local safety advice, and other travel details can change; verify time-sensitive details before travel. Two guides whose bodies carried upstream U+FFFD are excluded, so a question only they answered returns no match. Attribution rests on the pinned archive digest and each guide's revision-history URL because most guides carry no per-revision id. No target-device acceptance; the install-and-answer run is an emulator observation."
       },
       "compatibility": {
         "format": "Blobs library archive",
@@ -167,277 +127,285 @@
       }
     },
     {
-      "file_name": "nps-outdoor-safety-2026-10-v2.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/nps-outdoor-safety-2026-10-v2.blobs",
+      "file_name": "howto-repair-2026-10.4.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/howto-repair-2026-10.4.blobs",
       "download_format": "blobs",
-      "download_bytes": 39256,
-      "download_sha256": "e0bc383811ad95c5079b931292f33320a9477d0fb77846ef0e91de869e71fcd8",
+      "download_bytes": 256576414,
+      "download_sha256": "0b395e6eade09525f87ff61acd6a76e107fb13688be9a0a99c1b730c8e089a5c",
       "manifest": {
-        "bytes": 151552,
+        "bytes": 647237632,
         "format": 1,
-        "id": "nps-outdoor-safety",
+        "id": "howto-repair",
         "kind": "library",
-        "license": "U.S. Government work · National Park Service (public domain unless marked)",
-        "origin": "https://www.nps.gov/aboutus/disclaimer.htm",
-        "sha256": "c5ee800abfdd9c4988289f9f793968e9a37602985377b1cab4774188c8c8a70f",
-        "title": "Outdoor safety · U.S. national parks",
-        "version": "2026-10.2"
+        "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post revision history for attribution",
+        "origin": "https://stackexchange.com",
+        "records_sha256": "091df84e82a5dc332c1caad5be3dc86e51ba73b48e7032215b2f200abb2f9b2c",
+        "sha256": "06eadac68eb498fac2789e71b56a2c4205a3f5a2776923237307013038e37287",
+        "title": "Repair and fixing · vehicles, bicycles, aviation, printing, woodworking",
+        "version": "2026-10.4"
       },
       "role": "optional",
-      "description": "Five U.S. national-park guides for hiking, outdoor emergencies, water treatment, natural-water hazards, and winter hiking. Conditions differ by place; follow current park and emergency guidance. Blobs is not affiliated with or endorsed by NPS.",
+      "description": "78,626 records. English Stack Exchange repair and fixing questions from pinned 2026-10 Kiwix archives: motor vehicles, bicycles, aviation, 3D printing, and woodworking. Answers are included; images are excluded. Community answers are not guaranteed correct or current; safety-critical vehicle, aviation, and electrical repair must be checked against current manufacturer documentation. Unanswered questions and posts under the extraction thresholds are excluded.",
       "language": "English",
-      "publisher": "National Park Service",
+      "publisher": "Stack Exchange network contributors",
       "library_profile": {
-        "record_count": 5,
-        "scope": "Five U.S. National Park Service outdoor-safety guides for hiking, outdoor emergency planning, water, hazards, and winter hiking.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "U.S. national-park guidance only. Conditions, rules, closures, and emergency instructions vary by place and can change."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "ready-emergency-preparedness-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/ready-emergency-preparedness-2026-10-v1.blobs",
-      "download_format": "blobs",
-      "download_bytes": 25054,
-      "download_sha256": "5e39ee9eb713ae790b426d9e7088ffdd5ab55edc29705cb62503159f207e9d0d",
-      "manifest": {
-        "format": 1,
-        "id": "ready-emergency-preparedness",
-        "version": "2026-10.1",
-        "kind": "library",
-        "title": "Emergency preparedness · U.S. households",
-        "bytes": 106496,
-        "sha256": "aaa6315c84831b62c25458541513c3e9e0b3c9f25e0558d525596a27d6b5304c",
-        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
-        "origin": "https://www.fema.gov/about/website-information"
-      },
-      "role": "optional",
-      "description": "Offline U.S. household guides for emergency plans, supply kits, evacuation, and power outages. This snapshot can become outdated; follow current local instructions in an emergency. Blobs is independent and is not endorsed by FEMA.",
-      "language": "English",
-      "publisher": "Ready.gov · Federal Emergency Management Agency",
-      "library_profile": {
-        "record_count": 4,
-        "scope": "Four Ready.gov guides for U.S. household emergency planning, kits, evacuation, and power outages.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "U.S. household guidance only. Follow current local instructions and emergency authorities during an emergency."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "camping-safety-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/camping-safety-2026-10-v1.blobs",
-      "download_format": "blobs",
-      "download_bytes": 25535,
-      "download_sha256": "8613b763c0935aaca7871f0184271ee11f2f74b693c7c5f2dc9e840f505c512e",
-      "manifest": {
-        "format": 1,
-        "id": "camping-safety",
-        "version": "2026-10.1",
-        "kind": "library",
-        "title": "Camping safely · U.S. national parks",
-        "bytes": 110592,
-        "sha256": "3b8eea8198663c7c19d0aa7934861083cb04ce7bd77bb9c48340462f41810743",
-        "license": "National Park Service text; generally public domain unless otherwise marked; no images or external linked content. Source: https://www.nps.gov/aboutus/disclaimer.htm",
-        "origin": "https://www.nps.gov/articles/series.htm?id=77643FE6-1DD8-B71B-0B72D3AC63C4F039"
-      },
-      "role": "optional",
-      "description": "A four-step U.S. National Park Service camping-safety guide: prepare, check conditions on arrival, camp safely, and close out your trip. Pages last updated in 2017–2019; check current park rules and alerts. Blobs is independent and not endorsed by NPS.",
-      "language": "English",
-      "publisher": "National Park Service",
-      "library_profile": {
-        "record_count": 4,
-        "scope": "Four U.S. National Park Service camping-safety guides.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "The source pages were last updated in 2017–2019. This is not current park rules, alerts, permits, or site-specific safety guidance."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "backcountry-basics-2026-10-v3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/82425300557d47af28534b215882d628b558eebf/packages/backcountry-basics-2026-10-v3.blobs",
-      "download_format": "blobs",
-      "download_bytes": 29597,
-      "download_sha256": "e8b66c6a4ba1ca797ed3f03ff4aeb6bf647a007d9cde904b1aecd0e2468d711d",
-      "manifest": {
-        "format": 1,
-        "id": "backcountry-basics",
-        "version": "2026-10.3",
-        "kind": "library",
-        "title": "Backcountry trip planning · U.S. national parks",
-        "bytes": 118784,
-        "sha256": "c2d3f6bc7ce50bcaca70a0d4ca54666aebb4d6d3243c805dfc9b3a25da66021f",
-        "license": "National Park Service text; public-domain status may vary by page; source credits The Mountaineers for the Ten Essentials system",
-        "origin": "https://www.nps.gov/aboutus/disclaimer.htm"
-      },
-      "role": "optional",
-      "description": "A compact guide to planning national park trips, packing essentials, and preparing for backcountry conditions. The day and overnight trip guide does not cover multi-day backcountry travel. Rules, permits, weather, closures, and alerts can change; check current park guidance.",
-      "language": "English",
-      "publisher": "National Park Service",
-      "library_profile": {
-        "record_count": 3,
-        "scope": "Three U.S. National Park Service guides for trip planning and backcountry camping.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "The day and overnight trip guide does not cover multi-day backcountry travel. Rules, permits, weather, closures, and alerts can change."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "weather-safety-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/weather-safety-2026-10-v1.blobs",
-      "download_format": "blobs",
-      "download_bytes": 26824,
-      "download_sha256": "739094b1aa407a742f37e636ed24e389c2c1722fef18d89a38589b178a2f45d1",
-      "manifest": {
-        "format": 1,
-        "id": "weather-safety",
-        "version": "2026-10.1",
-        "kind": "library",
-        "title": "Weather & wildfire safety · U.S. guidance",
-        "bytes": 114688,
-        "sha256": "3793f9a274cedf3e36c6160de6742a23d64988cec00027dc6b964335bb15b236",
-        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
-        "origin": "https://www.fema.gov/about/website-information"
-      },
-      "role": "optional",
-      "description": "Prepare for floods, thunderstorms, winter storms, and wildfires with four Ready.gov guides. U.S. guidance from March-August 2026. No live forecasts or alerts; follow current local instructions. Blobs is independent and not endorsed by FEMA.",
-      "language": "English",
-      "publisher": "Ready.gov · Federal Emergency Management Agency",
-      "library_profile": {
-        "record_count": 4,
-        "scope": "Four Ready.gov U.S. weather and wildfire preparedness guides.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "No live forecasts, alerts, evacuation orders, or local conditions. Follow current local authorities."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "earthquake-tsunami-safety-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/earthquake-tsunami-safety-2026-10-v1.blobs",
-      "download_format": "blobs",
-      "download_bytes": 14750,
-      "download_sha256": "9edabd91404f15033dcac058a5876bc3a4f0b0ce129c2d936617287d88f0674d",
-      "manifest": {
-        "format": 1,
-        "id": "earthquake-tsunami-safety",
-        "version": "2026-10.1",
-        "kind": "library",
-        "title": "Earthquake & tsunami safety · U.S. guidance",
-        "bytes": 90112,
-        "sha256": "2acc2b72ca7ade2ee58d9f05242cf38f28e529b4266a885274c949eae46f08c4",
-        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
-        "origin": "https://www.fema.gov/about/website-information"
-      },
-      "role": "optional",
-      "description": "Two Ready.gov guides for earthquake preparation, protective actions, tsunami evacuation, and hazards after shaking. U.S. guidance from May-September 2026. No live warnings or evacuation maps; follow local authorities. Blobs is independent and not endorsed by FEMA.",
-      "language": "English",
-      "publisher": "Ready.gov · Federal Emergency Management Agency",
-      "library_profile": {
-        "record_count": 2,
-        "scope": "Two Ready.gov U.S. earthquake and tsunami preparedness guides.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "No live warnings, evacuation maps, or local hazard status. Follow current local authorities."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "emergency-food-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/9bab07fb944ee48777115a6a184771bf351c9506/packages/emergency-food-2026-10-v1.blobs",
-      "download_format": "blobs",
-      "download_bytes": 7662,
-      "download_sha256": "5552eea8cadb4a86e1f53bbaf7df5b90a5b6aa317a0095c8563393740aa75d24",
-      "manifest": {
-        "format": 1,
-        "id": "emergency-food",
-        "version": "2026-10.1",
-        "kind": "library",
-        "title": "Food during power outages · U.S. guidance",
-        "bytes": 73728,
-        "sha256": "d90ef82573ca930b5123e33ec971beea93dcb5fefc0f4ab265152463a990efec",
-        "license": "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
-        "origin": "https://www.fema.gov/about/website-information"
-      },
-      "role": "optional",
-      "description": "Plan food supplies, cook safely, and protect refrigerator and freezer food during outages with one Ready.gov guide. U.S. household guidance from March 2026; follow current local food-safety advice. Blobs is independent and not endorsed by FEMA.",
-      "language": "English",
-      "publisher": "Ready.gov · Federal Emergency Management Agency",
-      "library_profile": {
-        "record_count": 1,
-        "scope": "One Ready.gov U.S. household food-during-power-outages guide.",
-        "source_snapshot_date": "2026-10-19",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "One U.S. household guide only. Follow current local food-safety advice and authorities."
-      },
-      "compatibility": {
-        "format": "Blobs library archive",
-        "corpus_schema": 3,
-        "retrieval_format": "SQLite FTS5",
-        "minimum_app_version": "0.3.1"
-      }
-    },
-    {
-      "file_name": "practical-living-2026-10-v1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/8eb5bf7f426dad543d8e3a28e00d35f357b4f5ad/packages/practical-living-2026-10-v1.blobs",
-      "download_format": "blobs",
-      "download_bytes": 81377,
-      "download_sha256": "b4e59dacbcc9f70a8ffe28130e920a64f6d96bda2c836bebd874f28a633cd1b6",
-      "manifest": {
-        "format": 1,
-        "id": "practical-living",
-        "version": "2026-10.1",
-        "kind": "library",
-        "title": "Practical living",
-        "bytes": 229376,
-        "sha256": "3bd3da23ad4ae106f0875d7669130267f63ae0c7f21e43ec9d417225143b83b1",
-        "license": "CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/); Appropedia contributors. See each article for its source and contributor history.",
-        "origin": "https://www.appropedia.org/Appropedia:Intellectual_property"
-      },
-      "role": "optional",
-      "description": "Four Appropedia guides to composting, drip irrigation, rainwater collection and solar cooking. Saved October 2026, without diagrams or videos.",
-      "language": "English",
-      "publisher": "Appropedia contributors",
-      "library_profile": {
-        "record_count": 4,
-        "scope": "Four English Appropedia guides on garden, water, and solar-cooking concepts.",
+        "record_count": 78626,
+        "scope": "English Stack Exchange repair and fixing questions from pinned 2026-10 Kiwix archives: motor vehicles, bicycles, aviation, 3D printing, and woodworking. Answers are included; images are excluded.",
         "source_snapshot_date": "2026-10-20",
-        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically.",
-        "limitations": "Only four selected articles are included. Diagrams, videos, and hardware designs are excluded."
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digests and each post's revision-history URL.",
+        "limitations": "Community answers are not guaranteed correct or current; safety-critical vehicle, aviation, and electrical repair must be checked against current manufacturer documentation. Unanswered questions and posts under the extraction thresholds are excluded."
+      },
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "howto-practical-2026-10.4.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/howto-practical-2026-10.4.blobs",
+      "download_format": "blobs",
+      "download_bytes": 567686098,
+      "download_sha256": "2c5d4867931a14fd9220990090fb21375e0fdc9255670abaeee78d0c1167d028",
+      "manifest": {
+        "bytes": 1454772224,
+        "format": 1,
+        "id": "howto-practical",
+        "kind": "library",
+        "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post revision history for attribution",
+        "origin": "https://stackexchange.com",
+        "records_sha256": "23877c5b9107b35f838f25f8903404265a5d42b40534b324fae8eda20e5b223b",
+        "sha256": "9efdf2ee28db79d05ff8c2e933073fbf6c7a9bbbac20b304c8e985af0d68d481",
+        "title": "Practical how-to · cooking, money, travel, home",
+        "version": "2026-10.4"
+      },
+      "role": "optional",
+      "description": "189,294 records. English Stack Exchange practical how-to questions from pinned 2026-10 Kiwix archives: cooking, personal finance, travel, and home improvement. Answers are included; images are excluded. Community answers are not guaranteed correct or current. Financial, legal, travel-entry, and home-safety details depend on jurisdiction and change over time; verify against current official sources. Unanswered questions and posts under the extraction thresholds are excluded.",
+      "language": "English",
+      "publisher": "Stack Exchange network contributors",
+      "library_profile": {
+        "record_count": 189294,
+        "scope": "English Stack Exchange practical how-to questions from pinned 2026-10 Kiwix archives: cooking, personal finance, travel, and home improvement. Answers are included; images are excluded.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digests and each post's revision-history URL.",
+        "limitations": "Community answers are not guaranteed correct or current. Financial, legal, travel-entry, and home-safety details depend on jurisdiction and change over time; verify against current official sources. Unanswered questions and posts under the extraction thresholds are excluded."
+      },
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikipedia-top1m-mini-2026-04.5.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikipedia-top1m-mini-2026-04.5.blobs",
+      "download_format": "blobs",
+      "download_bytes": 1787025308,
+      "download_sha256": "a751510e64b1c845016d293e9d9af00bc393f87cdbeb01bec22f3268a5972528",
+      "manifest": {
+        "bytes": 4980006912,
+        "format": 1,
+        "id": "wikipedia-top1m-mini",
+        "kind": "library",
+        "license": "CC BY-SA 4.0; Wikipedia contributors; see per-article attribution and applicable notices",
+        "origin": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_mini_2026-04.zim",
+        "records_sha256": "2459f398597c3f6dd617badd58833ab99d8dfea41e40d6d8288fd97e383edf3e",
+        "sha256": "f850f7d0b78196309caefc4b6add5459321fa13f7a363f7a0744de20807a0243",
+        "title": "Wikipedia English Top 1M introductions",
+        "version": "2026-04.5"
+      },
+      "role": "optional",
+      "description": "997,714 records. English Wikipedia lead sections of the top one million articles from the pinned 2026-04 Kiwix snapshot; images are excluded. Introductions only, not full article bodies. Introductions only; facts can be outdated or simplified. Per-article revision ids were not extracted, so exact revisions cannot be pinned (sampled verification only). Duplicate bodies and non-article pages were excluded.",
+      "language": "English",
+      "publisher": "Wikipedia contributors",
+      "library_profile": {
+        "record_count": 997714,
+        "scope": "English Wikipedia lead sections of the top one million articles from the pinned 2026-04 Kiwix snapshot; images are excluded. Introductions only, not full article bodies.",
+        "source_snapshot_date": "2026-04-28",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digest and article revision histories because per-article revision ids are not retained.",
+        "limitations": "Introductions only; facts can be outdated or simplified. Per-article revision ids were not extracted, so exact revisions cannot be pinned (sampled verification only). Duplicate bodies and non-article pages were excluded."
+      },
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikisource-en-history-p000-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p000-2026-09.3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 1323097330,
+      "download_sha256": "6cf1ffb2ff7d97cc92fc2a95f5f601e51cb4be2d3f8ff981f53cff3e5267d2bc",
+      "manifest": {
+        "bytes": 3127779328,
+        "format": 1,
+        "id": "wikisource-en-history-p000",
+        "kind": "library",
+        "license": "Public domain or CC BY-SA 4.0 per work; Wikisource contributors; text extracted and reformatted by Blobs; images excluded.",
+        "origin": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim",
+        "records_sha256": "4669ab78053928f2436d10c9d8c85fddd5b0d9fdefa4376a844f238d621605cf",
+        "sha256": "4d986fb42ce83a1b535b002dced995cca0b7b5084667070b6cf6de4acfb8f706",
+        "title": "Wikisource history and primary texts - volume 1",
+        "version": "2026-09.3"
+      },
+      "role": "optional",
+      "description": "155,527 records. Volume 1 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes. Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance.",
+      "language": "English",
+      "publisher": "Wikisource contributors",
+      "library_profile": {
+        "record_count": 155527,
+        "scope": "Volume 1 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikisource-en-history-p001-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p001-2026-09.3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 1322088523,
+      "download_sha256": "370df30d8f81ef25ed75a04106e84651803a1b28cb7da3be699fe30123c4e035",
+      "manifest": {
+        "bytes": 3123478528,
+        "format": 1,
+        "id": "wikisource-en-history-p001",
+        "kind": "library",
+        "license": "Public domain or CC BY-SA 4.0 per work; Wikisource contributors; text extracted and reformatted by Blobs; images excluded.",
+        "origin": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim",
+        "records_sha256": "2bcddef364b637f476f7d5d3455c2782b243a7167343f3a27b53fa2de5ddc87a",
+        "sha256": "5d94af5e93ddfa4978b7971d0405ae665a16ecda2501f71c4ac91b548c723394",
+        "title": "Wikisource history and primary texts - volume 2",
+        "version": "2026-09.3"
+      },
+      "role": "optional",
+      "description": "155,739 records. Volume 2 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes. Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance.",
+      "language": "English",
+      "publisher": "Wikisource contributors",
+      "library_profile": {
+        "record_count": 155739,
+        "scope": "Volume 2 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikisource-en-history-p002-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p002-2026-09.3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 1335443794,
+      "download_sha256": "2a9973ca9ef6f1fb3f1e851c88634eb30182bebdf021492c4980139e56fec96c",
+      "manifest": {
+        "bytes": 3150995456,
+        "format": 1,
+        "id": "wikisource-en-history-p002",
+        "kind": "library",
+        "license": "Public domain or CC BY-SA 4.0 per work; Wikisource contributors; text extracted and reformatted by Blobs; images excluded.",
+        "origin": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim",
+        "records_sha256": "f2be3cf891884cd16f3f901d74d8a0e903ca04a74c492af2c56bb9c3dcf610b1",
+        "sha256": "18a5cbcacb5a30e8ae597f9e6beacacf1341779ccd60b77cf7a0dad9ca6751ef",
+        "title": "Wikisource history and primary texts - volume 3",
+        "version": "2026-09.3"
+      },
+      "role": "optional",
+      "description": "155,378 records. Volume 3 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes. Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance.",
+      "language": "English",
+      "publisher": "Wikisource contributors",
+      "library_profile": {
+        "record_count": 155378,
+        "scope": "Volume 3 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "wikisource-en-history-p003-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p003-2026-09.3.blobs",
+      "download_format": "blobs",
+      "download_bytes": 1323294448,
+      "download_sha256": "0176bb4a3ad8c5b8104a39c60620d83ea5b40a43013b50fe399a3a0987e60843",
+      "manifest": {
+        "bytes": 3126341632,
+        "format": 1,
+        "id": "wikisource-en-history-p003",
+        "kind": "library",
+        "license": "Public domain or CC BY-SA 4.0 per work; Wikisource contributors; text extracted and reformatted by Blobs; images excluded.",
+        "origin": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim",
+        "records_sha256": "3da5938b9f1e7a3ca662317c99dc61de6809c6ed0b6e49698b76bd3a44a748dc",
+        "sha256": "289f4e6545651215958d7179a5167544402c68cd5ed8701930a500a099c78368",
+        "title": "Wikisource history and primary texts - volume 4",
+        "version": "2026-09.3"
+      },
+      "role": "optional",
+      "description": "155,370 records. Volume 4 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes. Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance.",
+      "language": "English",
+      "publisher": "Wikisource contributors",
+      "library_profile": {
+        "record_count": 155370,
+        "scope": "Volume 4 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "compatibility": {
+        "format": "Blobs library archive",
+        "corpus_schema": 3,
+        "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "nairobi-health-places-2026-10.1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/nairobi-health-places-2026-10.1.blobs",
+      "download_format": "blobs",
+      "download_bytes": 86458,
+      "download_sha256": "2e99d33710ffb39502da6632ac230a7554e271d4f60dfab4b09258633fb79036",
+      "manifest": {
+        "bytes": 503808,
+        "format": 1,
+        "id": "nairobi-health-places",
+        "kind": "library",
+        "license": "ODbL 1.0; © OpenStreetMap contributors",
+        "origin": "https://www.openstreetmap.org/copyright",
+        "records_sha256": "adeee442844debd734b9cc164637d7c7d01ff30158437a58c581168d0ba8c234",
+        "sha256": "b4dcb40d70e7a8e88bd3df0e004fa804e5a268739ad03ebbb90605adf7c8438a",
+        "title": "Nairobi health places",
+        "version": "2026-10.1"
+      },
+      "role": "optional",
+      "description": "200 records. Named clinic, hospital, and pharmacy places inside a 0.06 x 0.06 degree box around the Nairobi central business area, from a reviewed OpenStreetMap Overpass snapshot taken on 2026-10-24. Place tags and coordinates are a 2026-10-24 snapshot and can be stale, incomplete, or locally inconsistent; verify hours and services on site. Coverage is only central Nairobi and does not imply open-now state, distance, safety, quality, popularity, or recommendation.",
+      "language": "English",
+      "publisher": "OpenStreetMap contributors",
+      "library_profile": {
+        "record_count": 200,
+        "scope": "Named clinic, hospital, and pharmacy places inside a 0.06 x 0.06 degree box around the Nairobi central business area, from a reviewed OpenStreetMap Overpass snapshot taken on 2026-10-24.",
+        "source_snapshot_date": "2026-10-24",
+        "update_policy": "New reviewed snapshots are published as new immutable catalog entries; installed editions are never replaced automatically. Each edition pins the exact Overpass query, response digest, and OpenStreetMap base time.",
+        "limitations": "Place tags and coordinates are a 2026-10-24 snapshot and can be stale, incomplete, or locally inconsistent; verify hours and services on site. Coverage is only central Nairobi and does not imply open-now state, distance, safety, quality, popularity, or recommendation."
       },
       "compatibility": {
         "format": "Blobs library archive",
