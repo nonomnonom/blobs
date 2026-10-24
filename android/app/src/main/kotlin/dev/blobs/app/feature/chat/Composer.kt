@@ -115,7 +115,7 @@ internal fun Composer(
                 onValueChange = model::draft,
                 placeholder = { Text(inputLabel, style = MaterialTheme.typography.bodyLarge) },
                 modifier = Modifier.fillMaxWidth().heightIn(
-                    min = 94.dp,
+                    min = 64.dp,
                     max = if (large) 240.dp else 140.dp
                 )
                     .onFocusChanged {

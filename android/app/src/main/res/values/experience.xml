@@ -21,6 +21,7 @@
     <string name="device_available">%1$s · %2$s memory · %3$s available</string>
     <string name="this_phone">This phone</string>
     <string name="setup_continue">Continue</string>
+    <string name="setup_finish">Finish setup</string>
     <string name="check_storage">Check available space</string>
     <string name="your_collections">Your collections</string>
     <string name="discover_more">Discover more</string>

@@ -178,6 +178,7 @@ internal fun AppHeader(
     state: AppUiState,
     home: Boolean,
     model: AppViewModel,
+    importComplete: Boolean,
     openNavigation: () -> Unit
 ) {
     val reviewing = state.importUri != null
@@ -204,6 +205,7 @@ internal fun AppHeader(
                     reviewing -> R.string.review_package
                     chat && home -> R.string.app_wordmark
                     state.page == Page.SETUP -> R.string.setup_header
+                    state.page == Page.IMPORT && importComplete -> R.string.import_ready_title
                     else -> pageTitle(state.page)
                 }
             ),

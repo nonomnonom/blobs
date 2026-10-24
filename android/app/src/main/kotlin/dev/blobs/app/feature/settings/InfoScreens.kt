@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -36,6 +37,7 @@ import dev.blobs.app.R
 import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.ScrollPage
+import dev.blobs.app.ui.SectionLabel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -196,12 +198,22 @@ fun AboutScreen() {
                 Text(stringResource(credit), style = MaterialTheme.typography.bodyMedium)
             }
         }
-        Heading(R.string.licenses)
-        files.forEach { file ->
-            TextButton(onClick = { selected = file }, modifier = Modifier.fillMaxWidth()) {
-                Text(file.removeSuffix(".txt").replace('-', ' '), Modifier.fillMaxWidth())
+        SectionLabel(R.string.licenses)
+        Column {
+            files.forEach { file ->
+                TextButton(
+                    onClick = { selected = file },
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        file.removeSuffix(".txt").replace('-', ' '),
+                        Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                HorizontalDivider()
             }
-            HorizontalDivider()
         }
     }
     selected?.let { file ->

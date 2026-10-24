@@ -34,10 +34,7 @@ import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-internal fun HomeContent(state: AppUiState, work: WorkState, ready: Boolean, model: AppViewModel) {
-    var focused by androidx.compose.runtime.remember {
-        androidx.compose.runtime.mutableStateOf(false)
-    }
+internal fun HomeIntro(state: AppUiState, work: WorkState, ready: Boolean, model: AppViewModel) {
     var howOpen by rememberSaveable { mutableStateOf(false) }
     var whyOpen by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -50,7 +47,7 @@ internal fun HomeContent(state: AppUiState, work: WorkState, ready: Boolean, mod
         val large = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f
         if (large) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
-                Mascot(R.drawable.mascot_curious, Modifier.size(80.dp), focused = focused)
+                Mascot(R.drawable.mascot_curious, Modifier.size(80.dp))
                 HomeTitle(Modifier.fillMaxWidth())
             }
         } else {
@@ -59,11 +56,9 @@ internal fun HomeContent(state: AppUiState, work: WorkState, ready: Boolean, mod
                 horizontalArrangement = Arrangement.spacedBy(BlobsDimens.md)
             ) {
                 HomeTitle(Modifier.weight(1f))
-                Mascot(R.drawable.mascot_curious, Modifier.size(104.dp), focused = focused)
+                Mascot(R.drawable.mascot_curious, Modifier.size(104.dp))
             }
         }
-        AnswerDisclaimer()
-        Composer(state, work, false, model, onFocusChange = { focused = it })
         if (ready) {
             Column(verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs)) {
                 Text(
@@ -105,7 +100,7 @@ internal fun HomeContent(state: AppUiState, work: WorkState, ready: Boolean, mod
                     summary = {
                         Text(
                             stringResource(R.string.home_how),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

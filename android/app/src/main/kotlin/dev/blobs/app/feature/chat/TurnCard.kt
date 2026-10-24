@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -58,6 +60,11 @@ internal fun TurnCard(
     val offlineNotice = OfflineAnswerNotice.forQuestion(turn.question)
     val modelAnswer = response.body
     val groups = remember(evidence) { groupTurnSources(evidence.orEmpty()) }
+    val running = status == TurnStatus.RUNNING
+    val stages = remember(turn.id) { mutableStateListOf<ResearchStage>() }
+    LaunchedEffect(researchStage) {
+        if (researchStage != null && researchStage !in stages) stages.add(researchStage)
+    }
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Column(
             Modifier.widthIn(max = BlobsDimens.answerReadingWidth).fillMaxWidth()
@@ -77,15 +84,18 @@ internal fun TurnCard(
                     )
                 }
                 MessageContent {
+                    if (running) {
+                        ResearchTrace(stages, researchStage, evidence?.size ?: 0)
+                    }
+                    if (!running && response.evidence != null && modelAnswer.isNotBlank()) {
+                        GroundingChain(response)
+                    }
                     if (modelAnswer.isNotEmpty()) {
                         AnswerContent(
                             answer = modelAnswer,
                             evidence = evidence.orEmpty(),
                             onRead = model::read
                         )
-                    }
-                    if (status == TurnStatus.RUNNING) {
-                        ResearchStep(researchStage, evidence?.size ?: 0)
                     }
                     TurnOutcome(
                         response = response,
@@ -95,7 +105,7 @@ internal fun TurnCard(
                         onSearchAll = { model.retry(turn, widen = true) },
                         onRetry = { model.retry(turn) }
                     )
-                    if (evidence == null) Body(R.string.sources_unavailable)
+                    if (evidence == null && !running) Body(R.string.sources_unavailable)
                     TurnSources(
                         turnId = turn.id,
                         groups = groups,

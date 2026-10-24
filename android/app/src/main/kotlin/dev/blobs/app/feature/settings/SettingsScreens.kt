@@ -126,7 +126,7 @@ fun AppearanceScreen(state: AppUiState, theme: ThemeMode, model: AppViewModel) {
             ThemeMode.DARK to R.string.theme_dark,
             ThemeMode.SYSTEM to R.string.theme_system
         )
-        SectionLabel(R.string.appearance)
+        SectionLabel(R.string.theme)
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(
@@ -139,25 +139,7 @@ fun AppearanceScreen(state: AppUiState, theme: ThemeMode, model: AppViewModel) {
                 }
             }
         }
-        Surface(
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerLow
-        ) {
-            Column(
-                Modifier.fillMaxWidth().padding(BlobsDimens.lg),
-                verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
-            ) {
-                Icon(
-                    painterResource(R.drawable.ic_auto_stories),
-                    null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    stringResource(R.string.reading_preview),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        }
+        SectionLabel(R.string.motion)
         Row(
             Modifier.fillMaxWidth().heightIn(min = 56.dp).toggleable(
                 value = state.options.reducedMotion,

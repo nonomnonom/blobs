@@ -126,31 +126,31 @@ fun ImportScreen(state: AppUiState, work: WorkState, model: AppViewModel) {
             },
             168
         )
-        Heading(
-            when {
-                work.importComplete -> R.string.import_ready_title
+        if (!work.importComplete) {
+            Heading(
+                when {
+                    failed -> R.string.import_error_title
 
-                failed -> R.string.import_error_title
+                    !running && work.hasPendingTransfer -> if (work.inAppDownload) {
+                        R.string.download_title
+                    } else {
+                        R.string.import_title
+                    }
 
-                !running && work.hasPendingTransfer -> if (work.inAppDownload) {
-                    R.string.download_title
-                } else {
-                    R.string.import_title
+                    checking -> R.string.import_checking_title
+
+                    work.downloading -> R.string.download_title
+
+                    work.inAppDownload && running -> R.string.download_install_title
+
+                    running -> R.string.import_title
+
+                    work.pendingImport != null -> R.string.import_title
+
+                    else -> R.string.import_cancelled
                 }
-
-                checking -> R.string.import_checking_title
-
-                work.downloading -> R.string.download_title
-
-                work.inAppDownload && running -> R.string.download_install_title
-
-                running -> R.string.import_title
-
-                work.pendingImport != null -> R.string.import_title
-
-                else -> R.string.import_cancelled
-            }
-        )
+            )
+        }
         Text(
             stateLine,
             style = MaterialTheme.typography.bodyLarge,
@@ -219,14 +219,8 @@ fun ImportScreen(state: AppUiState, work: WorkState, model: AppViewModel) {
                         }
                     }
                     when {
-                        work.importComplete -> Icon(
-                            painterResource(R.drawable.ic_check),
-                            null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-
+                        work.importComplete -> Unit
                         preparingDocuments -> CircularProgressIndicator()
-
                         running || failed -> SetupProgress(progress)
                     }
                 }

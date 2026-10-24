@@ -19,7 +19,6 @@
     <string name="library_details_for">About %1$s</string>
     <string name="download_library_named">Download %1$s</string>
     <string name="library_source_credits">Browse the collection to read each source and its original credits.</string>
-    <string name="library_small_downloads">Choose only the libraries you need. Each stays on this phone.</string>
     <string name="library_storage_requirement">Needs %1$s available while adding.</string>
     <string name="library_space_to_free">Free up %1$s to add this library.</string>
     <string name="library_edition">Edition %1$s</string>
@@ -58,13 +57,15 @@
     <string name="setup_library_step">Your source library</string>
     <string name="progress_percent">%1$d%%</string>
     <string name="setup_model_title">Choose a model</string>
-    <string name="setup_state_line">%1$s · %2$s · %3$s</string>
+    <string name="setup_state_line">%1$s · %2$s</string>
+    <string name="model_installed_summary">%1$s on your phone</string>
+    <string name="model_state_installed">%1$s · installed</string>
     <string name="model_context_short">%1$d-token context</string>
     <string name="state_fits">runs here</string>
     <string name="state_tight">may not fit</string>
     <string name="setup_why_model">Why this model</string>
     <string name="setup_change_later">You can change this later.</string>
-    <string name="setup_library_state">%1$s · %2$s · optional</string>
+    <string name="setup_library_state">Optional · add more later</string>
     <string name="setup_whats_inside">What\'s inside</string>
     <string name="setup_ready_state">Model and library ready</string>
     <string name="setup_ready_details">Setup details</string>
@@ -121,7 +122,7 @@
     <string name="no_installed_libraries">No libraries are installed yet. You can still chat offline.</string>
     <string name="add_library">Add a library</string>
     <string name="library_available_offline">Available offline · %1$s</string>
-    <string name="library_scope_help">Choose which installed libraries Blobs searches for your next answer. Earlier answers keep their original sources.</string>
+    <string name="library_scope_help">Choose what Blobs searches for your next answer.</string>
     <string name="use_library_in_chat">Ask about this</string>
     <string name="sources_count">Cited passages · %1$d</string>
     <string name="related_sources_count">Related passages · %1$d</string>
@@ -153,6 +154,7 @@
         <item quantity="one">Checking %1$d passage against your question…</item>
         <item quantity="other">Checking %1$d passages against your question…</item>
     </plurals>
+    <string name="research_checking">Checking saved passages…</string>
     <string name="research_writing">Writing an answer…</string>
     <string name="status_complete">Answer saved</string>
     <plurals name="turn_passages">
@@ -183,8 +185,8 @@
     <string name="turn_details">Why</string>
     <string name="chain_summary">%1$s · %2$s</string>
     <string name="chain_state_grounded">Sourced</string>
-    <string name="chain_state_unverified">Partial</string>
-    <string name="chain_state_unchecked">Unchecked</string>
+    <string name="chain_state_unverified">Partly sourced</string>
+    <string name="chain_state_unchecked">Not checked</string>
     <plurals name="chain_cited_short">
         <item quantity="one">%1$d cited</item>
         <item quantity="other">%1$d cited</item>
@@ -215,10 +217,11 @@
     <string name="keep_model">Keep at least one model. Add another before removing this one.</string>
     <string name="settings">Settings</string>
     <string name="appearance">Appearance</string>
-    <string name="model_memory_warning">A smaller model is a better fit for this phone.</string>
+    <string name="theme">Theme</string>
+    <string name="motion">Motion</string>
+    <string name="model_memory_warning">This phone may not have enough memory.</string>
     <string name="model_context_incompatible">This model does not support Blobs’ 4,096-token reading context. Choose a model with at least 4,096 context tokens.</string>
     <string name="model_incompatible_detail">This model does not include a usable chat template. Choose a model packaged for chat.</string>
-    <string name="reading_preview">Follow a question. Find a connection. Take your time with the sources.</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>

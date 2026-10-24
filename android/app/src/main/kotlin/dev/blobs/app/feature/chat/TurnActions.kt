@@ -3,6 +3,10 @@ package dev.blobs.app.feature.chat
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -15,21 +19,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
+import dev.blobs.app.ui.theme.BlobsDimens
 import kotlinx.coroutines.delay
 
 @Composable
 internal fun TurnActions(turnId: String, answer: String, modelName: String) {
     val context = LocalContext.current
     val appName = stringResource(R.string.app_name)
+    val large = LocalDensity.current.fontScale >= 1.5f
     var copied by rememberSaveable(turnId) { mutableStateOf(false) }
     LaunchedEffect(copied) {
         if (copied) {
@@ -37,27 +46,52 @@ internal fun TurnActions(turnId: String, answer: String, modelName: String) {
             copied = false
         }
     }
-    if (answer.isNotBlank()) {
-        TextButton(
-            onClick = {
-                val clipboard =
-                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText(appName, answer))
-                copied = true
-            },
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
-        ) {
-            Icon(
-                painterResource(R.drawable.ic_content_copy),
-                null,
-                Modifier.padding(end = 8.dp).size(20.dp)
-            )
-            Text(stringResource(if (copied) R.string.copied else R.string.copy_answer))
+    val copy: @Composable () -> Unit = {
+        if (answer.isNotBlank()) {
+            TextButton(
+                onClick = {
+                    val clipboard =
+                        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText(appName, answer))
+                    copied = true
+                },
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_content_copy),
+                    null,
+                    Modifier.padding(end = 8.dp).size(20.dp)
+                )
+                Text(stringResource(if (copied) R.string.copied else R.string.copy_answer))
+            }
         }
     }
-    Text(
-        modelName,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
+    val label: @Composable (Modifier) -> Unit = { modifier ->
+        Text(
+            modelName,
+            modifier,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+    if (large) {
+        Column(
+            Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.xxs)
+        ) {
+            copy()
+            label(Modifier.fillMaxWidth())
+        }
+    } else {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(BlobsDimens.xs),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            copy()
+            label(Modifier.weight(1f, fill = false))
+        }
+    }
 }

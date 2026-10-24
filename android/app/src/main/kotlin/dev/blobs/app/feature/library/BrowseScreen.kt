@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,7 @@ fun BrowseScreen(state: AppUiState, model: AppViewModel) {
         return
     }
     val collection = packages.find { it.key == state.browseCollection }
+    val scoped = state.browseCollection != null
     Column(
         Modifier.fillMaxWidth().padding(horizontal = BlobsDimens.page),
         verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
@@ -69,16 +71,17 @@ fun BrowseScreen(state: AppUiState, model: AppViewModel) {
                 Surface(
                     onClick = { model.readFull(source) },
                     shape = MaterialTheme.shapes.medium,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     color = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
                     Column(
                         Modifier.fillMaxWidth().padding(BlobsDimens.md),
                         verticalArrangement = Arrangement.spacedBy(BlobsDimens.xxs)
                     ) {
-                        Text(source.title, style = MaterialTheme.typography.labelLarge)
-                        Text(source.publisher, style = MaterialTheme.typography.bodyMedium)
-                        if (source.section.isNotBlank()) {
+                        Text(source.title, style = MaterialTheme.typography.titleMedium)
+                        if (!scoped) {
+                            Text(source.publisher, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        if (!scoped && source.section.isNotBlank()) {
                             Text(
                                 source.section,
                                 style = MaterialTheme.typography.bodySmall,
@@ -152,17 +155,16 @@ private fun LibraryScopePicker(packages: List<PackageEntity>, model: AppViewMode
                 }
             } else {
                 items(libraries, key = { it.key }) { pack ->
-                    val checked = all || pack.key in selected.orEmpty()
+                    val checked = !all && pack.key in selected.orEmpty()
                     Surface(
                         selected = checked,
                         onClick = {
-                            val current = selected ?: libraries.mapTo(mutableSetOf()) { it.key }
-                            val next =
-                                if (pack.key in current) {
-                                    current - pack.key
-                                } else {
-                                    current + pack.key
-                                }
+                            val current = selected
+                            val next = when {
+                                current == null -> setOf(pack.key)
+                                pack.key in current -> current - pack.key
+                                else -> current + pack.key
+                            }
                             selected = next
                             model.selectLibraryScope(next)
                         },
@@ -181,14 +183,23 @@ private fun LibraryScopePicker(packages: List<PackageEntity>, model: AppViewMode
                             MaterialTheme.colorScheme.surfaceContainerLow
                         }
                     ) {
+                        val large = LocalDensity.current.fontScale >= 1.5f
                         Row(
                             Modifier.fillMaxWidth().padding(BlobsDimens.md),
                             horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = if (large) {
+                                Alignment.Top
+                            } else {
+                                Alignment.CenterVertically
+                            }
                         ) {
                             Checkbox(checked = checked, onCheckedChange = null)
                             Column(Modifier.weight(1f)) {
-                                Text(pack.title, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    pack.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                                 Text(
                                     stringResource(
                                         R.string.library_available_offline,
@@ -233,17 +244,26 @@ private fun ScopeOption(
             MaterialTheme.colorScheme.surfaceContainerLow
         }
     ) {
+        val large = LocalDensity.current.fontScale >= 1.5f
         Row(
             Modifier.fillMaxWidth().padding(BlobsDimens.md),
             horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = if (large) Alignment.Top else Alignment.CenterVertically
         ) {
-            Icon(painterResource(icon), null)
+            Icon(
+                painterResource(icon),
+                null,
+                if (large) Modifier.padding(top = 2.dp) else Modifier
+            )
             Column(
                 Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(BlobsDimens.xxs)
             ) {
-                Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Text(
                     stringResource(description),
                     style = MaterialTheme.typography.bodySmall,

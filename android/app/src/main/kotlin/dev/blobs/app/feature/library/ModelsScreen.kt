@@ -1,5 +1,6 @@
 package dev.blobs.app.feature.library
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,23 +72,14 @@ fun ModelsScreen(
                     )
                 }
                 if (pack != null) {
-                    OutlinedButton(
-                        onClick = { model.selectModel(pack) },
-                        enabled =
-                            !work.busy && pack.key != selected,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            stringResource(
-                                if (pack.key ==
-                                    selected
-                                ) {
-                                    R.string.model_selected
-                                } else {
-                                    R.string.use_model
-                                }
-                            )
-                        )
+                    if (pack.key != selected) {
+                        OutlinedButton(
+                            onClick = { model.selectModel(pack) },
+                            enabled = !work.busy,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.use_model))
+                        }
                     }
                 } else {
                     PrimaryAction(R.string.download_model, !work.busy) {
@@ -100,23 +92,14 @@ fun ModelsScreen(
             catalog.packages.none { it.manifest.key == pack.key }
         }.forEach { pack ->
             ModelCard(pack.title, pack.version, fileSize(pack.bytes), pack.key == selected) {
-                OutlinedButton(
-                    onClick = { model.selectModel(pack) },
-                    enabled =
-                        !work.busy && pack.key != selected,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        stringResource(
-                            if (pack.key ==
-                                selected
-                            ) {
-                                R.string.model_selected
-                            } else {
-                                R.string.use_model
-                            }
-                        )
-                    )
+                if (pack.key != selected) {
+                    OutlinedButton(
+                        onClick = { model.selectModel(pack) },
+                        enabled = !work.busy,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.use_model))
+                    }
                 }
             }
         }
@@ -137,8 +120,24 @@ private fun ModelCard(
 ) {
     Surface(
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.onSurface
+        border = BorderStroke(
+            1.dp,
+            if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            }
+        ),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+        contentColor = if (selected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
     ) {
         Column(
             Modifier.fillMaxWidth().padding(BlobsDimens.lg),

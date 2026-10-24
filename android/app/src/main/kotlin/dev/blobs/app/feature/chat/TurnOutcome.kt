@@ -129,9 +129,6 @@ internal fun TurnOutcome(
             Text(stringResource(explanation), style = MaterialTheme.typography.bodyMedium)
         }
     }
-    if (response.evidence != null && answer.isNotBlank()) {
-        GroundingChain(response)
-    }
     if (latest && response.hasNoSources) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = onChooseLibraries) {

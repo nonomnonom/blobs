@@ -101,7 +101,7 @@ class TransferLayoutCaptureTest {
                                     color = MaterialTheme.colorScheme.background
                                 ) {
                                     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-                                        AppHeader(state, false, model) { }
+                                        AppHeader(state, false, model, work.importComplete) { }
                                         ImportScreen(state, work, model)
                                     }
                                 }

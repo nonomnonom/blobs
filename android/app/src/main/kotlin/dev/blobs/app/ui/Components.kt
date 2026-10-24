@@ -265,7 +265,13 @@ fun SearchField(value: String, @StringRes hint: Int, onValueChange: (String) -> 
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(stringResource(hint)) },
+        placeholder = {
+            Text(
+                stringResource(hint),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         leadingIcon = { Icon(painterResource(R.drawable.ic_search), null, Modifier.size(22.dp)) },
         modifier = Modifier.fillMaxWidth().semantics {
             contentDescription = label

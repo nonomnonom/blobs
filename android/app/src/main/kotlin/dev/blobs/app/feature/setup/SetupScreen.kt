@@ -148,12 +148,15 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                     )
                     Heading(R.string.setup_model_title)
                     Text(
-                        stringResource(
-                            R.string.setup_state_line,
-                            contextLabel,
-                            fileSize(selected.downloadBytes),
-                            stringResource(fitLabel)
-                        ),
+                        if (installed != null) {
+                            stringResource(R.string.model_state_installed, contextLabel)
+                        } else {
+                            stringResource(
+                                R.string.setup_state_line,
+                                contextLabel,
+                                stringResource(fitLabel)
+                            )
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -196,8 +199,12 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                             )
                             Text(
                                 stringResource(
-                                    R.string.model_download_size,
-                                    fileSize(selected.downloadBytes)
+                                    if (installed != null) {
+                                        R.string.model_installed_summary
+                                    } else {
+                                        R.string.model_download_size
+                                    },
+                                    fileSize(installed?.bytes ?: selected.downloadBytes)
                                 ),
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -306,11 +313,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                     )
                     Heading(R.string.setup_library_title)
                     Text(
-                        stringResource(
-                            R.string.setup_library_state,
-                            starter.language,
-                            fileSize(starter.downloadBytes)
-                        ),
+                        stringResource(R.string.setup_library_state),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -409,18 +412,14 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                     }
 
                     step == SetupStep.MODEL -> PrimaryAction(
-                        if (installed !=
-                            null
-                        ) {
-                            R.string.continue_model
-                        } else {
-                            R.string.download_selected_model
+                        when {
+                            installed == null -> R.string.download_selected_model
+                            model.selectedModel()?.key == installed.key -> R.string.setup_continue
+                            else -> R.string.continue_model
                         },
                         work.ready && !work.busy && (fits || installed != null)
                     ) {
-                        if (installed !=
-                            null
-                        ) {
+                        if (installed != null) {
                             model.selectModel(installed)
                             model.continueSetup()
                         } else {
@@ -428,7 +427,7 @@ fun SetupScreen(packages: List<PackageEntity>, model: AppViewModel, readyScroll:
                         }
                     }
 
-                    hasStarter -> PrimaryAction(R.string.setup_continue) { model.continueSetup() }
+                    hasStarter -> PrimaryAction(R.string.setup_finish) { model.continueSetup() }
 
                     else -> PrimaryAction(
                         R.string.download_starter,

@@ -33,7 +33,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -139,12 +145,36 @@ fun ChatScreen(
     }
 
     if (turns.isEmpty()) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Column(modifier.fillMaxSize()) {
+            val intro = rememberScrollState()
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier.widthIn(max = BlobsDimens.homeReadingWidth).fillMaxWidth()
+                        .then(
+                            if (intro.canScrollForward) {
+                                Modifier.fadeBottomEdge()
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Box(Modifier.verticalScroll(intro)) {
+                        HomeIntro(state, work, ready, model)
+                    }
+                }
+            }
             Column(
-                Modifier.widthIn(max = BlobsDimens.homeReadingWidth).fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
+                Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                HomeContent(state, work, ready, model)
+                AnswerDisclaimer(Modifier.padding(horizontal = BlobsDimens.page))
+                Composer(
+                    state,
+                    work,
+                    false,
+                    model,
+                    Modifier.padding(horizontal = BlobsDimens.md, vertical = BlobsDimens.xs)
+                )
             }
         }
         return
@@ -254,3 +284,22 @@ fun ChatScreen(
 private const val TAG_VIEWPORT = "message-scroller-viewport"
 private const val TAG_ITEM = "message-scroller-item"
 private const val TAG_LATEST_BUTTON = "message-scroller-button"
+
+/**
+ * Fades the last rows into the page when more content sits below the pinned composer, so a
+ * card crossing that edge dissolves instead of looking sliced.
+ */
+private fun Modifier.fadeBottomEdge(): Modifier =
+    graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+        .drawWithContent {
+            drawContent()
+            val start = ((size.height - 28.dp.toPx()) / size.height).coerceIn(0f, 1f)
+            drawRect(
+                brush = Brush.verticalGradient(
+                    0f to Color.White,
+                    start to Color.White,
+                    1f to Color.Transparent
+                ),
+                blendMode = BlendMode.DstIn
+            )
+        }

@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.ui.AppViewModel
-import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.PrimaryAction
 import dev.blobs.app.ui.theme.BlobsDimens
 
@@ -87,6 +86,11 @@ fun ReaderScreen(source: Evidence?, model: AppViewModel) {
                 }
             }
             itemsIndexed(paragraphs) { index, paragraph ->
+                val text = if (!state.readerIsFull && index == paragraphs.lastIndex) {
+                    "$paragraph…"
+                } else {
+                    paragraph
+                }
                 if (!state.readerIsFull && index == 0) {
                     Surface(
                         shape = MaterialTheme.shapes.medium,
@@ -94,7 +98,7 @@ fun ReaderScreen(source: Evidence?, model: AppViewModel) {
                     ) {
                         SelectionContainer {
                             Text(
-                                paragraph,
+                                text,
                                 Modifier.padding(BlobsDimens.md),
                                 style = MaterialTheme.typography.bodyLarge
                             )
@@ -102,11 +106,10 @@ fun ReaderScreen(source: Evidence?, model: AppViewModel) {
                     }
                 } else {
                     SelectionContainer {
-                        Text(paragraph, style = MaterialTheme.typography.bodyLarge)
+                        Text(text, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
-            item { Heading(R.string.source_details) }
             item {
                 Text(
                     stringResource(
@@ -123,7 +126,8 @@ fun ReaderScreen(source: Evidence?, model: AppViewModel) {
                             Text(stringResource(R.string.source_address))
                             Text(
                                 source.url.toUri().host ?: source.url,
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

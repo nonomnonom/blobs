@@ -53,50 +53,28 @@ class DesignCaptureTest {
         fun capture(name: String, waitForMarker: Boolean = true) {
             val marker = when (name) {
                 "welcome" -> text(R.string.welcome_headline)
-
                 "setup-model" -> text(R.string.setup_model_title)
-
                 "setup-library" -> text(R.string.setup_library_title)
-
                 "setup-ready" -> text(R.string.setup_ready_title)
-
                 "home" -> text(R.string.home_title)
-
                 "navigation" -> text(R.string.search_conversations)
-
                 "library" -> text(R.string.your_collections)
-
                 "discover" -> text(R.string.discover_heading)
-
-                "browse", "sources", "sources-selected", "sources-all" ->
-                    text(R.string.search_sources)
-
+                "sources" -> text(R.string.library_scope_help)
+                "browse", "sources-selected", "sources-all" -> text(R.string.search_sources)
                 "reader" -> model.state.value.reader?.title.orEmpty()
-
                 "import-review" -> text(R.string.review_package)
-
                 "import-complete" -> text(R.string.import_ready_title)
-
                 "conversation-fixture" -> "How do sources stay with an answer?"
-
                 "working-fixture" -> text(R.string.working)
-
                 "history" -> text(R.string.search_history)
-
                 "settings" -> text(R.string.appearance)
-
                 "appearance" -> text(R.string.theme_dark)
-
                 "storage" -> text(R.string.storage_body)
-
                 "data" -> text(R.string.data_heading)
-
                 "privacy" -> text(R.string.privacy_heading)
-
                 "help" -> text(R.string.help_heading)
-
                 "about" -> text(R.string.about_how)
-
                 else -> text(R.string.models)
             }
             if (waitForMarker) {

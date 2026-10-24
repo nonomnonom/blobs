@@ -222,7 +222,13 @@ fun BlobsApp(container: AppContainer) {
                                         }
                                     ).fillMaxSize().safeDrawingPadding().imePadding()
                                 ) {
-                                    AppHeader(state, turns.isEmpty(), model, openNavigation)
+                                    AppHeader(
+                                        state,
+                                        turns.isEmpty(),
+                                        model,
+                                        work.importComplete,
+                                        openNavigation
+                                    )
                                     if (!reviewingImport && state.page != Page.IMPORT) {
                                         (state.notice ?: work.notice)
                                             ?.takeUnless {

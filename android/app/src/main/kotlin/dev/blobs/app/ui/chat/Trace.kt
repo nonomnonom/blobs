@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -62,13 +63,16 @@ internal fun TraceLine(
     Row(
         modifier = modifier.fillMaxWidth().testTag(TAG_TRACE_LINE)
             .semantics { contentDescription = label },
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(BlobsDimens.xs)
     ) {
-        Box(Modifier.size(BlobsDimens.traceGutter), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.size(BlobsDimens.traceGutter).padding(top = 3.dp),
+            contentAlignment = Alignment.TopCenter
+        ) {
             if (status == TraceStatus.RUNNING) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(16.dp),
                     strokeWidth = 2.dp,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -81,21 +85,23 @@ internal fun TraceLine(
                 )
             }
         }
-        Text(
-            title,
-            modifier = Modifier.weight(1f, fill = false),
-            style = MaterialTheme.typography.bodyMedium,
-            color = when (status) {
-                TraceStatus.ERROR -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            }
-        )
-        if (!description.isNullOrBlank()) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                description,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = DIMMED_ALPHA)
+                title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = when (status) {
+                    TraceStatus.ERROR -> MaterialTheme.colorScheme.error
+                    TraceStatus.RUNNING -> MaterialTheme.colorScheme.onSurface
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
             )
+            if (!description.isNullOrBlank()) {
+                Text(
+                    description,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = DIMMED_ALPHA)
+                )
+            }
         }
     }
 }

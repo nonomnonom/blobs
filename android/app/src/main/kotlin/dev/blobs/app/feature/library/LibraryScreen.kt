@@ -1,5 +1,6 @@
 package dev.blobs.app.feature.library
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -94,12 +96,38 @@ fun LibraryScreen(
     } ?: true
     Column {
         PrimaryTabRow(selectedTabIndex = if (discover) 1 else 0) {
-            Tab(selected = !discover, onClick = {
-                discover = false
-            }, text = { Text(stringResource(R.string.your_collections)) })
-            Tab(selected = discover, onClick = {
-                discover = true
-            }, text = { Text(stringResource(R.string.discover_more)) })
+            Tab(
+                selected = !discover,
+                onClick = {
+                    discover = false
+                },
+                text = {
+                    Text(
+                        stringResource(R.string.your_collections),
+                        color = if (discover) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                }
+            )
+            Tab(
+                selected = discover,
+                onClick = {
+                    discover = true
+                },
+                text = {
+                    Text(
+                        stringResource(R.string.discover_more),
+                        color = if (discover) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
+            )
         }
         Column(
             Modifier.weight(
@@ -165,8 +193,6 @@ fun LibraryScreen(
                 CatalogStatus(catalog, work.busy, model::refreshCatalog)
                 if (available.isEmpty()) {
                     Body(R.string.all_caught_up)
-                } else {
-                    Body(R.string.library_small_downloads)
                 }
                 available.forEach { asset ->
                     val requiredStorageBytes = model.catalog.requiredStorageBytes(asset)
@@ -184,6 +210,23 @@ fun LibraryScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SavedBadge(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        contentColor = MaterialTheme.colorScheme.onSurface
+    ) {
+        Text(
+            stringResource(R.string.saved_offline),
+            Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1
+        )
     }
 }
 
@@ -225,16 +268,9 @@ private fun CollectionCard(
                     Modifier.fillMaxWidth().height(if (large) 80.dp else 112.dp),
                     contentScale = ContentScale.Crop
                 )
-                Surface(
-                    modifier = Modifier.align(Alignment.BottomStart).padding(BlobsDimens.sm),
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ) {
-                    Text(
-                        stringResource(R.string.saved_offline),
-                        Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.bodySmall
+                if (!large) {
+                    SavedBadge(
+                        Modifier.align(Alignment.BottomStart).padding(BlobsDimens.sm)
                     )
                 }
             }
@@ -242,6 +278,7 @@ private fun CollectionCard(
                 Modifier.padding(BlobsDimens.lg),
                 verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
             ) {
+                if (large) SavedBadge(Modifier)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         pack.title,
@@ -295,9 +332,17 @@ private fun CollectionCard(
                 } else if (storedProfile != null) {
                     InstalledLibraryDetails(pack, storedProfile)
                 }
-                OutlinedButton(onClick = {
-                    model.browseCollection(pack)
-                }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { model.browseCollection(pack) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    )
+                ) {
                     Text(stringResource(R.string.browse_collection))
                 }
                 Row(
