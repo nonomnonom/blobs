@@ -3,6 +3,8 @@ package dev.blobs.app
 import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToIndexAction
@@ -15,6 +17,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -24,12 +27,13 @@ import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.ConversationEntity
 import dev.blobs.app.data.local.TurnEntity
 import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductViewModel
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -60,7 +64,7 @@ class UiParityTest {
     @Test
     fun importReviewReturnsToOriginAndRejectsDuplicatesWithoutLosingDraft() {
         val container = (compose.activity.application as BlobsApplication).container
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         val file = File(compose.activity.cacheDir, "ui-import.blobs")
         InstrumentationRegistry.getInstrumentation().context.assets.open("corpus-fixture.blobs")
             .use { input -> file.outputStream().use { input.copyTo(it) } }
@@ -104,7 +108,7 @@ class UiParityTest {
             compose.waitUntil(10_000) { model.state.value.manifest != null }
             fontScale.set(2f)
             compose.onNodeWithText(
-                text(R.string.already_added)
+                text(R.string.package_already_added)
             ).assertIsDisplayed()
             compose.onNodeWithText(text(R.string.add)).assertIsNotEnabled()
             compose.onNodeWithText(text(R.string.cancel)).performClick()
@@ -128,6 +132,25 @@ class UiParityTest {
             compose.waitUntil(10_000) {
                 model.packages.value.any { it.key == manifest.key && it.enabled }
             }
+            runBlocking { container.preferences.selectScope("*") }
+            compose.waitUntil(10_000) { model.selectedLibraryScope() == null }
+            compose.runOnUiThread { model.navigate(Page.CHAT) }
+            compose.onNodeWithContentDescription(text(R.string.all_libraries))
+                .performClick()
+            compose.waitUntil(10_000) { model.state.value.page == Page.SOURCES }
+            compose.onNodeWithText(text(R.string.no_library))
+                .performScrollTo().performTouchInput { click() }.assertIsSelected()
+            compose.waitUntil(10_000) { model.selectedLibraryScope() == emptySet<String>() }
+            compose.onNodeWithText(manifest.title).performScrollTo().performTouchInput { click() }
+            compose.onNodeWithText(manifest.title).assertIsSelected()
+            compose.waitUntil(10_000) {
+                model.selectedLibraryScope() == setOf(manifest.key)
+            }
+            compose.onNodeWithText(text(R.string.all_libraries))
+                .performScrollTo().performTouchInput { click() }.assertIsSelected()
+            compose.waitUntil(10_000) { model.selectedLibraryScope() == null }
+            compose.onNodeWithText(text(R.string.done)).performClick()
+            compose.waitUntil(10_000) { model.state.value.page == Page.CHAT }
             compose.runOnUiThread { model.navigate(Page.STORAGE) }
             compose.onNodeWithContentDescription(
                 compose.activity.getString(R.string.remove_package_name, manifest.title)
@@ -150,7 +173,7 @@ class UiParityTest {
     @Test
     fun renamingAndDeletingAConversationKeepsOtherDrafts() {
         val container = (compose.activity.application as BlobsApplication).container
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         val dao = container.database.conversations()
         val id = "history-${UUID.randomUUID()}"
         val title = "History smoke $id"
@@ -228,16 +251,16 @@ class UiParityTest {
             val conversation =
                 runBlocking { requireNotNull(container.database.conversations().find(id)) }
             compose.runOnUiThread {
-                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                ViewModelProvider(compose.activity)[AppViewModel::class.java]
                     .openConversation(conversation)
             }
             compose.waitUntil(10_000) {
-                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                ViewModelProvider(compose.activity)[AppViewModel::class.java]
                     .conversationId.value == id
             }
             compose.activityRule.scenario.recreate()
             compose.waitUntil(10_000) {
-                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                ViewModelProvider(compose.activity)[AppViewModel::class.java]
                     .turns.value.any { it.id == "$id-turn" }
             }
             val formattedAnswer = hasText("A saved CO₂ answer", substring = true)
@@ -249,17 +272,45 @@ class UiParityTest {
             hideKeyboard()
             revealFollowUp()
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
-            val selectedTitle = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+            val selectedTitle = ViewModelProvider(compose.activity)[AppViewModel::class.java]
                 .selectedModel()?.title ?: text(R.string.model_missing)
-            compose.onNodeWithContentDescription(
+            val work = ViewModelProvider(compose.activity)[AppViewModel::class.java].work.value
+            assertTrue("Composer controls stay locked while work is busy: $work", !work.busy)
+            // A notice banner from earlier work shifts the composer while it is on screen,
+            // so the reading controls are exercised from a settled layout.
+            val reader = ViewModelProvider(compose.activity)[AppViewModel::class.java]
+            compose.runOnUiThread { reader.dismissNotice() }
+            compose.waitUntil(10_000) {
+                reader.state.value.notice == null && reader.work.value.notice == null
+            }
+            compose.waitForIdle()
+            val modelChoice = compose.onNodeWithContentDescription(
                 compose.activity.getString(R.string.model_choice, selectedTitle)
-            ).performScrollTo().performClick()
-            compose.onNodeWithText(text(R.string.manage_models)).assertIsDisplayed()
-            compose.onNodeWithText(text(R.string.done)).performClick()
+            )
+            modelChoice.performScrollTo()
+            compose.waitForIdle()
+            modelChoice.performClick()
+            val opened = compose.onAllNodes(hasText(text(R.string.manage_models)))
+                .fetchSemanticsNodes().isNotEmpty()
+            assertTrue("The model chip tap opened no menu", opened)
+            compose.onNodeWithText(text(R.string.manage_models)).performClick()
+            compose.waitUntil(10_000) {
+                ViewModelProvider(compose.activity)[AppViewModel::class.java]
+                    .state.value.page == Page.MODELS
+            }
+            compose.onNodeWithContentDescription(text(R.string.back)).performClick()
+            compose.waitUntil(10_000) {
+                ViewModelProvider(compose.activity)[AppViewModel::class.java]
+                    .state.value.page == Page.CHAT
+            }
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             hideKeyboard()
+            compose.onNodeWithText(
+                compose.activity.getString(R.string.sources_count, 1)
+            ).performClick()
             val label = compose.activity.getString(R.string.read_source, 1, source.title)
-            val sourceRow = hasContentDescription(label) and hasText(source.title)
+            val sourceRow = hasContentDescription(label, substring = true) and
+                hasText(source.title)
             compose.onNode(hasScrollToIndexAction()).performScrollToNode(sourceRow)
             compose.onNode(sourceRow).performScrollTo().performClick()
             compose.onNodeWithText(source.text).assertIsDisplayed()
@@ -282,7 +333,7 @@ class UiParityTest {
             compose.onNodeWithText("Keep this follow-up").assertIsDisplayed()
             compose.activityRule.scenario.recreate()
             compose.waitUntil(10_000) {
-                ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+                ViewModelProvider(compose.activity)[AppViewModel::class.java]
                     .turns.value.any { it.id == "$id-turn" }
             }
             revealFollowUp()

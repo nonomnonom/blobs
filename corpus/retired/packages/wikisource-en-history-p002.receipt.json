@@ -1,0 +1,64 @@
+{
+  "build": {
+    "audit_schema": 1,
+    "builder_sources": {
+      "library.py": "982a35ead1b810f20cf270f4383dfac21ce96f63fcadf53c1cd705fd278e2464",
+      "names.py": "5392fdc1e5f921246d5e235d0f09505bcfa26a5db4e0498cd8cef58ef80af6d4",
+      "records.py": "3f504ac9274bca4592451741ddccad7624ce545380d504f11ed4b491041ee715"
+    },
+    "document_names": {
+      "ambiguous_names": 46,
+      "format": 1,
+      "maximum_resolution_passes": 32,
+      "name_document_pairs": 189313,
+      "normalization": "NFKC, lowercase, Unicode letters/numbers separated by spaces",
+      "redirects": 156894,
+      "resolved_redirects": 32699,
+      "unresolved_redirects": 124195
+    },
+    "documents": 158753,
+    "exact_duplicate_bodies": 0,
+    "format": 1,
+    "offsets": "Unicode code points, half-open into normalized documents.body",
+    "partition": {
+      "algorithm": "sha256-document-id-modulo-v1",
+      "count": 4,
+      "document_ids_sha256": "ad214da6b3da911c4b6f2108cbb2e8ad1a178c1cd0362bd544175e5e18d43ab5",
+      "documents": 158753,
+      "id": "p002",
+      "index": 2,
+      "plan_sha256": "bff534652a9cbf69c5b3b3a851a844e6353b41c7c6be06242338629294a71d1f",
+      "source_edition": "2026-09",
+      "source_id": "wikisource-en-all-nopic",
+      "source_lock_sha256": "4231ed3b6c4e38d4a236640c7d42ed332f6a1fd505785c21d4070318198db440",
+      "source_manifest_sha256": "5fa2cb042000108b6cc25174eb264b7af53ca8e5a7fc60cc5e38f2cef6b84901"
+    },
+    "passage_storage": "document spans + contentless FTS",
+    "passages": 1444218,
+    "records_sha256": "737308f98b50c30cb74da064563f74d09bf0922e9a21064923d4e1aba329b743",
+    "schema": 3,
+    "sqlite_version": "3.50.4",
+    "title_index": "opening passage only"
+  },
+  "format": 1,
+  "input_sha256": "5fa2cb042000108b6cc25174eb264b7af53ca8e5a7fc60cc5e38f2cef6b84901",
+  "manifest": {
+    "bytes": 3164192768,
+    "format": 1,
+    "id": "wikisource-en-history-p002",
+    "kind": "library",
+    "license": "Public domain or CC BY-SA 4.0 per work; Wikisource contributors; text reformatted by Blobs",
+    "origin": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim",
+    "records_sha256": "737308f98b50c30cb74da064563f74d09bf0922e9a21064923d4e1aba329b743",
+    "sha256": "ea6a6f68087fa5c9707b1f9815ab2730fbc4673c2ef16fbed78fbe7a10acf043",
+    "title": "Wikisource history and primary texts - volume 3",
+    "version": "2026-09.1"
+  },
+  "package": {
+    "bytes": 1338943137,
+    "file": "wikisource-en-history-p002.blobs",
+    "sha256": "af7231fd9542f4e6780f6e54bebd25c572507208da2a921e3ef5a3be8bf92c80"
+  },
+  "platform": "Windows",
+  "python": "3.14.3"
+}

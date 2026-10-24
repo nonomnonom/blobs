@@ -9,7 +9,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.ConversationEntity
-import dev.blobs.app.ui.ProductViewModel
+import dev.blobs.app.ui.AppViewModel
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -37,12 +38,18 @@ class AppJourneyPerformanceTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val container = (context.applicationContext as BlobsApplication).container
         val scenario = ActivityScenario.launch(MainActivity::class.java)
-        lateinit var viewModel: ProductViewModel
-        scenario.onActivity { viewModel = ViewModelProvider(it)[ProductViewModel::class.java] }
+        lateinit var viewModel: AppViewModel
+        scenario.onActivity { viewModel = ViewModelProvider(it)[AppViewModel::class.java] }
         val previous = container.preferences.options.first()
         val report = JSONObject()
         val output = File(context.getExternalFilesDir("performance"), "$profile.json")
         val conversations = mutableListOf<String>()
+        fun workDiagnostic(): String = container.work.state.value.let { state ->
+            val notice = state.notice?.let(context::getString) ?: "none"
+            "stage=${state.researchStage}, busy=${state.busy}, " +
+                "evidence=${Evidence.decode(state.evidence).size}, " +
+                "textChars=${state.text.length}, notice=$notice"
+        }
         try {
             withTimeout(15_000) { container.work.state.first { it.ready && !it.busy } }
             withTimeout(15_000) { viewModel.state.first { it.loaded } }
@@ -113,16 +120,32 @@ class AppJourneyPerformanceTest {
                 }
                 try {
                     withContext(Dispatchers.Main) {
-                        viewModel.send("What is photosynthesis?")
+                        viewModel.send("What do my saved science sources say about photosynthesis?")
                     }.join()
                     assertEquals(id, container.work.state.value.threadId)
                     withContext(Dispatchers.Main) { viewModel.draft("Keep my draft") }
-                    withTimeout(180_000) {
-                        container.work.state.first { it.threadId == id && it.evidence != "[]" }
+                    val evidenceState = withTimeoutOrNull(180_000) {
+                        container.work.state.first {
+                            it.threadId == id && (it.evidence != "[]" || !it.busy)
+                        }
+                    }
+                    check(evidenceState != null) {
+                        "Timed out waiting for library evidence; ${workDiagnostic()}"
+                    }
+                    check(evidenceState.evidence != "[]") {
+                        "Response ended without library evidence; ${workDiagnostic()}"
                     }
                     val evidenceMs = SystemClock.elapsedRealtime() - start
-                    withTimeout(180_000) {
-                        container.work.state.first { it.threadId == id && it.text.isNotBlank() }
+                    val responseState = withTimeoutOrNull(180_000) {
+                        container.work.state.first {
+                            it.threadId == id && (it.text.isNotBlank() || !it.busy)
+                        }
+                    }
+                    check(responseState != null) {
+                        "Timed out waiting for answer text; ${workDiagnostic()}"
+                    }
+                    check(responseState.text.isNotBlank()) {
+                        "Response ended without visible text; ${workDiagnostic()}"
                     }
                     val visibleMs = SystemClock.elapsedRealtime() - start
                     val responseMemory = Debug.MemoryInfo()
@@ -145,18 +168,12 @@ class AppJourneyPerformanceTest {
                                 cancellationMs
                             ).put("sampled_peak_pss_kb", peakPssKb)
                             .put("retrieval_ms", performance.retrievalElapsedMs)
-                            .put("model_cache_hit", performance.generation.modelCacheHit)
-                            .put("reused_prompt_tokens", performance.generation.reusedPromptTokens)
                             .put(
-                                "processed_prompt_tokens",
-                                performance.generation.processedPromptTokens
+                                "first_visible_text_elapsed_ms",
+                                performance.firstVisibleTextElapsedMs ?: JSONObject.NULL
                             )
+                            .put("end_to_end_elapsed_ms", performance.endToEndElapsedMs)
                             .put("pss_at_first_text_kb", responseMemory.totalPss)
-                            .put("native_threads", performance.generation.inferenceThreads)
-                            .put(
-                                "native_first_callback_us",
-                                performance.generation.firstTokenCallbackUs
-                            )
                             .put("status", turn.status)
                     )
                     assertEquals(
@@ -165,7 +182,7 @@ class AppJourneyPerformanceTest {
                     )
                     assertEquals("Keep my draft", viewModel.state.value.draft)
                     assertTrue(Evidence.decode(turn.evidence).isNotEmpty())
-                    assertTrue(turn.status in setOf("STOPPED", "COMPLETE", "UNVERIFIED"))
+                    assertTrue(turn.status in setOf("STOPPED", "COMPLETE"))
                     save()
                 } finally {
                     sampler.cancel()

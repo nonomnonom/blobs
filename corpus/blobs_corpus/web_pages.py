@@ -23,6 +23,10 @@ MAX_SOURCES = 40
 EXTRACTOR_VERSION = "3"
 
 
+def _sha(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 def read_lock(path: Path) -> dict:
     lock = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(lock, dict):
@@ -88,46 +92,100 @@ class SameHostRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def _fetch(source: dict, directory: Path) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"{source['id']}.html"
+    if target.exists():
+        return target
+    if shutil.disk_usage(directory).free < 1024**3 + 1024 * 1024:
+        raise OSError("Keep at least 1 GiB free while acquiring source snapshots")
+    opener = urllib.request.build_opener(SameHostRedirect(source["host"]))
+    request = urllib.request.Request(
+        snapshot_url(source),
+        headers={
+            "User-Agent": "BlobsCorpus/0.1 (reproducible offline library)",
+            "Accept-Encoding": "identity",
+        },
+    )
+    with opener.open(request, timeout=45) as response:
+        checked_url(response.geturl(), [source["host"]])
+        content_type = response.headers.get("Content-Type", "").lower()
+        if not content_type.startswith("text/html"):
+            raise ValueError(f"Expected HTML source page: {source['id']}")
+        data = response.read(MAX_SOURCE_BYTES + 1)
+    if len(data) > MAX_SOURCE_BYTES:
+        raise ValueError(f"Remote page exceeds the size limit: {source['id']}")
+    partial = target.with_suffix(".html.partial")
+    try:
+        with partial.open("xb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.link(partial, target)
+    finally:
+        partial.unlink(missing_ok=True)
+    return target
+
+
 def acquire(lock_path: Path, directory: Path) -> list[Path]:
     lock = read_lock(lock_path)
-    directory.mkdir(parents=True, exist_ok=True)
     results = []
     for source in lock["sources"]:
-        target = directory / f"{source['id']}.html"
-        if target.exists():
-            _source_text(target.read_bytes(), source)
-            results.append(target)
-            continue
-        if shutil.disk_usage(directory).free < 1024**3 + 1024 * 1024:
-            raise OSError("Keep at least 1 GiB free while acquiring source snapshots")
-        opener = urllib.request.build_opener(SameHostRedirect(source["host"]))
-        request = urllib.request.Request(
-            snapshot_url(source),
-            headers={
-                "User-Agent": "BlobsCorpus/0.1 (reproducible offline library)",
-                "Accept-Encoding": "identity",
-            },
-        )
-        with opener.open(request, timeout=45) as response:
-            checked_url(response.geturl(), [source["host"]])
-            content_type = response.headers.get("Content-Type", "").lower()
-            if not content_type.startswith("text/html"):
-                raise ValueError(f"Expected HTML source page: {source['id']}")
-            data = response.read(MAX_SOURCE_BYTES + 1)
-        if len(data) > MAX_SOURCE_BYTES:
-            raise ValueError(f"Remote page exceeds the size limit: {source['id']}")
-        _source_text(data, source)
-        partial = target.with_suffix(".html.partial")
-        try:
-            with partial.open("xb") as stream:
-                stream.write(data)
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.link(partial, target)
-        finally:
-            partial.unlink(missing_ok=True)
+        target = _fetch(source, directory)
+        _source_text(target.read_bytes(), source)
         results.append(target)
     return results
+
+
+def derive_source(raw: bytes, source: dict) -> dict:
+    """Re-pin the volatile page facts while keeping the reviewed selector and identity."""
+    parsed = _parse(raw, source)
+    refreshed = dict(source)
+    refreshed["title"] = parsed["title"]
+    refreshed["body_sha256"] = parsed["body_sha256"]
+    if "revision_id" in source:
+        refreshed["revision_id"] = parsed["revision_id"]
+    else:
+        refreshed["updated"] = parsed["updated"]
+    return refreshed
+
+
+def refresh(lock_path: Path, directory: Path, output: Path, edition: str, saved: str) -> dict:
+    prior = read_lock(lock_path)
+    if output.exists():
+        raise FileExistsError(output)
+    sources = []
+    for source in prior["sources"]:
+        target = _fetch(source, directory)
+        derived = derive_source(target.read_bytes(), source)
+        sources.append(derived)
+    changed = [
+        source["id"]
+        for original, source in zip(prior["sources"], sources)
+        if source["body_sha256"] != original["body_sha256"]
+        or source.get("updated") != original.get("updated")
+        or source.get("revision_id") != original.get("revision_id")
+    ]
+    lock = dict(prior)
+    lock["edition"] = edition
+    lock["saved"] = saved
+    lock["sources"] = sources
+    lock["refreshed_from"] = {
+        "lock": lock_path.as_posix(),
+        "lock_sha256": _sha(lock_path.read_text(encoding="utf-8")),
+        "edition": prior["edition"],
+        "changed_sources": changed,
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("x", encoding="utf-8") as stream:
+        json.dump(lock, stream, indent=2, ensure_ascii=False)
+        stream.write("\n")
+    read_lock(output)
+    print(
+        f"Refreshed {len(sources)} sources; {len(changed)} changed: {', '.join(changed) or 'none'}",
+        flush=True,
+    )
+    return lock
 
 
 def _remove_furniture(root):
@@ -146,7 +204,8 @@ def snapshot_url(source: dict) -> str:
     return source["url"] + f"?oldid={revision}" if revision else source["url"]
 
 
-def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
+def _parse(raw: bytes, source: dict) -> dict:
+    """Read the page facts a lock pins: title, update identity, and article body."""
     if len(raw) > MAX_SOURCE_BYTES:
         raise ValueError(f"Source page exceeds the size limit: {source['id']}")
     try:
@@ -156,8 +215,7 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
     tree = LexborHTMLParser(html)
     title_node = tree.css_first("h1")
     title = clean(title_node.text()) if title_node else ""
-    if title != source["title"]:
-        raise ValueError(f"Unexpected source title for {source['id']}: {title!r}")
+    parsed = {"title": title}
     if "revision_id" in source:
         configs = []
         for script in tree.css("script"):
@@ -168,9 +226,9 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
             len(configs) != 1
             or not isinstance(configs[0], dict)
             or type(configs[0].get("wgRevisionId")) is not int
-            or configs[0]["wgRevisionId"] != source["revision_id"]
         ):
-            raise ValueError(f"Wiki revision changed: {source['id']}")
+            raise ValueError(f"Cannot read a wiki revision: {source['id']}")
+        parsed["revision_id"] = configs[0]["wgRevisionId"]
     else:
         page_text = tree.body.text(separator=" ", strip=True) if tree.body else ""
         update_dates = re.findall(
@@ -182,9 +240,7 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
             raise ValueError(f"Expected one page update date: {source['id']}")
         date_text = next(value for value in update_dates[0] if value)
         date_format = "%m/%d/%Y" if "/" in date_text else "%B %d, %Y"
-        updated = datetime.strptime(date_text, date_format).date().isoformat()
-        if updated != source["updated"]:
-            raise ValueError(f"Page update date changed: {source['id']} ({updated})")
+        parsed["updated"] = datetime.strptime(date_text, date_format).date().isoformat()
     root = tree.css_first(source["selector"])
     if root is None:
         raise ValueError(f"Missing locked article body selector: {source['id']}")
@@ -194,10 +250,22 @@ def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
         raise ValueError(f"Normalized source is unexpectedly short: {source['id']}")
     if "\ufffd" in title or "\ufffd" in body:
         raise ValueError(f"Source text contains a Unicode replacement character: {source['id']}")
-    body_sha256 = hashlib.sha256(body.encode("utf-8")).hexdigest()
-    if body_sha256 != source["body_sha256"]:
+    parsed["body"] = body
+    parsed["body_sha256"] = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    return parsed
+
+
+def _source_text(raw: bytes, source: dict) -> tuple[str, str]:
+    parsed = _parse(raw, source)
+    if parsed["title"] != source["title"]:
+        raise ValueError(f"Unexpected source title for {source['id']}: {parsed['title']!r}")
+    if "revision_id" in source and parsed["revision_id"] != source["revision_id"]:
+        raise ValueError(f"Wiki revision changed: {source['id']}")
+    if "updated" in parsed and parsed["updated"] != source["updated"]:
+        raise ValueError(f"Page update date changed: {source['id']} ({parsed['updated']})")
+    if parsed["body_sha256"] != source["body_sha256"]:
         raise ValueError(f"Reviewed source text changed: {source['id']}")
-    return title, body
+    return parsed["title"], parsed["body"]
 
 
 def extract(lock_path: Path, snapshots: Path, output: Path) -> Path:
@@ -262,10 +330,18 @@ def main():
     extract_parser.add_argument("lock", type=Path)
     extract_parser.add_argument("snapshots", type=Path)
     extract_parser.add_argument("output", type=Path)
+    refresh_parser = subparsers.add_parser("refresh")
+    refresh_parser.add_argument("lock", type=Path)
+    refresh_parser.add_argument("directory", type=Path)
+    refresh_parser.add_argument("output", type=Path)
+    refresh_parser.add_argument("--edition", required=True)
+    refresh_parser.add_argument("--saved", required=True)
     args = parser.parse_args()
     if args.command == "acquire":
         for path in acquire(args.lock, args.directory):
             print(f"Verified {path}", flush=True)
+    elif args.command == "refresh":
+        refresh(args.lock, args.directory, args.output, args.edition, args.saved)
     else:
         print(
             f"Normalized records written to {extract(args.lock, args.snapshots, args.output)}",

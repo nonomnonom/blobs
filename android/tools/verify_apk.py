@@ -12,6 +12,11 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SHA256 = re.compile(r"[a-f0-9]{64}")
+SIGNER_CERTIFICATE = re.compile(
+    r"^Signer #\d+ certificate SHA-256 digest:\s*([0-9a-f]{64})\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
 
 
 def sdk_directory():
@@ -33,7 +38,20 @@ def run_tool(path, *arguments):
     return result.stdout
 
 
-def verify(apk):
+def normalized_certificate_sha256(value):
+    if not isinstance(value, str) or not SHA256.fullmatch(value.lower()):
+        raise ValueError("Expected a 64-character SHA-256 signing certificate fingerprint")
+    return value.lower()
+
+
+def signing_certificate_sha256(signature):
+    matches = SIGNER_CERTIFICATE.findall(signature)
+    if len(matches) != 1:
+        raise RuntimeError("Cannot read exactly one signer certificate SHA-256 fingerprint")
+    return matches[0].lower()
+
+
+def verify(apk, expected_certificate_sha256=None):
     suffix = ".exe" if os.name == "nt" else ""
     build_tools = sdk_directory() / "build-tools" / "36.0.0"
     permissions = run_tool(build_tools / ("aapt2" + suffix), "dump", "permissions", apk)
@@ -80,10 +98,22 @@ def verify(apk):
     if abis != ["arm64-v8a", "x86_64"]:
         raise RuntimeError(f"Expected ARM64 and x86_64 native libraries, found: {abis}")
 
+    signing_certificate = None
+    if expected_certificate_sha256 is not None:
+        expected_certificate = normalized_certificate_sha256(expected_certificate_sha256)
+        signature = run_tool(
+            build_tools / ("apksigner" + suffix), "verify", "--verbose", "--print-certs", apk
+        )
+        signing_certificate = signing_certificate_sha256(signature)
+        if signing_certificate != expected_certificate:
+            raise RuntimeError(
+                "APK signer certificate SHA-256 differs from the protected release fingerprint"
+            )
+
     with apk.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
 
-    return {
+    report = {
         "apk": apk.name,
         "application_id": identity.group(1),
         "version_code": int(identity.group(2)),
@@ -93,21 +123,27 @@ def verify(apk):
         "internet_permission": True,
         "zip_alignment_16kb": True,
         "native_libraries": libraries,
-        "scope": "Packaging and permission proof only; source review is required to verify that networking remains limited to explicit package downloads.",
+        "scope": "Packaging and permission proof only; source review is required to verify "
+        "that networking remains limited to explicit package downloads.",
     }
+    if signing_certificate is not None:
+        report["signing_certificate_sha256"] = signing_certificate
+    return report
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("apk", type=Path)
+    parser.add_argument("--certificate-sha256")
     args = parser.parse_args()
     try:
-        report = verify(args.apk.resolve(strict=True))
+        report = verify(args.apk.resolve(strict=True), args.certificate_sha256)
         destination = ROOT / "app/build/reports/apk" / (args.apk.stem + ".json")
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         print(
-            f"PASS: {report['apk']}; package-download INTERNET permission; 16 KB ZIP/ELF alignment; {len(report['native_libraries'])} native libraries."
+            f"PASS: {report['apk']}; package-download INTERNET permission; 16 KB ZIP/ELF "
+            f"alignment; {len(report['native_libraries'])} native libraries."
         )
         print(f"Report: {destination}")
     except (RuntimeError, OSError, ValueError, struct.error, zipfile.BadZipFile) as error:

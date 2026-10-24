@@ -288,6 +288,86 @@ class BuildTests(unittest.TestCase):
                 self.assertNotIn("cycle one", rows)
         self.assertEqual(name_key("  CO₂ / ＡＩ — Earth’s  "), "co2 ai earth s")
 
+    def test_review_drops_a_second_record_with_an_identical_body(self):
+        text = b"<p>Two archive pages can normalize to the same text even when their titles and paths differ, and only one may be shipped.</p>"
+        items = [
+            article(text, "First", "First", LOCK),
+            article(text, "Second", "Second", LOCK),
+        ]
+        with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
+            root = Path(folder)
+            shard = root / "documents.jsonl.gz"
+            write_lines(shard, items)
+            info = dict(
+                name=shard.name,
+                bytes=shard.stat().st_size,
+                sha256=hashlib.sha256(shard.read_bytes()).hexdigest(),
+            )
+            manifest = dict(
+                format=1,
+                source=LOCK,
+                complete=True,
+                next_entry=2,
+                totals={"documents": 2},
+                shards=[dict(start=0, end=2, counts={"documents": 2}, files={"documents": info})],
+            )
+            write_json(root / "manifest.json", manifest)
+            reviewed = curate(root / "manifest.json", root / "reviewed")
+            self.assertEqual(
+                [d["title"] for d in documents(root / "reviewed/manifest.json")], ["First"]
+            )
+            self.assertEqual(reviewed["totals"]["excluded_duplicate_bodies"], 1)
+            self.assertEqual(reviewed["totals"]["documents"], 1)
+            self.assertEqual(
+                reviewed["curation"]["excluded_documents"][0]["reason"],
+                "Duplicate body text of an earlier record",
+            )
+
+    def test_review_drops_an_unanswered_stack_exchange_question(self):
+        text = b"<p>The question text is long enough to be extracted, but no answer exists in the pinned archive.</p>"
+        unanswered = article(
+            text, "Why is my chain slipping", "questions/1/why-is-my-chain-slipping", LOCK
+        )
+        unanswered["provenance"]["normalization"] = {"answers": 0, "question_id": "1"}
+        answered = article(text, "How do I true a wheel", "questions/2/how-do-i-true-a-wheel", LOCK)
+        answered["provenance"]["normalization"] = {"answers": 2, "question_id": "2"}
+        with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
+            root = Path(folder)
+            shard = root / "documents.jsonl.gz"
+            write_lines(shard, [unanswered, answered])
+            info = dict(
+                name=shard.name,
+                bytes=shard.stat().st_size,
+                sha256=hashlib.sha256(shard.read_bytes()).hexdigest(),
+            )
+            manifest = dict(
+                format=1,
+                source=LOCK,
+                complete=True,
+                next_entry=2,
+                totals={"documents": 2},
+                shards=[
+                    dict(
+                        start=0,
+                        end=2,
+                        archive="stackexchange-bicycles-en-all",
+                        counts={"documents": 2},
+                        files={"documents": info},
+                    )
+                ],
+            )
+            write_json(root / "manifest.json", manifest)
+            reviewed = curate(root / "manifest.json", root / "reviewed")
+            self.assertEqual(
+                [d["title"] for d in documents(root / "reviewed/manifest.json")],
+                ["How do I true a wheel"],
+            )
+            self.assertEqual(reviewed["totals"]["excluded_unanswered"], 1)
+            self.assertEqual(
+                reviewed["curation"]["excluded_documents"][0]["reason"],
+                "Unanswered question, not an answer to ship",
+            )
+
     def test_review_excludes_support_pages_without_changing_source_shards(self):
         text = b"<p>This original text is long enough to be extracted, but its archive path determines whether it belongs to an article.</p>"
         items = [
@@ -296,6 +376,7 @@ class BuildTests(unittest.TestCase):
                 ("Article", "Article"),
                 ("Main Page", "index"),
                 ("Support file", "_assets_/MathML"),
+                ("MathML support", "_mw_/MathML"),
             ]
         ]
         with tempfile.TemporaryDirectory() as folder, redirect_stdout(io.StringIO()):
@@ -310,20 +391,20 @@ class BuildTests(unittest.TestCase):
                 format=1,
                 source=LOCK,
                 complete=True,
-                next_entry=3,
-                totals={"documents": 3},
-                shards=[dict(start=0, end=3, counts={"documents": 3}, files={"documents": info})],
+                next_entry=4,
+                totals={"documents": 4},
+                shards=[dict(start=0, end=4, counts={"documents": 4}, files={"documents": info})],
             )
             write_json(root / "manifest.json", manifest)
             reviewed = curate(root / "manifest.json", root / "reviewed")
             self.assertEqual(
                 [d["title"] for d in documents(root / "reviewed/manifest.json")], ["Article"]
             )
-            self.assertEqual(reviewed["totals"]["excluded_non_articles"], 2)
-            self.assertEqual(len(reviewed["curation"]["excluded_documents"]), 2)
+            self.assertEqual(reviewed["totals"]["excluded_non_articles"], 3)
+            self.assertEqual(len(reviewed["curation"]["excluded_documents"]), 3)
             self.assertEqual(shard.read_bytes(), before)
             exported = root / "exported"
-            export_records(root / "reviewed/manifest.json", exported)
+            export_records(root / "reviewed/manifest.json", exported, portfolio_root=root)
             self.assertEqual(
                 (exported / "manifest.json").read_bytes(),
                 (root / "reviewed/manifest.json").read_bytes(),
@@ -332,10 +413,12 @@ class BuildTests(unittest.TestCase):
                 [d["title"] for d in documents(exported / "manifest.json")], ["Article"]
             )
             with self.assertRaises(FileExistsError):
-                export_records(root / "reviewed/manifest.json", exported)
+                export_records(root / "reviewed/manifest.json", exported, portfolio_root=root)
             with patch("blobs_corpus.export.MAX_FILE_BYTES", 1):
                 with self.assertRaisesRegex(ValueError, "artifact budget"):
-                    export_records(root / "reviewed/manifest.json", root / "oversized")
+                    export_records(
+                        root / "reviewed/manifest.json", root / "oversized", portfolio_root=root
+                    )
             self.assertFalse((root / "oversized").exists())
             with self.assertRaises(FileExistsError):
                 curate(root / "manifest.json", root / "reviewed")
@@ -404,7 +487,7 @@ class BuildTests(unittest.TestCase):
                 ),
             )
             with self.assertRaisesRegex(ValueError, "Unicode replacement character"):
-                export_records(root / "manifest.json", root / "exported")
+                export_records(root / "manifest.json", root / "exported", portfolio_root=root)
             self.assertFalse((root / "exported").exists())
 
     def test_review_accepts_pinned_wikivoyage_source(self):

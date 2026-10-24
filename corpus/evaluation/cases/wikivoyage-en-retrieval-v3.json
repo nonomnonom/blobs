@@ -1,0 +1,540 @@
+{
+  "cases": [
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-cfd2c466f6c5efa317a39438f3ee2b88"
+      ],
+      "expected_document_titles": [
+        "Amsterdam/Canal District"
+      ],
+      "id": "amsterdam-canal-district",
+      "question": "Which canal-ring neighbourhood in Amsterdam suits a slow first day?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-18a4c2e9a82ce7d082277153c4db61c6"
+      ],
+      "expected_document_titles": [
+        "Andalusia"
+      ],
+      "id": "andalusia-white-villages",
+      "question": "What is a good driving route for the white villages of Andalusia?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-dbd391c367eafc3b13b54dfcef0ec588"
+      ],
+      "expected_document_titles": [
+        "Bali"
+      ],
+      "id": "bali-scooter-permit",
+      "question": "Do I need an international driving permit to rent a scooter in Bali?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-2762e6724004afeebc34996e226877ef"
+      ],
+      "expected_document_titles": [
+        "Bangkok"
+      ],
+      "id": "bangkok-river-boat",
+      "question": "Can I avoid Bangkok traffic by using the river boats and canals?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-cfab0e804ef29a7cb50a364981028590"
+      ],
+      "expected_document_titles": [
+        "Barcelona"
+      ],
+      "id": "barcelona-gaudi-tickets",
+      "question": "How far in advance should I book Gaudí buildings in Barcelona?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-98419a76f76535059bc22dcec44efde3"
+      ],
+      "expected_document_titles": [
+        "Berlin"
+      ],
+      "id": "berlin-wall-sites",
+      "question": "Which sites in Berlin best explain the Wall and the divided city?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-8e9506a5a5ea98a44551834e6638f549"
+      ],
+      "expected_document_titles": [
+        "Budapest"
+      ],
+      "id": "budapest-thermal-spa",
+      "question": "Which thermal spa in Budapest works well on a rainy afternoon?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-84c72733effbdbc8b3ee32943a80c69e"
+      ],
+      "expected_document_titles": [
+        "Cairo"
+      ],
+      "id": "cairo-giza-pyramids",
+      "question": "How do I get from central Cairo to the Giza pyramids without booking a tour?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-3193421f66e27b68de78e18230eb043b"
+      ],
+      "expected_document_titles": [
+        "Cape Town"
+      ],
+      "id": "cape-town-tap-water",
+      "question": "Is the tap water safe to drink in Cape Town?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-828a991c1e2d142974a67b10f8b5add5"
+      ],
+      "expected_document_titles": [
+        "Cuzco"
+      ],
+      "id": "cuzco-altitude",
+      "question": "How should I acclimatise to altitude in Cuzco before hiking?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-828a991c1e2d142974a67b10f8b5add5"
+      ],
+      "expected_document_titles": [
+        "Cuzco"
+      ],
+      "id": "cuzco-machu-picchu-train",
+      "question": "How do I buy train tickets from Cuzco to Machu Picchu?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-4082a8068fa269438e612b90a0c71eba"
+      ],
+      "expected_document_titles": [
+        "Tour cycling"
+      ],
+      "id": "cycling-touring",
+      "question": "Can I tour a foreign country by bicycle with loaded panniers?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-4fd0fe0aa90e7182a4d66a1862705611"
+      ],
+      "expected_document_titles": [
+        "Dubrovnik"
+      ],
+      "id": "dubrovnik-crowds",
+      "question": "What time of day is Dubrovnik's old town least crowded with cruise visitors?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-1afee3d798fec0f415c3851f5b014a07"
+      ],
+      "expected_document_titles": [
+        "Goa"
+      ],
+      "id": "goa-quiet-beaches",
+      "question": "Which part of Goa is quieter for a week of beaches?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-1f9aa07fe3bf42c58d31244738bb554a"
+      ],
+      "expected_document_titles": [
+        "Hanoi"
+      ],
+      "id": "hanoi-crossing-streets",
+      "question": "How should I cross the road as a pedestrian in Hanoi?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-93cc0f3a4de13d9620adf681b2cf43ae"
+      ],
+      "expected_document_titles": [
+        "Hitchhiking"
+      ],
+      "id": "hitchhiking-legality",
+      "question": "Is hitchhiking legal, and how do travellers do it safely?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-a5a23cedfcb632f2f90300beef99d01a"
+      ],
+      "expected_document_titles": [
+        "Ho Chi Minh City"
+      ],
+      "id": "ho-chi-minh-coffee",
+      "question": "Which cafés in Ho Chi Minh City are known for Vietnamese coffee?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-264603f7c99a466a0244dd9ba65be5b0"
+      ],
+      "expected_document_titles": [
+        "Istanbul"
+      ],
+      "id": "istanbul-tram-sights",
+      "question": "Is the Istanbul tram enough to reach the main historic sights?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-25a3d0b53450fa2de75166c8260479f8"
+      ],
+      "expected_document_titles": [
+        "Rail travel in Japan"
+      ],
+      "id": "japan-rail-pass-value",
+      "question": "Is a Japan Rail Pass still worth buying for two weeks of travel?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-f923fec16071d472e097b37c61a15e35"
+      ],
+      "expected_document_titles": [
+        "Kathmandu"
+      ],
+      "id": "kathmandu-trekker-base",
+      "question": "Where in Kathmandu do trekkers usually stay and arrange gear?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-abf38e25e82b2f3a9a1046277cb846b1"
+      ],
+      "expected_document_titles": [
+        "Lima"
+      ],
+      "id": "lima-ceviche",
+      "question": "Where in Lima should I go for ceviche?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-5c3fbee31865cfd3450c7eb90773a4e1"
+      ],
+      "expected_document_titles": [
+        "Lisbon"
+      ],
+      "id": "lisbon-tram-28",
+      "question": "Is tram 28 in Lisbon worth riding as a tourist?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-47c982487c31fba8bf69658362de28a3"
+      ],
+      "expected_document_titles": [
+        "London"
+      ],
+      "id": "london-underground-payment",
+      "question": "How do I pay for the London Underground without buying paper tickets?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-ed8486227f2cb9c4d0cd84c828f854e8"
+      ],
+      "expected_document_titles": [
+        "Marrakech"
+      ],
+      "id": "marrakech-souk-bargaining",
+      "question": "What is the etiquette for bargaining in the Marrakech souks?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-6d3a49fdb6329b23272b112e981f05b2"
+      ],
+      "expected_document_titles": [
+        "Mexico City"
+      ],
+      "id": "mexico-city-metro",
+      "question": "Is the Mexico City metro safe and easy for a first-time visitor?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-6b885877b40f7e0db50c711593015aad"
+      ],
+      "expected_document_titles": [
+        "Mostar"
+      ],
+      "id": "mostar-old-bridge",
+      "question": "How much time do I need in Mostar for the Old Bridge and the bazaar?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-ec1d8ad5856c4f0a3c1506cb46443b65"
+      ],
+      "expected_document_titles": [
+        "Mumbai"
+      ],
+      "id": "mumbai-local-trains",
+      "question": "When should a newcomer avoid Mumbai local trains?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-806059720b349e1dda2518003b05daad"
+      ],
+      "expected_document_titles": [
+        "Nepal"
+      ],
+      "id": "nepal-trek-permits",
+      "question": "Do I need permits and a guide to trek in Nepal?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-cd023ddf03d2e341850e509aa77e3e43"
+      ],
+      "expected_document_titles": [
+        "New York City"
+      ],
+      "id": "new-york-boroughs",
+      "question": "Which parts of New York City are worth more than a single day?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-73f592d58b0a591cadcfec6c032686d9"
+      ],
+      "expected_document_titles": [
+        "Paris/18th arrondissement"
+      ],
+      "id": "paris-first-stay",
+      "question": "Which neighbourhood is the 18th arrondissement of Paris and what is it like to stay there?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-94717733c5d6f6b04feeb006206bfaa0"
+      ],
+      "expected_document_titles": [
+        "Paris"
+      ],
+      "id": "paris-museum-pass",
+      "question": "Is a museum pass worth buying for three days of museums in Paris?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-fa59dc54035dcb326d9335aac8637af2"
+      ],
+      "expected_document_titles": [
+        "Porto"
+      ],
+      "id": "porto-port-lodges",
+      "question": "Where are the port wine lodges across the river from Porto?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-face0dea02fed2871ae71839bde58cce"
+      ],
+      "expected_document_titles": [
+        "Prague"
+      ],
+      "id": "prague-jewish-quarter",
+      "question": "Is the Jewish Quarter walkable in one morning in Prague?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-eb679af0e24ec11446efbad4493fa9d8"
+      ],
+      "expected_document_titles": [
+        "Rail travel"
+      ],
+      "id": "rail-night-train",
+      "question": "How do I book a night train and choose between couchette and sleeper?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-366bbe5e501eec1c939b27f81c3070d2"
+      ],
+      "expected_document_titles": [
+        "Sarajevo"
+      ],
+      "id": "sarajevo-siege-history",
+      "question": "How should I spend one day on the siege history of Sarajevo?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-c544ea3447052139f3e597e1fbced07a"
+      ],
+      "expected_document_titles": [
+        "Siena"
+      ],
+      "id": "siena-palio",
+      "question": "When is the Palio run in Siena and what should a first-timer know?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-8b3208f6787acd6f1398e4a7e08a8ef8"
+      ],
+      "expected_document_titles": [
+        "Stay safe"
+      ],
+      "id": "stay-safe-nightlife",
+      "question": "How do I avoid drink spiking and street scams when going out at night?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-df52f311bb24f588da99c75f88c7f91f"
+      ],
+      "expected_document_titles": [
+        "Tbilisi"
+      ],
+      "id": "tbilisi-wine",
+      "question": "Where can I taste Kakheti wine while staying in Tbilisi?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-f6eec6b5f611f6d070d12e5759b376ca"
+      ],
+      "expected_document_titles": [
+        "Thailand"
+      ],
+      "id": "thailand-gulf-beach-season",
+      "question": "Which side of the Gulf of Thailand has usable beaches in October?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-b45baa02554cee906059bb995a2de28a"
+      ],
+      "expected_document_titles": [
+        "Tokyo"
+      ],
+      "id": "tokyo-airport-transfer",
+      "question": "How do I get from Narita airport into central Tokyo without an expensive tour?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-b45baa02554cee906059bb995a2de28a"
+      ],
+      "expected_document_titles": [
+        "Tokyo"
+      ],
+      "id": "tokyo-rail-network",
+      "question": "What is the easiest way to get around Tokyo using trains and the subway?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-01414461a767fb77d1f0b0b70c2e5fae"
+      ],
+      "expected_document_titles": [
+        "Turkey"
+      ],
+      "id": "turkey-cash-or-card",
+      "question": "Should I carry cash or card when travelling around Turkey?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-2cb392923b97d579755dd2017c930a4b"
+      ],
+      "expected_document_titles": [
+        "Tuscany"
+      ],
+      "id": "tuscany-rental-car",
+      "question": "Is renting a car the best way to explore Tuscany's hill towns?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-fb9147304282a73b2686e101804a743a"
+      ],
+      "expected_document_titles": [
+        "Ubud"
+      ],
+      "id": "ubud-temples",
+      "question": "Which temples near Ubud are worth making a day trip?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-4ba3fe66c1be0335b47d6cf5056061eb"
+      ],
+      "expected_document_titles": [
+        "Venice"
+      ],
+      "id": "venice-vaporetto-pass",
+      "question": "Do I need a vaporetto pass for three days in Venice?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-735ffadf71338d746caed9ca9bfb1233"
+      ],
+      "expected_document_titles": [
+        "Vietnam"
+      ],
+      "id": "vietnam-sleeper-bus",
+      "question": "Are overnight sleeper buses a good way to move around Vietnam?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-4587211cfac0ae62008e69ad93e2ebc0"
+      ],
+      "expected_document_titles": [
+        "Volunteer travel"
+      ],
+      "id": "volunteer-trip-vetting",
+      "question": "What should I verify before joining a volunteer trip abroad?"
+    },
+    {
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-fd35ecc9480ba905ed034283af9576b7"
+      ],
+      "expected_document_titles": [
+        "Yogyakarta"
+      ],
+      "id": "yogyakarta-borobudur-sunrise",
+      "question": "How do I get from Yogyakarta to Borobudur in time for sunrise?"
+    }
+  ],
+  "format": 1,
+  "id": "wikivoyage-en-retrieval-v3",
+  "library": {
+    "id": "wikivoyage-en",
+    "payload_sha256": "380896b48d45f1d2e586d7d0f793ef57c79f861083867d68058d9b1e92631226",
+    "records_sha256": "9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b",
+    "version": "2026-09.5"
+  }
+}

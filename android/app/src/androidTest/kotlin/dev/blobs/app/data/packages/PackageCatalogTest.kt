@@ -388,7 +388,8 @@ class PackageCatalogTest {
               "description": "A small reference library.",
               "language": "English",
               "publisher": "Blobs",
-              "compatibility": {"format":"Blobs library archive","corpus_schema":3,"retrieval_format":"SQLite FTS5","minimum_app_version":"0.3.1"}
+              "compatibility": {"format":"Blobs library archive","corpus_schema":3,"retrieval_format":"SQLite FTS5","minimum_app_version":"0.3.1"},
+              "library_profile": {"record_count": 10, "scope": "A small reference library for tests.", "source_snapshot_date": "2026-10-01", "update_policy": "New editions are published as new immutable entries.", "limitations": "Test fixture data only."}
             }
           ]
         }

@@ -24,13 +24,27 @@ object RetrievalQuery {
         "around"
     )
     private val titleNoiseWords = setOf("city", "town")
+    private val lowSpecificityNumberWords = setOf(
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+        "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+        "seventeen", "eighteen", "nineteen", "twenty", "hundred", "thousand", "times",
+        "twice"
+    )
+    private val nonTopicalWords = broadTitleIntentWords + titleNoiseWords + "best" +
+        lowSpecificityNumberWords
     private val followUp = Regex(
         "^(and\\b|what about\\b|how about\\b|tell me more\\b|go on\\b|" +
             "why[?.!]*$|why (is|was) that\\b|" +
             "(how|what|why|which|can|could|does|do|is|are) " +
-            "(does |do |is |are |would |can |of )?" +
+            "(does |do |did |is |are |was |were |would |will |has |have |had |can |could |" +
+            "should |might |of )?" +
             "(it|its|they|their|them|that|this|these|those|both|one|" +
             "the (first|second|third|former|latter))\\b)"
+    )
+    private val sourcedFollowUp = Regex(
+        "^(?:what|which|how)\\b.*\\b" +
+            "(?:sources?|references?|citations?|libraries|collections?|documents?)\\b" +
+            ".*\\b(?:it|its|they|their|them|that|this|these|those)\\b"
     )
     private val responseLengthInstruction = Regex(
         "(?i)(?:^|(?<=[.!?\\n]))\\s*(?:please\\s+)?" +
@@ -38,14 +52,14 @@ object RetrievalQuery {
             "(?:(?:short|brief|concise)\\s+)?(?:sentences?|paragraphs?|words?)\\s*" +
             "(?:[.!?:](?=\\s|$)|$)"
     )
-
     fun forSearch(question: String): String = responseLengthInstruction.replace(question, "").trim()
 
     fun resolve(question: String, previousQuestions: List<String>): String {
         if (!isFollowUp(question)) return question
         val recent = previousQuestions.filter(String::isNotBlank)
         if (recent.isEmpty()) return question
-        val anchorIndex = recent.indexOfLast { !isFollowUp(it) }.coerceAtLeast(0)
+        val anchorIndex = recent.indexOfLast { !isFollowUp(it) }
+        if (anchorIndex < 0) return question
         val anchor = recent[anchorIndex].take(300)
         val continuation = recent.drop(anchorIndex + 1)
             .joinToString(" ") { it.take(300) }.takeLast(300)
@@ -53,8 +67,10 @@ object RetrievalQuery {
         return "$question $context"
     }
 
-    private fun isFollowUp(question: String): Boolean =
-        followUp.containsMatchIn(question.trim().lowercase(Locale.ROOT))
+    private fun isFollowUp(question: String): Boolean {
+        val normalized = question.trim().lowercase(Locale.ROOT)
+        return followUp.containsMatchIn(normalized) || sourcedFollowUp.containsMatchIn(normalized)
+    }
 
     private fun normalized(text: String): String =
         Normalizer.normalize(text, Normalizer.Form.NFKC).lowercase(Locale.ROOT)
@@ -65,15 +81,17 @@ object RetrievalQuery {
     fun isBroadTitleQuestion(question: String, title: String): Boolean {
         val titleWords = nameKey(title).split(' ').toSet()
         val questionTerms = nameKey(question).split(' ').filter {
-            it.length >= 2 && it !in broadTitleIntentWords
+            it.length >= 2 && it !in broadTitleIntentWords && it !in titleNoiseWords
         }
         return questionTerms.isNotEmpty() && questionTerms.all { it in titleWords }
     }
 
     fun isDirectTitleMatch(question: String, title: String): Boolean {
         if (isBroadTitleQuestion(question, title)) return true
-        val titleWords = nameKey(title).split(' ')
-        if (titleWords.size > 1) return true
+        val normalizedQuestion = " ${nameKey(question)} "
+        val normalizedTitle = nameKey(title)
+        val titleWords = normalizedTitle.split(' ')
+        if (titleWords.size > 1) return " $normalizedTitle " in normalizedQuestion
         val titleWord = titleWords.singleOrNull() ?: return false
         return wordPattern.findAll(question).any { match ->
             match.range.first > 0 &&
@@ -109,11 +127,20 @@ object RetrievalQuery {
         section: String,
         text: String
     ): Int {
-        val terms = questionTerms - broadTitleIntentWords - titleNoiseWords
+        val terms = questionTerms - nonTopicalWords
         if (terms.isEmpty()) return 0
         val words = wordPattern.findAll("$title $section $text".lowercase(Locale.ROOT))
             .mapTo(mutableSetOf()) { it.value }
         return terms.count(words::contains)
+    }
+
+    fun minimumEvidenceOverlap(questionTerms: Set<String>): Int? {
+        val topicalTerms = questionTerms - nonTopicalWords
+        return when (topicalTerms.size) {
+            0 -> null
+            1 -> 1
+            else -> 2
+        }
     }
 
     private fun isShortTitleExpansion(term: String, word: String): Boolean =

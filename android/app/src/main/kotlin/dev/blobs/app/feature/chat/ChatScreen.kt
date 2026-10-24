@@ -1,35 +1,26 @@
 package dev.blobs.app.feature.chat
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.os.SystemClock
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -42,94 +33,171 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
-import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.local.TurnEntity
-import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.ui.AppUiState
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
-import dev.blobs.app.ui.Mascot
-import dev.blobs.app.ui.MascotMotion
-import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductState
-import dev.blobs.app.ui.ProductViewModel
-import dev.blobs.app.ui.SectionLabel
-import dev.blobs.app.ui.SourceRow
-import kotlinx.coroutines.delay
+import dev.blobs.app.ui.chat.ConversationScrollPolicy
+import dev.blobs.app.ui.chat.ScrollDirective
+import dev.blobs.app.ui.theme.BlobsDimens
 import kotlinx.coroutines.launch
 
 @Composable
 fun ChatScreen(
-    state: ProductState,
+    state: AppUiState,
     turns: List<TurnEntity>,
     work: WorkState,
-    model: ProductViewModel
+    model: AppViewModel,
+    modifier: Modifier = Modifier
 ) {
     val currentThread by model.conversationId.collectAsStateWithLifecycle()
-    val packages by model.packages.collectAsStateWithLifecycle()
-    val ready = model.selectedModel() != null && model.catalog.hasStarterLibrary(packages)
+    val ready = model.selectedModel() != null
     val large = LocalDensity.current.fontScale >= 1.5f
     val list = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val focus = LocalFocusManager.current
-    var observedTurns by rememberSaveable(currentThread) { mutableIntStateOf(0) }
+    val peekPx = with(LocalDensity.current) { BlobsDimens.conversationTurnPeek.toPx().toInt() }
+    val policy = remember(peekPx) { ConversationScrollPolicy(peekPx) }
+    val heldByReader = remember { mutableIntStateOf(0) }
     val showLatest by remember { derivedStateOf { list.canScrollForward && turns.isNotEmpty() } }
-    var slow by rememberSaveable(work.turnId) { mutableStateOf(false) }
-    LaunchedEffect(work.turnId, work.busy) {
-        slow = false
-        if (work.busy && work.turnId.isNotEmpty()) {
-            delay((30_000L - (SystemClock.elapsedRealtime() - work.startedAt)).coerceAtLeast(0))
-            slow = true
+    var seenTurn by rememberSaveable(currentThread) { mutableStateOf<String?>(null) }
+
+    /**
+     * The reader, not the stream, owns the scroll. Only a drag or a fling that we did not
+     * start ourselves counts as the reader moving, so following the tail never looks like
+     * the reader asked to be there.
+     */
+    val intent = remember(list, heldByReader, policy) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                if (source == NestedScrollSource.UserInput && heldByReader.intValue == 0) {
+                    policy.readerMoved(atLiveEdge = !list.canScrollForward)
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                if (heldByReader.intValue == 0) {
+                    policy.readerMoved(atLiveEdge = !list.canScrollForward)
+                }
+                return Velocity.Zero
+            }
         }
     }
-    LaunchedEffect(turns.size) {
-        if (turns.size > observedTurns) {
-            list.scrollToItem(turns.lastIndex)
-            focus.clearFocus()
+
+    suspend fun follow(directive: ScrollDirective) {
+        val last = turns.lastIndex
+        if (last < 0) return
+        heldByReader.intValue += 1
+        try {
+            when (directive) {
+                ScrollDirective.None -> Unit
+
+                ScrollDirective.FollowBottom -> {
+                    list.scrollToItem(last)
+                    val tail = list.layoutInfo.visibleItemsInfo.lastOrNull()?.size ?: 0
+                    list.scrollBy(tail.toFloat())
+                }
+
+                is ScrollDirective.AnchorTurn -> {
+                    list.scrollToItem(directive.index.coerceIn(0, last))
+                    list.scrollBy(-directive.peekPx.toFloat())
+                }
+            }
+        } finally {
+            heldByReader.intValue -= 1
         }
-        observedTurns = turns.size
     }
+
+    LaunchedEffect(currentThread, turns.lastOrNull()?.id) {
+        val newest = turns.lastOrNull()?.id
+        if (newest == null || newest == seenTurn) return@LaunchedEffect
+        seenTurn = newest
+        follow(policy.turnAppeared(turns.lastIndex))
+        if (work.busy) focus.clearFocus()
+    }
+    LaunchedEffect(work.text, work.evidence, work.busy) {
+        follow(policy.contentGrew(atLiveEdge = !list.canScrollForward))
+    }
+
     if (turns.isEmpty()) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            HomeContent(state, work, ready, model)
+        Column(modifier.fillMaxSize()) {
+            val intro = rememberScrollState()
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier.widthIn(max = BlobsDimens.homeReadingWidth).fillMaxWidth()
+                        .then(
+                            if (intro.canScrollForward) {
+                                Modifier.fadeBottomEdge()
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Box(Modifier.verticalScroll(intro)) {
+                        HomeIntro(state, work, ready, model)
+                    }
+                }
+            }
+            Column(
+                Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                AnswerDisclaimer(Modifier.padding(horizontal = BlobsDimens.page))
+                Composer(
+                    state,
+                    work,
+                    false,
+                    model,
+                    Modifier.padding(horizontal = BlobsDimens.md, vertical = BlobsDimens.xs)
+                )
+            }
         }
         return
     }
-    Column(Modifier.fillMaxSize()) {
+    Column(modifier.fillMaxSize()) {
         if (work.busy &&
             work.threadId.isNotBlank() &&
             work.threadId != currentThread
         ) {
             Body(R.string.other_answer)
         }
-        Column(Modifier.weight(1f)) {
+        Box(Modifier.weight(1f).fillMaxWidth()) {
             LazyColumn(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(TAG_VIEWPORT)
+                    .nestedScroll(intent),
                 state = list,
                 contentPadding = PaddingValues(
-                    top = 12.dp,
-                    bottom = 24.dp
+                    top = BlobsDimens.sm,
+                    bottom = BlobsDimens.lg
                 ),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg)
             ) {
                 items(turns, key = { it.id }) { turn ->
                     TurnCard(
@@ -143,264 +211,95 @@ fun ChatScreen(
                         },
                         work.busy,
                         model,
-                        latest = turn.id == turns.lastOrNull()?.id
+                        researchStage = work.researchStage.takeIf { work.turnId == turn.id },
+                        latest = turn.id == turns.lastOrNull()?.id,
+                        modifier = Modifier.testTag(TAG_ITEM)
                     )
                 }
                 if (large) {
                     item(key = "follow-up-composer") {
                         Column(
-                            Modifier.padding(horizontal = 24.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            Modifier.padding(horizontal = BlobsDimens.page),
+                            verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
                         ) {
                             Text(
                                 stringResource(R.string.follow_up),
                                 style = MaterialTheme.typography.titleMedium
                             )
+                            AnswerDisclaimer()
                             Composer(state, work, true, model)
                         }
                     }
                 }
             }
             if (showLatest) {
-                androidx.compose.material3.OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            list.scrollToItem(turns.lastIndex)
-                            list.scrollBy(
-                                list.layoutInfo.visibleItemsInfo.lastOrNull()?.size?.toFloat() ?: 0f
-                            )
-                        }
-                    },
-                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 8.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                ElevatedButton(
+                    onClick = { scope.launch { follow(policy.jumpToLatest()) } },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = BlobsDimens.xs)
+                        .heightIn(min = 36.dp)
+                        .testTag(TAG_LATEST_BUTTON),
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    elevation = ButtonDefaults.elevatedButtonElevation(
+                        defaultElevation = 3.dp
                     )
-                ) { Text(stringResource(R.string.latest)) }
+                ) {
+                    Icon(
+                        painterResource(R.drawable.ic_expand_more),
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 4.dp).size(18.dp)
+                    )
+                    Text(
+                        stringResource(R.string.latest),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
         }
         Column(
             Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            if (slow) {
-                Text(
-                    stringResource(R.string.slow_answer),
-                    Modifier.padding(horizontal = 24.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
             if (!large) {
+                AnswerDisclaimer(Modifier.padding(horizontal = BlobsDimens.page))
                 Composer(
                     state,
                     work,
                     true,
                     model,
-                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    Modifier.padding(
+                        horizontal = BlobsDimens.md,
+                        vertical = BlobsDimens.xs
+                    )
                 )
             }
         }
     }
 }
 
-@Composable
-private fun TurnCard(
-    turn: TurnEntity,
-    answer: String,
-    busy: Boolean,
-    model: ProductViewModel,
-    latest: Boolean
-) {
-    val context = LocalContext.current
-    val appName = stringResource(R.string.app_name)
-    val evidence = Evidence.decodeOrNull(turn.evidence)
-    val large = LocalDensity.current.fontScale >= 1.5f
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        SelectionContainer {
-            Text(
-                turn.question,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = if (large) 21.sp else 26.sp,
-                    lineHeight = if (large) 27.sp else 34.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = (-.5).sp
+private const val TAG_VIEWPORT = "message-scroller-viewport"
+private const val TAG_ITEM = "message-scroller-item"
+private const val TAG_LATEST_BUTTON = "message-scroller-button"
+
+/**
+ * Fades the last rows into the page when more content sits below the pinned composer, so a
+ * card crossing that edge dissolves instead of looking sliced.
+ */
+private fun Modifier.fadeBottomEdge(): Modifier =
+    graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+        .drawWithContent {
+            drawContent()
+            val start = ((size.height - 28.dp.toPx()) / size.height).coerceIn(0f, 1f)
+            drawRect(
+                brush = Brush.verticalGradient(
+                    0f to Color.White,
+                    start to Color.White,
+                    1f to Color.Transparent
                 ),
-                modifier = Modifier.semantics { heading() }
+                blendMode = BlendMode.DstIn
             )
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Image(
-                painterResource(R.drawable.mascot_curious),
-                contentDescription = null,
-                modifier = Modifier.size(32.dp)
-            )
-            Text(appName, style = MaterialTheme.typography.labelMedium)
-        }
-        if (answer.isNotEmpty()) {
-            val markerSize = if (large) 32.dp else 24.dp
-            val markerSp = (markerSize.value / LocalDensity.current.fontScale).sp
-            val citations = evidence.orEmpty().mapIndexed { index, source ->
-                val description = stringResource(R.string.read_source, index + 1, source.title)
-                "citation-${index + 1}" to InlineTextContent(
-                    Placeholder(markerSp, markerSp, PlaceholderVerticalAlign.TextCenter)
-                ) {
-                    Surface(
-                        onClick = { model.read(source) },
-                        modifier = Modifier.size(markerSize).semantics {
-                            contentDescription =
-                                description
-                        },
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        shape = RoundedCornerShape(7.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                (index + 1).toString(),
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-            }.toMap()
-            val text = buildAnnotatedString {
-                var previous = 0
-                for (citation in AnswerText.citations(answer, evidence?.size ?: 0)) {
-                    appendEmphasis(answer.substring(previous, citation.range.first))
-                    appendInlineContent(
-                        "citation-${citation.sourceIndex + 1}",
-                        answer.substring(citation.range)
-                    )
-                    previous = citation.range.last + 1
-                }
-                appendEmphasis(answer.substring(previous))
-            }
-            SelectionContainer {
-                Text(text, inlineContent = citations, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-        val label = when (turn.status) {
-            "RUNNING" -> R.string.working
-
-            "COMPLETE" -> R.string.status_complete
-
-            "STOPPED" -> if (answer.isBlank()) {
-                R.string.status_stopped_empty
-            } else {
-                R.string.status_stopped
-            }
-
-            "INTERRUPTED" -> if (answer.isBlank()) {
-                R.string.status_interrupted_empty
-            } else {
-                R.string.status_interrupted
-            }
-
-            "LIMITED" -> R.string.status_limited
-
-            "UNVERIFIED" -> R.string.status_unverified
-
-            "CONTEXT_FULL" -> R.string.context_full
-
-            "NO_SOURCES" -> R.string.status_no_sources
-
-            else -> R.string.status_error
-        }
-        if (turn.status != "COMPLETE") {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (turn.status ==
-                    "RUNNING"
-                ) {
-                    Mascot(R.drawable.mascot_reading, Modifier.size(64.dp), MascotMotion.SEARCH)
-                }
-                Text(
-                    stringResource(label),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        if (evidence == null) Body(R.string.sources_unavailable)
-        if (!evidence.isNullOrEmpty()) {
-            SectionLabel(R.string.sources_used)
-            evidence.forEachIndexed { index, source ->
-                SourceRow(
-                    index + 1,
-                    source.title,
-                    stringResource(
-                        R.string.read_source,
-                        index + 1,
-                        source.title
-                    ),
-                    onClick = {
-                        model.read(source)
-                    }
-                )
-            }
-        }
-        if (turn.status != "RUNNING") {
-            if (answer.isNotBlank()) {
-                TextButton(onClick = {
-                    (
-                        context.getSystemService(
-                            Context.CLIPBOARD_SERVICE
-                        ) as ClipboardManager
-                        ).setPrimaryClip(
-                        ClipData.newPlainText(appName, answer)
-                    )
-                }) {
-                    androidx.compose.material3.Icon(
-                        painterResource(R.drawable.ic_content_copy),
-                        null,
-                        Modifier.padding(end = 8.dp).size(20.dp)
-                    )
-                    Text(stringResource(R.string.copy_answer))
-                }
-            }
-            if (latest && turn.status != "COMPLETE") {
-                if (turn.status == "NO_SOURCES") {
-                    TextButton(onClick = { model.navigate(Page.SOURCES) }) {
-                        Text(stringResource(R.string.choose_sources))
-                    }
-                }
-                Button(onClick = {
-                    model.retry(turn)
-                }, enabled = !busy) { Text(stringResource(R.string.retry)) }
-                if (turn.scope != "*" && turn.status == "NO_SOURCES") {
-                    TextButton(onClick = {
-                        model.retry(turn, widen = true)
-                    }, enabled = !busy) { Text(stringResource(R.string.search_all)) }
-                }
-            }
-            Text(
-                turn.model.substringBeforeLast(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                stringResource(R.string.answer_check),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-private fun AnnotatedString.Builder.appendEmphasis(value: String) {
-    var start = 0
-    val text = AnswerText.readable(value).replace(Regex("(?m)^#{1,6} +"), "")
-    for (match in Regex("\\*\\*([^*]+)\\*\\*").findAll(text)) {
-        append(text.substring(start, match.range.first))
-        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.groupValues[1]) }
-        start = match.range.last + 1
-    }
-    append(text.substring(start))
-}

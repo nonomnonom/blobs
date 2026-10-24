@@ -1,0 +1,123 @@
+{
+ "format": 1,
+ "library": {
+  "id": "wikisource-en-history-p001",
+  "version": "2026-09.1",
+  "records_sha256": "e89c91621eb42694713e9e12cba0bbee49b00aa4a0f0e3d5f88a304870062015",
+  "payload_sha256": "f4a6799fb0dc0c56de59e623ea6e61cbe971799fdf308b6aa4dfd953641b9d1a"
+ },
+ "id": "wikisource-en-history-p001-retrieval-v1",
+ "notes": "Held-out research questions answered by documents assigned to Wikisource volume p001. Questions paraphrase the source; they do not copy its title.",
+ "cases": [
+  {
+   "id": "gettysburg-nicolay",
+   "question": "What did Lincoln say the nation was testing whether it could long endure at the Pennsylvania battlefield?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-1ff6a318deb6723ba1c9e726808a0a62"
+   ],
+   "expected_document_titles": [
+    "Gettysburg Address (Nicolay draft)"
+   ]
+  },
+  {
+   "id": "miranda-custody",
+   "question": "What must police tell a suspect before questioning them in custody?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-82077149330ce086e0c636cf52bb9ebd"
+   ],
+   "expected_document_titles": [
+    "Miranda v. Arizona"
+   ]
+  },
+  {
+   "id": "roe-trimester",
+   "question": "How did the 1973 ruling divide pregnancy into stages for regulating abortion?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-714fb6793c6e22ae2678f751011a7b20"
+   ],
+   "expected_document_titles": [
+    "Roe v. Wade"
+   ]
+  },
+  {
+   "id": "nato-article-five",
+   "question": "What did the 1949 alliance pledge members to do if one of them was attacked?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-76d3ad602a7dd6b6d3c73d82a4858785"
+   ],
+   "expected_document_titles": [
+    "North Atlantic Treaty"
+   ]
+  },
+  {
+   "id": "huck-finn-raft",
+   "question": "How does the runaway boy travel down the Mississippi with an escaped slave?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-122fcb808e18975e26ff78b645a70cae"
+   ],
+   "expected_document_titles": [
+    "Adventures of Huckleberry Finn (1885)"
+   ]
+  },
+  {
+   "id": "emancipation-preliminary",
+   "question": "What did Lincoln announce in September 1862 would happen to slaves in rebellious states on the first day of 1863?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-efabd46c0bc6b6d7c230e59092e3e842"
+   ],
+   "expected_document_titles": [
+    "Preliminary Emancipation Proclamation, September 22, 1862 original draft"
+   ]
+  },
+  {
+   "id": "geneva-1906",
+   "question": "What updated protections did the 1906 convention set for sick and wounded soldiers and for hospital staff?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-a980d9d950aa8b4db1792644cf9bdec9"
+   ],
+   "expected_document_titles": [
+    "First Geneva Convention (1906)"
+   ]
+  },
+  {
+   "id": "obama-farewell",
+   "question": "What did the outgoing president say about the state of democracy and civic participation in his last address?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-c28bdf60f4605148f150cdbeb26e1c7c"
+   ],
+   "expected_document_titles": [
+    "Barack Obama's Farewell Address"
+   ]
+  },
+  {
+   "id": "iceland-constitution",
+   "question": "How does the Icelandic constitution divide legislative, executive, and judicial power?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-db3569855006532e0a3922b37a718315"
+   ],
+   "expected_document_titles": [
+    "Constitution of the Republic of Iceland (1944)"
+   ]
+  },
+  {
+   "id": "korea-1972",
+   "question": "What emergency powers and term rules did the 1972 Korean constitution give the president?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-fe2af70687bbd8f93609721afb2c390b"
+   ],
+   "expected_document_titles": [
+    "Constitution of the Republic of Korea (1972)"
+   ]
+  }
+ ]
+}

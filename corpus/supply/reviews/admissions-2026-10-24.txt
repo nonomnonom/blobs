@@ -1,0 +1,78 @@
+Blobs corpus admission log — 2026-10-24
+======================================
+
+Reviewer: automated review agent (delegated by the repository owner)
+Method: automated review of source locks, record manifests, retrieval cases,
+package receipts and archive digests. No human reviewer signed this log.
+
+Trigger
+-------
+The runtime text contract rejected eight of nine installable libraries because
+their record bodies contained U+FFFD replacement characters. The root cause was
+fixed in the corpus normalizer, and every affected edition was rebuilt under a
+new version rather than patched in place.
+
+Admissions written to corpus/supply/registry.json (release_ready): 9
+--------------------------------------------------------------------
+library                              version      records   passages     archive bytes  archive sha256 (12)
+wikivoyage-en                        2026-09.5     34,597    520,143        290,811,362  f44f582e2836
+howto-repair                         2026-10.4     78,626    300,571        256,576,414  0b395e6eade0
+howto-practical                      2026-10.4    189,294    672,866        567,686,098  2c5d4867931a
+wikipedia-top1m-mini                 2026-04.5    997,714  2,126,742      1,787,025,308  a751510e64b1
+wikisource-en-history-p000           2026-09.3    155,527  1,430,232      1,323,097,330  6cf1ffb2ff7d
+wikisource-en-history-p001           2026-09.3    155,739  1,425,914      1,322,088,523  370df30d8f81
+wikisource-en-history-p002           2026-09.3    155,378  1,438,450      1,335,443,794  2a9973ca9ef6
+wikisource-en-history-p003           2026-09.3    155,370  1,431,552      1,323,294,448  0176bb4a3ad8
+nairobi-health-places               2026-10.1        200        200             86,458  2e99d33710ff
+
+Each entry carries a source lock, rights-review record, reviewed-record
+manifest, versioned retrieval case set, archive receipt, records digest,
+archive digest and an exact library_profile.
+
+Predecessors retired (not published): 5 registry editions plus 4 superseded
+Wikisource volume candidates. Their records directories remain under
+corpus/retired/records/ for provenance; none is installable.
+
+Legacy dispositions recorded: 18
+Local candidate portfolio entries recorded: 9 (none installable)
+Supply families registered: 9
+
+Verification run for this admission
+-----------------------------------
+- Corpus suite: uv run --locked python -m unittest discover -s tests -> 84 tests OK
+- Publisher tools suite: uv run --locked --group publisher python -m unittest
+  discover -s ../android/tools/tests -> 41 tests OK
+- Catalog gate: python android/tools/build_catalog.py --check -> shipped catalog
+  matches the supply registry
+- Runtime text contract: 0 U+FFFD in all 9 admitted record manifests
+- Portfolio distinctness: repeated_supply [], identity_slots_taken []
+- Retrieval scaling case set: multi-library-retrieval-scaling-v6.json pins the
+  nine admitted libraries and their payload digests (v1-v5 retired)
+
+Publication state
+-----------------
+Published 2026-10-24 to the public dataset nonomnonom/blobs-catalog.
+
+Packages and signed catalog: commit 56e50616d02ed9a29f86b66de09f059ba276f0d9
+  - 9 library archives plus the 3 model entries, 12 packages total
+  - catalog revision 2026102404, release tag v0.4.0
+  - catalog catalog.sha256 e45b9e78970abc7490a669ba1a1367b7b34d2a118e910c516483019d5bbd2d7a
+  - ECDSA P-256/SHA-256 signature verified against
+    android/app/src/main/assets/catalog-public-key-v3.pem, both the local
+    android/.local/catalog.signed.json and the file served from main
+  - every library URL answered HTTP 200 with content-length equal to the
+    catalog's download_bytes (checked 2026-10-24)
+
+Reviewed records: commit 3059b4150abc5a872232d2b8bfd7327bfc7d7b77
+  - six records editions, 5,134 files
+  - all six published manifest.json files are byte-identical to the staged
+    manifests
+  - identities recorded in corpus/published-records.json (16 entries total)
+
+APK release remains blocked on this host: BLOBS_KEYSTORE, BLOBS_STORE_PASSWORD,
+BLOBS_KEY_PASSWORD, BLOBS_KEY_ALIAS and BLOBS_CERT_SHA256 are absent, and no
+release keystore exists anywhere under the user profile, so no build can be
+signed as an update for the existing dev.blobs.app install. Installed users on
+0.3.14 trust only catalog-public-key-v2.pem and therefore cannot accept the
+v3-signed catalog until a v3-trusting APK ships. Their current downloads remain
+available because no previously published package was deleted.

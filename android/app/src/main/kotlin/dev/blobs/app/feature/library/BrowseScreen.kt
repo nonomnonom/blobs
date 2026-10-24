@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -18,169 +17,194 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
+import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.ui.AppUiState
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
-import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductState
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.SearchField
+import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-fun BrowseScreen(state: ProductState, model: ProductViewModel) {
-    val selecting = state.page == Page.SOURCES
-    val selected = model.selectedScope()
-    val all = selected == null
+fun BrowseScreen(state: AppUiState, model: AppViewModel) {
     val packages by model.packages.collectAsStateWithLifecycle()
+    if (state.page == Page.SOURCES) {
+        LibraryScopePicker(packages, model)
+        return
+    }
+    val collection = packages.find { it.key == state.browseCollection }
+    val scoped = state.browseCollection != null
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        Modifier.fillMaxWidth().padding(horizontal = BlobsDimens.page),
+        verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
     ) {
-        val collection = packages.find { it.key == state.browseCollection }
-        if (!selecting && collection != null) {
-            Text(collection.title, style = MaterialTheme.typography.titleLarge)
-        }
-        SearchField(state.query, R.string.search_sources, onValueChange = {
-            model.search(it)
-        })
+        collection?.let { Text(it.title, style = MaterialTheme.typography.titleLarge) }
+        SearchField(state.query, R.string.search_sources, onValueChange = model::search)
         if (state.searching) LinearProgressIndicator(Modifier.fillMaxWidth())
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (selecting) {
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Body(R.string.source_picker_help)
-                        Surface(
-                            selected = all,
-                            onClick = { model.selectScope(null) },
-                            shape = RoundedCornerShape(16.dp),
-                            border = BorderStroke(
-                                1.dp,
-                                if (all) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant
-                                }
-                            ),
-                            color = if (all) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.background
-                            }
-                        ) {
-                            Row(
-                                Modifier.fillMaxWidth().padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(painterResource(R.drawable.ic_auto_stories), null)
-                                Text(
-                                    stringResource(R.string.all_sources),
-                                    Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                if (all) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_check),
-                                        null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        }
-                        val summary = if (all) {
-                            stringResource(R.string.individual_sources)
-                        } else {
-                            pluralStringResource(
-                                R.plurals.sources_selected,
-                                selected.size,
-                                selected.size
-                            )
-                        }
-                        if (LocalDensity.current.fontScale >= 1.5f) {
-                            Text(summary, style = MaterialTheme.typography.bodySmall)
-                            TextButton(onClick = { model.selectScope(emptySet()) }) {
-                                Text(stringResource(R.string.clear_selection))
-                            }
-                        } else {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    summary,
-                                    Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                                TextButton(onClick = { model.selectScope(emptySet()) }) {
-                                    Text(stringResource(R.string.clear_selection))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        LazyColumn(
+            Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
+        ) {
             if (state.sources.isEmpty() && !state.searching) {
                 item {
                     Body(R.string.no_results)
                     Body(R.string.no_results_body)
-                    TextButton(onClick = {
-                        model.search("")
-                    }) { Text(stringResource(R.string.clear_search)) }
+                    TextButton(onClick = { model.search("") }) {
+                        Text(stringResource(R.string.clear_search))
+                    }
                 }
             }
             items(state.sources, key = { it.id }) { source ->
                 Surface(
-                    onClick = {
-                        if (selecting) model.toggleSource(source) else model.readFull(source)
-                    },
-                    shape = RoundedCornerShape(
-                        20.dp
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (selecting &&
-                            selected?.contains(source.id) == true
-                        ) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.outlineVariant
-                        }
-                    ),
-                    color = if (selecting &&
-                        selected?.contains(source.id) == true
-                    ) {
-                        MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.background
-                    }
+                    onClick = { model.readFull(source) },
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    Column(
+                        Modifier.fillMaxWidth().padding(BlobsDimens.md),
+                        verticalArrangement = Arrangement.spacedBy(BlobsDimens.xxs)
                     ) {
-                        if (selecting) {
-                            Checkbox(
-                                checked =
-                                    selected?.contains(source.id) == true,
-                                onCheckedChange = null
+                        Text(source.title, style = MaterialTheme.typography.titleMedium)
+                        if (!scoped) {
+                            Text(source.publisher, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        if (!scoped && source.section.isNotBlank()) {
+                            Text(
+                                source.section,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Column(Modifier.weight(1f)) {
-                            Text(source.title, style = MaterialTheme.typography.labelLarge)
-                            Text(source.publisher, style = MaterialTheme.typography.bodyMedium)
-                            if (source.section.isNotBlank()) {
+                    }
+                }
+            }
+            item {
+                if (state.offset > 0) {
+                    TextButton(onClick = {
+                        model.search(state.query, (state.offset - 50).coerceAtLeast(0))
+                    }) { Text(stringResource(R.string.previous_page)) }
+                }
+                if (state.hasMore) {
+                    TextButton(onClick = { model.search(state.query, state.offset + 50) }) {
+                        Text(stringResource(R.string.next_page))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibraryScopePicker(packages: List<PackageEntity>, model: AppViewModel) {
+    var selected by remember { mutableStateOf(model.selectedLibraryScope()) }
+    val all = selected == null
+    val none = selected?.isEmpty() == true
+    val libraries = packages.filter { it.kind == "library" && it.enabled }
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = BlobsDimens.page),
+        verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
+    ) {
+        LazyColumn(
+            Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
+        ) {
+            item { Body(R.string.library_scope_help) }
+            item {
+                ScopeOption(
+                    R.string.all_libraries,
+                    R.string.all_libraries_description,
+                    all,
+                    R.drawable.ic_auto_stories
+                ) {
+                    selected = null
+                    model.selectLibraryScope(null)
+                }
+            }
+            item {
+                ScopeOption(
+                    R.string.no_library,
+                    R.string.no_library_description,
+                    none,
+                    R.drawable.ic_chat_bubble
+                ) {
+                    selected = emptySet()
+                    model.selectLibraryScope(emptySet())
+                }
+            }
+            if (libraries.isEmpty()) {
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Body(R.string.no_installed_libraries)
+                        TextButton(onClick = { model.navigate(Page.LIBRARY) }) {
+                            Text(stringResource(R.string.add_library))
+                        }
+                    }
+                }
+            } else {
+                items(libraries, key = { it.key }) { pack ->
+                    val checked = !all && pack.key in selected.orEmpty()
+                    Surface(
+                        selected = checked,
+                        onClick = {
+                            val current = selected
+                            val next = when {
+                                current == null -> setOf(pack.key)
+                                pack.key in current -> current - pack.key
+                                else -> current + pack.key
+                            }
+                            selected = next
+                            model.selectLibraryScope(next)
+                        },
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(
+                            1.dp,
+                            if (checked) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outline
+                            }
+                        ),
+                        color = if (checked) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerLow
+                        }
+                    ) {
+                        val large = LocalDensity.current.fontScale >= 1.5f
+                        Row(
+                            Modifier.fillMaxWidth().padding(BlobsDimens.md),
+                            horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
+                            verticalAlignment = if (large) {
+                                Alignment.Top
+                            } else {
+                                Alignment.CenterVertically
+                            }
+                        ) {
+                            Checkbox(checked = checked, onCheckedChange = null)
+                            Column(Modifier.weight(1f)) {
                                 Text(
-                                    source.section,
+                                    pack.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    stringResource(
+                                        R.string.library_available_offline,
+                                        fileSize(pack.bytes)
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -189,37 +213,69 @@ fun BrowseScreen(state: ProductState, model: ProductViewModel) {
                     }
                 }
             }
-            item {
-                if (state.offset >
-                    0
-                ) {
-                    TextButton(onClick = {
-                        model.search(state.query, (state.offset - 50).coerceAtLeast(0))
-                    }) { Text(stringResource(R.string.previous_page)) }
-                }
-                if (state.hasMore) {
-                    TextButton(onClick = {
-                        model.search(
-                            state.query,
-                            state.offset + 50
-                        )
-                    }) { Text(stringResource(R.string.next_page)) }
-                }
-            }
         }
-        if (selecting) {
-            Column(Modifier.padding(bottom = 12.dp)) {
-                PrimaryAction(
-                    if (all) {
-                        stringResource(R.string.done)
-                    } else {
-                        pluralStringResource(
-                            R.plurals.done_sources,
-                            selected.size,
-                            selected.size
-                        )
-                    }
-                ) { model.back() }
+        PrimaryAction(R.string.done) { model.back() }
+    }
+}
+
+@Composable
+private fun ScopeOption(
+    title: Int,
+    description: Int,
+    selected: Boolean,
+    icon: Int,
+    onClick: () -> Unit
+) {
+    Surface(
+        selected = selected,
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(
+            1.dp,
+            if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline
+            }
+        ),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        }
+    ) {
+        val large = LocalDensity.current.fontScale >= 1.5f
+        Row(
+            Modifier.fillMaxWidth().padding(BlobsDimens.md),
+            horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
+            verticalAlignment = if (large) Alignment.Top else Alignment.CenterVertically
+        ) {
+            Icon(
+                painterResource(icon),
+                null,
+                if (large) Modifier.padding(top = 2.dp) else Modifier
+            )
+            Column(
+                Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.xxs)
+            ) {
+                Text(
+                    stringResource(title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    stringResource(description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (selected) {
+                Icon(
+                    painterResource(R.drawable.ic_check),
+                    null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

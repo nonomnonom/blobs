@@ -8,12 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -37,12 +36,14 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import dev.blobs.app.R
 import dev.blobs.app.data.WorkState
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.ScrollPage
+import dev.blobs.app.ui.SetupProgress
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -52,7 +53,7 @@ private data class StorageUsage(val used: Long?, val available: Long, val capaci
 fun StorageScreen(
     packages: List<PackageEntity>,
     work: WorkState,
-    model: ProductViewModel,
+    model: AppViewModel,
     pickFile: () -> Unit
 ) {
     val context = LocalContext.current
@@ -84,13 +85,13 @@ fun StorageScreen(
         Heading(R.string.storage_heading)
         Body(R.string.storage_body)
         Surface(
-            shape = RoundedCornerShape(24.dp),
+            shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             contentColor = MaterialTheme.colorScheme.onSurface
         ) {
             Column(
-                Modifier.fillMaxWidth().padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                Modifier.fillMaxWidth().padding(BlobsDimens.lg),
+                verticalArrangement = Arrangement.spacedBy(BlobsDimens.sm)
             ) {
                 Text(
                     stringResource(
@@ -113,15 +114,14 @@ fun StorageScreen(
                     style = MaterialTheme.typography.headlineLarge
                 )
                 usage?.let { current ->
-                    LinearProgressIndicator(progress = {
+                    SetupProgress(
                         (
                             (
                                 current.used
                                     ?: packages.sumOf { it.bytes }
-                                ).toDouble() /
-                                current.capacity.coerceAtLeast(1)
-                            ).toFloat().coerceIn(0f, 1f)
-                    }, modifier = Modifier.fillMaxWidth())
+                                ).toDouble() / current.capacity.coerceAtLeast(1)
+                            ).toFloat()
+                    )
                     Text(
                         stringResource(R.string.storage_free, fileSize(current.available)),
                         style = MaterialTheme.typography.bodySmall
@@ -138,8 +138,8 @@ fun StorageScreen(
         Text(stringResource(R.string.saved_offline), style = MaterialTheme.typography.titleMedium)
         packages.forEach { pack ->
             Row(
-                Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier.fillMaxWidth().padding(vertical = BlobsDimens.xs),
+                horizontalArrangement = Arrangement.spacedBy(BlobsDimens.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -199,9 +199,13 @@ fun StorageScreen(
                         model.remove(target)
                         removing = null
                     },
-                    enabled =
-                        !work.busy && !lastModel
-                ) { Text(stringResource(R.string.remove)) }
+                    enabled = !work.busy && !lastModel,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.remove))
+                }
             },
             dismissButton = {
                 TextButton(onClick = { removing = null }) { Text(stringResource(R.string.cancel)) }

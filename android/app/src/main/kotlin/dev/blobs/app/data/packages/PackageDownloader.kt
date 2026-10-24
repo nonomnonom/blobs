@@ -91,15 +91,21 @@ class PackageDownloader(
 
             val partial = File(root, "${asset.fileName}.part")
             val resume = File(root, "${asset.fileName}.resume")
-            if (!partial.exists() || partial.length() > asset.downloadBytes || !resume.isFile) {
+            if (
+                !partial.exists() ||
+                partial.length() > asset.downloadBytes ||
+                !resume.isFile ||
+                resume.length() !in 1L..MAX_RESUME_TAG_BYTES
+            ) {
                 partial.delete()
                 resume.delete()
             }
-            val resumeTag = resume.takeIf {
-                it.isFile
-            }?.readText(Charsets.UTF_8)?.takeIf(String::isNotBlank)
+            val resumeTag = readResumeTag(resume)
+            if (resumeTag == null) {
+                partial.delete()
+                resume.delete()
+            }
             var offset = partial.takeIf { it.isFile }?.length() ?: 0L
-            if (resumeTag == null) offset = 0L
             if (offset == asset.downloadBytes) {
                 if (sha256(partial) == asset.downloadSha256) {
                     activate(partial, target, previous)
@@ -174,7 +180,7 @@ class PackageDownloader(
                     throw IOException("DOWNLOAD_HTTP_$response")
                 }
 
-                val tag = active.getHeaderField("ETag")?.takeIf(String::isNotBlank)
+                val tag = active.getHeaderField("ETag")?.takeIf(::validResumeTag)
                 if (offset > 0 &&
                     tag != null &&
                     tag != resumeTag
@@ -274,7 +280,18 @@ class PackageDownloader(
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
+    private fun readResumeTag(file: File): String? = runCatching {
+        file.takeIf { it.isFile && it.length() in 1L..MAX_RESUME_TAG_BYTES }
+            ?.readText(Charsets.UTF_8)
+            ?.takeIf(::validResumeTag)
+    }.getOrNull()
+
+    private fun validResumeTag(value: String): Boolean =
+        value.isNotBlank() && value.length.toLong() <= MAX_RESUME_TAG_BYTES &&
+            value.all { it in '\u0021'..'\u007e' }
+
     private companion object {
+        const val MAX_RESUME_TAG_BYTES = 4_096L
         val ALLOWED_HOSTS = setOf(
             "github.com",
             "release-assets.githubusercontent.com",

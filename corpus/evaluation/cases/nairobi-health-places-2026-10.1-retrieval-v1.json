@@ -1,0 +1,122 @@
+{
+ "format": 1,
+ "id": "nairobi-health-places-retrieval-v1",
+ "library": {
+  "id": "nairobi-health-places",
+  "version": "2026-10.1",
+  "records_sha256": "adeee442844debd734b9cc164637d7c7d01ff30158437a58c581168d0ba8c234",
+  "payload_sha256": "b4dcb40d70e7a8e88bd3df0e004fa804e5a268739ad03ebbb90605adf7c8438a"
+ },
+ "cases": [
+  {
+   "id": "kenyatta-national-hospital",
+   "question": "Where is Kenyatta National Hospital in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-way-245262898"
+   ],
+   "expected_document_titles": [
+    "Kenyatta National Hospital"
+   ]
+  },
+  {
+   "id": "aga-khan-university-hospital",
+   "question": "Where can I find Aga Khan University Hospital in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-way-25473029"
+   ],
+   "expected_document_titles": [
+    "Aga Khan University Hospital"
+   ]
+  },
+  {
+   "id": "mp-shah-hospital",
+   "question": "Where is MP Shah Hospital in Parklands Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-way-106088780"
+   ],
+   "expected_document_titles": [
+    "MP Shah Hospital"
+   ]
+  },
+  {
+   "id": "pumwani-maternity-hospital",
+   "question": "Where is Pumwani Maternity Hospital in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-way-569280187"
+   ],
+   "expected_document_titles": [
+    "Pumwani Maternity Hospital"
+   ]
+  },
+  {
+   "id": "mater-hospital",
+   "question": "Where is Mater Hospital in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-node-5555074074"
+   ],
+   "expected_document_titles": [
+    "Mater Hospital"
+   ]
+  },
+  {
+   "id": "haltons-pharmacy",
+   "question": "Where is Haltons Pharmacy in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-node-5383781991"
+   ],
+   "expected_document_titles": [
+    "Haltons Pharmacy"
+   ]
+  },
+  {
+   "id": "hurlingham-medical-center",
+   "question": "Where is Hurlingham Medical Center in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-way-792515244"
+   ],
+   "expected_document_titles": [
+    "Hurlingham Medical Center"
+   ]
+  },
+  {
+   "id": "the-jordon-hospital",
+   "question": "Where is The Jordon Hospital in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-node-7952200601"
+   ],
+   "expected_document_titles": [
+    "The Jordon Hospital"
+   ]
+  },
+  {
+   "id": "upper-hill-medical-centre",
+   "question": "Where is Upper Hill Medical Centre in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-node-911044039"
+   ],
+   "expected_document_titles": [
+    "Upper Hill Medical Centre"
+   ]
+  },
+  {
+   "id": "nairobi-outpatient-centre",
+   "question": "Where is Nairobi Outpatient Centre in Nairobi?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "osm-node-5552467940"
+   ],
+   "expected_document_titles": [
+    "Nairobi Outpatient Centre Ltd"
+   ]
+  }
+ ]
+}

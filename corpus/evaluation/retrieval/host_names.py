@@ -10,11 +10,14 @@ import time
 
 from blobs_corpus.extract import write_json
 from blobs_corpus.names import name_key
-from .host_replay import direct_title_ids, retrieve, sha, unpack
-
-
-LIBRARY_STORE_SHA256 = "3ba109923c22281a29282e693777845972a3d2445b0c0e44b097476f200390c5"
-QUERY_SHA256 = "acee75cef2a8b7845ed1817d3e81143bb4daf730661b83d7f7c864f81c4f8ab5"
+from .host_replay import (
+    LIBRARY_STORE_SHA256,
+    QUERY_SHA256,
+    direct_title_ids,
+    retrieve,
+    sha,
+    unpack,
+)
 
 
 def expanded_query(database, question, base_query, stop_words):

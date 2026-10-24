@@ -11,7 +11,12 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
-from verify_apk import verify, sdk_directory
+from verify_apk import (
+    normalized_certificate_sha256,
+    signing_certificate_sha256,
+    sdk_directory,
+    verify,
+)
 from build_package import verify_package
 from verify_release import catalog_edition, verify_kit
 from blobs_corpus.footprint import release_report as build_footprint_report
@@ -172,7 +177,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--library", type=Path, required=True)
+    parser.add_argument("--certificate-sha256", required=True)
     args = parser.parse_args()
+    expected_certificate = normalized_certificate_sha256(args.certificate_sha256)
     apk = ROOT / "app/build/outputs/apk/release/app-release.apk"
     report = verify(apk)
     if report["application_id"] != "dev.blobs.app":
@@ -191,6 +198,10 @@ def main():
     signature = subprocess.check_output(
         [str(signer), "verify", "--verbose", "--print-certs", str(apk)], text=True
     )
+    if signing_certificate_sha256(signature) != expected_certificate:
+        raise ValueError(
+            "APK signer certificate SHA-256 differs from the protected release fingerprint"
+        )
     packages = [(args.model, args.model.name), (args.library, args.library.name)]
     if any(source.suffix != ".blobs" for source, _ in packages):
         raise ValueError("Release packages must use .blobs filenames")

@@ -5,11 +5,16 @@ description: Work on the native Android app or this documentation site.
 
 Blobs uses Kotlin and Jetpack Compose for Android, Room and SQLite FTS5 for storage and retrieval, and a pinned llama.cpp CPU runtime for local inference. Python runs on the development computer for corpus preparation, not on users’ phones.
 
+The repository is in a rebuild phase. The current product decision prohibits
+builds, tests, benchmarks, and evaluators until the local vertical slice is
+ready for validation. The commands below are for the later verification phase,
+not evidence that the current rebuild works.
+
 ## Build the Android app
 
-Follow the [Android build guide](https://github.com/nonomnonom/blobs/blob/main/android/README.md) for the pinned toolchain, a clone without large corpus downloads, preparation, verification, and installation. App builds and unit tests do not need the reviewed record shards.
+When validation resumes, follow the [Android build guide](https://github.com/nonomnonom/blobs/blob/main/android/README.md) for the pinned toolchain, a clone without large corpus downloads, preparation, verification, and installation. App builds and unit tests do not need the reviewed record shards.
 
-Use the [contribution guide](https://github.com/nonomnonom/blobs/blob/main/CONTRIBUTING.md#verification) to choose checks for your change. Asset-dependent performance tools are optional; they are separate from ordinary application verification.
+When validation resumes, use the [contribution guide](https://github.com/nonomnonom/blobs/blob/main/CONTRIBUTING.md#verification) to choose checks for your change. Asset-dependent performance tools are separate from ordinary application verification.
 
 ## Run this website
 

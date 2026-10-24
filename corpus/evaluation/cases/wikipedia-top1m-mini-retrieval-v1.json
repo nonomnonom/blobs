@@ -1,0 +1,95 @@
+{
+  "format": 1,
+  "id": "wikipedia-top1m-mini-retrieval-v1",
+  "library": {
+    "id": "wikipedia-top1m-mini",
+    "version": "2026-04.2",
+    "payload_sha256": "d6245ce39e03d6ab5d46d191a3a313dcd81a859c2e2efa3b9550617474108d2d"
+  },
+  "cases": [
+    {
+      "id": "photosynthesis",
+      "question": "What is photosynthesis, and how do plants turn light into chemical energy?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-6a61ac687d4058d4ee4c4eb6d4db7a40"],
+      "expected_document_titles": ["Photosynthesis"]
+    },
+    {
+      "id": "earthquake",
+      "question": "Explain how an Earthquake happens.",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-f309732925c818d2c34eb304a7260185"],
+      "expected_document_titles": ["Earthquake"]
+    },
+    {
+      "id": "dna",
+      "question": "What is DNA, and how are its two chains arranged?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-2fff187f6c9ba066bc8283a8f1f2feac"],
+      "expected_document_titles": ["DNA"]
+    },
+    {
+      "id": "inflation",
+      "question": "Why does inflation reduce the purchasing power of money?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-454a6f88b5ae325cb3160425c12997f4"],
+      "expected_document_titles": ["Inflation"]
+    },
+    {
+      "id": "climate-change",
+      "question": "What is present-day climate change?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-24ef1a588aa8242ed43193766154fd5f"],
+      "expected_document_titles": ["Climate change"]
+    },
+    {
+      "id": "artificial-intelligence",
+      "question": "What is Artificial intelligence?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-aef977fc2141d0a33cb702dadf489df7"],
+      "expected_document_titles": ["Artificial intelligence"]
+    },
+    {
+      "id": "machine-learning",
+      "question": "What is Machine learning?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-ce155af0fb1cae77bb3c831bcd50375e"],
+      "expected_document_titles": ["Machine learning"]
+    },
+    {
+      "id": "vaccine",
+      "question": "How does a Vaccine help the immune system recognize disease?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-c95c1b3c81a49f92b2978566e4d42e08"],
+      "expected_document_titles": ["Vaccine"]
+    },
+    {
+      "id": "water-cycle",
+      "question": "How does the Water cycle move water between reservoirs?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-a9405e312481190c19987c8a6a1a55fb"],
+      "expected_document_titles": ["Water cycle"]
+    },
+    {
+      "id": "solar-cell",
+      "question": "What does a Solar cell do?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-03823aae214296489d43e52e78bec9c3"],
+      "expected_document_titles": ["Solar cell"]
+    },
+    {
+      "id": "roman-empire",
+      "question": "Summarize the Roman Empire.",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-834db4f335ade0f8381e3e0cb8cbdf68"],
+      "expected_document_titles": ["Roman Empire"]
+    },
+    {
+      "id": "indonesia",
+      "question": "Where is Indonesia?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-7b4adfcf1c6b9a147d01663455f580ea"],
+      "expected_document_titles": ["Indonesia"]
+    }
+  ]
+}

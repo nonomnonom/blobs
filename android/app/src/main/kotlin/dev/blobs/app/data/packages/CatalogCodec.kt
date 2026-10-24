@@ -49,6 +49,7 @@ internal object CatalogCodec {
                     description = item.optString("description"),
                     language = item.optString("language"),
                     publisher = item.optString("publisher"),
+                    libraryProfile = item.parseLibraryProfile(),
                     compatibility = item.optJSONObject("compatibility")?.let { compatibility ->
                         PackageCompatibility(
                             runtime = compatibility.optString("runtime"),
@@ -73,12 +74,14 @@ internal object CatalogCodec {
                 require(asset.publisher.isNotBlank()) { "CATALOG_PUBLISHER" }
                 requireNotNull(asset.compatibility) { "CATALOG_COMPATIBILITY" }
                 if (asset.manifest.kind == "model") {
+                    require(asset.libraryProfile == null) { "CATALOG_MODEL_LIBRARY_PROFILE" }
                     require(
                         asset.compatibility.runtime == "llama.cpp" &&
                             asset.compatibility.format == "GGUF" &&
                             asset.compatibility.minimumRamMb > 0
                     ) { "CATALOG_MODEL_COMPATIBILITY" }
                 } else {
+                    requireNotNull(asset.libraryProfile) { "CATALOG_LIBRARY_PROFILE" }
                     require(
                         asset.compatibility.format == "Blobs library archive" &&
                             asset.compatibility.corpusSchema == 3 &&
@@ -91,7 +94,25 @@ internal object CatalogCodec {
         require(packages.any { it.manifest.kind == "model" })
         require(packages.count { it.role == PackageRole.STARTER } == 1)
         require(packages.map { it.manifest.key }.distinct().size == packages.size)
+        require(packages.map { it.fileName }.distinct().size == packages.size) {
+            "CATALOG_FILE_NAME"
+        }
         return packages
+    }
+
+    private fun JSONObject.parseLibraryProfile(): LibraryProfile? {
+        if (!has("library_profile")) return null
+        require(!isNull("library_profile")) { "CATALOG_LIBRARY_PROFILE" }
+        val profile = getJSONObject("library_profile")
+        val rawRecordCount = profile.get("record_count")
+        require(rawRecordCount is Int || rawRecordCount is Long) { "CATALOG_LIBRARY_RECORD_COUNT" }
+        return LibraryProfile(
+            recordCount = (rawRecordCount as Number).toLong(),
+            scope = profile.getString("scope"),
+            sourceSnapshotDate = profile.getString("source_snapshot_date"),
+            updatePolicy = profile.getString("update_policy"),
+            limitations = profile.getString("limitations")
+        )
     }
 
     private fun supportsMinimumVersion(version: String): Boolean {

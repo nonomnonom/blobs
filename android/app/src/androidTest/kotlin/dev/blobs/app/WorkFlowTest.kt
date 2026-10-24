@@ -7,12 +7,17 @@ import dev.blobs.app.data.WorkController
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.local.BlobsDatabase
 import dev.blobs.app.data.local.ConversationEntity
+import dev.blobs.app.data.local.ConversationStore
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.DownloadablePackage
+import dev.blobs.app.data.packages.LibraryProfile
 import dev.blobs.app.data.packages.PackageDownloader
 import dev.blobs.app.data.packages.PackageInstaller
 import dev.blobs.app.data.packages.PackageRole
+import dev.blobs.app.data.transfer.PackageTransferExecutor
+import dev.blobs.app.data.transfer.PackageTransferRecovery
+import dev.blobs.app.engine.LocalResearchEngine
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
@@ -26,6 +31,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -36,15 +42,8 @@ class WorkFlowTest {
             installer,
             root
         ->
-        val work =
-            WorkController(
-                db,
-                LibraryStore(),
-                installer,
-                PackageDownloader(root, {
-                    Long.MAX_VALUE
-                })
-            )
+        val downloader = PackageDownloader(root, { Long.MAX_VALUE })
+        val work = workController(db, installer, downloader)
         withTimeout(10_000) { work.state.first { it.ready } }
         db.conversations().save(ConversationEntity("thread", "", "", 1, 1))
         val model = PackageEntity(
@@ -54,17 +53,24 @@ class WorkFlowTest {
         assertTrue(work.answer("thread", "A question without sources", model, emptyList(), null))
         withTimeout(10_000) { work.state.first { !it.busy } }
         val original = db.conversations().turns("thread").single()
-        assertEquals("NO_SOURCES", original.status)
-        db.conversations().saveDraft("thread", "Keep my next question")
+        assertEquals("ERROR", original.status)
+        db.conversations().saveDraft("thread", "Keep my next question", 2)
         assertTrue(work.answer("thread", original.question, model, emptyList(), null, original.id))
         withTimeout(10_000) { work.state.first { !it.busy } }
-        val retried = db.conversations().turns("thread").single()
-        assertEquals(original.id, retried.id)
-        assertEquals(original.createdAt, retried.createdAt)
+        val turns = db.conversations().turns("thread")
+        assertEquals(2, turns.size)
+        val retried = turns.single { it.id != original.id }
+        assertNotEquals(original.id, retried.id)
+        assertEquals(original.question, retried.question)
+        assertTrue(retried.createdAt >= original.createdAt)
+        assertEquals("ERROR", turns.single { it.id == original.id }.status)
         assertEquals("Keep my next question", db.conversations().find("thread")?.draft)
         db.conversations().saveTurn(retried.copy(status = "COMPLETE", answer = "Saved answer"))
         assertFalse(work.answer("thread", original.question, model, emptyList(), null, original.id))
-        assertEquals("Saved answer", db.conversations().turns("thread").single().answer)
+        assertEquals(
+            "Saved answer",
+            db.conversations().turns("thread").single { it.id == retried.id }.answer
+        )
     }
 
     @Test
@@ -90,7 +96,14 @@ class WorkFlowTest {
                 DownloadFormat.BLOBS,
                 manifest,
                 PackageRole.OPTIONAL,
-                Long.MAX_VALUE
+                Long.MAX_VALUE,
+                libraryProfile = LibraryProfile(
+                    recordCount = 1,
+                    scope = "Fixture library",
+                    sourceSnapshotDate = "2026-01-01",
+                    updatePolicy = "Static test fixture",
+                    limitations = "Not production data"
+                )
             )
         var requests = 0
         var range: String? = null
@@ -136,7 +149,7 @@ class WorkFlowTest {
                 }
             }
         }
-        val work = WorkController(db, LibraryStore(), installer, downloader)
+        val work = workController(db, installer, downloader)
         withTimeout(10_000) { work.state.first { it.ready } }
         assertTrue(work.downloadAndInstall(asset))
         val paused = withTimeout(10_000) { work.state.first { !it.busy && it.hasPendingTransfer } }
@@ -145,7 +158,7 @@ class WorkFlowTest {
         assertFalse(paused.transferActive)
         assertEquals(R.string.download_failed, paused.notice)
         assertEquals(null, downloader.pending(listOf(asset.copy(downloadSha256 = "0".repeat(64)))))
-        val restarted = WorkController(db, LibraryStore(), installer, downloader, listOf(asset))
+        val restarted = workController(db, installer, downloader, listOf(asset))
         withTimeout(10_000) { restarted.state.first { it.ready } }
         assertEquals(asset, restarted.state.value.download)
         assertEquals(512L, restarted.state.value.progress)
@@ -180,7 +193,14 @@ class WorkFlowTest {
             DownloadFormat.BLOBS,
             manifest,
             PackageRole.OPTIONAL,
-            Long.MAX_VALUE
+            Long.MAX_VALUE,
+            libraryProfile = LibraryProfile(
+                recordCount = 1,
+                scope = "Cancellation fixture",
+                sourceSnapshotDate = "2026-01-01",
+                updatePolicy = "Static test fixture",
+                limitations = "Not production data"
+            )
         )
         val downloader = PackageDownloader(root, { Long.MAX_VALUE }) { url ->
             object : HttpURLConnection(url) {
@@ -202,7 +222,7 @@ class WorkFlowTest {
                 }
             }
         }
-        val work = WorkController(db, LibraryStore(), installer, downloader)
+        val work = workController(db, installer, downloader)
         withTimeout(10_000) { work.state.first { it.ready } }
         val unrelated = File(root.parentFile, "keep.txt").apply { writeText("Keep this file") }
         assertTrue(work.downloadAndInstall(asset))
@@ -240,4 +260,24 @@ class WorkFlowTest {
                 folder.deleteRecursively()
             }
         }
+
+    private fun workController(
+        database: BlobsDatabase,
+        installer: PackageInstaller,
+        downloader: PackageDownloader,
+        availableDownloads: List<DownloadablePackage> = emptyList()
+    ): WorkController {
+        val library = LibraryStore()
+        return WorkController(
+            ConversationStore(database.conversations()),
+            LocalResearchEngine(library),
+            PackageTransferExecutor(installer, downloader),
+            PackageTransferRecovery(
+                installer,
+                downloader,
+                database.packages(),
+                availableDownloads
+            )
+        )
+    }
 }

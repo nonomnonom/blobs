@@ -1,0 +1,51 @@
+{
+  "build": {
+    "audit_schema": 1,
+    "builder_sources": {
+      "library.py": "982a35ead1b810f20cf270f4383dfac21ce96f63fcadf53c1cd705fd278e2464",
+      "names.py": "5392fdc1e5f921246d5e235d0f09505bcfa26a5db4e0498cd8cef58ef80af6d4",
+      "records.py": "554a41821d92b5d4b602717e0cfa456942b86e2b717e1d66e6d1b5718b3eba23"
+    },
+    "document_names": {
+      "ambiguous_names": 77,
+      "format": 1,
+      "maximum_resolution_passes": 32,
+      "name_document_pairs": 65311,
+      "normalization": "NFKC, lowercase, Unicode letters/numbers separated by spaces",
+      "redirects": 33582,
+      "resolved_redirects": 33473,
+      "unresolved_redirects": 109
+    },
+    "documents": 34597,
+    "exact_duplicate_bodies": 0,
+    "format": 1,
+    "offsets": "Unicode code points, half-open into normalized documents.body",
+    "passage_storage": "document spans + contentless FTS",
+    "passages": 520143,
+    "records_sha256": "9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b",
+    "schema": 3,
+    "sqlite_version": "3.50.4",
+    "title_index": "opening passage only"
+  },
+  "format": 1,
+  "input_sha256": "021d6e8818921951355f0563061be4587f91a6150a2c58292e64b28180595c9e",
+  "manifest": {
+    "bytes": 622776320,
+    "format": 1,
+    "id": "wikivoyage-en",
+    "kind": "library",
+    "license": "CC BY-SA 4.0; Wikivoyage contributors; per-article attribution and applicable notices",
+    "origin": "https://download.kiwix.org/zim/wikivoyage/wikivoyage_en_all_nopic_2026-09.zim",
+    "records_sha256": "9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b",
+    "sha256": "380896b48d45f1d2e586d7d0f793ef57c79f861083867d68058d9b1e92631226",
+    "title": "Wikivoyage English travel guides",
+    "version": "2026-09.5"
+  },
+  "package": {
+    "bytes": 290811362,
+    "file": "wikivoyage-en-2026-09.5.blobs",
+    "sha256": "f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc"
+  },
+  "platform": "Windows",
+  "python": "3.13.12"
+}

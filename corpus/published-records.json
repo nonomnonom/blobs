@@ -4,6 +4,16 @@
   "libraries": [
     {
       "id": "wikivoyage-en",
+      "version": "2026-09.4",
+      "documents": 34599,
+      "records_revision": "e72b9f311dc74e664208d33f32462d7c8bb594cc",
+      "records_path": "records/wikivoyage-en-all-nopic-2026-09.4",
+      "manifest_sha256": "80a5fa527c7ae9ba3e874a4d66b9fecc065a21b0f917e7c2f1b3ad04dcbf95b1",
+      "records_sha256": "b94c8609ea743bd813e4426daaeea3efd1dafbb5dfc33ba7779acea2f8751d41",
+      "source_lock": "corpus/sources/wikivoyage-en-all-nopic-2026-09.json"
+    },
+    {
+      "id": "wikivoyage-en",
       "version": "2026-09.3",
       "documents": 34597,
       "records_revision": "698ab323d165b46128b000ecbe06367380906c10",
@@ -55,6 +65,96 @@
       "records_path": "records/bali-travel-2026-09.1/documents.jsonl.gz",
       "records_sha256": "e2b6d130b6b79dc7b756a1c09e7a99006ba8d7b8a59714f5700317f57b2e55f1",
       "source_lock": "corpus/sources/bali-travel-2026-09.json"
+    },
+    {
+      "id": "wikivoyage-en",
+      "version": "2026-09.5",
+      "documents": 34597,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/wikivoyage-en-all-nopic-2026-09.5",
+      "manifest_sha256": "021d6e8818921951355f0563061be4587f91a6150a2c58292e64b28180595c9e",
+      "records_sha256": "9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b",
+      "source_lock": "corpus/sources/wikivoyage-en-all-nopic-2026-09.json"
+    },
+    {
+      "id": "howto-repair",
+      "version": "2026-10.4",
+      "documents": 78626,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/howto-repair-2026-10.4",
+      "manifest_sha256": "0cda50f5ea69b04df2f81b2c6a1433e41d92cd1fc66860d311109aca9db93e28",
+      "records_sha256": "091df84e82a5dc332c1caad5be3dc86e51ba73b48e7032215b2f200abb2f9b2c",
+      "source_lock": "corpus/sources/howto-repair-en-2026-10.4.json"
+    },
+    {
+      "id": "howto-practical",
+      "version": "2026-10.4",
+      "documents": 189294,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/howto-practical-2026-10.4",
+      "manifest_sha256": "dc9cd320cd6e5b484d57655fc974c4d05aa757bef800f0fdf9769239ae772281",
+      "records_sha256": "23877c5b9107b35f838f25f8903404265a5d42b40534b324fae8eda20e5b223b",
+      "source_lock": "corpus/sources/howto-practical-en-2026-10.4.json"
+    },
+    {
+      "id": "wikipedia-top1m-mini",
+      "version": "2026-04.5",
+      "documents": 997714,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/wikipedia-en-top1m-mini-2026-04.5",
+      "manifest_sha256": "99ca4cfc1eec41ddc0f916a9d4da2144cd380129b5c4a3a407f9efe95db60c9a",
+      "records_sha256": "2459f398597c3f6dd617badd58833ab99d8dfea41e40d6d8288fd97e383edf3e",
+      "source_lock": "corpus/sources/wikipedia-en-top1m-mini-2026-04.json"
+    },
+    {
+      "id": "wikisource-en-history-p000",
+      "version": "2026-09.3",
+      "documents": 155527,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/wikisource-en-all-nopic-2026-09.3",
+      "manifest_sha256": "2de9b8f4caf3e95e9c3b71dea18cdef9263cde3623c62cb5c4a1b61a619e71ee",
+      "records_sha256": "4669ab78053928f2436d10c9d8c85fddd5b0d9fdefa4376a844f238d621605cf",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json"
+    },
+    {
+      "id": "wikisource-en-history-p001",
+      "version": "2026-09.3",
+      "documents": 155739,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/wikisource-en-all-nopic-2026-09.3",
+      "manifest_sha256": "2de9b8f4caf3e95e9c3b71dea18cdef9263cde3623c62cb5c4a1b61a619e71ee",
+      "records_sha256": "2bcddef364b637f476f7d5d3455c2782b243a7167343f3a27b53fa2de5ddc87a",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json"
+    },
+    {
+      "id": "wikisource-en-history-p002",
+      "version": "2026-09.3",
+      "documents": 155378,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/wikisource-en-all-nopic-2026-09.3",
+      "manifest_sha256": "2de9b8f4caf3e95e9c3b71dea18cdef9263cde3623c62cb5c4a1b61a619e71ee",
+      "records_sha256": "f2be3cf891884cd16f3f901d74d8a0e903ca04a74c492af2c56bb9c3dcf610b1",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json"
+    },
+    {
+      "id": "wikisource-en-history-p003",
+      "version": "2026-09.3",
+      "documents": 155370,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/wikisource-en-all-nopic-2026-09.3",
+      "manifest_sha256": "2de9b8f4caf3e95e9c3b71dea18cdef9263cde3623c62cb5c4a1b61a619e71ee",
+      "records_sha256": "3da5938b9f1e7a3ca662317c99dc61de6809c6ed0b6e49698b76bd3a44a748dc",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json"
+    },
+    {
+      "id": "nairobi-health-places",
+      "version": "2026-10.1",
+      "documents": 200,
+      "records_revision": "3059b4150abc5a872232d2b8bfd7327bfc7d7b77",
+      "records_path": "records/nairobi-health-places-2026-10.1",
+      "manifest_sha256": "638a1b9b0427544cc54330e243d8cbbbe6020688d75aa57deb34d8379a8a4600",
+      "records_sha256": "adeee442844debd734b9cc164637d7c7d01ff30158437a58c581168d0ba8c234",
+      "source_lock": "corpus/sources/nairobi-health-places-2026-10.json"
     }
   ]
 }

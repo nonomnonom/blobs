@@ -1,0 +1,541 @@
+{
+  "format": 1,
+  "id": "howto-repair-retrieval-v1",
+  "notes": "Held-out repair questions spread over the five reviewed sites in the lane (vehicle mechanics, bicycles, aviation, 3D printing, woodworking). Questions paraphrase the source post rather than copying its title.",
+  "library": {
+    "id": "howto-repair",
+    "version": "2026-10.2",
+    "records_sha256": "946a47e60e9390cd9539aea453d3b1fb9ea05ce38b3527db7cee935b19ddb45f",
+    "payload_sha256": "1fb1db975cf91e9230e883e8b0c2117ebc9bda68b3304b4e7722eb69de226e69"
+  },
+  "cases": [
+    {
+      "id": "coasting-brake-accelerator",
+      "question": "What happens to a car when you release both the accelerator and the brake?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-d856501ac242aa9cb4b22f30f90f548b"
+      ],
+      "expected_document_titles": [
+        "Does a Car Keep Moving If Neither Accelerator, Nor Brake Is Pressed?"
+      ]
+    },
+    {
+      "id": "battery-two-volts",
+      "question": "A car battery reads about two volts, what does that mean?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-00670701894faadebd559f6d2d583b27"
+      ],
+      "expected_document_titles": [
+        "2 Volts on Car Battery"
+      ]
+    },
+    {
+      "id": "oil-filter-intervals",
+      "question": "Can changing the oil filter often extend oil change intervals?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-8f97b4c6f9da1d1370d90c4f45719f35"
+      ],
+      "expected_document_titles": [
+        "Extending oil change intervals by changing oil filter frequently"
+      ]
+    },
+    {
+      "id": "starter-or-alternator",
+      "question": "The car sat for two years and will not start even with a jump; starter or alternator?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-a52346d2d742add3a5387b70240ea582"
+      ],
+      "expected_document_titles": [
+        "Car won't start after sitting for 2 years even with a jump. Is it a starter or alternator issue?"
+      ]
+    },
+    {
+      "id": "clutch-in-neutral",
+      "question": "Do I need to press the clutch to start the car in neutral?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-fed6afa4a7654918f928216b5257ee52"
+      ],
+      "expected_document_titles": [
+        "Need I press clutch pedal while starting my car in neutral?"
+      ]
+    },
+    {
+      "id": "coolant-compatibility",
+      "question": "Is an all-makes coolant really compatible with every car model?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-d9186d22801c7b6e98fa20546ae54792"
+      ],
+      "expected_document_titles": [
+        "Is Prestone \"All Makes/All Models\" coolant *really* compatible with all models?"
+      ]
+    },
+    {
+      "id": "tire-rotation",
+      "question": "Why do some countries rotate tyres and others rotate tires differently?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-f2ab229ef2a6958a56aa0c7dd9a7e604"
+      ],
+      "expected_document_titles": [
+        "Why don't we rotate tyres but you rotate tires?"
+      ]
+    },
+    {
+      "id": "check-engine-light",
+      "question": "The check engine light came on in a Chrysler Crossfire, what now?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-341b7cd0a152c0098b0940bee3fff355"
+      ],
+      "expected_document_titles": [
+        "2008 Chrysler Crossfire - Check Engine Light"
+      ]
+    },
+    {
+      "id": "broken-spark-plug",
+      "question": "A spark plug broke off in the engine, can I still drive the car?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-57f8bb7adc3ee92a83b514d7c224091f"
+      ],
+      "expected_document_titles": [
+        "Spark plug broke off in engine - can I drive the car?"
+      ]
+    },
+    {
+      "id": "transmission-neutral-park",
+      "question": "Is it bad to leave an automatic car in neutral instead of park?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-be7cb0a90d8c9de94b27a5ebc9ab9402"
+      ],
+      "expected_document_titles": [
+        "Leaving car with automatic transmission in Neutral instead of Park"
+      ]
+    },
+    {
+      "id": "clean-chain",
+      "question": "What is the easiest way to keep a bicycle chain clean?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-2ee16417bf71d13a1a95f651391c135d"
+      ],
+      "expected_document_titles": [
+        "How to achieve an always clean chain"
+      ]
+    },
+    {
+      "id": "disk-vs-rim-brakes",
+      "question": "What is the practical advantage of disc brakes over rim brakes on a bike?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-58a197a743117c025a8ca3d73a6e4d8a"
+      ],
+      "expected_document_titles": [
+        "What is the practical advantage of disk brakes over rim brakes?"
+      ]
+    },
+    {
+      "id": "low-tire-pressure-corner",
+      "question": "Can low tyre pressure make a bicycle fall in a corner?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-9dac8dd8ba02f59c1945aa4fe72b08cc"
+      ],
+      "expected_document_titles": [
+        "Low tire pressure causing fall in corner?"
+      ]
+    },
+    {
+      "id": "fixed-gear-why",
+      "question": "Why would someone ride a fixed-gear bicycle?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-9a25ef22c65fc35d7362cfc70b273e5f"
+      ],
+      "expected_document_titles": [
+        "Why ride a fixed-gear bike?"
+      ]
+    },
+    {
+      "id": "stripped-bottom-bracket",
+      "question": "How do I remove stripped plastic cups from a bottom bracket?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-e50446b94d188772b4812e2b5f95c765"
+      ],
+      "expected_document_titles": [
+        "How can I remove the stripped plastic cups of a bottom bracket?"
+      ]
+    },
+    {
+      "id": "beginner-derailleur",
+      "question": "A beginner keeps breaking the rear derailleur, what could be wrong?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-2a4fced5bd508e44d583d5b26cb8faa7"
+      ],
+      "expected_document_titles": [
+        "Beginner breaks rear derailleur, what might have gone wrong?"
+      ]
+    },
+    {
+      "id": "tubeless-vs-tubed",
+      "question": "Are tubeless tyres actually an upgrade over tubed tyres?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-1c3ce779065ed85c30ff0a5da06253de"
+      ],
+      "expected_document_titles": [
+        "Are tubeless tyres an upgrade from tubed tyres, or just different?"
+      ]
+    },
+    {
+      "id": "stuck-headset-spacers",
+      "question": "How do I remove headset spacers that are stuck on an aluminium or carbon steerer?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-9c0f20dfca34e981dc883d159dc0d334"
+      ],
+      "expected_document_titles": [
+        "How can I remove very stuck headset spacers (alu/carbon)"
+      ]
+    },
+    {
+      "id": "spoke-lacing",
+      "question": "Do the spokes on a traditional wheel really need to cross each other?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-873f7a73130d2941384d118e7db12375"
+      ],
+      "expected_document_titles": [
+        "Is it really necessary to physically cross (interlace) the spokes on traditional wheel lacing?"
+      ]
+    },
+    {
+      "id": "intentional-stall",
+      "question": "Is it ever practical to deliberately stall an aircraft for a fast descent?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-eef86d5b594743bcb5c8cddd97d96037"
+      ],
+      "expected_document_titles": [
+        "Is it practical to intentionally stall an aircraft to execute a fast, controlled descent?"
+      ]
+    },
+    {
+      "id": "short-runway-ramps",
+      "question": "Why don't short runways use ramps to help with takeoff?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-ce32e9038b1199bf9e55a3e8914ebc30"
+      ],
+      "expected_document_titles": [
+        "Why don't short runways use ramps for takeoff?"
+      ]
+    },
+    {
+      "id": "shuttle-landing",
+      "question": "How does the Space Shuttle slow down for landing?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-ea538549c48bfa45fa8d32c709f0e7ca"
+      ],
+      "expected_document_titles": [
+        "How does the Space Shuttle slow down during re-entry, descent, and landing?"
+      ]
+    },
+    {
+      "id": "single-engine-turnback",
+      "question": "Can a single-engine aircraft turn back to the airport after engine failure?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-e63363f04fcda886c1d6bd8f0b444757"
+      ],
+      "expected_document_titles": [
+        "Is it even remotely feasible to turnback a single engine aircraft with an engine failure?"
+      ]
+    },
+    {
+      "id": "icing-missiles",
+      "question": "Do missiles need anti-icing protection?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-533b9ae3a99356009e7d9a7583c37f40"
+      ],
+      "expected_document_titles": [
+        "Do missiles need anti-icing?"
+      ]
+    },
+    {
+      "id": "hydrogen-fuel",
+      "question": "Could hydrogen be an alternative fuel for a gas turbine engine?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-7b889ab3fd31ccde2be4dccd69a27d30"
+      ],
+      "expected_document_titles": [
+        "Can hydrogen gas be an alternative fuel source for a gas turbine engine?"
+      ]
+    },
+    {
+      "id": "gravity-at-altitude",
+      "question": "Is gravity weaker on an airliner at cruise altitude?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-cd9b121481f840e6334642216dd0c1bc"
+      ],
+      "expected_document_titles": [
+        "Is gravity less on an airliner at cruise altitude?"
+      ]
+    },
+    {
+      "id": "downwind-landing-turn",
+      "question": "On a downwind landing, should I turn into the crosswind or away from it?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-7f9823fbe6e5252df9293994c73c7faf"
+      ],
+      "expected_document_titles": [
+        "Which way to turn to return to runway for downwind landing-- into crosswind or with crosswind?"
+      ]
+    },
+    {
+      "id": "checklist-discipline",
+      "question": "How do pilots keep using checklists once they become routine?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-086bdf65f67b2857270ac20b70cfffb8"
+      ],
+      "expected_document_titles": [
+        "How do pilots stay disciplined and use checklists, even after they have become routine?"
+      ]
+    },
+    {
+      "id": "bottles-to-filament",
+      "question": "Can plastic bottles be turned into 3D printer filament?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-b063e940d09425bf62a4c63d39395998"
+      ],
+      "expected_document_titles": [
+        "Plastic bottles to filament"
+      ]
+    },
+    {
+      "id": "masking-tape-adhesion",
+      "question": "My prints will not stick to masking tape, what should I change?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-34cae930bda83d23c50989d4a2f56adb"
+      ],
+      "expected_document_titles": [
+        "Adhesion problems with masking tape"
+      ]
+    },
+    {
+      "id": "delta-nozzle-square",
+      "question": "On a delta printer the nozzle does not move square to a level bed, is the bed bent?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-691e04ef7025e45d237d5517406580b0"
+      ],
+      "expected_document_titles": [
+        "Delta printer nozzle not moving square with a perfectly level bed (as if the bed is bent... but it isn't)"
+      ]
+    },
+    {
+      "id": "bottom-skin-expansion",
+      "question": "Why does the bottom skin of a print bulge after the first layer?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-41bd21bef1878bcb9da2bc3c99bac4f3"
+      ],
+      "expected_document_titles": [
+        "Expansion in bottom skin after first layer"
+      ]
+    },
+    {
+      "id": "print-warping",
+      "question": "How do I stop 3D prints from warping?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-5ecd8836a1ec679965bb7761ff428673"
+      ],
+      "expected_document_titles": [
+        "3D prints keep suffering from warping"
+      ]
+    },
+    {
+      "id": "auto-bed-leveling",
+      "question": "Auto bed levelling homes off-centre after a Marlin configuration change, what is wrong?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-4e80d7f6d05b19d714d710b91ca675a8"
+      ],
+      "expected_document_titles": [
+        "Anet A8 Auto Bed Levelling - Auto home not centring with new Marlin 1.1.9 config"
+      ]
+    },
+    {
+      "id": "printed-part-melting",
+      "question": "At what temperature does a 3D printed part start to melt?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-4749857e09229a28dcddcbab665692c4"
+      ],
+      "expected_document_titles": [
+        "What is the melting temperature of a 3D printed part?"
+      ]
+    },
+    {
+      "id": "stringing-nth-layer",
+      "question": "Why does a 3D printer start stringing after several layers?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-82650355a8e3819290e219ffbedbbaa9"
+      ],
+      "expected_document_titles": [
+        "3D Printer Stringing after nth layer"
+      ]
+    },
+    {
+      "id": "resin-disposal",
+      "question": "How do I safely dispose of leftover resin?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-d8f4fa025f81df420cafc6596daa9e5a"
+      ],
+      "expected_document_titles": [
+        "Safe way of disposing resin"
+      ]
+    },
+    {
+      "id": "heat-creep-clog",
+      "question": "Is a print clog from heat creep fixed by a new cooler or a new hotend?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-8ceeffd8e9a4bdfd4f2e0bcbd2a9066a"
+      ],
+      "expected_document_titles": [
+        "Clogging due to heat creep: buy new cooler or new hotend?"
+      ]
+    },
+    {
+      "id": "saw-for-sheet-goods",
+      "question": "What should I use to cut a 4x8 sheet: circular saw, table saw or panel saw?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-15d449fd438264a525578dd52daad6ab"
+      ],
+      "expected_document_titles": [
+        "4'x8' length cut - circular saw, table saw, or panel saw?"
+      ]
+    },
+    {
+      "id": "butcher-block-glue-up",
+      "question": "How do I glue up a butcher-block style countertop?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-b061539a231f216295c759243fcf5a12"
+      ],
+      "expected_document_titles": [
+        "Glue-up for butcher block-style countertop"
+      ]
+    },
+    {
+      "id": "hardwood-shelf-finish",
+      "question": "How should I finish a hardwood board that will be used as a shelf?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-aa2d25a0cd8c225c6d70acb12c4ec066"
+      ],
+      "expected_document_titles": [
+        "How might I finish this hardwood board for use as a shelf?"
+      ]
+    },
+    {
+      "id": "plywood-straight-cuts",
+      "question": "How do I make straight cuts in plywood without a circular saw?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-479e87bc318212bf3bed1efb9464c8e6"
+      ],
+      "expected_document_titles": [
+        "Straight cuts in plywood without a circular saw"
+      ]
+    },
+    {
+      "id": "sanding-vs-scraping",
+      "question": "What is the difference between sanding and scraping wood?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-aa7d75110037b31a47d35e5e769e8d49"
+      ],
+      "expected_document_titles": [
+        "What are the differences between sanding and scraping?"
+      ]
+    },
+    {
+      "id": "quick-corner-joints",
+      "question": "What are practical quick corner joints for a woodworking project?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-e12a770479e94b9c7aab6821ede7d9e6"
+      ],
+      "expected_document_titles": [
+        "Quick corner joints in practice"
+      ]
+    },
+    {
+      "id": "router-thin-boards",
+      "question": "How do I hold thin boards vertically on a router table?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-991910a85c9c59a50640a0ac375fd110"
+      ],
+      "expected_document_titles": [
+        "Stabilizing thin boards, with trim, vertically on a router table"
+      ]
+    },
+    {
+      "id": "center-of-circle",
+      "question": "How do I drill a hole exactly in the centre of a circle?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-1508178e6f2efa3e19fee80bc62e8d24"
+      ],
+      "expected_document_titles": [
+        "How do I drill a hole exactly in the center of a circle?"
+      ]
+    },
+    {
+      "id": "epoxy-vs-varnish",
+      "question": "For a desktop case, should I use epoxy resin or varnish first?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-a0c54cdc692f06e5ced6b4a17cc47f4f"
+      ],
+      "expected_document_titles": [
+        "Desktop case design: Which one should I do first for mold and heat resistance, epoxy resin or varnish?"
+      ]
+    },
+    {
+      "id": "wood-movement-legs",
+      "question": "How does wood movement affect load-bearing legs on a TV console?",
+      "expectation": "hit",
+      "expected_document_ids": [
+        "wiki-87b7822f670ba1e940afa535883c6579"
+      ],
+      "expected_document_titles": [
+        "Load Bearing of Legs and Wood Movement on TV Console"
+      ]
+    }
+  ]
+}

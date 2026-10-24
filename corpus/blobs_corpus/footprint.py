@@ -11,6 +11,8 @@ from .package import verify_package
 
 
 STORAGE_LIMIT_BYTES = 50_000_000_000
+MAX_MODEL_PAYLOAD_BYTES = 40_000_000_000
+MAX_LIBRARY_PAYLOAD_BYTES = 6 * 1024**3
 
 
 def sha(path: Path):
@@ -26,12 +28,52 @@ def read_installer_policy(path: Path):
 
 def installer_policy_text(text: str, source_sha256: str):
     headroom = re.findall(r"expected\.bytes - resumeBytes \+ (\d+)L \* 1024 \* 1024", text)
-    caps = re.findall(r"expected\.bytes < ([\d_]+)L", text)
+    caps = re.findall(
+        r"(?:private|internal) const val MAX_INSTALLED_PAYLOAD_BYTES = ([\d_]+)L", text
+    )
+    if not caps:
+        # Keep prior release-evidence fixtures readable. Current Android sources use the
+        # named constant above so the bound cannot be mistaken for a per-library limit.
+        caps = re.findall(
+            r"dao\.all\(\)\.sumOf \{ it\.bytes \} \+ expected\.bytes < ([\d_]+)L",
+            text,
+        )
     if headroom != ["64"] or caps != ["48_000_000_000"]:
         raise ValueError("Android import storage policy changed; review this calculator")
     return dict(
         import_headroom_bytes=int(headroom[0]) * 1024 * 1024,
         installed_payload_cap_bytes=int(caps[0].replace("_", "")),
+        source_sha256=source_sha256,
+    )
+
+
+def read_package_payload_limits(path: Path):
+    source = path.read_bytes()
+    text = source.decode("utf-8")
+    return package_payload_limits_text(text, hashlib.sha256(source).hexdigest())
+
+
+def package_payload_limits_text(text: str, source_sha256: str):
+    model = re.findall(r"internal const val MAX_MODEL_PAYLOAD_BYTES = ([\d_]+)L", text)
+    library = re.findall(
+        r"internal const val MAX_LIBRARY_PAYLOAD_BYTES = "
+        r"([\d_]+)L \* ([\d_]+)L \* ([\d_]+)L \* ([\d_]+)L",
+        text,
+    )
+    has_kind_mapping = (
+        '"model" -> MAX_MODEL_PAYLOAD_BYTES' in text
+        and '"library" -> MAX_LIBRARY_PAYLOAD_BYTES' in text
+    )
+    if model != ["40_000_000_000"] or len(library) != 1 or not has_kind_mapping:
+        raise ValueError("Android package payload policy changed; review this calculator")
+    library_bytes = 1
+    for factor in library[0]:
+        library_bytes *= int(factor.replace("_", ""))
+    if library_bytes != 6 * 1024**3:
+        raise ValueError("Android library payload limit changed; review this calculator")
+    return dict(
+        model_payload_cap_bytes=int(model[0].replace("_", "")),
+        library_payload_cap_bytes=library_bytes,
         source_sha256=source_sha256,
     )
 
@@ -111,7 +153,12 @@ def storage_values(packages, apk_bytes, import_headroom):
     )
 
 
-def catalog_storage_values(source: bytes, apk_bytes: int):
+def catalog_storage_values(
+    source: bytes,
+    apk_bytes: int,
+    payload_limits=None,
+    installed_payload_cap_bytes=48_000_000_000,
+):
     """Bound storage for every model and library offered by the installed catalog."""
     try:
         catalog = json.loads(source.decode("utf-8"))
@@ -122,6 +169,19 @@ def catalog_storage_values(source: bytes, apk_bytes: int):
     assets = catalog.get("packages")
     if not isinstance(assets, list) or not assets:
         raise ValueError("Package catalog has no assets")
+    payload_limits = payload_limits or dict(
+        model_payload_cap_bytes=MAX_MODEL_PAYLOAD_BYTES,
+        library_payload_cap_bytes=MAX_LIBRARY_PAYLOAD_BYTES,
+    )
+    if (
+        type(payload_limits.get("model_payload_cap_bytes")) is not int
+        or type(payload_limits.get("library_payload_cap_bytes")) is not int
+        or payload_limits["model_payload_cap_bytes"] <= 0
+        or payload_limits["library_payload_cap_bytes"] <= 0
+        or type(installed_payload_cap_bytes) is not int
+        or installed_payload_cap_bytes <= 0
+    ):
+        raise ValueError("Invalid package payload limits")
     rows = []
     names = set()
     model_count = library_count = 0
@@ -150,14 +210,19 @@ def catalog_storage_values(source: bytes, apk_bytes: int):
             or not re.fullmatch(r"[a-f0-9]{64}", manifest_hash)
         ):
             raise ValueError(f"Invalid package catalog metadata: {name!r}")
-        if download_format == "gguf" and download_bytes != manifest["bytes"]:
-            raise ValueError(f"Raw GGUF download and installed payload sizes differ: {name}")
-        if manifest.get("kind") == "model":
+        kind = manifest.get("kind")
+        if kind == "model":
+            maximum_payload_bytes = payload_limits["model_payload_cap_bytes"]
             model_count += 1
-        elif manifest.get("kind") == "library":
+        elif kind == "library":
+            maximum_payload_bytes = payload_limits["library_payload_cap_bytes"]
             library_count += 1
         else:
             raise ValueError(f"Unsupported package kind in catalog: {name}")
+        if download_bytes > maximum_payload_bytes or manifest["bytes"] > maximum_payload_bytes:
+            raise ValueError(f"Package exceeds its catalog size limit: {name}")
+        if download_format == "gguf" and download_bytes != manifest["bytes"]:
+            raise ValueError(f"Raw GGUF download and installed payload sizes differ: {name}")
         names.add(name.casefold())
         rows.append(
             dict(
@@ -197,6 +262,10 @@ def catalog_storage_values(source: bytes, apk_bytes: int):
         asset_count=len(rows),
         assets=rows,
         all_catalog_options=dict(
+            per_package_payload_limits=dict(
+                model_bytes=payload_limits["model_payload_cap_bytes"],
+                library_bytes=payload_limits["library_payload_cap_bytes"],
+            ),
             downloadable_bytes=download_bytes,
             installed_payload_bytes=payload_bytes,
             known_steady_bytes=known_steady,
@@ -206,15 +275,20 @@ def catalog_storage_values(source: bytes, apk_bytes: int):
             storage_limit_bytes=STORAGE_LIMIT_BYTES,
             storage_limit_margin_bytes=STORAGE_LIMIT_BYTES - known_steady,
             storage_limit_passes=known_steady <= STORAGE_LIMIT_BYTES,
-            importer_payload_cap_bytes=48_000_000_000,
-            importer_payload_margin_bytes=48_000_000_000 - payload_bytes,
-            importer_payload_cap_passes=payload_bytes < 48_000_000_000,
+            installed_payload_cap_bytes=installed_payload_cap_bytes,
+            installed_payload_margin_bytes=installed_payload_cap_bytes - payload_bytes,
+            installed_payload_cap_passes=payload_bytes < installed_payload_cap_bytes,
+            importer_payload_cap_passes=payload_bytes < installed_payload_cap_bytes,
         ),
     )
 
 
 def calculate(
-    apk_report_path: Path, package_paths, installer_source: Path, catalog_path: Path | None = None
+    apk_report_path: Path,
+    package_paths,
+    installer_source: Path,
+    catalog_path: Path | None = None,
+    package_manifest_source: Path | None = None,
 ):
     apk = read_apk_report(apk_report_path)
     if len(package_paths) != 2 or len(set(path.resolve() for path in package_paths)) != 2:
@@ -233,6 +307,19 @@ def calculate(
     ].count("library") != 1:
         raise ValueError("A release footprint requires exactly one model and one library")
     policy = read_installer_policy(installer_source)
+    payload_limits = None
+    if package_manifest_source is not None:
+        payload_limits = read_package_payload_limits(package_manifest_source)
+        policy["package_payload_limits"] = payload_limits
+        for item in packages:
+            kind = item["manifest"]["kind"]
+            maximum = payload_limits[f"{kind}_payload_cap_bytes"]
+            if item["manifest"]["bytes"] > maximum:
+                raise ValueError(f"Selected {kind} package exceeds Android payload limit")
+    effective_payload_limits = payload_limits or dict(
+        model_payload_cap_bytes=MAX_MODEL_PAYLOAD_BYTES,
+        library_payload_cap_bytes=MAX_LIBRARY_PAYLOAD_BYTES,
+    )
     storage = storage_values(packages, apk["bytes"], policy["import_headroom_bytes"])
     installed = storage["installed_payload_bytes"]
     strict_cap_passes = installed < policy["installed_payload_cap_bytes"]
@@ -251,6 +338,23 @@ def calculate(
         import_order=[item["package"]["file"] for item in packages],
         storage=storage,
         checks=dict(
+            per_package_payload_caps={
+                item["manifest"]["kind"]: dict(
+                    limit_bytes=effective_payload_limits[
+                        f"{item['manifest']['kind']}_payload_cap_bytes"
+                    ],
+                    payload_bytes=item["manifest"]["bytes"],
+                    margin_bytes=(
+                        effective_payload_limits[f"{item['manifest']['kind']}_payload_cap_bytes"]
+                        - item["manifest"]["bytes"]
+                    ),
+                    passes=(
+                        item["manifest"]["bytes"]
+                        <= effective_payload_limits[f"{item['manifest']['kind']}_payload_cap_bytes"]
+                    ),
+                )
+                for item in packages
+            },
             android_installed_payload_cap=dict(
                 limit_bytes=policy["installed_payload_cap_bytes"],
                 selected_bytes=installed,
@@ -279,7 +383,12 @@ def calculate(
         ),
     )
     if catalog_path is not None:
-        result["catalog_storage"] = catalog_storage_values(catalog_path.read_bytes(), apk["bytes"])
+        result["catalog_storage"] = catalog_storage_values(
+            catalog_path.read_bytes(),
+            apk["bytes"],
+            effective_payload_limits,
+            policy["installed_payload_cap_bytes"],
+        )
     return result
 
 
@@ -295,13 +404,25 @@ def release_report(apk_report_path: Path, package_paths, installer_source: Path)
     )
     if catalog_path is None:
         raise ValueError("Could not locate the catalog paired with the installer source")
-    result = calculate(apk_report_path, package_paths, installer_source, catalog_path)
+    package_manifest_source = installer_source.parent / "PackageManifest.kt"
+    if not package_manifest_source.is_file():
+        raise ValueError("Could not locate the package payload policy paired with the installer")
+    result = calculate(
+        apk_report_path,
+        package_paths,
+        installer_source,
+        catalog_path,
+        package_manifest_source,
+    )
     result["catalog_storage"]["source_file"] = (
         "blobs/android/app/src/main/assets/package-catalog.json"
     )
     result["apk_report"]["file"] = "APK-VERIFICATION.json"
     result["installer_policy"]["file"] = (
         "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
+    )
+    result["installer_policy"]["package_payload_limits"]["source_file"] = (
+        "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
     )
     return result
 
@@ -321,7 +442,15 @@ def main():
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
-    report = calculate(args.apk_report, args.package, args.installer_source)
+    package_manifest_source = args.installer_source.parent / "PackageManifest.kt"
+    report = calculate(
+        args.apk_report,
+        args.package,
+        args.installer_source,
+        package_manifest_source=(
+            package_manifest_source if package_manifest_source.is_file() else None
+        ),
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     write_json(args.output, report)
     summary = report["storage"]

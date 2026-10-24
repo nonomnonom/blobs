@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -16,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -23,28 +24,28 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.local.PackageEntity
+import dev.blobs.app.ui.AppUiState
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductState
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-fun ImportReviewScreen(
-    state: ProductState,
-    packages: List<PackageEntity>,
-    model: ProductViewModel
-) {
+fun ImportReviewScreen(state: AppUiState, packages: List<PackageEntity>, model: AppViewModel) {
     val work by model.work.collectAsStateWithLifecycle()
     if (state.importUri == null) return
     val manifest = state.manifest
     val duplicate = packages.any { it.key == manifest?.key }
     val otherEdition = packages.any { it.packageId == manifest?.id && it.key != manifest.key }
+    var checksOpen by rememberSaveable(manifest?.key) { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(BlobsDimens.page),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.lg)
         ) {
             Heading(if (duplicate) R.string.package_already_added else R.string.review_import)
             if (manifest == null) {
@@ -52,12 +53,12 @@ fun ImportReviewScreen(
                 Body(R.string.checking_file)
             } else {
                 Surface(
-                    shape = RoundedCornerShape(24.dp),
+                    shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Column(
-                        Modifier.fillMaxWidth().padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        Modifier.fillMaxWidth().padding(BlobsDimens.lg),
+                        verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs)
                     ) {
                         Text(manifest.title, style = MaterialTheme.typography.titleLarge)
                         Text(
@@ -93,28 +94,43 @@ fun ImportReviewScreen(
                     Text(manifest.license, style = MaterialTheme.typography.bodyLarge)
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Text(
-                    stringResource(R.string.import_trust),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (!duplicate && otherEdition) {
+                DetailDisclosure(
+                    open = checksOpen,
+                    onOpenChange = { checksOpen = it },
+                    summary = {
+                        Text(
+                            stringResource(R.string.import_checks),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                ) {
                     Text(
-                        stringResource(R.string.older_editions_kept),
-                        style = MaterialTheme.typography.bodyMedium
+                        stringResource(R.string.import_trust_detail),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (duplicate) {
+                        Text(
+                            stringResource(R.string.already_added_detail),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else if (otherEdition) {
+                        Text(
+                            stringResource(R.string.older_editions_detail),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
-            if (duplicate) {
-                Text(
-                    stringResource(R.string.already_added),
-                    modifier = Modifier.padding(bottom = 12.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+        Column(
+            Modifier.fillMaxWidth().padding(
+                horizontal = BlobsDimens.page,
+                vertical = BlobsDimens.sm
+            )
+        ) {
             PrimaryAction(
                 R.string.add,
                 manifest != null && !duplicate && !work.busy,

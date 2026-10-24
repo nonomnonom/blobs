@@ -1,0 +1,80 @@
+{
+ "format": 1,
+ "id": "wikisource-en-history-cross-volume-v1",
+ "libraries": [
+  {
+   "file": "wikisource-en-history-p000.blobs",
+   "id": "wikisource-en-history-p000",
+   "version": "2026-09.2",
+   "payload_sha256": "db592c9e0d80c595f97abf73bf8cd5cc9ca2eeccf89ccda5c6ebe018aaaa3efb"
+  },
+  {
+   "file": "wikisource-en-history-p001.blobs",
+   "id": "wikisource-en-history-p001",
+   "version": "2026-09.2",
+   "payload_sha256": "9c5a9f8b133b188d001f8c89e566547513496accc6bb1ec7fb3c33facf393453"
+  },
+  {
+   "file": "wikisource-en-history-p002.blobs",
+   "id": "wikisource-en-history-p002",
+   "version": "2026-09.2",
+   "payload_sha256": "0f7c97b2e0023ae524c6007945085ceae5f5440439ce22facba230cfcc3ef202"
+  },
+  {
+   "file": "wikisource-en-history-p003.blobs",
+   "id": "wikisource-en-history-p003",
+   "version": "2026-09.2",
+   "payload_sha256": "3216ee1df01ec53aca871a40bea11f9cb6fad855d74563ad88f722d505e82a0c"
+  }
+ ],
+ "cases": [
+  {
+   "id": "cross-magna-carta-limits",
+   "question": "What limits did King John accept on the power of the English crown in 1215?",
+   "expected_library_id": "wikisource-en-history-p000",
+   "expected_document_title": "Magna Carta (trans. Davis)"
+  },
+  {
+   "id": "cross-dred-scott-citizenship",
+   "question": "Could a Black man whose ancestors were brought to America as slaves claim federal citizenship in the 1857 Supreme Court ruling?",
+   "expected_library_id": "wikisource-en-history-p000",
+   "expected_document_title": "Dred Scott v. Sandford"
+  },
+  {
+   "id": "cross-gettysburg-nicolay",
+   "question": "What did Lincoln say the nation was testing whether it could long endure at the Pennsylvania battlefield?",
+   "expected_library_id": "wikisource-en-history-p001",
+   "expected_document_title": "Gettysburg Address (Nicolay draft)"
+  },
+  {
+   "id": "cross-miranda-custody",
+   "question": "What must police tell a suspect before questioning them in custody?",
+   "expected_library_id": "wikisource-en-history-p001",
+   "expected_document_title": "Miranda v. Arizona"
+  },
+  {
+   "id": "cross-rough-draught-declaration",
+   "question": "What wording did Jefferson use in the draft about human events and the consent of the governed?",
+   "expected_library_id": "wikisource-en-history-p002",
+   "expected_document_title": "\"Original Rough Draught\" of the Declaration of Independence"
+  },
+  {
+   "id": "cross-lincoln-second-inaugural",
+   "question": "What did Lincoln say about the cause of the war and charity toward both sides in his 1865 address?",
+   "expected_library_id": "wikisource-en-history-p002",
+   "expected_document_title": "Abraham Lincoln's Second Inaugural Address"
+  },
+  {
+   "id": "cross-gettysburg-bancroft",
+   "question": "Which draft of the address says the nation was conceived in liberty and dedicated to equality?",
+   "expected_library_id": "wikisource-en-history-p003",
+   "expected_document_title": "Gettysburg Address (Bancroft draft)"
+  },
+  {
+   "id": "cross-treaty-paris-1783-borders",
+   "question": "What boundaries and fishing rights did Britain recognise for the new United States in 1783?",
+   "expected_library_id": "wikisource-en-history-p003",
+   "expected_document_title": "Treaty of Paris (1783)"
+  }
+ ]
+}

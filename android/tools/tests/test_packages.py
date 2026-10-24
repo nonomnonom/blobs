@@ -18,7 +18,10 @@ import verify_release
 
 def fixture_source_archive(path):
     with zipfile.ZipFile(path, "x") as archive:
-        for name in sorted(verify_release.SOURCE_REQUIRED):
+        required = verify_release.SOURCE_REQUIRED | {
+            "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
+        }
+        for name in sorted(required):
             relative = name.removeprefix("blobs/")
             source = package_release.ROOT / relative.removeprefix("android/")
             if not relative.startswith("android/"):
@@ -43,16 +46,25 @@ class PackageTests(unittest.TestCase):
                 "THIRD_PARTY_NOTICES.md",
                 "app/src/main/assets/licenses/TEST.txt",
                 "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+                "app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt",
                 "app/build/reports/release-evidence/old-build.txt",
             ):
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("Original fixture text", encoding="utf-8")
-            installer = root / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
-            installer.write_text(
-                "expected.bytes - resumeBytes + 64L * 1024 * 1024\nexpected.bytes < 48_000_000_000L\n",
-                encoding="utf-8",
+            manifest_source = (
+                package_release.ROOT
+                / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
             )
+            (
+                root / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt"
+            ).write_text(manifest_source.read_text(encoding="utf-8"), encoding="utf-8")
+            installer = root / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
+            installer_source = (
+                package_release.ROOT
+                / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt"
+            )
+            installer.write_text(installer_source.read_text(encoding="utf-8"), encoding="utf-8")
             inputs = []
             for kind, payload in [
                 ("model", b"GGUF fixture"),
@@ -108,7 +120,9 @@ class PackageTests(unittest.TestCase):
                 patch.object(package_release, "verify_catalog_packages"),
                 patch.object(package_release, "sdk_directory", return_value=root),
                 patch.object(
-                    package_release.subprocess, "check_output", return_value="Fixture certificate"
+                    package_release.subprocess,
+                    "check_output",
+                    return_value="Signer #1 certificate SHA-256 digest: " + "a" * 64,
                 ),
                 patch.object(
                     package_release, "write_source_archive", side_effect=fixture_source_archive
@@ -116,7 +130,15 @@ class PackageTests(unittest.TestCase):
                 patch.object(
                     sys,
                     "argv",
-                    ["package_release.py", "--model", str(inputs[0]), "--library", str(inputs[1])],
+                    [
+                        "package_release.py",
+                        "--model",
+                        str(inputs[0]),
+                        "--library",
+                        str(inputs[1]),
+                        "--certificate-sha256",
+                        "a" * 64,
+                    ],
                 ),
             ):
                 package_release.main()
@@ -190,7 +212,7 @@ class PackageTests(unittest.TestCase):
                 file="model.gguf",
             )
             (root / "models.lock.json").write_text(json.dumps({"small": pin}))
-            output = root / "packages/qwen3-small.blobs"
+            output = root / "packages/model.blobs"
             output.parent.mkdir()
             output.touch()
             manifest = dict(
@@ -271,7 +293,15 @@ class PackageTests(unittest.TestCase):
                 patch.object(
                     sys,
                     "argv",
-                    ["package_release.py", "--model", "model.blobs", "--library", "library.blobs"],
+                    [
+                        "package_release.py",
+                        "--model",
+                        "model.blobs",
+                        "--library",
+                        "library.blobs",
+                        "--certificate-sha256",
+                        "a" * 64,
+                    ],
                 ),
             ):
                 with self.assertRaises(FileExistsError):
@@ -290,7 +320,15 @@ class PackageTests(unittest.TestCase):
             patch.object(
                 sys,
                 "argv",
-                ["package_release.py", "--model", "model.blobs", "--library", "library.blobs"],
+                [
+                    "package_release.py",
+                    "--model",
+                    "model.blobs",
+                    "--library",
+                    "library.blobs",
+                    "--certificate-sha256",
+                    "a" * 64,
+                ],
             ),
         ):
             with self.assertRaisesRegex(ValueError, "production application ID"):
@@ -348,7 +386,9 @@ class PackageTests(unittest.TestCase):
                 ),
                 patch.object(package_release, "sdk_directory", return_value=root),
                 patch.object(
-                    package_release.subprocess, "check_output", return_value="Fixture certificate"
+                    package_release.subprocess,
+                    "check_output",
+                    return_value="Signer #1 certificate SHA-256 digest: " + "a" * 64,
                 ),
                 patch.object(
                     sys,
@@ -359,6 +399,8 @@ class PackageTests(unittest.TestCase):
                         "model/Package.blobs",
                         "--library",
                         "library/package.blobs",
+                        "--certificate-sha256",
+                        "a" * 64,
                     ],
                 ),
             ):
@@ -376,6 +418,7 @@ class PackageTests(unittest.TestCase):
                 "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageCatalog.kt",
                 "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageDownloader.kt",
                 "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+                "android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt",
                 "android/tools/verify_release.py",
                 "corpus/uv.lock",
                 "corpus/blobs_corpus/curate.py",
@@ -425,6 +468,10 @@ class PackageTests(unittest.TestCase):
                 )
                 self.assertIn(
                     "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+                    names,
+                )
+                self.assertIn(
+                    "blobs/android/app/src/main/kotlin/dev/blobs/app/data/packages/PackageManifest.kt",
                     names,
                 )
                 self.assertIn("blobs/android/tools/verify_release.py", names)

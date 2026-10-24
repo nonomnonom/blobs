@@ -1,6 +1,6 @@
 import unittest
 
-from checks import affected, gate_passes
+from checks import affected, changeset_missing, gate_passes
 
 
 class CheckSelectionTest(unittest.TestCase):
@@ -61,6 +61,39 @@ class CheckSelectionTest(unittest.TestCase):
             "android": {"result": "success" if android else "skipped"},
             "docs": {"result": "success" if docs else "skipped"},
         }
+
+
+class ReleaseNoteCheckTest(unittest.TestCase):
+    def test_shipped_components_require_a_changeset(self):
+        for path in [
+            "android/app/src/main/java/dev/blobs/app/App.kt",
+            "corpus/blobs_corpus/build.py",
+            "docs/web/content/index.mdx",
+        ]:
+            with self.subTest(path=path):
+                self.assertTrue(changeset_missing([path]))
+
+    def test_a_changeset_satisfies_the_requirement(self):
+        self.assertFalse(
+            changeset_missing(["android/app/build.gradle.kts", ".changeset/fix-search.md"])
+        )
+
+    def test_consuming_a_changeset_for_a_release_needs_no_new_note(self):
+        self.assertFalse(changeset_missing([".changeset/fix-search.md", "CHANGELOG.md"]))
+
+    def test_the_changeset_config_is_not_itself_a_release_note(self):
+        self.assertTrue(changeset_missing(["docs/web/README.md", ".changeset/config.json"]))
+
+    def test_repository_hygiene_changes_need_no_note(self):
+        for path in [
+            "README.md",
+            "CONTRIBUTING.md",
+            ".github/workflows/ci.yml",
+            ".github/scripts/checks.py",
+            "package.json",
+        ]:
+            with self.subTest(path=path):
+                self.assertFalse(changeset_missing([path]))
 
 
 if __name__ == "__main__":

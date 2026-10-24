@@ -11,7 +11,7 @@ const screens = {
         title: 'A model that fits',
         description:
             'Review the recommendation, size, and space before continuing.',
-        alt: 'Model setup showing the recommended Qwen3 model, available space, and a comparison option.',
+        alt: 'Model setup showing the installed LFM2 1.2B model, its on-phone size, and a comparison link.',
     },
     'setup-library': {
         title: 'Something to get you wondering',
@@ -28,7 +28,7 @@ const screens = {
         title: 'Follow your curiosity',
         description:
             'Ask a question, choose a model, or focus on particular sources.',
-        alt: 'Blobs home with a question composer, model choice, and Sources button.',
+        alt: 'Blobs home with a question composer, model choice, and an All libraries button.',
     },
     library: {
         title: 'Your collections',
@@ -45,7 +45,7 @@ const screens = {
         title: 'Read the source',
         description:
             'Open the passage, origin, date, and license inside Blobs.',
-        alt: 'Source details for Amed, with a passage, attribution, and full-source reading action.',
+        alt: "Source details for 's-Hertogenbosch, with a passage, Wikivoyage attribution, and full-source reading action.",
     },
     models: {
         title: 'Change your model',
@@ -71,8 +71,8 @@ export function ScreenGallery({ names }: { names: (keyof typeof screens)[] }) {
                             <ImageZoom
                                 src={`${basePath}/screens/${name}.webp`}
                                 alt={screen.alt}
-                                width={912}
-                                height={2048}
+                                width={1080}
+                                height={2400}
                                 sizes="(max-width: 480px) 320px, 350px"
                                 caption={screen.title}
                             />

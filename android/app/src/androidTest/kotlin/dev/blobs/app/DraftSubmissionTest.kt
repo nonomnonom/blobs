@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import dev.blobs.app.data.local.PackageEntity
-import dev.blobs.app.ui.ProductViewModel
+import dev.blobs.app.ui.AppViewModel
 import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +26,7 @@ class DraftSubmissionTest {
     @Test
     fun typingWhileSubmissionIsBeingSavedPreservesTheNextDraft() {
         val container = (compose.activity.application as BlobsApplication).container
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded && model.work.value.ready }
         val previous = runBlocking { container.preferences.options.first() }
         val key = "draft-${UUID.randomUUID()}"

@@ -1,0 +1,32 @@
+{
+  "format": 1,
+  "models": {
+    "qwen35-2b-q4km": {
+      "title": "Qwen3.5 2B Q4_K_M · 262k",
+      "description": "Unsloth Q4_K_M GGUF of Qwen3.5 2B. 262k native context; non-thinking chat is used by default.",
+      "language": "English",
+      "publisher": "Qwen · Unsloth GGUF",
+      "minimum_ram_mb": 6144,
+      "recommended_up_to_memory_mb": 32768,
+      "publication": "authorized"
+    },
+    "phi4-mini-q4km": {
+      "title": "Phi-4 Mini Q4_K_M · 128k",
+      "description": "Community GGUF conversion of Microsoft Phi-4 Mini Instruct, quantized Q4_K_M. 128k native context.",
+      "language": "English",
+      "publisher": "Microsoft · LM Studio Community GGUF",
+      "minimum_ram_mb": 8192,
+      "recommended_up_to_memory_mb": 65536,
+      "publication": "authorized"
+    },
+    "lfm2-1b2-q4km": {
+      "title": "LFM2 1.2B Q4_K_M · 128k",
+      "description": "Liquid AI LFM2-1.2B, a hybrid conv/attention model built for on-device use, official Q4_K_M GGUF. 128k native context. Licensed under the LFM Open License 1.0, which caps commercial use below 10M USD annual revenue and requires shipping the license text with the model.",
+      "language": "English",
+      "publisher": "Liquid AI · official GGUF",
+      "minimum_ram_mb": 4096,
+      "recommended_up_to_memory_mb": 32768,
+      "publication": "authorized"
+    }
+  }
+}

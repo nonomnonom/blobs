@@ -1,0 +1,724 @@
+{
+  "format": 1,
+  "updated": "2026-10-24",
+  "phase": "production-validation",
+  "release_admission": {
+    "required_evidence": [
+      "versioned_source_lock",
+      "retained_raw_snapshot_or_revision",
+      "rights_review",
+      "reviewed_normalized_records",
+      "records_sha256",
+      "archive_sha256",
+      "archive_receipt",
+      "retrieval_case_set",
+      "catalog_library_profile"
+    ],
+    "rule": "Only an exact entry in release_ready may be published as a library."
+  },
+  "portfolio_policy": {
+    "library_payload_limit_bytes": 6442450944,
+    "aggregate_installed_assets_limit_bytes": 48000000000,
+    "release_ready_count": 9,
+    "local_candidates_are_not_admissions": true,
+    "keep_history": "Retire unnecessary packs from the active portfolio and catalog; preserve source locks, reviewed records, receipts, and prior editions needed for reproduction.",
+    "product_rule": "Prefer a small number of complementary, broad libraries with measured retrieval over overlapping topical fragments. Never infer freshness, rights, or quality from availability or package size. A second library over the same project universe in the same language is a duplicate and is rejected, whatever its size. All published supply is English knowledge: do not prepare a per-language or per-region edition of one project, because categories grow by subject. The exporter refuses an edition whose archive language is not English. Daily-use English categories only: general reference, practical how-to, repair and fixing, named places, history and primary texts, and travel. Programming and software-documentation lanes are out of scope."
+  },
+  "local_candidate_portfolio": [
+    {
+      "id": "wikivoyage-en",
+      "version": "2026-09.5",
+      "role": "travel-reference-candidate",
+      "source_lock": "corpus/sources/wikivoyage-en-all-nopic-2026-09.json",
+      "records_manifest": "corpus/artifacts/records/wikivoyage-en-all-nopic-2026-09.5/manifest.json",
+      "package": "corpus/work/packages/wikivoyage-en-2026-09.5.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-v3.json",
+      "retrieval_gap_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-gaps-v1.json",
+      "rights_review": "corpus/supply/reviews/wikivoyage-en-2026-09.5-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc",
+      "payload_sha256": "380896b48d45f1d2e586d7d0f793ef57c79f861083867d68058d9b1e92631226",
+      "records_sha256": "9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b",
+      "payload_bytes": 622776320,
+      "archive_bytes": 290811362,
+      "limits": "34,597 English travel guides. On the committed Android retrieval policy the successor package replayed 45 of 48 expected titles, 29 at rank 1, MRR 0.7431; bali-scooter-permit, paris-first-stay, and tokyo-rail-network were missed. The withdrawn 2026-09.4 package produced identical verdicts over the same cases, so the rebuild altered no retrieval behaviour. The package installed and answered offline on an emulator (status COMPLETE/STOP, model_support=sourced); no phone-class acceptance exists. Rights review is decided under delegated authority.",
+      "retrieval_report": "corpus/work/evaluation/results/wikivoyage-en-2026-09.5-retrieval-v4.json"
+    },
+    {
+      "id": "wikipedia-top1m-mini",
+      "version": "2026-04.5",
+      "role": "only-core-reference-candidate",
+      "source_lock": "corpus/sources/wikipedia-en-top1m-mini-2026-04.json",
+      "records_manifest": "corpus/artifacts/records/wikipedia-en-top1m-mini-2026-04.5/manifest.json",
+      "package": "corpus/work/packages/wikipedia-top1m-mini-2026-04.5.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikipedia-top1m-mini-retrieval-v3.json",
+      "rights_review": "corpus/supply/reviews/wikipedia-top1m-mini-2026-04.5-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "a751510e64b1c845016d293e9d9af00bc393f87cdbeb01bec22f3268a5972528",
+      "payload_sha256": "f850f7d0b78196309caefc4b6add5459321fa13f7a363f7a0744de20807a0243",
+      "records_sha256": "2459f398597c3f6dd617badd58833ab99d8dfea41e40d6d8288fd97e383edf3e",
+      "payload_bytes": 4980006912,
+      "archive_bytes": 1787025308,
+      "limits": "997,717 English Wikipedia lead sections. Host retrieval was measured on the withdrawn predecessor package, not on this successor; the successor is that record set minus the bodies rejected for U+FFFD. No target-device acceptance."
+    },
+    {
+      "id": "howto-repair",
+      "version": "2026-10.4",
+      "role": "repair-and-fixing-library",
+      "source_lock": "corpus/sources/howto-repair-en-2026-10.4.json",
+      "records_manifest": "corpus/artifacts/records/howto-repair-2026-10.4/manifest.json",
+      "package": "corpus/work/packages/howto-repair-2026-10.4.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/howto-repair-retrieval-v3.json",
+      "rights_review": "corpus/supply/reviews/howto-repair-en-2026-10.4-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "0b395e6eade09525f87ff61acd6a76e107fb13688be9a0a99c1b730c8e089a5c",
+      "payload_sha256": "06eadac68eb498fac2789e71b56a2c4205a3f5a2776923237307013038e37287",
+      "records_sha256": "091df84e82a5dc332c1caad5be3dc86e51ba73b48e7032215b2f200abb2f9b2c",
+      "payload_bytes": 647237632,
+      "archive_bytes": 256576414,
+      "limits": "78,633 English Stack Exchange repair questions across five site archives. Host retrieval was measured on the withdrawn predecessor package, not on this successor; the successor is that record set minus the bodies rejected for U+FFFD. No target-device acceptance."
+    },
+    {
+      "id": "howto-practical",
+      "version": "2026-10.4",
+      "role": "practical-howto-library",
+      "source_lock": "corpus/sources/howto-practical-en-2026-10.4.json",
+      "records_manifest": "corpus/artifacts/records/howto-practical-2026-10.4/manifest.json",
+      "package": "corpus/work/packages/howto-practical-2026-10.4.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/howto-practical-retrieval-v3.json",
+      "rights_review": "corpus/supply/reviews/howto-practical-en-2026-10.4-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "2c5d4867931a14fd9220990090fb21375e0fdc9255670abaeee78d0c1167d028",
+      "payload_sha256": "9efdf2ee28db79d05ff8c2e933073fbf6c7a9bbbac20b304c8e985af0d68d481",
+      "records_sha256": "23877c5b9107b35f838f25f8903404265a5d42b40534b324fae8eda20e5b223b",
+      "payload_bytes": 1454772224,
+      "archive_bytes": 567686098,
+      "limits": "189,297 English Stack Exchange practical how-to questions across four site archives. Host retrieval was measured on the withdrawn predecessor package, not on this successor; the successor is that record set minus the bodies rejected for U+FFFD. No target-device acceptance."
+    },
+    {
+      "id": "wikisource-en-history-p000",
+      "version": "2026-09.3",
+      "role": "history-and-primary-texts-volume-1",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "records_manifest": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "package": "corpus/work/packages/wikisource-en-history-p000-2026-09.3.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p000-retrieval-v3.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "6cf1ffb2ff7d97cc92fc2a95f5f601e51cb4be2d3f8ff981f53cff3e5267d2bc",
+      "payload_sha256": "4d986fb42ce83a1b535b002dced995cca0b7b5084667070b6cf6de4acfb8f706",
+      "records_sha256": "4669ab78053928f2436d10c9d8c85fddd5b0d9fdefa4376a844f238d621605cf",
+      "payload_bytes": 3127779328,
+      "archive_bytes": 1323097330,
+      "limits": "A deterministic hash partition of the 622,014-record reviewed Wikisource edition; the edition is complete only with all four volumes. 135 records whose bodies carried upstream U+FFFD are excluded. 2,897 records lack a revision id but keep a history URL. Transcriptions are not critical editions; legal and historical texts can be superseded. Host retrieval was measured on the withdrawn 2026-09.2 volumes, not on this successor. No target-device acceptance."
+    },
+    {
+      "id": "wikisource-en-history-p001",
+      "version": "2026-09.3",
+      "role": "history-and-primary-texts-volume-2",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "records_manifest": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "package": "corpus/work/packages/wikisource-en-history-p001-2026-09.3.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p001-retrieval-v3.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "370df30d8f81ef25ed75a04106e84651803a1b28cb7da3be699fe30123c4e035",
+      "payload_sha256": "5d94af5e93ddfa4978b7971d0405ae665a16ecda2501f71c4ac91b548c723394",
+      "records_sha256": "2bcddef364b637f476f7d5d3455c2782b243a7167343f3a27b53fa2de5ddc87a",
+      "payload_bytes": 3123478528,
+      "archive_bytes": 1322088523,
+      "limits": "A deterministic hash partition of the 622,014-record reviewed Wikisource edition; the edition is complete only with all four volumes. 135 records whose bodies carried upstream U+FFFD are excluded. 2,897 records lack a revision id but keep a history URL. Transcriptions are not critical editions; legal and historical texts can be superseded. Host retrieval was measured on the withdrawn 2026-09.2 volumes, not on this successor. No target-device acceptance."
+    },
+    {
+      "id": "wikisource-en-history-p002",
+      "version": "2026-09.3",
+      "role": "history-and-primary-texts-volume-3",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "records_manifest": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "package": "corpus/work/packages/wikisource-en-history-p002-2026-09.3.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p002-retrieval-v3.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "2a9973ca9ef6f1fb3f1e851c88634eb30182bebdf021492c4980139e56fec96c",
+      "payload_sha256": "18a5cbcacb5a30e8ae597f9e6beacacf1341779ccd60b77cf7a0dad9ca6751ef",
+      "records_sha256": "f2be3cf891884cd16f3f901d74d8a0e903ca04a74c492af2c56bb9c3dcf610b1",
+      "payload_bytes": 3150995456,
+      "archive_bytes": 1335443794,
+      "limits": "A deterministic hash partition of the 622,014-record reviewed Wikisource edition; the edition is complete only with all four volumes. 135 records whose bodies carried upstream U+FFFD are excluded. 2,897 records lack a revision id but keep a history URL. Transcriptions are not critical editions; legal and historical texts can be superseded. Host retrieval was measured on the withdrawn 2026-09.2 volumes, not on this successor. No target-device acceptance."
+    },
+    {
+      "id": "wikisource-en-history-p003",
+      "version": "2026-09.3",
+      "role": "history-and-primary-texts-volume-4",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "records_manifest": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "package": "corpus/work/packages/wikisource-en-history-p003-2026-09.3.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p003-retrieval-v3.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "0176bb4a3ad8c5b8104a39c60620d83ea5b40a43013b50fe399a3a0987e60843",
+      "payload_sha256": "289f4e6545651215958d7179a5167544402c68cd5ed8701930a500a099c78368",
+      "records_sha256": "3da5938b9f1e7a3ca662317c99dc61de6809c6ed0b6e49698b76bd3a44a748dc",
+      "payload_bytes": 3126341632,
+      "archive_bytes": 1323294448,
+      "limits": "A deterministic hash partition of the 622,014-record reviewed Wikisource edition; the edition is complete only with all four volumes. 135 records whose bodies carried upstream U+FFFD are excluded. 2,897 records lack a revision id but keep a history URL. Transcriptions are not critical editions; legal and historical texts can be superseded. Host retrieval was measured on the withdrawn 2026-09.2 volumes, not on this successor. No target-device acceptance."
+    },
+    {
+      "id": "nairobi-health-places",
+      "version": "2026-10.1",
+      "role": "openstreetmap-regional-places-shard",
+      "source_lock": "corpus/sources/nairobi-health-places-2026-10.json",
+      "records_manifest": "corpus/artifacts/records/nairobi-health-places-2026-10/manifest.json",
+      "package": "corpus/work/packages/nairobi-health-places-2026-10.1.blobs",
+      "retrieval_cases": "corpus/evaluation/cases/nairobi-health-places-2026-10.1-retrieval-v1.json",
+      "rights_review": "corpus/supply/reviews/nairobi-health-places-2026-10.1-rights-review.md",
+      "state": "release-ready",
+      "package_sha256": "2e99d33710ffb39502da6632ac230a7554e271d4f60dfab4b09258633fb79036",
+      "payload_sha256": "b4dcb40d70e7a8e88bd3df0e004fa804e5a268739ad03ebbb90605adf7c8438a",
+      "records_sha256": "adeee442844debd734b9cc164637d7c7d01ff30158437a58c581168d0ba8c234",
+      "payload_bytes": 503808,
+      "archive_bytes": 86458,
+      "limits": "200 named places in one central-Nairobi box; 3 unnamed elements excluded. Host retrieval found 10 of 10 expected titles at rank 1 (MRR 1.0; median 3.4ms, p95 4.4ms). Tags are a snapshot and can be stale or inconsistent, and no open-now, distance, safety, quality, or recommendation claim is made. No target-device acceptance."
+    }
+  ],
+  "supply_families": [
+    {
+      "id": "wikipedia-global-reference",
+      "priority": 1,
+      "tier": "core-reference",
+      "planned_package_prefix": "wikipedia-en-reference",
+      "status": "acquisition-planned",
+      "languages": [
+        "English"
+      ],
+      "scope": "Broad encyclopaedic reference coverage from a full, pinned English source edition. Images and third-party media are out of scope until separately reviewed. The released library may use deterministic complementary shards so each Android archive remains within its package limit.",
+      "source_lock": "corpus/sources/wikipedia-en-all-nopic-2026-06.json",
+      "partition_plan": {
+        "status": "not-created",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Create the plan only from a complete reviewed source manifest. Publish only complementary volumes whose library payload does not exceed 6 GiB (6,442,450,944 bytes)."
+      },
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikipedia/wikipedia_en_all_nopic_2026-06.zim",
+        "https://dumps.wikimedia.org/",
+        "https://library.kiwix.org/"
+      ],
+      "selection_requirements": [
+        "Use one immutable edition with a verified byte digest.",
+        "Preserve canonical article URLs and contributor-attribution paths.",
+        "Publish an explicit exclusion report for redirects, non-articles, malformed pages, and removed media.",
+        "If output requires more than one archive, define deterministic complementary shard boundaries and retrieval cases for cross-shard queries before packaging.",
+        "Admitting this family retires wikipedia-top1m-mini from the installable portfolio; it replaces the one English reference identity rather than adding a second overlapping English Wikipedia library."
+      ],
+      "known_limits": "A snapshot cannot provide live events or guarantee correctness of individual articles."
+    },
+    {
+      "id": "wikivoyage-global-travel",
+      "priority": 2,
+      "tier": "travel-and-regional",
+      "planned_library_id": "wikivoyage-en",
+      "status": "release-ready",
+      "languages": [
+        "English"
+      ],
+      "scope": "A complete pinned English travel-guide edition, retaining destination and contributor history paths.",
+      "candidate_origins": [
+        "https://library.kiwix.org/"
+      ],
+      "selection_requirements": [
+        "Resolve the existing record-count discrepancy before adopting any successor.",
+        "Do not publish a city or country subset when the same full library already supplies those records.",
+        "State that schedules, fares, safety guidance, entry rules, and opening hours may have changed."
+      ],
+      "known_limits": "No map tiles, routing, live transport, or current availability claims."
+    },
+    {
+      "id": "wikidata-structured-reference",
+      "priority": 3,
+      "tier": "structured-local-facts",
+      "planned_library_id": "wikidata-reference",
+      "status": "rights-review",
+      "languages": [
+        "Multilingual labels",
+        "English descriptions where available"
+      ],
+      "scope": "Reviewed, bounded entity facts selected from an immutable Wikidata source edition; not a live knowledge graph.",
+      "candidate_origins": [
+        "https://www.wikidata.org/wiki/Wikidata:Data_access"
+      ],
+      "selection_requirements": [
+        "Define permitted properties and data transformations before acquisition.",
+        "Retain entity identifiers and revision/snapshot identity for every record.",
+        "Exclude claims whose provenance, ranking, or temporal qualifiers cannot be rendered in the reader."
+      ],
+      "known_limits": "It cannot answer unmodeled facts, resolve every entity ambiguity, or supply current values."
+    },
+    {
+      "id": "openstreetmap-regional-places",
+      "priority": 4,
+      "tier": "structured-local-facts",
+      "planned_library_id": "osm-regional-places",
+      "status": "release-ready",
+      "languages": [
+        "Source-dependent"
+      ],
+      "scope": "Region-sharded named place snapshots with an exact query, raw snapshot digest, object URLs, source timestamp, and visible OpenStreetMap attribution. The measured first shard carries 200 named clinic, hospital, and pharmacy places from a 0.06 x 0.06 degree box around the Nairobi central business area.",
+      "candidate_origins": [
+        "https://www.openstreetmap.org/copyright"
+      ],
+      "selection_requirements": [
+        "Release only a reviewed geographic shard; do not claim worldwide coverage from one query.",
+        "Preserve ODbL obligations and any database-derivative requirements before distribution.",
+        "Do not infer open-now state, distance, route, quality, safety, popularity, or recommendations.",
+        "Release each shard only after the extractor writes a complete reviewed manifest that names the lock digest, records the exclusion report, and carries a body digest per record."
+      ],
+      "known_limits": "Place tags and geometry are snapshots and may be incomplete, stale, or locally inconsistent. One shard covers one reviewed box; it is not a worldwide directory, and it makes no open-now, distance, route, quality, safety, popularity, or recommendation claim.",
+      "source_lock": "corpus/sources/nairobi-health-places-2026-10.json",
+      "archive_locks": [
+        "corpus/sources/nairobi-health-places-2026-10.json"
+      ]
+    },
+    {
+      "id": "primary-public-guidance",
+      "priority": 5,
+      "tier": "primary-domain",
+      "planned_library_id": "us-preparedness-guidance",
+      "status": "review-planned",
+      "languages": [
+        "English"
+      ],
+      "scope": "Separately reviewed official public guidance, grouped by jurisdiction and subject instead of mixing incompatible national advice into one global authority. The first edition consolidates 23 U.S. federal pages from the seven retired single-topic packs: 23 records, 211 passages, a 372,736-byte payload.",
+      "source_lock": "corpus/sources/us-preparedness-guidance-2026-10.2.json",
+      "candidate_origins": [
+        "https://www.nps.gov/",
+        "https://home.nps.gov/",
+        "https://www.ready.gov/"
+      ],
+      "selection_requirements": [
+        "Approve rights and reuse conditions for every publisher and page.",
+        "Keep jurisdiction, publication date, and local-authority limitations visible on every record.",
+        "Split a source into a new immutable edition when its advice or rights change.",
+        "Refresh a moved page set with `python -m blobs_corpus.web_pages refresh`, which keeps the reviewed selector and identity and records the changed sources in refreshed_from lineage."
+      ],
+      "known_limits": "Official guidance can still be jurisdiction-specific, time-sensitive, and unsuitable for emergency or professional advice without current local confirmation."
+    },
+    {
+      "id": "practical-howto-daily-life",
+      "priority": 8,
+      "tier": "everyday-practice",
+      "planned_library_id": "howto-practical",
+      "status": "release-ready",
+      "languages": [
+        "English"
+      ],
+      "scope": "Everyday practical questions answered by English Stack Exchange sites outside programming: cooking, personal finance, travel, and home improvement. The admitted 2026-10.4 edition merges four pinned 2026-10 Kiwix archives into one reviewed library of 189,294 question pages, installed as 1,454,772,224 payload bytes from 567,686,098 archive bytes; 23,917 unanswered questions were excluded.",
+      "source_lock": "corpus/sources/howto-practical-en-2026-10.4.json",
+      "archive_locks": [
+        "corpus/sources/stackexchange-cooking-en-all-2026-10.json",
+        "corpus/sources/stackexchange-money-en-all-2026-10.json",
+        "corpus/sources/stackexchange-travel-en-all-2026-10.json",
+        "corpus/sources/stackexchange-diy-en-all-2026-10.json"
+      ],
+      "partition_plan": {
+        "status": "not-required",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Recompute the projected payload from the reviewed merged manifest before packaging; split into complementary volumes if it exceeds 6,442,450,944 bytes."
+      },
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/stack_exchange/"
+      ],
+      "selection_requirements": [
+        "Exclude programming and software-development sites: the owner scoped supply to daily-use knowledge, and code documentation is a separate profession-specific product decision.",
+        "Implement the reviewed multi-archive edition before packaging, so one library spans these archives with per-archive lineage instead of shipping a pack per site.",
+        "Keep post-level attribution: every record must retain its canonical question URL and the CC BY-SA 4.0 licence string.",
+        "Measure canonical URL and body-hash overlap against the repair lane; the same site cannot be published in both libraries."
+      ],
+      "known_limits": "Community answers are not professional, legal, medical, or safety advice, and a snapshot cannot show whether an accepted answer still applies to a newer product, law, or price."
+    },
+    {
+      "id": "repair-and-fixing",
+      "priority": 9,
+      "tier": "everyday-practice",
+      "planned_library_id": "howto-repair",
+      "status": "release-ready",
+      "archive_locks": [
+        "corpus/sources/stackexchange-mechanics-en-all-2026-10.json",
+        "corpus/sources/stackexchange-bicycles-en-all-2026-10.json",
+        "corpus/sources/stackexchange-aviation-en-all-2026-10.json",
+        "corpus/sources/stackexchange-3dprinting-en-all-2026-10.json",
+        "corpus/sources/stackexchange-woodworking-en-all-2026-10.json"
+      ],
+      "languages": [
+        "English"
+      ],
+      "scope": "Fix-it knowledge from five English Stack Exchange repair communities: vehicle mechanics, bicycles, aviation, 3D printing, and woodworking. The admitted 2026-10.4 edition keeps question pages with their answers and excludes images: 78,626 questions, 647,237,632 installed payload bytes, 256,576,414 archive bytes, records_sha256 091df84e. Review excluded member profiles, navigation listings, and tag directories; 9,749 unanswered questions are excluded. The robotics archive is not part of the lane because its question set is mostly programming documentation.",
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/stack_exchange/"
+      ],
+      "selection_requirements": [
+        "Reject the iFixit archive as a supply source unless the owner accepts a non-commercial licence: iFixit content is CC BY-NC-SA 3.0, and its guides depend on photographs that the text-only pipeline does not carry.",
+        "Keep only question pages (questions/<id>/<slug>); Stack Exchange ZIMs also carry member profiles, tag directories, and paged listings that are not answers.",
+        "Prefer repair communities whose questions are about physical equipment; a site dominated by software tooling belongs to no Blobs lane.",
+        "Decide whether electronics joins this lane as two volumes or is deferred, because 4.00 GB of archive projects past the 6 GiB installed-payload limit.",
+        "Do not overlap with the practical how-to lane; the exporter refuses repeated canonical URLs."
+      ],
+      "known_limits": "Repair instructions carry safety risk, model coverage is partial, and a text extraction loses the photographs and disassembly diagrams that make a guide usable.",
+      "source_lock": "corpus/sources/howto-repair-en-2026-10.4.json"
+    },
+    {
+      "id": "history-and-primary-texts",
+      "priority": 10,
+      "tier": "reference",
+      "planned_library_id": "wikisource-en-history-p000",
+      "status": "release-ready",
+      "languages": [
+        "English"
+      ],
+      "scope": "Historical and primary texts in English: treaties, speeches, constitutions, court opinions, letters, and published works, so an answer can quote the document instead of summarising an article about it. The measured 2026-09.3 edition contains 622,014 curated documents (6,362,968,404 text characters; 6,425,153,383 UTF-8 bytes) from the pinned 3,905,588,830-byte nopic archive, published as four deterministic hash partitions of about 155,000 documents and 3.13 GB installed payload each.",
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-08.zim"
+      ],
+      "partition_plan": {
+        "status": "created",
+        "plan": "corpus/supply/plans/wikisource-en-all-nopic-2026-09.3.json",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "rule": "Four complementary volumes were measured from the complete reviewed manifest; the largest installed payload is 3,154,440,192 bytes, below 6,442,450,944, and the four together install 12,543,102,976 bytes. Each volume carries its own 10-case retrieval set; a cross-volume case set is retained at corpus/evaluation/cases/wikisource-en-history-cross-volume-v1.json."
+      },
+      "selection_requirements": [
+        "Keep only primary-text pages: author metadata pages, version indexes, disambiguation pages and subject portals are not supply (66,788 records excluded by policy v3).",
+        "Keep sub-page structure as the document identity, because a work spans many pages.",
+        "State that a transcription is not a critical edition and can carry source errors.",
+        "Preserve each record's canonical work URL and Wikisource revision-history path; 2,897 records have no revision id but all have a history URL.",
+        "Publish the edition only as the complete four-volume set; a single volume is a hash partition, not a topical selection."
+      ],
+      "known_limits": "Transcriptions preserve historical spelling and errors, provide no commentary or sourcing apparatus, and cannot answer questions about works that were never transcribed. 135 records whose bodies carried upstream U+FFFD are excluded. Legal, constitutional and treaty texts can be amended or superseded and are not professional advice.",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "archive_locks": [
+        "corpus/sources/wikisource-en-all-nopic-2026-09.json"
+      ]
+    },
+    {
+      "id": "wikipedia-top1m-fulltext",
+      "priority": 11,
+      "tier": "core-reference",
+      "planned_library_id": "wikipedia-en-top1m",
+      "status": "cancelled-by-owner",
+      "languages": [
+        "English"
+      ],
+      "scope": "Full article text of the most-read English Wikipedia selection: the Kiwix 2026-04 no-picture archive is 17,134,155,148 bytes and is planned as five deterministic complementary volumes inside a 32,731,709,440-byte total payload cap.",
+      "candidate_origins": [
+        "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_nopic_2026-04.zim"
+      ],
+      "candidate_identity": {
+        "filename": "wikipedia_en_top1m_nopic_2026-04.zim",
+        "bytes": 17134155148,
+        "sha256": "f0ad000be866fa576448a861e42cbaecd87df0d376c1f97f36e12aef58082662",
+        "checksum_source": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top1m_nopic_2026-04.zim.meta4",
+        "verification": "Publisher-declared size and digest were checked on 2026-10-24; no local download or source lock exists, and the owner cancelled the lane, so none will be created."
+      },
+      "partition_plan": {
+        "status": "cancelled",
+        "algorithm": "sha256-document-id-modulo-v1",
+        "volumes": 5,
+        "payload_cap_bytes": 32731709440,
+        "capacity_plan": "corpus/supply/plans/capacity-plan-2026-10-24.md",
+        "rule": "Cancelled by the owner on 2026-10-24. The capacity numbers are retained only as the record of why the lane was withdrawn; no acquisition or build may start."
+      },
+      "selection_requirements": [
+        "This family is a successor to wikipedia-top1m-mini: admitting volume one retires the lead-section candidate in the same change instead of installing beside it.",
+        "Publish an explicit exclusion report and cross-volume retrieval cases before any volume enters release_ready.",
+        "Record measured per-volume install and retrieval cost on a phone, because a five-volume reference changes aggregate storage near the 48 GB safeguard.",
+        "Use the measured capacity plan at corpus/supply/plans/capacity-plan-2026-10-24.md; the 2026-05 origin named earlier does not exist and must not be acquired."
+      ],
+      "known_limits": "Five volumes are five downloads and five installs on a phone; a snapshot cannot provide live events or guarantee article correctness. The admitted mini already replays only 7 of 12 expected titles, so full text alone is not evidence that the reference lane is dependable.",
+      "decision": {
+        "date": "2026-10-24",
+        "decided_by": "Product owner (nonomnonom) in chat",
+        "reason": "The 17,134,155,148-byte archive and its five-volume payload are too large for this product. The lane is withdrawn; do not acquire the archive or resume capacity planning unless the owner explicitly reopens it."
+      }
+    }
+  ],
+  "legacy_dispositions": [
+    {
+      "library_id": "wikivoyage-pt",
+      "status": "retired",
+      "reason": "Prepared and packaged as a distinct-language travel work (4,097 guides, 54,059,008-byte payload, zero shared canonical URLs or body hashes with the English candidate), then withdrawn on 2026-10-24 by the owner decision that Blobs publishes English knowledge only. This was a portfolio-direction change, not a quality or rights failure."
+    },
+    {
+      "library_id": "wikipedia-id-mini",
+      "status": "retired",
+      "reason": "Curated to 777,575 Indonesian articles, then stopped by the duplicate gate, which correctly reported that this edition and the retained English edition shared one body hash: a MediaWiki MathML support page the old curation policy published as an article. Withdrawn on 2026-10-24 with the English-only decision. The defect it exposed is fixed in the curation policy and drives the English rebuild."
+    },
+    {
+      "library_id": "wikipedia-starter",
+      "status": "retired",
+      "reason": "A 100-record English Wikipedia subset duplicates the broad reference lane and adds no separate install purpose. Preserve the old edition only for historical reproduction."
+    },
+    {
+      "library_id": "wikipedia-en-top-50k",
+      "status": "retired",
+      "reason": "Do not distribute as a separate overlapping Wikipedia library beside the selected Top 1M reference candidate: 49,970 of 49,999 canonical article URLs (99.9%) also exist in the Top 1M edition, so the two cover the same English universe. The 990 MB reviewed records edition was removed on 2026-10-24 because its package and receipt had already been deleted and the records alone reproduced no published result. The source lock, the retired disposition, and the pinned 7-of-12 smoke report stay as the explanation. One English reference install identity only."
+    },
+    {
+      "library_id": "wikivoyage-en",
+      "status": "development-only",
+      "reason": "Current local inventories disagree on record count; a successor must resolve the discrepancy."
+    },
+    {
+      "library_id": "nps-outdoor-safety",
+      "status": "retired",
+      "reason": "Do not ship as a fragmented five-record pack; any future U.S. preparedness library must consolidate and review its source set before creating a new edition."
+    },
+    {
+      "library_id": "ready-emergency-preparedness",
+      "status": "retired",
+      "reason": "Do not ship as a fragmented four-record pack; any future U.S. preparedness library must consolidate and review its source set before creating a new edition."
+    },
+    {
+      "library_id": "camping-safety",
+      "status": "retired",
+      "reason": "Overlaps the NPS backcountry/outdoor subset and is too small as a separate install. Preserve its source evidence for a possible reviewed consolidation."
+    },
+    {
+      "library_id": "backcountry-basics",
+      "status": "retired",
+      "reason": "Catalog and source-lock editions disagree."
+    },
+    {
+      "library_id": "weather-safety",
+      "status": "retired",
+      "reason": "Source and record evidence exist, but no archive proof has been admitted."
+    },
+    {
+      "library_id": "earthquake-tsunami-safety",
+      "status": "retired",
+      "reason": "Source and record evidence exist, but no archive proof has been admitted."
+    },
+    {
+      "library_id": "emergency-food",
+      "status": "retired",
+      "reason": "One narrow record is not a standalone library. Keep only as source evidence if a reviewed preparedness collection is built."
+    },
+    {
+      "library_id": "practical-living",
+      "status": "retired",
+      "reason": "Four loosely related topics do not form a coherent reference pack or distinct install purpose."
+    },
+    {
+      "library_id": "bali-travel",
+      "status": "retired",
+      "reason": "The 30-record subset duplicates the broader Wikivoyage library and is removed from the bundled catalog."
+    },
+    {
+      "library_id": "howto-practical",
+      "status": "superseded",
+      "reason": "Retired 2026-10-24: predecessor edition 2026-10.3 had 3 bodies carrying U+FFFD, making the whole archive uninstallable. Successor 2026-10.4 excludes those 3 posts (Turkey dinners parrot-railway bill-tracing) into counted rejected stream. Records moved to corpus/retired/records/howto-practical-2026-10.3."
+    },
+    {
+      "library_id": "howto-repair",
+      "status": "superseded",
+      "reason": "Retired 2026-10-24: predecessor edition 2026-10.3 had 7 bodies carrying U+FFFD, making the whole archive uninstallable. Successor 2026-10.4 excludes those 7 posts (OctoPrint/Lulzbot serial sensor OctoPi/FlashForge K airport prefix head-wind vintage helicopter 250kts-penalty) into counted rejected stream. Records moved to corpus/retired/records/howto-repair-2026-10.3."
+    },
+    {
+      "library_id": "wikipedia-top1m-mini",
+      "status": "superseded",
+      "reason": "Retired 2026-10-24: predecessor edition 2026-04.4 had 3 bodies carrying U+FFFD (including Mojibake and Specials Unicode block articles whose subject matter includes the replacement character - legitimate conflict between runtime contract and subject matter), making the whole archive uninstallable. Successor 2026-04.5 excludes those 3 articles into counted rejected stream. Records moved to corpus/retired/records/wikipedia-en-top1m-mini-2026-04.4."
+    },
+    {
+      "library_id": "wikisource-en-history-p000..p003",
+      "status": "superseded",
+      "reason": "Retired 2026-10-24: predecessor edition 2026-09.2 had 135 bodies carrying U+FFFD across all four volumes, making every volume uninstallable. Successor 2026-09.3 excludes those 135 records (encyclopaedia entries official reports index/plate pages) into counted rejected stream. Root cause was documents.body exemption removed from validate_document. Records moved to corpus/retired/records/wikisource-en-all-nopic-2026-09.2."
+    }
+  ],
+  "release_ready": [
+    {
+      "id": "wikivoyage-en",
+      "version": "2026-09.5",
+      "source_lock": "corpus/sources/wikivoyage-en-all-nopic-2026-09.json",
+      "rights_review": "corpus/supply/reviews/wikivoyage-en-2026-09.5-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/wikivoyage-en-all-nopic-2026-09.5/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/wikivoyage-en-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/wikivoyage-en-2026-09.5.receipt.json",
+      "records_sha256": "9d6c9b94c172b1b8d86ba2b93d876097fdebe74f96c88212ec67770ecf1d7c1b",
+      "archive_sha256": "f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc",
+      "library_profile": {
+        "record_count": 34597,
+        "scope": "English Wikivoyage guide text worldwide from the 2026-09-13 Kiwix snapshot; images are excluded.",
+        "source_snapshot_date": "2026-09-13",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digest and each guide's revision-history URL because most guides carry no per-revision id.",
+        "limitations": "Opening hours, fares, visas, entry rules, local safety advice, and other travel details can change; verify time-sensitive details before travel. Two guides whose bodies carried upstream U+FFFD are excluded, so a question only they answered returns no match. Attribution rests on the pinned archive digest and each guide's revision-history URL because most guides carry no per-revision id. No target-device acceptance; the install-and-answer run is an emulator observation."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "howto-repair",
+      "version": "2026-10.4",
+      "source_lock": "corpus/sources/howto-repair-en-2026-10.4.json",
+      "rights_review": "corpus/supply/reviews/howto-repair-en-2026-10.4-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/howto-repair-2026-10.4/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/howto-repair-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/howto-repair-2026-10.4.receipt.json",
+      "records_sha256": "091df84e82a5dc332c1caad5be3dc86e51ba73b48e7032215b2f200abb2f9b2c",
+      "archive_sha256": "0b395e6eade09525f87ff61acd6a76e107fb13688be9a0a99c1b730c8e089a5c",
+      "library_profile": {
+        "record_count": 78626,
+        "scope": "English Stack Exchange repair and fixing questions from pinned 2026-10 Kiwix archives: motor vehicles, bicycles, aviation, 3D printing, and woodworking. Answers are included; images are excluded.",
+        "source_snapshot_date": "2026-10-20",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digests and each post's revision-history URL.",
+        "limitations": "Community answers are not guaranteed correct or current; safety-critical vehicle, aviation, and electrical repair must be checked against current manufacturer documentation. Unanswered questions and posts under the extraction thresholds are excluded."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "howto-practical",
+      "version": "2026-10.4",
+      "source_lock": "corpus/sources/howto-practical-en-2026-10.4.json",
+      "rights_review": "corpus/supply/reviews/howto-practical-en-2026-10.4-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/howto-practical-2026-10.4/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/howto-practical-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/howto-practical-2026-10.4.receipt.json",
+      "records_sha256": "23877c5b9107b35f838f25f8903404265a5d42b40534b324fae8eda20e5b223b",
+      "archive_sha256": "2c5d4867931a14fd9220990090fb21375e0fdc9255670abaeee78d0c1167d028",
+      "library_profile": {
+        "record_count": 189294,
+        "scope": "English Stack Exchange practical how-to questions from pinned 2026-10 Kiwix archives: cooking, personal finance, travel, and home improvement. Answers are included; images are excluded.",
+        "source_snapshot_date": "2026-10-19",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digests and each post's revision-history URL.",
+        "limitations": "Community answers are not guaranteed correct or current. Financial, legal, travel-entry, and home-safety details depend on jurisdiction and change over time; verify against current official sources. Unanswered questions and posts under the extraction thresholds are excluded."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "wikipedia-top1m-mini",
+      "version": "2026-04.5",
+      "source_lock": "corpus/sources/wikipedia-en-top1m-mini-2026-04.json",
+      "rights_review": "corpus/supply/reviews/wikipedia-top1m-mini-2026-04.5-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/wikipedia-en-top1m-mini-2026-04.5/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/wikipedia-top1m-mini-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/wikipedia-top1m-mini-2026-04.5.receipt.json",
+      "records_sha256": "2459f398597c3f6dd617badd58833ab99d8dfea41e40d6d8288fd97e383edf3e",
+      "archive_sha256": "a751510e64b1c845016d293e9d9af00bc393f87cdbeb01bec22f3268a5972528",
+      "library_profile": {
+        "record_count": 997714,
+        "scope": "English Wikipedia lead sections of the top one million articles from the pinned 2026-04 Kiwix snapshot; images are excluded. Introductions only, not full article bodies.",
+        "source_snapshot_date": "2026-04-28",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. Attribution relies on the pinned archive digest and article revision histories because per-article revision ids are not retained.",
+        "limitations": "Introductions only; facts can be outdated or simplified. Per-article revision ids were not extracted, so exact revisions cannot be pinned (sampled verification only). Duplicate bodies and non-article pages were excluded."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "wikisource-en-history-p000",
+      "version": "2026-09.3",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p000-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/wikisource-en-history-p000-2026-09.3.receipt.json",
+      "records_sha256": "4669ab78053928f2436d10c9d8c85fddd5b0d9fdefa4376a844f238d621605cf",
+      "archive_sha256": "6cf1ffb2ff7d97cc92fc2a95f5f601e51cb4be2d3f8ff981f53cff3e5267d2bc",
+      "partition_plan": "corpus/supply/plans/wikisource-en-all-nopic-2026-09.3.json",
+      "partition_id": "p000",
+      "library_profile": {
+        "record_count": 155527,
+        "scope": "Volume 1 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "wikisource-en-history-p001",
+      "version": "2026-09.3",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p001-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/wikisource-en-history-p001-2026-09.3.receipt.json",
+      "records_sha256": "2bcddef364b637f476f7d5d3455c2782b243a7167343f3a27b53fa2de5ddc87a",
+      "archive_sha256": "370df30d8f81ef25ed75a04106e84651803a1b28cb7da3be699fe30123c4e035",
+      "partition_plan": "corpus/supply/plans/wikisource-en-all-nopic-2026-09.3.json",
+      "partition_id": "p001",
+      "library_profile": {
+        "record_count": 155739,
+        "scope": "Volume 2 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "wikisource-en-history-p002",
+      "version": "2026-09.3",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p002-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/wikisource-en-history-p002-2026-09.3.receipt.json",
+      "records_sha256": "f2be3cf891884cd16f3f901d74d8a0e903ca04a74c492af2c56bb9c3dcf610b1",
+      "archive_sha256": "2a9973ca9ef6f1fb3f1e851c88634eb30182bebdf021492c4980139e56fec96c",
+      "partition_plan": "corpus/supply/plans/wikisource-en-all-nopic-2026-09.3.json",
+      "partition_id": "p002",
+      "library_profile": {
+        "record_count": 155378,
+        "scope": "Volume 3 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "wikisource-en-history-p003",
+      "version": "2026-09.3",
+      "source_lock": "corpus/sources/wikisource-en-all-nopic-2026-09.json",
+      "rights_review": "corpus/supply/reviews/wikisource-en-2026-09.3-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/wikisource-en-all-nopic-2026-09.3/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/wikisource-en-history-p003-retrieval-v3.json",
+      "archive_receipt": "corpus/supply/receipts/wikisource-en-history-p003-2026-09.3.receipt.json",
+      "records_sha256": "3da5938b9f1e7a3ca662317c99dc61de6809c6ed0b6e49698b76bd3a44a748dc",
+      "archive_sha256": "0176bb4a3ad8c5b8104a39c60620d83ea5b40a43013b50fe399a3a0987e60843",
+      "partition_plan": "corpus/supply/plans/wikisource-en-all-nopic-2026-09.3.json",
+      "partition_id": "p003",
+      "library_profile": {
+        "record_count": 155370,
+        "scope": "Volume 4 of 4 of the complete reviewed English Wikisource transcription edition from the 2026-09-08 Kiwix nopic snapshot: treaties, constitutions, court opinions, speeches, letters and published works, split deterministically by document-id hash. Images are excluded. This is one hash partition; the reviewed edition is complete only with all four volumes.",
+        "source_snapshot_date": "2026-09-08",
+        "update_policy": "New reviewed source editions are published as new immutable catalog entries; installed editions are never replaced automatically. The four volumes share one pinned source lock and one reviewed records manifest. Attribution relies on each record's Wikisource revision-history URL and the pinned archive digest.",
+        "limitations": "Transcriptions are not critical editions: they can preserve source errors, historical spelling and omissions. 135 records whose bodies carried upstream U+FFFD were excluded, so a question only they answered returns no match rather than corrupted text. 2,897 of 622,014 records have no MediaWiki revision id but keep a history URL. Court opinions, constitutions, treaties and statutes may be amended, repealed or superseded and are not legal, medical or professional advice; verify the current official source. The split is deterministic, not topical. No target-device acceptance."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    },
+    {
+      "id": "nairobi-health-places",
+      "version": "2026-10.1",
+      "source_lock": "corpus/sources/nairobi-health-places-2026-10.json",
+      "rights_review": "corpus/supply/reviews/nairobi-health-places-2026-10.1-rights-review.md",
+      "reviewed_records": "corpus/artifacts/records/nairobi-health-places-2026-10/manifest.json",
+      "retrieval_cases": "corpus/evaluation/cases/nairobi-health-places-2026-10.1-retrieval-v1.json",
+      "archive_receipt": "corpus/supply/receipts/nairobi-health-places-2026-10.1.receipt.json",
+      "records_sha256": "adeee442844debd734b9cc164637d7c7d01ff30158437a58c581168d0ba8c234",
+      "archive_sha256": "2e99d33710ffb39502da6632ac230a7554e271d4f60dfab4b09258633fb79036",
+      "library_profile": {
+        "record_count": 200,
+        "scope": "Named clinic, hospital, and pharmacy places inside a 0.06 x 0.06 degree box around the Nairobi central business area, from a reviewed OpenStreetMap Overpass snapshot taken on 2026-10-24.",
+        "source_snapshot_date": "2026-10-24",
+        "update_policy": "New reviewed snapshots are published as new immutable catalog entries; installed editions are never replaced automatically. Each edition pins the exact Overpass query, response digest, and OpenStreetMap base time.",
+        "limitations": "Place tags and coordinates are a 2026-10-24 snapshot and can be stale, incomplete, or locally inconsistent; verify hours and services on site. Coverage is only central Nairobi and does not imply open-now state, distance, safety, quality, popularity, or recommendation."
+      },
+      "decided": "2026-10-24",
+      "decided_by": "Qoder agent under delegated review authority for the product owner (nonomnonom)"
+    }
+  ]
+}

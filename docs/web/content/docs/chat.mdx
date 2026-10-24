@@ -5,9 +5,22 @@ description: Ask, follow a citation, and keep exploring.
 
 ## Ask a question
 
-Write a question in the chat box and send it. Blobs searches enabled local libraries, then streams a reply using your selected model. You can keep reading as the answer appears.
+Write a question in the chat box and send it. The current source sends one
+bounded library search and one on-device completion for each question. A library
+is optional, and a missing match does not block a reply. Android device
+acceptance has not yet verified this flow.
 
-For a focused question, choose specific sources before sending. An enabled library can supply material for answers; a disabled one stays saved but is left out of retrieval.
+Use **Answer libraries** to focus a conversation on particular enabled libraries. Disabled libraries stay saved but are left out of retrieval. Without a supporting passage, the reply comes from the model's knowledge and is not library-verified.
+
+While a turn runs, Blobs reports the local step in progress: preparing the
+on-device model, searching libraries, reviewing passages, or writing the
+answer. These labels describe app activity, not a model reasoning trace.
+
+When a search returns no passages, Blobs keeps a usable model answer and marks
+it as unverified against library sources. Choose libraries or search a wider
+scope to try again. After a reply, the collapsed source list shows cited
+passages, or related passages when the answer has no citations. Duplicate
+passages are grouped by their local identity.
 
 ## Open a citation
 
@@ -19,7 +32,10 @@ A citation is a way to inspect evidence, not a promise that every generated sent
 
 The source example is [Amed on Wikivoyage](https://en.wikivoyage.org/wiki/Amed), by Wikivoyage contributors under CC BY-SA 4.0.
 
-If a question falls outside your saved material, add a relevant library or document, or narrow your question. See [your library](/docs/library).
+If you want citations for a question, add a relevant library or document. The
+current source is designed to use installed assets and cannot browse the web or
+check current events. Android device acceptance for offline use is still
+pending. See [your library](/docs/library).
 
 ## Stop a reply
 
@@ -27,10 +43,14 @@ Tap **Stop** while Blobs is replying. You don’t need to wait for a long respon
 
 ## Return to a conversation
 
-Use the button at the top left to open full-screen conversation history. Select a conversation to continue it, or start a new chat for a different topic. Conversations and drafts stay on your phone.
+Use the button at the top left to open full-screen conversation history. Select a
+conversation to continue it, or start a new chat for a different topic. The
+current source stores conversations and drafts in app-private storage.
 
 Use the conversation’s available actions to rename, export, or delete it. Check an exported file before sharing: exports can contain your messages and source material.
 
 ## Read without leaving
 
-Library search, citation passages, and installed articles open in the app. You can read this saved material offline. An original-source web address is attribution; opening that website separately requires a connection and uses your browser.
+Library search, citation passages, and installed articles open from saved files
+in the app. An original-source web address is attribution; opening that website
+separately requires a connection and uses your browser.

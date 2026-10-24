@@ -24,9 +24,9 @@ import dev.blobs.app.data.WorkState
 import dev.blobs.app.data.preferences.ThemeMode
 import dev.blobs.app.feature.library.ImportScreen
 import dev.blobs.app.ui.AppHeader
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.LocalLessMotion
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.theme.BlobsTheme
 import java.io.File
 import org.junit.Rule
@@ -40,7 +40,7 @@ class TransferLayoutCaptureTest {
     @Test
     fun captureTransferLayouts() {
         val args = InstrumentationRegistry.getArguments()
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded }
         val asset = model.catalog.models.first()
         val total = asset.downloadBytes
@@ -101,7 +101,7 @@ class TransferLayoutCaptureTest {
                                     color = MaterialTheme.colorScheme.background
                                 ) {
                                     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-                                        AppHeader(state, false, model) { }
+                                        AppHeader(state, false, model, work.importComplete) { }
                                         ImportScreen(state, work, model)
                                     }
                                 }

@@ -2,26 +2,21 @@ package dev.blobs.app.feature.settings
 
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,86 +28,89 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import dev.blobs.app.R
-import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.ScrollPage
+import dev.blobs.app.ui.SectionLabel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+private data class InfoSection(@StringRes val title: Int, val details: List<Int>)
+
+private val privacySections = listOf(
+    InfoSection(R.string.privacy_local, listOf(R.string.privacy_local_detail)),
+    InfoSection(
+        R.string.privacy_connects,
+        listOf(R.string.privacy_connects_detail, R.string.privacy_offline_detail)
+    ),
+    InfoSection(R.string.privacy_copy, listOf(R.string.privacy_copy_detail))
+)
+
+private val helpSections = listOf(
+    InfoSection(R.string.help_start, listOf(R.string.help_start_detail)),
+    InfoSection(R.string.help_ask, listOf(R.string.help_ask_detail)),
+    InfoSection(R.string.help_sources, listOf(R.string.help_sources_detail)),
+    InfoSection(R.string.help_library, listOf(R.string.help_library_detail)),
+    InfoSection(R.string.help_stops, listOf(R.string.help_stops_detail)),
+    InfoSection(R.string.help_model, listOf(R.string.help_model_detail)),
+    InfoSection(R.string.help_keep, listOf(R.string.help_keep_detail))
+)
+
 @Composable
 fun PrivacyScreen() {
-    val paragraphs = stringResource(R.string.privacy_body).split("\n\n")
-    val titles = listOf(R.string.privacy_local, R.string.privacy_connects, R.string.privacy_copy)
+    var open by rememberSaveable { mutableStateOf<Int?>(null) }
     ScrollPage {
         Heading(R.string.privacy_heading)
-        paragraphs.forEachIndexed { index, paragraph ->
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                titles.getOrNull(index)?.let {
-                    Text(stringResource(it), style = MaterialTheme.typography.titleMedium)
-                }
-                Text(paragraph, style = MaterialTheme.typography.bodyLarge)
-            }
+        Text(
+            stringResource(R.string.privacy_state),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        privacySections.forEachIndexed { index, section ->
+            HorizontalDivider()
+            InfoDisclosure(section, open == index) { open = if (open == index) null else index }
         }
     }
 }
 
 @Composable
-fun HelpScreen(reducedMotion: Boolean) {
-    val sections = stringResource(R.string.help_body).split("\n\n")
-    var expanded by rememberSaveable { mutableStateOf<Int?>(0) }
+fun HelpScreen() {
+    var open by rememberSaveable { mutableStateOf<Int?>(null) }
     ScrollPage {
         Heading(R.string.help_heading)
-        Body(R.string.help_description)
-        sections.forEachIndexed { index, section ->
-            val open = index == expanded
-            val status = stringResource(if (open) R.string.expanded else R.string.collapsed)
-            val rotation by animateFloatAsState(
-                if (open) 180f else 0f,
-                tween(if (reducedMotion) 0 else 180),
-                label = "help-section"
+        Text(
+            stringResource(R.string.help_description),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        helpSections.forEachIndexed { index, section ->
+            HorizontalDivider()
+            InfoDisclosure(section, open == index) { open = if (open == index) null else index }
+        }
+    }
+}
+
+@Composable
+private fun InfoDisclosure(section: InfoSection, open: Boolean, onToggle: () -> Unit) {
+    DetailDisclosure(
+        open = open,
+        onOpenChange = { onToggle() },
+        summary = {
+            Text(
+                stringResource(section.title),
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium
             )
-            Column(Modifier.animateContentSize(tween(if (reducedMotion) 0 else 180))) {
-                Surface(
-                    onClick = {
-                        expanded = if (open) null else index
-                    },
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.semantics { stateDescription = status }
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            section.substringBefore('\n'),
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Icon(
-                            painterResource(R.drawable.ic_expand_more),
-                            null,
-                            Modifier.rotate(rotation)
-                        )
-                    }
-                }
-                if (open) {
-                    Text(
-                        section.substringAfter('\n', ""),
-                        Modifier.padding(bottom = 20.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                HorizontalDivider()
-            }
+        }
+    ) {
+        section.details.forEach { detail ->
+            Text(stringResource(detail), style = MaterialTheme.typography.bodyLarge)
         }
     }
 }
@@ -140,6 +138,7 @@ fun AboutScreen() {
         }
     }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    var open by rememberSaveable { mutableStateOf<String?>(null) }
     ScrollPage {
         Column(
             Modifier.fillMaxWidth(),
@@ -149,7 +148,7 @@ fun AboutScreen() {
             Image(
                 painterResource(R.drawable.welcome_world),
                 null,
-                Modifier.size(160.dp, 130.dp).clip(RoundedCornerShape(30.dp)),
+                Modifier.size(160.dp, 130.dp).clip(MaterialTheme.shapes.extraLarge),
                 contentScale = ContentScale.Crop
             )
             Text(
@@ -163,27 +162,58 @@ fun AboutScreen() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Body(R.string.about_description)
-        Text(stringResource(R.string.made_possible_by), style = MaterialTheme.typography.titleLarge)
-        listOf(
-            R.string.credit_interface,
-            R.string.credit_inference,
-            R.string.credit_storage,
-            R.string.credit_type
-        ).forEach { credit ->
-            Text(
-                stringResource(credit),
-                Modifier.padding(vertical = 10.dp),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            HorizontalDivider()
-        }
-        Heading(R.string.licenses)
-        files.forEach { file ->
-            TextButton(onClick = { selected = file }, modifier = Modifier.fillMaxWidth()) {
-                Text(file.removeSuffix(".txt").replace('-', ' '), Modifier.fillMaxWidth())
+        DetailDisclosure(
+            open = open == "how",
+            onOpenChange = { open = if (open == "how") null else "how" },
+            summary = {
+                Text(
+                    stringResource(R.string.about_how),
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
-            HorizontalDivider()
+        ) {
+            Text(
+                stringResource(R.string.about_description_detail),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+        DetailDisclosure(
+            open = open == "credits",
+            onOpenChange = { open = if (open == "credits") null else "credits" },
+            summary = {
+                Text(
+                    stringResource(R.string.made_possible_by),
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        ) {
+            listOf(
+                R.string.credit_interface_detail,
+                R.string.credit_inference_detail,
+                R.string.credit_storage_detail,
+                R.string.credit_type_detail
+            ).forEach { credit ->
+                Text(stringResource(credit), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        SectionLabel(R.string.licenses)
+        Column {
+            files.forEach { file ->
+                TextButton(
+                    onClick = { selected = file },
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        file.removeSuffix(".txt").replace('-', ' '),
+                        Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                HorizontalDivider()
+            }
         }
     }
     selected?.let { file ->

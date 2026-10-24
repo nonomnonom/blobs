@@ -80,6 +80,13 @@ internal val BlobsTypography =
             fontSize = 14.sp,
             lineHeight = 20.sp
         ),
+        labelSmall = TextStyle(
+            fontFamily = DmSans,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.4.sp
+        ),
         labelLarge = TextStyle(
             fontFamily = DmSans,
             fontWeight = FontWeight.SemiBold,

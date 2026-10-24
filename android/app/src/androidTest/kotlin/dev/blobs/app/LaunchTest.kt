@@ -22,8 +22,8 @@ import dev.blobs.app.data.packages.DownloadFormat
 import dev.blobs.app.data.packages.PackageCatalog
 import dev.blobs.app.data.packages.PackageRole
 import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.ProductViewModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -55,6 +55,7 @@ class LaunchTest {
             ) {
                 compose.onNodeWithContentDescription(history).assertIsDisplayed()
             } else {
+                // The page title is the app bar, which has no scroll parent to reach.
                 compose.onNodeWithText(
                     compose.activity.getString(R.string.setup_header)
                 ).assertIsDisplayed()
@@ -88,7 +89,7 @@ class LaunchTest {
             app.container.preferences.setThemeMode(ThemeMode.SYSTEM)
             app.container.preferences.welcome()
         }
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded }
         val previous = model.conversationId.value
         compose.runOnUiThread { model.newConversation() }
@@ -144,28 +145,18 @@ class LaunchTest {
     @Test
     fun firstRunCatalogIsPinnedAndSetupOffersInAppDownloads() {
         val catalog = PackageCatalog(compose.activity)
-        assertTrue(
-            catalog.models.first().url.matches(
-                Regex(
-                    "https://huggingface\\.co/datasets/nonomnonom/blobs-catalog/resolve/" +
-                        "[a-f0-9]{40}/packages/qwen3-integration\\.blobs"
-                )
-            )
-        )
-        assertEquals(3, catalog.models.size)
-        assertEquals("gemma4-e2b-q4", catalog.models[1].manifest.id)
-        assertEquals(DownloadFormat.GGUF, catalog.models[1].format)
-        assertTrue(
-            catalog.models[1].url.contains("/resolve/675cff42a74c774d6cb76f76d8eacb49b48c9b93/")
-        )
-        assertEquals("gemma4-e4b-q4", catalog.models[2].manifest.id)
+        assertEquals(2, catalog.models.size)
+        assertEquals("qwen35-2b-q4km", catalog.models[0].manifest.id)
+        assertEquals(DownloadFormat.GGUF, catalog.models[0].format)
+        assertTrue(catalog.models[0].url.contains("/unsloth/Qwen3.5-2B-GGUF/resolve/"))
+        assertEquals("phi4-mini-q4km", catalog.models[1].manifest.id)
         assertEquals("model", catalog.models.first().manifest.kind)
         assertEquals("library", catalog.starterLibrary.manifest.kind)
-        assertEquals("wikipedia-starter", catalog.starterLibrary.manifest.id)
+        assertEquals("wikivoyage-en", catalog.starterLibrary.manifest.id)
         assertEquals(
             setOf(
                 "wikipedia-top1m-mini",
-                "wikivoyage-en",
+                "wikipedia-starter",
                 "nps-outdoor-safety",
                 "ready-emergency-preparedness",
                 "camping-safety",
@@ -173,8 +164,7 @@ class LaunchTest {
                 "weather-safety",
                 "earthquake-tsunami-safety",
                 "emergency-food",
-                "practical-living",
-                "bali-travel"
+                "practical-living"
             ),
             catalog.additionalLibraries.map { it.manifest.id }.toSet()
         )
@@ -204,16 +194,16 @@ class LaunchTest {
             catalog.recommendedModel(3L * 1024 * 1024 * 1024, 2L * 1024 * 1024 * 1024)
         )
         assertEquals(
-            catalog.models[1],
+            catalog.models[0],
             catalog.recommendedModel(8L * 1024 * 1024 * 1024, 8L * 1024 * 1024 * 1024)
         )
         assertEquals(
-            catalog.models[2],
+            catalog.models[0],
             catalog.recommendedModel(16L * 1024 * 1024 * 1024, 12L * 1024 * 1024 * 1024)
         )
         assertTrue(catalog.starterLibrary.downloadSha256.matches(Regex("[a-f0-9]{64}")))
 
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         compose.waitUntil(10_000) { model.state.value.loaded }
         compose.runOnUiThread { model.navigate(Page.WELCOME) }
         compose.onAllNodesWithText(compose.activity.getString(R.string.import_library_title))
@@ -237,7 +227,7 @@ class LaunchTest {
             compose.onNodeWithText(recommended.manifest.title).assertIsDisplayed()
             compose.onNodeWithText(
                 compose.activity.getString(
-                    if (profile.recommendedModelFitsStorage) {
+                    if (profile.recommendedModelFitsDevice) {
                         R.string.recommended
                     } else {
                         R.string.model_smallest_option
@@ -258,7 +248,7 @@ class LaunchTest {
                                 ).coerceAtLeast(0)
                         )
                     )
-                ).assertIsDisplayed()
+                ).performScrollTo().assertIsDisplayed()
                 compose.onNodeWithText(
                     compose.activity.getString(R.string.download_selected_model)
                 ).assertIsNotEnabled()
@@ -267,8 +257,6 @@ class LaunchTest {
                 compose.activity.getString(R.string.compare_models)
             ).performScrollTo().performClick()
             compose.onAllNodesWithText(catalog.models[1].manifest.title)[0]
-                .performScrollTo().assertIsDisplayed()
-            compose.onNodeWithText(catalog.models[2].manifest.title)
                 .performScrollTo().assertIsDisplayed()
             compose.onNodeWithText(compose.activity.getString(R.string.download_selected_model))
                 .assertIsDisplayed()
@@ -291,7 +279,7 @@ class LaunchTest {
     @ManualCheck
     @Test
     fun starterLibraryFromHubAppearsInYourLibrary() {
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         val catalog = model.catalog
         runBlocking {
             (compose.activity.application as BlobsApplication).container.preferences.welcome()
@@ -329,7 +317,7 @@ class LaunchTest {
     @ManualCheck
     @Test
     fun emergencyPreparednessLibraryFromHubAppearsInYourLibrary() {
-        val model = ViewModelProvider(compose.activity)[ProductViewModel::class.java]
+        val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         val catalog = model.catalog
         runBlocking {
             (compose.activity.application as BlobsApplication).container.preferences.welcome()

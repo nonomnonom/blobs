@@ -1,0 +1,123 @@
+{
+ "format": 1,
+ "library": {
+  "id": "wikisource-en-history-p003",
+  "version": "2026-09.1",
+  "records_sha256": "4d8009cf480039c792c0c571c06b4537c605b256c0df21187224cf487014c3e8",
+  "payload_sha256": "0c1f10e225c463b9481308dfae466003878bdf649dc11499c618d8a29ba3ab01"
+ },
+ "id": "wikisource-en-history-p003-retrieval-v1",
+ "notes": "Held-out research questions answered by documents assigned to Wikisource volume p003. Questions paraphrase the source; they do not copy its title.",
+ "cases": [
+  {
+   "id": "gettysburg-bancroft",
+   "question": "Which draft of the address says the nation was conceived in liberty and dedicated to equality?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-50259a13a500f796e28533f5c00a41b5"
+   ],
+   "expected_document_titles": [
+    "Gettysburg Address (Bancroft draft)"
+   ]
+  },
+  {
+   "id": "treaty-paris-1783-borders",
+   "question": "What boundaries and fishing rights did Britain recognise for the new United States in 1783?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-507695b7c6142352fd17ae44df0812c8"
+   ],
+   "expected_document_titles": [
+    "Treaty of Paris (1783)"
+   ]
+  },
+  {
+   "id": "mcculloch-bank",
+   "question": "Could Congress charter a national bank, and could a state tax it, according to the 1819 ruling?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-28a62898523449e48206350fd82d5e40"
+   ],
+   "expected_document_titles": [
+    "McCulloch v. Maryland"
+   ]
+  },
+  {
+   "id": "plessy-separate",
+   "question": "What did the 1896 ruling say about separate railway carriages for white and Black passengers?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-db22661a146e48ad162d73271e80df49"
+   ],
+   "expected_document_titles": [
+    "Plessy v. Ferguson"
+   ]
+  },
+  {
+   "id": "ghent-status-quo",
+   "question": "What did the 1814 peace treaty restore between Britain and America at the end of the war?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-b753cff41954b321d77ab1ec8e5111b6"
+   ],
+   "expected_document_titles": [
+    "Treaty of Ghent"
+   ]
+  },
+  {
+   "id": "beowulf-grendel",
+   "question": "How does the Geatish hero fight the monster that has been attacking the Danish hall?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-a2ccb6c7089f2a361a742552c8196359"
+   ],
+   "expected_document_titles": [
+    "Beowulf (Harrison and Sharp)"
+   ]
+  },
+  {
+   "id": "geneva-1949-wounded",
+   "question": "What protections does the 1949 convention give to wounded and sick members of armed forces in the field?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-a9bf5c188e41e5ae254c685b4a35fb62"
+   ],
+   "expected_document_titles": [
+    "First Geneva Convention (1949)"
+   ]
+  },
+  {
+   "id": "art-of-war-deception",
+   "question": "What does the ancient Chinese treatise say about deception and knowing the enemy?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-8bb32b81d6593e74c1be7400f49c16c0"
+   ],
+   "expected_document_titles": [
+    "The Art of War (Sun)"
+   ]
+  },
+  {
+   "id": "croatia-constitution",
+   "question": "How does the Croatian constitution define sovereignty and the rights of national minorities?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-eff1508ec522d6ab58b19b9acac945c6"
+   ],
+   "expected_document_titles": [
+    "Constitution of the Republic of Croatia"
+   ]
+  },
+  {
+   "id": "aeneid-conington",
+   "question": "How does Virgil's epic begin with the hero's flight from Troy and his journey to Italy?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-d391eb10180387230849b0b2bafd1e0e"
+   ],
+   "expected_document_titles": [
+    "The Aeneid of Virgil (Conington, 1917)"
+   ]
+  }
+ ]
+}

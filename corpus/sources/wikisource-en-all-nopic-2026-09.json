@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "id": "wikisource-en-all-nopic",
+  "edition": "2026-09",
+  "filename": "wikisource_en_all_nopic_2026-09.zim",
+  "url": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim",
+  "bytes": 3905588830,
+  "sha256": "6180cd199142862fb0d276861ccc5b48a40f7bae427b8427b2b6a573796e2f98",
+  "checksum_source": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim.meta4",
+  "metadata_source": "https://download.kiwix.org/zim/wikisource/wikisource_en_all_nopic_2026-09.zim.meta4",
+  "verified_date": "2026-10-24",
+  "allowed_hosts": ["download.kiwix.org", "lb.download.kiwix.org", "mirror.download.kiwix.org", "mirrors.dotsrc.org", "ftp.nluug.nl", "wi.mirror.driftle.ss"],
+  "wiki_host": "en.wikisource.org",
+  "publisher": "Wikisource contributors",
+  "collection": "Wikisource · English historical and primary texts",
+  "license": "Per work: public domain, or CC BY-SA 4.0 for contributions, translations and annotations; each document keeps its own licence statement and revision history. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://en.wikisource.org/wiki/Wikisource:Copyright_policy",
+  "scope": "English Wikisource transcriptions of treaties, speeches, constitutions, court opinions, letters, and published works, without images; Kiwix snapshot 2026-09. A transcription is not a critical edition and can preserve source errors."
+}

@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "id": "wikivoyage-en-retrieval-v1",
+  "library": {
+    "id": "wikivoyage-en",
+    "version": "2026-09.4",
+    "payload_sha256": "38a6141fb3039465d20a71094ff36180f043037e7230ce3daac79d34b21ce651"
+  },
+  "cases": [
+    {
+      "id": "jakarta-visit",
+      "question": "What should I know before visiting Jakarta?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-a9f6307bd85ba2b280c3bc50b5bb51a2"],
+      "expected_document_titles": ["Jakarta"]
+    },
+    {
+      "id": "japan-rail",
+      "question": "How can I travel around Japan by rail?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-25a3d0b53450fa2de75166c8260479f8"],
+      "expected_document_titles": ["Rail travel in Japan"]
+    },
+    {
+      "id": "beach-packing",
+      "question": "What should I pack for a beach trip?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-2c44725d1418aa9bd4f4a98764b59035"],
+      "expected_document_titles": ["Packing for beach travel"]
+    },
+    {
+      "id": "china-visas",
+      "question": "How do visa requirements for China work?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-7a22af746e77fbbde5b37cd4c1e5cd2d"],
+      "expected_document_titles": ["Visa requirements for China"]
+    },
+    {
+      "id": "travel-basics",
+      "question": "What are the basics of travel?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-83e2796550fb291ce529d8c50499ff11"],
+      "expected_document_titles": ["Travel basics"]
+    },
+    {
+      "id": "bangkok-airport",
+      "question": "How do I get from the airport to Bangkok city?",
+      "expectation": "hit",
+      "expected_document_ids": ["wiki-2762e6724004afeebc34996e226877ef"],
+      "expected_document_titles": ["Bangkok"]
+    }
+  ]
+}

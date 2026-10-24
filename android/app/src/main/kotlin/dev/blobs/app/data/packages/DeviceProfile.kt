@@ -9,7 +9,8 @@ data class DeviceProfile(
     val freeStorageBytes: Long,
     val lowMemoryDevice: Boolean,
     val recommendedModel: DownloadablePackage,
-    val recommendedModelFitsStorage: Boolean
+    val recommendedModelFitsStorage: Boolean,
+    val recommendedModelFitsDevice: Boolean
 ) {
     companion object {
         fun inspect(context: Context, catalog: PackageCatalog): DeviceProfile {
@@ -23,15 +24,16 @@ data class DeviceProfile(
             } else {
                 catalog.recommendedModel(memory.totalMem, freeStorage)
             }
+            val fitsStorage = catalog.packageFitsStorage(recommendedModel, freeStorage)
+            val totalMemory = memory.totalMem.coerceAtLeast(1)
             return DeviceProfile(
-                totalMemoryBytes = memory.totalMem.coerceAtLeast(1),
+                totalMemoryBytes = totalMemory,
                 freeStorageBytes = freeStorage,
                 lowMemoryDevice = lowRamDevice,
                 recommendedModel = recommendedModel,
-                recommendedModelFitsStorage = catalog.packageFitsStorage(
-                    recommendedModel,
-                    freeStorage
-                )
+                recommendedModelFitsStorage = fitsStorage,
+                recommendedModelFitsDevice = fitsStorage &&
+                    catalog.packageFitsMemory(recommendedModel, totalMemory)
             )
         }
     }

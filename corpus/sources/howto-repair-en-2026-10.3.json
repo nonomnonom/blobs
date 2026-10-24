@@ -1,0 +1,69 @@
+{
+  "format": 1,
+  "id": "howto-repair",
+  "edition": "2026-10.3",
+  "lane": "howto-repair",
+  "collection": "Stack Exchange repair and fixing",
+  "publisher": "Stack Exchange network contributors",
+  "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post's revision history for attribution. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "verified_date": "2026-10-24",
+  "scope": "Vehicle, bicycle, aviation, printer, and woodworking repair questions from pinned English Stack Exchange site archives.",
+  "archives": [
+    {
+      "id": "stackexchange-mechanics-en-all",
+      "edition": "2026-10",
+      "filename": "mechanics.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 341672133,
+      "sha256": "3b8790dcde480f466d0d55fae23941cdb1f06ff464a77168f27110f98d8eb923",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/mechanics.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-mechanics-en-all-2026-10.json",
+      "lock_sha256": "e6e17cf47f150721661ac76391cd0fd288e7a7140a1709ac5f647b485e44e9b5",
+      "manifest_sha256": "c9c47d709ac696c185d965821ca1920159fe4e605b66b16db18d8071c3ba2b35"
+    },
+    {
+      "id": "stackexchange-bicycles-en-all",
+      "edition": "2026-10",
+      "filename": "bicycles.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 499254876,
+      "sha256": "151c3966c4db62245e6b070d1e61a68501d205655bc3f9a56fe74ab59f0bd1d8",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/bicycles.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-bicycles-en-all-2026-10.json",
+      "lock_sha256": "dfc0faeee257ab6c84732cb815ee9d7a46f8e72e9982de643ffee0fa8bcce7a9",
+      "manifest_sha256": "04ee9a1aa76c75ffe80ad5cf68ab86b305fe576c1fbb08cb93e0b3b465d9b743"
+    },
+    {
+      "id": "stackexchange-aviation-en-all",
+      "edition": "2026-10",
+      "filename": "aviation.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 510507366,
+      "sha256": "31e9c2c9bb1955a64158d2fbe4db20f1bb3b5ece5ccc30ff7a9c46e8bc6f64f3",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/aviation.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-aviation-en-all-2026-10.json",
+      "lock_sha256": "ad5a9968b731ca5576b518166c9306370a5f49a2ccbc1822cf982337bc0cbf30",
+      "manifest_sha256": "26d366c3391679e13b7776ea76ae2417269077651d7c4b6cbccf9e055d844371"
+    },
+    {
+      "id": "stackexchange-3dprinting-en-all",
+      "edition": "2026-10",
+      "filename": "3dprinting.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 120337699,
+      "sha256": "97be8fa0145f9940dc40da7faea17f99aa8f88fc9d0b7d675249aa83c9ded378",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/3dprinting.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-3dprinting-en-all-2026-10.json",
+      "lock_sha256": "ec4ce0ee6c8127faee9f486e8c6efe76378adfad8df68949f9e13f12b5b21e98",
+      "manifest_sha256": "53989bffbdf70850edec7c16737b68e1b20742083a08a2386073de75e0916afa"
+    },
+    {
+      "id": "stackexchange-woodworking-en-all",
+      "edition": "2026-10",
+      "filename": "woodworking.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 106657287,
+      "sha256": "2ba925d1028f9442c153569701868b5b7abc6dbb2551c620680a92be9272b062",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/woodworking.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-woodworking-en-all-2026-10.json",
+      "lock_sha256": "132ff95c152564ed283c0da1d807c7356b04a072de1a269816abf66048d83b27",
+      "manifest_sha256": "509164df85fca2e54687254ca469cd0a2afe619c9911628dbab9784863a15c84"
+    }
+  ]
+}

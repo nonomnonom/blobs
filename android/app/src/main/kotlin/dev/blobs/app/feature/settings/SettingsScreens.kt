@@ -15,6 +15,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,19 +49,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.blobs.app.R
 import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.ui.AppUiState
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Body
+import dev.blobs.app.ui.DetailDisclosure
 import dev.blobs.app.ui.Heading
 import dev.blobs.app.ui.MenuRow
 import dev.blobs.app.ui.Page
 import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductState
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.ScrollPage
 import dev.blobs.app.ui.SectionLabel
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 
 @Composable
-fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
+fun SettingsScreen(model: AppViewModel, themeMode: ThemeMode) {
     val packages by model.packages.collectAsStateWithLifecycle()
     val conversations by model.conversations.collectAsStateWithLifecycle()
     val count = conversations.count { it.title.isNotBlank() || it.draft.isNotBlank() }
@@ -115,15 +119,14 @@ fun SettingsScreen(model: ProductViewModel, themeMode: ThemeMode) {
 }
 
 @Composable
-fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewModel) {
+fun AppearanceScreen(state: AppUiState, theme: ThemeMode, model: AppViewModel) {
     ScrollPage {
-        Body(R.string.appearance_body)
         val themes = listOf(
             ThemeMode.LIGHT to R.string.theme_light,
             ThemeMode.DARK to R.string.theme_dark,
             ThemeMode.SYSTEM to R.string.theme_system
         )
-        SectionLabel(R.string.appearance)
+        SectionLabel(R.string.theme)
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(
@@ -136,25 +139,7 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
                 }
             }
         }
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow
-        ) {
-            Column(
-                Modifier.fillMaxWidth().padding(22.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    painterResource(R.drawable.ic_auto_stories),
-                    null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    stringResource(R.string.reading_preview),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        }
+        SectionLabel(R.string.motion)
         Row(
             Modifier.fillMaxWidth().heightIn(min = 56.dp).toggleable(
                 value = state.options.reducedMotion,
@@ -167,7 +152,6 @@ fun AppearanceScreen(state: ProductState, theme: ThemeMode, model: ProductViewMo
             Text(stringResource(R.string.less_motion), Modifier.weight(1f))
             Switch(checked = state.options.reducedMotion, onCheckedChange = null)
         }
-        Body(R.string.less_motion_body)
     }
 }
 
@@ -185,13 +169,13 @@ private fun ThemeOption(
             role = Role.RadioButton,
             onClick = choose
         ),
-        shape = RoundedCornerShape(15.dp),
+        shape = MaterialTheme.shapes.medium,
         border = BorderStroke(
             if (selected) 2.dp else 1.dp,
             if (selected) {
                 MaterialTheme.colorScheme.primary
             } else {
-                MaterialTheme.colorScheme.outlineVariant
+                MaterialTheme.colorScheme.outline
             }
         ),
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
@@ -275,20 +259,20 @@ private fun ThemeOption(
 }
 
 @Composable
-fun DataScreen(busy: Boolean, model: ProductViewModel, export: () -> Unit) {
+fun DataScreen(busy: Boolean, model: AppViewModel, export: () -> Unit) {
     var deleting by remember { mutableStateOf(false) }
+    var exportOpen by rememberSaveable { mutableStateOf(false) }
     ScrollPage {
         Heading(R.string.data_heading)
-        Body(R.string.export_body)
         val conversations by model.conversations.collectAsStateWithLifecycle()
         val count = conversations.count { it.title.isNotBlank() || it.draft.isNotBlank() }
         Surface(
-            shape = RoundedCornerShape(24.dp),
+            shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             contentColor = MaterialTheme.colorScheme.onSurface
         ) {
             Column(
-                Modifier.fillMaxWidth().padding(24.dp),
+                Modifier.fillMaxWidth().padding(BlobsDimens.lg),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -305,6 +289,23 @@ fun DataScreen(busy: Boolean, model: ProductViewModel, export: () -> Unit) {
             }
         }
         if (busy) Body(R.string.busy_help)
+        DetailDisclosure(
+            open = exportOpen,
+            onOpenChange = { exportOpen = it },
+            summary = {
+                Text(
+                    stringResource(R.string.export_holds),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        ) {
+            Text(
+                stringResource(R.string.export_detail),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         PrimaryAction(R.string.export, count > 0, onClick = export)
         HorizontalDivider(Modifier.padding(top = 20.dp))
         Text(
@@ -333,10 +334,18 @@ fun DataScreen(busy: Boolean, model: ProductViewModel, export: () -> Unit) {
             title = { Text(stringResource(R.string.delete_all)) },
             text = { Text(stringResource(R.string.delete_all_body)) },
             confirmButton = {
-                TextButton(onClick = {
-                    model.delete(null)
-                    deleting = false
-                }, enabled = !busy) { Text(stringResource(R.string.delete)) }
+                TextButton(
+                    onClick = {
+                        model.delete(null)
+                        deleting = false
+                    },
+                    enabled = !busy,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
             },
             dismissButton = {
                 TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.cancel)) }

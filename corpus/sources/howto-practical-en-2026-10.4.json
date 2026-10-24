@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "id": "howto-practical",
+  "edition": "2026-10.4",
+  "lane": "howto-practical",
+  "collection": "Stack Exchange practical how-to",
+  "publisher": "Stack Exchange network contributors",
+  "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post's revision history for attribution. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "verified_date": "2026-10-24",
+  "scope": "Cooking, personal finance, travel, and home-improvement questions from pinned English Stack Exchange site archives.",
+  "archives": [
+    {
+      "id": "stackexchange-cooking-en-all",
+      "edition": "2026-10",
+      "filename": "cooking.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 238098128,
+      "sha256": "b5dc3a79b681be1afea32dd65e837c604e7dd7072f51622414a7a1d61fc52541",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/cooking.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-cooking-en-all-2026-10.json",
+      "lock_sha256": "537658efe935af5e57af47a34735311283249271969b68ac053431c3fd284387",
+      "manifest_sha256": "7272ee5c8adb38f4f622f37cc8789b269a18a1cebd5f722ec4b7d5805a188827"
+    },
+    {
+      "id": "stackexchange-money-en-all",
+      "edition": "2026-10",
+      "filename": "money.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 254194306,
+      "sha256": "6a4a4b96b7856e46f3c1d368ca44b5e8036497b7fab64efc2ed3e90a81e80b94",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/money.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-money-en-all-2026-10.json",
+      "lock_sha256": "9b26d520f9622fffb32b79e5d8844d111174784dc559d62d2e7b3bef59f78076",
+      "manifest_sha256": "c5f382ad1f8c82b93c412acad632911b6b97df8fff09b9455b09d68bbd3b257f"
+    },
+    {
+      "id": "stackexchange-travel-en-all",
+      "edition": "2026-10",
+      "filename": "travel.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 462009141,
+      "sha256": "55c364aac731f67070eba59bc68033a32e57ba04280348a466843999174e8697",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/travel.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-travel-en-all-2026-10.json",
+      "lock_sha256": "dccc1c115284e7da5e145983067432b33591eba5492fabd20b3751efdda7cea1",
+      "manifest_sha256": "681ccd94cc64e46e96a0ce148151a7757e63e71e5816e7567c7f0eec45cd565f"
+    },
+    {
+      "id": "stackexchange-diy-en-all",
+      "edition": "2026-10",
+      "filename": "diy.stackexchange.com_en_all_2026-10.zim",
+      "bytes": 2086024326,
+      "sha256": "df795a094698282164ddee422814f88bf84841a2413c89ac23401efd71f22731",
+      "checksum_source": "https://download.kiwix.org/zim/stack_exchange/diy.stackexchange.com_en_all_2026-10.zim.sha256",
+      "lock": "stackexchange-diy-en-all-2026-10.json",
+      "lock_sha256": "f470b330a5c044f92f73f1a57ec6ded65eff9b1cedc99b3900a6ed06c958af91",
+      "manifest_sha256": "fb374d2d36a59b4303aa6d2f3e65f068ed992a77f89c5844ec460f4a4817d227"
+    }
+  ]
+}

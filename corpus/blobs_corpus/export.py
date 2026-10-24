@@ -7,12 +7,13 @@ import shutil
 import tempfile
 
 from .extract import verified_shards
+from .portfolio import assert_distinct
 from .records import documents
 
 MAX_FILE_BYTES = 512 * 1024**2
 
 
-def export_records(source: Path, output: Path):
+def export_records(source: Path, output: Path, portfolio_root: Path | None = None):
     manifest = verified_shards(source)
     if not manifest["complete"] or not manifest.get("curation"):
         raise ValueError("Export a complete, reviewed corpus edition")
@@ -22,8 +23,17 @@ def export_records(source: Path, output: Path):
     if any(item["bytes"] > MAX_FILE_BYTES for item in files):
         raise ValueError("A normalized shard exceeds the 512 MiB artifact budget")
     # Old editions may have valid hashes but predate the current record contract.
-    for _ in documents(source):
-        pass
+    # A reviewed corpus proves its text with the current review policy; a legacy
+    # edition carries no such proof, so a body-level replacement character could
+    # be silent decode damage rather than an intentional literal.
+    legacy_policy = manifest["curation"].get("policy") == "legacy"
+    for record in documents(source):
+        if legacy_policy and "\ufffd" in record["body"]:
+            raise ValueError(
+                "Record body contains a Unicode replacement character in a legacy "
+                "corpus; re-review the extraction before export"
+            )
+    assert_distinct(source, portfolio_root)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".export-", dir=output.parent) as temporary:
         staged = Path(temporary) / "edition"

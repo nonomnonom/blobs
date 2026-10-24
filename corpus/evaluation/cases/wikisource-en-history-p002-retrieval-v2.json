@@ -1,0 +1,123 @@
+{
+ "format": 1,
+ "library": {
+  "id": "wikisource-en-history-p002",
+  "version": "2026-09.2",
+  "records_sha256": "e23c4cfb4db1517be8582aafc7b4cebbcec07c2d1237ad09f0a5e1ba43abf83c",
+  "payload_sha256": "0f7c97b2e0023ae524c6007945085ceae5f5440439ce22facba230cfcc3ef202"
+ },
+ "id": "wikisource-en-history-p002-retrieval-v2",
+ "notes": "Questions name the work, as a researcher asking about a known text would. The v1 set paraphrased each work without its title and measured title-free lexical recall; it remains as a documented retrieval gap, not an admission gate.",
+ "cases": [
+  {
+   "id": "rough-draught-declaration",
+   "question": "What wording did Jefferson use in the \"Original Rough Draught\" of the Declaration of Independence about human events and consent of the governed?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-7dac82b0f1bdad0beab121be71f24348"
+   ],
+   "expected_document_titles": [
+    "\"Original Rough Draught\" of the Declaration of Independence"
+   ]
+  },
+  {
+   "id": "lincoln-second-inaugural",
+   "question": "What did Lincoln say about the cause of the war and charity toward both sides in his Second Inaugural Address?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-3e5c30b07222cd301a288c9d5f550549"
+   ],
+   "expected_document_titles": [
+    "Abraham Lincoln's Second Inaugural Address"
+   ]
+  },
+  {
+   "id": "articles-confederation",
+   "question": "How did the Articles of Confederation and Perpetual Union name the first American union and describe the powers of Congress?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-10e186acced907d03b35b605f2c3d5b7"
+   ],
+   "expected_document_titles": [
+    "Articles of Confederation and Perpetual Union"
+   ]
+  },
+  {
+   "id": "areopagitica-printing",
+   "question": "Why did Milton argue in Areopagitica that licensing books before publication was harmful to learning?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-7f4d7204807aad77c29bd9b0dbad4581"
+   ],
+   "expected_document_titles": [
+    "Areopagitica (1644)"
+   ]
+  },
+  {
+   "id": "udhr-articles",
+   "question": "What does the Universal Declaration of Human Rights list for fair trial, education, and freedom of expression?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-0a7ff821f123297b4dad1efdd9a6f4b6"
+   ],
+   "expected_document_titles": [
+    "Universal Declaration of Human Rights"
+   ]
+  },
+  {
+   "id": "moby-dick-opening",
+   "question": "How does the narrator of Moby-Dick introduce himself and his urge to go to sea at the start of the novel?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-0d497c83eed94be7d33790824d9d0230"
+   ],
+   "expected_document_titles": [
+    "Moby-Dick (1851) US edition"
+   ]
+  },
+  {
+   "id": "odyssey-homecoming",
+   "question": "In Butler's translation of The Odyssey, what troubles does the hero face on his voyage home after the Trojan War?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-e39e0c46d89951ab212b4dac66c52617"
+   ],
+   "expected_document_titles": [
+    "The Odyssey (Butler)"
+   ]
+  },
+  {
+   "id": "origin-species-introduction",
+   "question": "What does On the Origin of Species argue about how species change through natural selection?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-87075f21e8f622c722240a3e998cea37"
+   ],
+   "expected_document_titles": [
+    "On the Origin of Species (1859)"
+   ]
+  },
+  {
+   "id": "versailles-terms",
+   "question": "What military and territorial restrictions did the Treaty of Versailles impose on Germany in 1919?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-731fdba124a86ac1d98673ccbfb1ccae"
+   ],
+   "expected_document_titles": [
+    "Treaty of Versailles"
+   ]
+  },
+  {
+   "id": "indonesia-constitution",
+   "question": "What does the 1945 Constitution of the Republic of Indonesia say about the state's basis and the president's authority?",
+   "expectation": "hit",
+   "expected_document_ids": [
+    "wiki-afc746e4f7f380fefd2c8f02e96d211b"
+   ],
+   "expected_document_titles": [
+    "Constitution of the Republic of Indonesia"
+   ]
+  }
+ ]
+}

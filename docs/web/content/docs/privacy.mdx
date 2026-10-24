@@ -1,13 +1,19 @@
 ---
-title: Privacy and offline use
-description: What stays on your phone, and when Blobs connects.
+title: Privacy and local-use design
+description: What the current source keeps on your phone, and when it connects.
 ---
 
 ## On your phone
 
-Model inference, library search, citations, reading, conversations, drafts, and settings use local files and app-private storage. There is no hosted inference service or account to sign into.
+The current source routes model inference, library search, citations, reading,
+conversations, drafts, and settings through local files and app-private storage.
+It contains no hosted inference service or account flow. Device acceptance is
+still pending.
 
-After a model and the starter library are installed, these features work without an internet connection. GrapheneOS is supported without Google Play Services.
+The current source routes these features through installed files after a model
+and starter library are present. Android device acceptance, including GrapheneOS
+and blocked-network checks, is still pending. The app does not declare a Google
+Play Services dependency.
 
 ## When the app connects
 

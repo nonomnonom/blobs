@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -36,27 +35,31 @@ import dev.blobs.app.R
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.data.packages.CatalogSnapshot
 import dev.blobs.app.data.packages.DownloadablePackage
+import dev.blobs.app.data.packages.LibraryProfile
+import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Page
-import dev.blobs.app.ui.PrimaryAction
-import dev.blobs.app.ui.ProductViewModel
 import dev.blobs.app.ui.fileSize
+import dev.blobs.app.ui.theme.BlobsDimens
 import java.text.DateFormat
+import java.text.NumberFormat
 import java.util.Date
 
 @Composable
 internal fun LibraryDownloadCard(
     library: DownloadablePackage,
     enabled: Boolean,
+    requiredStorageBytes: Long,
+    freeStorageBytes: Long?,
     onDownload: () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Column(
-            Modifier.fillMaxWidth().padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            Modifier.fillMaxWidth().padding(BlobsDimens.lg),
+            verticalArrangement = Arrangement.spacedBy(BlobsDimens.xs)
         ) {
             Text(library.manifest.title, style = MaterialTheme.typography.titleLarge)
             if (library.description.isNotBlank()) {
@@ -72,6 +75,24 @@ internal fun LibraryDownloadCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Text(
+                stringResource(
+                    R.string.library_storage_requirement,
+                    fileSize(requiredStorageBytes)
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (freeStorageBytes != null && freeStorageBytes < requiredStorageBytes) {
+                Text(
+                    stringResource(
+                        R.string.library_space_to_free,
+                        fileSize(requiredStorageBytes - freeStorageBytes)
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             LibraryDetails(library, enabled, onDownload)
         }
     }
@@ -117,6 +138,13 @@ internal fun LibraryDetails(
                 style = MaterialTheme.typography.bodySmall
             )
             Text(library.manifest.license, style = MaterialTheme.typography.bodySmall)
+            library.libraryProfile?.let { profile ->
+                LibraryProfileFacts(profile)
+            }
+            Text(
+                stringResource(R.string.library_source_origin, library.manifest.origin),
+                style = MaterialTheme.typography.bodySmall
+            )
             Text(
                 stringResource(R.string.library_source_credits),
                 style = MaterialTheme.typography.bodySmall,
@@ -124,6 +152,66 @@ internal fun LibraryDetails(
             )
         }
     }
+}
+
+@Composable
+internal fun InstalledLibraryDetails(pack: PackageEntity, profile: LibraryProfile) {
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable(pack.key) {
+        mutableStateOf(false)
+    }
+    val detailsLabel = stringResource(R.string.library_details_for, pack.title)
+    TextButton(
+        onClick = { expanded = !expanded },
+        modifier = Modifier.semantics { contentDescription = detailsLabel }
+    ) {
+        Text(stringResource(R.string.library_details))
+    }
+    if (expanded) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                stringResource(R.string.library_edition, pack.version),
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(pack.license, style = MaterialTheme.typography.bodySmall)
+            LibraryProfileFacts(profile)
+            Text(
+                stringResource(R.string.library_source_origin, pack.origin),
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                stringResource(R.string.library_source_credits),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun LibraryProfileFacts(profile: LibraryProfile) {
+    Text(
+        stringResource(
+            R.string.library_record_count,
+            NumberFormat.getIntegerInstance().format(profile.recordCount)
+        ),
+        style = MaterialTheme.typography.bodySmall
+    )
+    Text(
+        stringResource(R.string.library_scope, profile.scope),
+        style = MaterialTheme.typography.bodySmall
+    )
+    Text(
+        stringResource(R.string.library_source_snapshot, profile.sourceSnapshotDate),
+        style = MaterialTheme.typography.bodySmall
+    )
+    Text(
+        stringResource(R.string.library_update_policy, profile.updatePolicy),
+        style = MaterialTheme.typography.bodySmall
+    )
+    Text(
+        stringResource(R.string.library_limitations, profile.limitations),
+        style = MaterialTheme.typography.bodySmall
+    )
 }
 
 @Composable

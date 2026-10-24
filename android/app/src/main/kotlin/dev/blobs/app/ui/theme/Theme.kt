@@ -2,13 +2,16 @@ package dev.blobs.app.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import dev.blobs.app.data.preferences.ThemeMode
 
@@ -37,7 +40,9 @@ private val LightColors =
         onSecondaryContainer = Ink,
         tertiaryContainer = Lavender,
         onTertiaryContainer = Ink,
-        error = Color(0xFFB13636)
+        error = Color(0xFFB13636),
+        errorContainer = Color(0xFFFFDAD6),
+        onErrorContainer = Color(0xFF410002)
     )
 
 private val DarkColors =
@@ -65,7 +70,18 @@ private val DarkColors =
         onSecondaryContainer = NightInk,
         tertiaryContainer = Color(0xFF304B5D),
         onTertiaryContainer = NightInk,
-        error = Color(0xFFFFAAAA)
+        error = Color(0xFFFFAAAA),
+        errorContainer = Color(0xFF93000A),
+        onErrorContainer = Color(0xFFFFDAD6)
+    )
+
+private val BlobsShapes =
+    Shapes(
+        extraSmall = RoundedCornerShape(8.dp),
+        small = RoundedCornerShape(12.dp),
+        medium = RoundedCornerShape(16.dp),
+        large = RoundedCornerShape(24.dp),
+        extraLarge = RoundedCornerShape(28.dp)
     )
 
 @Composable
@@ -89,6 +105,7 @@ fun BlobsTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Un
     MaterialTheme(
         colorScheme = if (dark) DarkColors else LightColors,
         typography = BlobsTypography,
+        shapes = BlobsShapes,
         content = content
     )
 }

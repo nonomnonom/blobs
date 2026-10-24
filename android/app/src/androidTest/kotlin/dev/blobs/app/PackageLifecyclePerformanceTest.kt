@@ -7,7 +7,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.packages.CatalogRefreshOutcome
 import dev.blobs.app.data.packages.CatalogSource
-import dev.blobs.app.ui.ProductViewModel
+import dev.blobs.app.ui.AppViewModel
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.flow.first
@@ -124,9 +124,9 @@ class PackageLifecyclePerformanceTest {
                 put("api", Build.VERSION.SDK_INT)
             }
 
-            var viewModel: ProductViewModel? = null
+            var viewModel: AppViewModel? = null
             scenario.onActivity { activity ->
-                viewModel = ViewModelProvider(activity)[ProductViewModel::class.java]
+                viewModel = ViewModelProvider(activity)[AppViewModel::class.java]
             }
             val totalStart = SystemClock.elapsedRealtime()
             requireNotNull(viewModel).downloadPackage(asset)

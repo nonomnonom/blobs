@@ -1,5 +1,6 @@
 package dev.blobs.app.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -15,7 +16,13 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("conversationId")]
+    indices = [
+        Index("conversationId"),
+        Index(
+            value = ["conversationId", "status", "createdAt", "id"],
+            name = "index_turns_context"
+        )
+    ]
 )
 data class TurnEntity(
     @PrimaryKey val id: String,
@@ -28,5 +35,12 @@ data class TurnEntity(
     val evidence: String,
     val createdAt: Long,
     val elapsedMs: Long = 0,
-    val error: String = ""
+    val error: String = "",
+    @ColumnInfo(defaultValue = "''") val libraryScope: String = "",
+    @ColumnInfo(defaultValue = "'LEGACY'") val grounding: String = TurnGrounding.LEGACY.storedValue,
+    @ColumnInfo(
+        defaultValue = "'LEGACY'"
+    ) val finishReason: String = TurnFinishReason.LEGACY.storedValue,
+    @ColumnInfo(defaultValue = "''") val suggestions: String = "",
+    @ColumnInfo(defaultValue = "''") val modelSupport: String = ""
 )

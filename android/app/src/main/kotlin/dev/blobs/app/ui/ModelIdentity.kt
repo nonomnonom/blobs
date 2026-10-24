@@ -3,12 +3,11 @@ package dev.blobs.app.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -18,14 +17,17 @@ import dev.blobs.app.R
 @Composable
 internal fun ModelLogo(identity: String, size: Dp = 40.dp) {
     val image = when {
-        identity.contains("gemma", ignoreCase = true) -> R.drawable.model_gemma
+        identity.contains("minicpm", ignoreCase = true) -> R.drawable.model_minicpm
+        identity.contains("phi-4", ignoreCase = true) -> R.drawable.model_phi
         identity.contains("qwen", ignoreCase = true) -> R.drawable.model_qwen
+        identity.contains("lfm2", ignoreCase = true) -> R.drawable.model_lfm2
         else -> null
     }
     Surface(
         modifier = Modifier.size(size),
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         if (image != null) {
             Image(
@@ -39,7 +41,7 @@ internal fun ModelLogo(identity: String, size: Dp = 40.dp) {
                 painterResource(R.drawable.ic_auto_stories),
                 null,
                 Modifier.padding(size * 0.2f),
-                tint = Color(0xFF292A32)
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }

@@ -1,0 +1,50 @@
+{
+  "build": {
+    "audit_schema": 1,
+    "builder_sources": {
+      "library.py": "982a35ead1b810f20cf270f4383dfac21ce96f63fcadf53c1cd705fd278e2464",
+      "names.py": "5392fdc1e5f921246d5e235d0f09505bcfa26a5db4e0498cd8cef58ef80af6d4",
+      "records.py": "3f504ac9274bca4592451741ddccad7624ce545380d504f11ed4b491041ee715"
+    },
+    "document_names": {
+      "ambiguous_names": 8,
+      "format": 1,
+      "maximum_resolution_passes": 32,
+      "name_document_pairs": 200,
+      "normalization": "NFKC, lowercase, Unicode letters/numbers separated by spaces",
+      "resolved_redirects": 0,
+      "unresolved_redirects": 0
+    },
+    "documents": 200,
+    "exact_duplicate_bodies": 0,
+    "format": 1,
+    "offsets": "Unicode code points, half-open into normalized documents.body",
+    "passage_storage": "document spans + contentless FTS",
+    "passages": 200,
+    "records_sha256": "adeee442844debd734b9cc164637d7c7d01ff30158437a58c581168d0ba8c234",
+    "schema": 3,
+    "sqlite_version": "3.50.4",
+    "title_index": "opening passage only"
+  },
+  "format": 1,
+  "input_sha256": "638a1b9b0427544cc54330e243d8cbbbe6020688d75aa57deb34d8379a8a4600",
+  "manifest": {
+    "bytes": 503808,
+    "format": 1,
+    "id": "nairobi-health-places",
+    "kind": "library",
+    "license": "ODbL 1.0; © OpenStreetMap contributors",
+    "origin": "https://www.openstreetmap.org/copyright",
+    "records_sha256": "adeee442844debd734b9cc164637d7c7d01ff30158437a58c581168d0ba8c234",
+    "sha256": "b4dcb40d70e7a8e88bd3df0e004fa804e5a268739ad03ebbb90605adf7c8438a",
+    "title": "Nairobi health places",
+    "version": "2026-10.1"
+  },
+  "package": {
+    "bytes": 86458,
+    "file": "nairobi-health-places-2026-10.1.blobs",
+    "sha256": "2e99d33710ffb39502da6632ac230a7554e271d4f60dfab4b09258633fb79036"
+  },
+  "platform": "Windows",
+  "python": "3.13.12"
+}

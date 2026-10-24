@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "id": "stackexchange-travel-en-all",
+  "edition": "2026-10",
+  "filename": "travel.stackexchange.com_en_all_2026-10.zim",
+  "url": "https://download.kiwix.org/zim/stack_exchange/travel.stackexchange.com_en_all_2026-10.zim",
+  "bytes": 462009141,
+  "sha256": "55c364aac731f67070eba59bc68033a32e57ba04280348a466843999174e8697",
+  "checksum_source": "https://download.kiwix.org/zim/stack_exchange/travel.stackexchange.com_en_all_2026-10.zim.sha256",
+  "metadata_source": "https://download.kiwix.org/zim/stack_exchange/travel.stackexchange.com_en_all_2026-10.zim.meta4",
+  "verified_date": "2026-10-24",
+  "allowed_hosts": [
+    "download.kiwix.org",
+    "lb.download.kiwix.org",
+    "mirror.download.kiwix.org",
+    "mirrors.dotsrc.org",
+    "ftp.nluug.nl",
+    "wi.mirror.driftle.ss"
+  ],
+  "publisher": "Stack Exchange network contributors",
+  "collection": "Stack Exchange \u00b7 Travel questions and answers",
+  "license": "CC BY-SA 4.0; Stack Exchange contributors; see each post's revision history for attribution. Text extracted and reformatted by Blobs; images excluded.",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "scope": "English travel site questions and answers through the pinned archive snapshot; community advice, not professional authority.",
+  "wiki_host": "travel.stackexchange.com"
+}

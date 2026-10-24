@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 import unicodedata
 
+from .records import valid_utf8_text
+
 
 def name_key(text: str) -> str:
     text = unicodedata.normalize("NFKC", text).lower()
@@ -14,6 +16,13 @@ def name_key(text: str) -> str:
 
 def build_names(db, source: Path):
     from .extract import verified_shards
+
+    manifest = verified_shards(source) if source.name == "manifest.json" else None
+    if manifest is not None and not manifest["complete"]:
+        raise ValueError("Cannot index incomplete redirects")
+    # A lane edition spans several archives, and a ZIM entry path is only unique
+    # inside its own archive, so paths are scoped by the archive identity.
+    scope_by_digest = {a["sha256"]: a["id"] for a in (manifest or {}).get("archives", [])}
 
     db.executescript("""
         CREATE TABLE document_names(name TEXT NOT NULL,doc_id TEXT NOT NULL,
@@ -31,13 +40,15 @@ def build_names(db, source: Path):
         if key and len(key) <= 300:
             db.execute("INSERT OR IGNORE INTO document_names VALUES (?,?)", (key, doc_id))
             db.execute("INSERT OR IGNORE INTO canonical_names VALUES (?,?)", (key, doc_id))
-        path = json.loads(details).get("entry_path")
+        provenance = json.loads(details)
+        path = provenance.get("entry_path")
         if path:
-            db.execute("INSERT INTO name_paths VALUES (?,?)", (path, doc_id))
-    if source.name == "manifest.json":
-        manifest = verified_shards(source)
-        if not manifest["complete"]:
-            raise ValueError("Cannot index incomplete redirects")
+            scope = scope_by_digest.get(provenance.get("source_sha256"))
+            db.execute(
+                "INSERT INTO name_paths VALUES (?,?)",
+                (f"{scope}:{path}" if scope else path, doc_id),
+            )
+    if manifest is not None:
         for shard in manifest["shards"]:
             if "aliases" not in shard["files"]:
                 continue
@@ -52,6 +63,8 @@ def build_names(db, source: Path):
                         or not row[field]
                         or len(row[field]) > 4096
                         or "\x00" in row[field]
+                        or "\ufffd" in row[field]
+                        or not valid_utf8_text(row[field])
                         for field in ("path", "target", "title")
                     ):
                         raise ValueError("Invalid redirect record")
@@ -62,9 +75,14 @@ def build_names(db, source: Path):
                     # A section anchor cannot identify a different article.
                     target = row["target"].split("#", 1)[0].removeprefix("./")
                     key = name_key(row["title"])
+                    scope = shard.get("archive")
                     db.execute(
                         "INSERT INTO name_redirects VALUES (?,?,?)",
-                        (row["path"], target, key if len(key) <= 300 else ""),
+                        (
+                            f"{scope}:{row['path']}" if scope else row["path"],
+                            f"{scope}:{target}" if scope else target,
+                            key if len(key) <= 300 else "",
+                        ),
                     )
         # Resolve on disk. Missing destinations and cycles never become names.
         # The bound also prevents pathological redirect chains delaying a build.

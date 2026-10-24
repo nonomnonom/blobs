@@ -48,6 +48,17 @@ class AnswerTextTest {
     }
 
     @Test
+    fun answerWithoutSourcesRemainsVisible() {
+        assertEquals(
+            "A useful local-model answer without a citation.",
+            AnswerText.validSourceCitations(
+                "A useful local-model answer without a citation.",
+                0
+            )
+        )
+    }
+
+    @Test
     fun groupedNamespacedCitationsKeepOnlyAvailableSources() {
         assertEquals(
             "Supported [S1, S2]. Unsupported .",
@@ -87,6 +98,26 @@ class AnswerTextTest {
                 AnswerText.Citation(19..22, 1)
             ),
             AnswerText.citations("Both [S1, S2] then [S2]", 2)
+        )
+    }
+
+    @Test
+    fun extractFollowUpsParsesSuggestionsAndCleansBody() {
+        val raw = """
+            Photosynthesis is a process used by plants [S1].
+
+            Follow-up questions:
+            1. What are light-dependent reactions?
+            2. How do C4 plants adapt to dry environments?
+        """.trimIndent()
+        val (clean, suggestions) = AnswerText.extractFollowUps(raw)
+        assertEquals("Photosynthesis is a process used by plants [S1].", clean)
+        assertEquals(
+            listOf(
+                "What are light-dependent reactions?",
+                "How do C4 plants adapt to dry environments?"
+            ),
+            suggestions
         )
     }
 

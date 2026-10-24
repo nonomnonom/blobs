@@ -48,7 +48,13 @@ class PackageCatalog internal constructor(
         ),
         endpoint = URL(CATALOG_URL),
         openConnection = { it.openConnection() as HttpURLConnection },
-        hasInternet = { context.hasValidatedInternet() }
+        hasInternet = { context.hasValidatedInternet() },
+        // v2 stays trusted so a catalog signed before the key rotation still verifies.
+        additionalPublicKeys = listOf(
+            CatalogCodec.loadPublicKey(
+                context.assets.open(LEGACY_PUBLIC_KEY_FILE).bufferedReader().use { it.readText() }
+            )
+        )
     )
 
     private val bundledPackages = CatalogCodec.parseCatalog(fallbackCatalog)
@@ -142,8 +148,8 @@ class PackageCatalog internal constructor(
                 opened.readTimeout = READ_TIMEOUT_MS
                 opened.setRequestProperty("Accept", "application/json")
                 opened.setRequestProperty("Accept-Encoding", "identity")
-                if (etagFile.isFile && mutableSnapshot.value.source != CatalogSource.BUNDLED) {
-                    etagFile.readText(Charsets.UTF_8).takeIf(String::isNotBlank)?.let {
+                if (mutableSnapshot.value.source != CatalogSource.BUNDLED) {
+                    cachedEtag()?.let {
                         opened.setRequestProperty("If-None-Match", it)
                     }
                 }
@@ -195,7 +201,7 @@ class PackageCatalog internal constructor(
                 require(revision.accepts(minimumRevision)) { "CATALOG_ROLLBACK" }
                 rememberRevision(revision)
                 writeAtomically(cacheFile.baseFile, envelope)
-                opened.getHeaderField("ETag")?.takeIf(String::isNotBlank)?.let {
+                opened.getHeaderField("ETag")?.takeIf(::validEtag)?.let {
                     writeAtomically(etagFile, it.toByteArray(Charsets.UTF_8))
                 }
                 mutableSnapshot.value = CatalogSnapshot(
@@ -217,12 +223,26 @@ class PackageCatalog internal constructor(
         minimumRevision = revision
     }
 
+    private fun cachedEtag(): String? = runCatching {
+        etagFile.takeIf { it.isFile && it.length() in 1L..MAX_ETAG_BYTES }
+            ?.readText(Charsets.UTF_8)
+            ?.takeIf(::validEtag)
+    }.getOrNull()
+
+    private fun validEtag(value: String): Boolean =
+        value.isNotBlank() && value.length.toLong() <= MAX_ETAG_BYTES &&
+            value.all { it in '\u0021'..'\u007e' }
+
     private fun initialSnapshot(): CatalogSnapshot {
         try {
             if (revisionFile.baseFile.exists() ||
                 File(revisionFile.baseFile.path + ".bak").exists()
             ) {
-                val saved = revisionFile.openRead().bufferedReader().use { it.readText() }
+                val saved = readAtomicText(
+                    revisionFile,
+                    MAX_REVISION_RECORD_BYTES,
+                    "CATALOG_REVISION"
+                )
                 val revision = CatalogRevision.fromRecord(saved)
                 if (revision.number >= minimumRevision.number) minimumRevision = revision
             }
@@ -232,7 +252,11 @@ class PackageCatalog internal constructor(
         }
         val cached = runCatching {
             check(revisionStateHealthy)
-            val envelope = cacheFile.openRead().bufferedReader().use { it.readText() }
+            val envelope = readAtomicText(
+                cacheFile,
+                CatalogCodec.MAX_CATALOG_BYTES,
+                "CATALOG_SIZE"
+            )
             val payload = CatalogCodec.verifiedPayload(envelope, trustedPublicKeys)
             val parsed = CatalogCodec.parseCatalog(payload)
             val revision = CatalogRevision.fromPayload(payload)
@@ -241,7 +265,9 @@ class PackageCatalog internal constructor(
             parsed
         }.getOrNull()
         val lastChecked = runCatching {
-            checkedFile.takeIf(File::isFile)?.readText(Charsets.UTF_8)?.toLongOrNull()
+            checkedFile.takeIf {
+                it.isFile && it.length() in 1L..MAX_CHECKED_AT_BYTES
+            }?.readText(Charsets.UTF_8)?.toLongOrNull()
         }.getOrNull()
         return if (cached == null) {
             CatalogSnapshot(bundledPackages, lastChecked, null, false, CatalogSource.BUNDLED)
@@ -258,13 +284,17 @@ class PackageCatalog internal constructor(
 
     companion object {
         const val FILE_NAME = "package-catalog.json"
-        const val PUBLIC_KEY_FILE = "catalog-public-key-v2.pem"
+        const val PUBLIC_KEY_FILE = "catalog-public-key-v3.pem"
+        const val LEGACY_PUBLIC_KEY_FILE = "catalog-public-key-v2.pem"
         const val CATALOG_URL =
             "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/main/catalog.signed.json"
         private const val TAG = "PackageCatalog"
         private const val CACHED_CATALOG_FILE = "catalog.signed.json"
         private const val ETAG_FILE = "catalog.etag"
+        private const val MAX_ETAG_BYTES = 4_096L
         private const val CHECKED_FILE = "last-check.txt"
+        private const val MAX_CHECKED_AT_BYTES = 64L
+        private const val MAX_REVISION_RECORD_BYTES = 4_096L
         private const val CONNECT_TIMEOUT_MS = 15_000
         private const val READ_TIMEOUT_MS = 20_000
         private const val MAX_REDIRECTS = 5
@@ -296,6 +326,14 @@ class PackageCatalog internal constructor(
                 atomic.failWrite(output)
                 throw error
             }
+        }
+
+        private fun readAtomicText(file: AtomicFile, maximumBytes: Long, error: String): String {
+            val backup = File(file.baseFile.path + ".bak")
+            require(
+                file.baseFile.length() <= maximumBytes && backup.length() <= maximumBytes
+            ) { error }
+            return file.openRead().bufferedReader().use { it.readText() }
         }
     }
 }

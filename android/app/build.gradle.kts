@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.ktlint)
@@ -12,17 +13,30 @@ android {
     buildToolsVersion = "36.0.0"
     ndkVersion = "27.1.12297006"
 
+    val snapdragonBackends =
+        providers.gradleProperty("blobs.snapdragonBackends").orNull == "true"
+
     defaultConfig {
         applicationId = "dev.blobs.app"
         minSdk = 28
         targetSdk = 37
-        versionCode = 18
-        versionName = "0.3.14"
+        versionCode = 19
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["notAnnotation"] = "dev.blobs.app.ManualCheck"
-        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        ndk {
+            abiFilters += if (snapdragonBackends) {
+                listOf("arm64-v8a")
+            } else {
+                listOf("arm64-v8a", "x86_64")
+            }
+        }
         externalNativeBuild {
-            cmake { arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON" }
+            cmake {
+                arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                arguments += "-DBLOBS_ENABLE_SNAPDRAGON_BACKENDS=$snapdragonBackends"
+                targets += "blobs"
+            }
         }
     }
 
@@ -89,7 +103,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
-
+    implementation(libs.kotlinx.serialization.json)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)

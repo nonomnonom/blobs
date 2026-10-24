@@ -29,7 +29,7 @@ class ProductStorageTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun schemaOneDraftSurvivesMigrationAndOldWorkBecomesInterrupted() = runBlocking {
+    fun schemaOneDraftSurvivesMigrationAndOldWorkBecomesStopped() = runBlocking {
         val name = "migration-${UUID.randomUUID()}.db"
         val file = context.getDatabasePath(name)
         file.parentFile?.mkdirs()
@@ -45,13 +45,96 @@ class ProductStorageTest {
             val dao = db.conversations()
             assertEquals("Keep my draft", dao.find("a")?.draft)
             dao.saveTurn(
-                TurnEntity("turn", "a", "Why?", "Partial", "RUNNING", "model", "*", "[]", 3)
+                TurnEntity(
+                    "turn",
+                    "a",
+                    "Why?",
+                    "Partial",
+                    "RUNNING",
+                    "model",
+                    "*",
+                    "[]",
+                    3,
+                    grounding = "PENDING",
+                    finishReason = "PENDING"
+                )
             )
             dao.recoverInterrupted()
-            assertEquals("INTERRUPTED", dao.turns("a").single().status)
-            assertEquals(0, dao.updateAnswer("turn", "late result", "[]", "COMPLETE", 10, ""))
+            val recovered = dao.turns("a").single()
+            assertEquals("STOPPED", recovered.status)
+            assertEquals("CANCELLED", recovered.finishReason)
+            assertEquals(
+                0,
+                dao.updateAnswer(
+                    "turn",
+                    "late result",
+                    "[]",
+                    "COMPLETE",
+                    10,
+                    "",
+                    "GROUNDED",
+                    "STOP",
+                    suggestions = "unexplored_source|0|Root depth",
+                    modelSupport = "sourced"
+                )
+            )
             assertEquals("Partial", dao.turns("a").single().answer)
             assertEquals("Keep my draft", dao.find("a")?.draft)
+        } finally {
+            db.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    @Test
+    fun schemaEightTurnKeepsItsAnswerAndGainsEmptyOffers() = runBlocking {
+        val name = "migration-eight-${UUID.randomUUID()}.db"
+        val installed = BlobsDatabase.open(context, name)
+        try {
+            val dao = installed.conversations()
+            dao.save(ConversationEntity("a", "Original", "Keep my draft", 1, 2))
+            dao.beginTurn(
+                TurnEntity(
+                    "turn", "a", "Why?", "Stored answer", "RUNNING", "model", "*", "[]", 3,
+                    elapsedMs = 9
+                )
+            )
+        } finally {
+            installed.close()
+        }
+        // Leave the file exactly as the previous app release would have stored it.
+        BundledSQLiteDriver().open(context.getDatabasePath(name).path).use { db ->
+            listOf(
+                "ALTER TABLE turns DROP COLUMN suggestions",
+                "ALTER TABLE turns DROP COLUMN modelSupport",
+                "PRAGMA user_version=8"
+            ).forEach { sql -> db.prepare(sql).use { it.step() } }
+        }
+        val db = BlobsDatabase.open(context, name)
+        try {
+            val dao = db.conversations()
+            val migrated = dao.turns("a").single()
+            assertEquals("Stored answer", migrated.answer)
+            assertEquals("LEGACY", migrated.grounding)
+            assertEquals("", migrated.suggestions)
+            assertEquals("", migrated.modelSupport)
+            dao.updateAnswer(
+                "turn",
+                "Stored answer",
+                "[]",
+                "COMPLETE",
+                9,
+                "",
+                "UNVERIFIED",
+                "STOP",
+                suggestions = "unexplored_source|0|Root depth",
+                modelSupport = "partial"
+            )
+            assertEquals(
+                "unexplored_source|0|Root depth",
+                dao.turns("a").single().suggestions
+            )
+            assertEquals("partial", dao.turns("a").single().modelSupport)
         } finally {
             db.close()
             context.deleteDatabase(name)
@@ -72,19 +155,39 @@ class ProductStorageTest {
                     "source-v1", "[]", 3
                 )
             )
-            dao.saveDraft("a", "Next question")
+            dao.saveDraft("a", "Next question", 4)
             dao.updateAnswer(
                 "request",
                 "Saved [1]",
                 "[{\"title\":\"Original\"}]",
                 "STOPPED",
                 100,
-                ""
+                "",
+                "UNVERIFIED",
+                "CANCELLED",
+                suggestions = "unexplored_source|0|Root depth",
+                modelSupport = "unsourced"
             )
-            assertEquals(0, dao.updateAnswer("request", "Late output", "[]", "COMPLETE", 101, ""))
+            assertEquals(
+                0,
+                dao.updateAnswer(
+                    "request",
+                    "Late output",
+                    "[]",
+                    "COMPLETE",
+                    101,
+                    "",
+                    "GROUNDED",
+                    "STOP",
+                    suggestions = "uncovered_heading|0|More detail",
+                    modelSupport = "sourced"
+                )
+            )
             assertEquals("Next question", dao.find("a")?.draft)
             assertEquals("Other draft", dao.find("b")?.draft)
             assertEquals("[{\"title\":\"Original\"}]", dao.turns("a").single().evidence)
+            assertEquals("unexplored_source|0|Root depth", dao.turns("a").single().suggestions)
+            assertEquals("unsourced", dao.turns("a").single().modelSupport)
             dao.delete("b")
             assertEquals("Saved [1]", dao.turns("a").single().answer)
         } finally {
@@ -161,13 +264,16 @@ class ProductStorageTest {
         output.write("GGUF".toByteArray())
         int(3)
         long(1)
-        long(2)
+        long(3)
         text("general.architecture")
         int(8)
         text("qwen3")
         text("tokenizer.chat_template")
         int(8)
         text("chatml")
+        text("qwen3.context_length")
+        int(4)
+        int(4096)
         text("test.weight")
         int(1)
         long(32)

@@ -10,6 +10,7 @@ data class WorkState(
     val threadId: String = "",
     val text: String = "",
     val evidence: String = "[]",
+    val researchStage: ResearchStage? = null,
     val startedAt: Long = 0,
     val progress: Long = 0,
     val total: Long = 0,
@@ -55,4 +56,11 @@ data class WorkState(
         val fraction = (progress / kinds.size).coerceIn(0f, 1f)
         return if (inAppDownload && !importComplete) fraction.coerceAtMost(.99f) else fraction
     }
+}
+
+enum class ResearchStage {
+    PREPARING_MODEL,
+    SEARCHING_LIBRARY,
+    REVIEWING_SOURCES,
+    WRITING_ANSWER
 }
