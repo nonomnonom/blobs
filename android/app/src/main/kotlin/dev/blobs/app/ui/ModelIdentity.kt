@@ -20,6 +20,7 @@ internal fun ModelLogo(identity: String, size: Dp = 40.dp) {
         identity.contains("minicpm", ignoreCase = true) -> R.drawable.model_minicpm
         identity.contains("phi-4", ignoreCase = true) -> R.drawable.model_phi
         identity.contains("qwen", ignoreCase = true) -> R.drawable.model_qwen
+        identity.contains("lfm2", ignoreCase = true) -> R.drawable.model_lfm2
         else -> null
     }
     Surface(
