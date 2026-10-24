@@ -8,7 +8,7 @@
   instead of a hand-kept asset. `android/tools/build_catalog.py` reads
   `corpus/supply/registry.json` together with `android/models.lock.json` and the new
   `android/models.present.json`, pulls each library's manifest, digests, sizes, and
-  `library_profile` from the receipt made beside its archive, and validates the result with the
+  `library_profile` from the archive receipt recorded with the admission, and validates the result with the
   same admission contract that gates an upload. `--check` prints how the shipped catalog drifts
   from the registry. The committed catalog now carries the nine admitted libraries and their
   `records_sha256` identities, so this release downloads only editions that passed the review,
@@ -21,7 +21,7 @@
   older than this build rejects a v3-signed catalog and must be updated to keep receiving
   catalog refreshes.
 
-  Model publication is now an explicit per-model declaration: `android/models.present.json` carries a `publication` state and the compiler refuses to build a catalog when a locked model declares none. `qwen35-2b-q4km` and `phi4-mini-q4km` are `authorized` (the state the committed catalog already reflects); `lfm2-1b2-q4km` is `local-only`, so a candidate that still needs owner authorization, and whose LFM Open License caps commercial use and requires shipping the license text with the model, cannot reach the catalog by editing `models.lock.json` alone.
+  Model publication is now an explicit per-model declaration: `android/models.present.json` carries a `publication` state and the compiler refuses to build a catalog when a locked model declares none. All three locked models are `authorized` (`qwen35-2b-q4km`, `phi4-mini-q4km`, and `lfm2-1b2-q4km`), so the catalog this release ships, and the list it downloads, matches the committed declarations. Because the state is per model, a locked candidate cannot reach the catalog by editing `models.lock.json` alone; the LFM Open License text that model requires travels in `assets/licenses/`.
 
 - 133653d: Chat transcript: the reader owns the scroll. A new turn anchors near the top with a peek of
   the previous turn, a streaming answer is followed only while the reader is already at the
