@@ -8,10 +8,10 @@ historical comparison labels them as evaluation material.
 | --- | --- |
 | [Bounty contract](bounty-contract.md) | Turn behaviour, evidence provenance, and grounding during rebuild |
 | [Architecture](architecture.md) | Global catalog, Android structure, data lifecycle, runtime, and trust boundaries |
-| [Data catalog inventory](data-catalog-inventory.md) | Local evidence, legacy disposition, and publication blockers for current library profiles |
 | [Knowledge supply registry](../corpus/supply/README.md) | Candidate global source families and the executable release admission allow-list |
 | [Engineering roadmap](engineering-roadmap.md) | Product decisions, data-first work order, owners, and next acceptance gates |
 | [Evaluation system](evaluation-system.md) | Retrieval, answer, runtime, and offline evidence without mixing metrics |
+| [UI direction](ui-design.md) | Visual and interaction direction for the chat, library, and settings surfaces |
 | [Implementation rules](rules/README.md) | Ownership, naming, language, testing, and workspace rules |
 | [Historical competitor evaluation](competitive-runtime-evaluation.md) | Prior reproducible observations; not a release baseline or proof of winning |
 

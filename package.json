@@ -1,6 +1,6 @@
 {
   "name": "blobs",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "private": true,
   "description": "Release orchestration for the Blobs Android app.",
   "engines": {

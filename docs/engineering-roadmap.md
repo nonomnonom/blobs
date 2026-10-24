@@ -195,24 +195,125 @@ rubric, or device differ.
 
 ## Blocked now
 
-These are recorded as blockers, not worked around, and each needs an input or an
-owner decision rather than a code change:
+These are recorded as blockers, not worked around. Most need an input or an owner
+decision rather than a code change; the two runtime items stay listed because
+what is missing there is a phone-class device, not a patch:
 
-- Nothing is publishable. `corpus/supply/registry.json` carries an empty
-  `release_ready` list, so `android/tools/publish_hf_assets.py` refuses every
-  catalog library before any network call. Nine shipped catalog libraries map to
-  `retired` registry families and two to `development-only`.
-- Catalog manifests carry no `records_sha256`, which the same publisher requires
-  for a library package.
-- No catalog signing key and no `BLOBS_CATALOG_SIGNING_KEY`, and no release
-  keystore or `BLOBS_*` values, so catalog signing and `release.ps1` stop by
-  design. Publication, upload, and release remain unauthorized.
+- Rebuilt editions are admitted and published. Under the corrected record contract these nine
+  packages were rebuilt from the same pinned sources and each passed
+  `runtime_contract.audit_library` with zero rejected documents, zero rejected passages and no
+  duplicate ids: `wikivoyage-en@2026-09.5` (34,597 guides; installed and answered offline on
+  device; retrieval replay 45 of 48 titles, 29 at rank 1, MRR 0.7431, identical to the withdrawn
+  `2026-09.4` when re-scored with the same tool), `howto-repair@2026-10.4`
+  (78,626 = published 78,633 minus exactly the 7 corrupt posts), `howto-practical@2026-10.4`
+  (189,294 = 189,297 minus 3), `wikipedia-top1m-mini@2026-04.5` (997,714 = 997,717 minus 3, and
+  all 997,714 records pass a full `validate_document` iteration), and
+  `wikisource-en-history-p000`..`p003@2026-09.3` (155,527 / 155,739 / 155,378 / 155,370 documents,
+  matching the rebuilt partition plan exactly). Coverage cost of the fix is therefore measured per
+  lane, not assumed: 2, 7, 3, 3 and about 135 records respectively, and every case document id
+  still resolves (`40` of `40` for Wikisource, no case changing volume). Each successor carries a
+  rights review, re-pinned retrieval case files and a measured recall report, and a single atomic
+  registry write retired each predecessor while admitting its successor.
+  `nairobi-health-places@2026-10.1` was already clean and remains the only installed-and-answered
+  place pack. See `corpus/supply/reviews/admissions-2026-10-24.txt`.
 - The full-Wikipedia partition plan is not created, and its source lock says do
   not acquire or package.
-- Instrumented baseline is red for four checks unrelated to the research path:
-  two `LaunchTest` UI assertions, one `LibraryRetrievalTest` ranking assertion,
-  and one `UiParityTest` control. They were unobservable before 2026-10-24
-  because the instrumentation sources did not compile.
+- Catalog publication is done for the data release; APK release signing is still blocked.
+  The catalog asset is now compiled from `corpus/supply/registry.json` plus
+  `models.present.json`, so its nine libraries are the admitted editions and every entry carries
+  the `records_sha256` the publisher requires. `docs/web/components/asset-tables.tsx` reads that
+  same asset, so the public library page names only installable packs. The catalog was signed
+  with the v3 P-256 key and uploaded with its packages to `nonomnonom/blobs-catalog`, and the
+  v3-signed envelope was verified through the exact Java path `CatalogCodec` uses. What remains
+  is the APK: `release.ps1` and `android/tools/package_release.py` stop by design because no
+  release keystore or `BLOBS_*` values exist on this host, so no build can be signed as an update
+  for `dev.blobs.app`. Installed 0.3.14 builds also trust only `catalog-public-key-v2.pem`, so
+  they will reject the v3-signed catalog until a v3-trusting APK ships.
+- `UiParityTest#readingControlsKeepDraftAndOpenSavedSourcesAtDoubleText` is the one
+
+  red standard check and it is not a tap-delivery problem. At 2x font scale on the
+  acceptance emulator it passed in the model-plus-library state against APK
+  `73ca6f83e93cd808...` and passed clean data inside a 60-check suite on APK
+  `d72c6e9e748f1687...`, then failed on clean data against APK `6849c249245dc686...`.
+  The check was extended to name which path failed, and the failure message answers it:
+  the chip is on screen (`Rect(84, 2267, 996, 2361)` of a 1080x2424 window), the tap is
+  delivered, the page stays `CHAT` so the tap went nowhere else, the node's own click
+  action is present, and invoking that action directly still shows no `Manage models`
+  item within five seconds. A window swallowing the tap is therefore ruled out; what is
+  missing is the menu itself in that state. This is the composer's popup, so it belongs
+  to whoever owns that surface, and the numbers above are why the check keeps recording
+  the distinction instead of asserting one cause.
+- Gates on the current APK `cece676507b01d5d...` (three advertised models), 2026-10-24:
+  `verify` is green (unit tests, ktlint over main/test/androidTest, debug and release
+  assembly), the catalog-pinning check passes with LFM2 included, and
+  `connectedDebugAndroidTest` runs 60 checks with the single composer-menu failure
+  recorded above — that check is now red on APKs `6849c249245dc686...` and
+  `cece676507b01d5d...` and green on `73ca6f83e93cd808...` and `d72c6e9e748f1687...`, so
+  it tracks the composer, not the research path. A bare `am instrument` with no
+  annotation filter is not a gate: it also runs the `ManualCheck` captures, which need
+  fixtures and a network the gate does not have.
+- The pinned 2B model does not cite inline. Every pulled journey artifact on it has
+  zero citation markers in the answer while each turn claims `sourced`, so the
+  reader's badge is structural (`AnswerGrounding`) and the claim is discarded. The
+  grammar cannot supply the missing capability: masking the closing quote until a
+  marker appears yielded no marker in three turns, doubled the turn to 26.5-29.5 s,
+  and lost the support claim because the document never closed
+  (`journey-cite-req-001`, reverted). Coverage needs a model that emits markers, or
+  a per-sentence attribution mechanism, not a stricter mask.
+- The first-run setup flow no longer depends on which device state it inherits.
+  `setupStep` derived `READY` whenever any model was installed, so a device with a
+  model and no local source was told to ask a first question and never saw the
+  starter-library offer, and `continueSetup` stepped `MODEL -> READY` outright.
+  The library step is now derived from installed packages, and the check covers
+  all three states: no model, a model with no library, and both assets present.
+- The two catalog-download captures (`starterLibraryFromHubAppearsInYourLibrary`,
+  `emergencyPreparednessLibraryFromHubAppearsInYourLibrary`) fail at
+  `catalog.refreshNow()` before any package transfer, because the remote signed
+  catalog is not fetchable while nothing in the registry is publishable. They are
+  `ManualCheck` captures, excluded from the standard suite, and they are supply
+  blockers rather than runtime failures.
+- A ~1B candidate is measured and waiting on a decision, not on engineering.
+  `lfm2-1b2-q4km` (LFM2-1.2B Q4_K_M, 730,893,248 bytes) is pinned in
+  `android/models.lock.json`, loads on the existing llama.cpp pin, and installs through
+  the normal model-package path. On one APK it beat the 2B default on every measured
+  axis: 50.3 against 92.3 ms per token constrained, 6.4-11.7 s against 15.9-29.2 s per
+  journey turn, 1.30 against 1.89 GiB process PSS after a turn. Making it selectable in
+  the app still needs the catalog rebuilt with release tags and a signing key, which is
+  owner-authorized publication work, and its LFM Open License 1.0 caps Commercial Use
+  below 10,000,000 USD annual revenue, which only the owner can accept. Its published
+  language list is English-first and omits Indonesian, unlike the current default.
+- `/no_think` is a Qwen chat-template control, and it used to be appended to every
+  request, so a non-Qwen model received a token that means nothing to it. It is now
+  offered only when the selected model's id declares the family
+  (`ResearchPrompt.understandsThinkingControl`), and the LFM2 measurements above were
+  taken before that change, with the stray token present.
+- Grammar-constrained decoding no longer costs extra. The chain used to put the
+  grammar first, so its mask walked all 151,936 vocabulary entries every token:
+  180 ms per token against 64 ms unconstrained, 29.8 s against 18.4 s on one real
+  2,610-character three-passage prompt (`cost-app-001`). The runtime now samples
+  the pruned chain, verifies that single token against the grammar, and pays the
+  vocabulary-wide mask only when the candidate cannot extend the document, which
+  is llama.cpp's own default order. Re-measured on the same prompt: 63.9 ms per
+  token constrained against 64.3 unconstrained, and the response document still
+  decodes (`cost-app-002`).
+- Thread policy is measured, not guessed: eight threads on a four-CPU target took
+  442 s for 75 tokens against 4.8 s at four threads (`cost-baseline-001`), so the
+  count comes from the device processor count and is resolved once per process.
+  What is still missing is a phone-class device for both items above: every
+  timing in this repository is emulator-only, so no latency claim about the
+  99-second turns a user reported is in evidence yet, and no thread count above
+  the emulator's four has ever been measured on real silicon. Confirmed with the
+  product owner on 2026-10-24: no phone-class device can be attached for now, so
+  device acceptance is a recorded blocker, not a step being skipped.
+- Publishing under the rotated v3 catalog key strands existing installs. The owner
+  chose to keep the v3 rotation on 2026-10-24. Installed APK v0.3.14 trusts only
+  `catalog-public-key-v2.pem` (verified by downloading that release's bundled assets),
+  so it rejects a v3-signed catalog and keeps showing its stale bundled revision
+  2026102002 - the twelve libraries the registry has since withdrawn. Changing what
+  those users see therefore requires shipping a new APK built with the corrected
+  catalog asset, which makes the signed release and offline kit part of the fix rather
+  than a later milestone. The release keystore and `BLOBS_*` values stay outside this
+  checkout, so that signing remains owner-supplied.
 - CI never runs instrumented tests: `verify` builds and compiles them only, so
   device acceptance stays a manual, recorded step.
 - The pinned `clang-format==23.1.3` rejects the committed native style: an
@@ -220,13 +321,19 @@ owner decision rather than a code change:
   `--dry-run --Werror` check the corpus job runs. The formatter or
   `.clang-format` needs one deliberate decision before that gate can be green;
   reformatting five files to a new default is not that decision.
-- The pinned formatter rejects six committed Python files the same way:
-  `ruff format --check` on `android/tools/publish_hf_assets.py`,
-  `corpus/archive.py`, `corpus/footprint.py`, `corpus/library.py`,
-  `corpus/partition.py`, and `corpus/places.py` reports changes. Those files are
-  untouched by this work, so the decision is a formatter-version policy, not a
-  code fix. The suites themselves pass (44 corpus tests, 28 tooling tests) and
-  `ruff check` is clean.
+- Python formatting drift is down to 7 files from 19. Twelve files carrying no
+  uncommitted edits from another session were reformatted on 2026-10-24 under the
+  decision that pinned `ruff 0.17.1` plus the repository `ruff.toml` are canonical;
+  `ruff check` stayed clean and both suites still passed (84 corpus, 38 tooling), so
+  the change is formatting only, proven by the suites rather than assumed. The seven
+  that remain are `android/tools/publish_hf_assets.py`,
+  `android/tools/tests/test_publish_hf_assets.py`, `corpus/blobs_corpus/{places,portfolio}.py`,
+  `corpus/evaluation/retrieval/host_replay.py`, and `corpus/tests/{test_curate,test_places}.py` -
+  all of them holding another session's uncommitted work, so their owners run
+  `ruff format` on them before committing. The native gate is in the same position:
+  all five files under `android/app/src/main/cpp/` carry uncommitted edits, so the
+  `clang-format 23.1.3` pass waits for that lane, and it will still need the same
+  one deliberate decision about whether the pinned formatter or `.clang-format` wins.
 
 ## Immediate next work
 

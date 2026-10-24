@@ -218,18 +218,61 @@ The answer shape is a runtime property, not a request. `StructuredAnswer` owns
 the one response document: the prose first, the model's own local-source support
 claim last. `inference/` hands its grammar to the native sampler, so only a token
 that keeps that document valid can ever be chosen, and the finalizer re-reads the
-whole document before persisting. Streaming, cancellation, and a token-limited
+whole document before persisting. Enforcement and cost are separate: the runtime
+samples the pruned chain first, checks that one candidate against the grammar, and
+applies the mask over the whole vocabulary only when the candidate could not
+extend the document. Choosing a token the grammar rejects is therefore impossible,
+while the vocabulary-wide pass is not paid for on every token. Streaming, cancellation, and a token-limited
 turn render the decoded prefix, so no document punctuation reaches a reader or a
 stored answer. `AnswerGrounding` then decides the disclosure: citation coverage is
 the only route to `grounded`, and a claimed `partial` or `unsourced` support can
 only lower it.
 
+What the shape cannot carry, the prompt does. `ResearchPrompt.system` is a short
+writing contract, now 910 characters: open with the result, stay in plain prose,
+give every factual sentence its marker, append no source list, and say plainly when
+the local library does not cover a claim. Rules the sampler or the finalizer already
+enforce — document shape, admissible markers, termination — stay out of that prose.
+Prompt wording was measured on the pinned model against a fixed question set, and
+the measurement corrected the claim: a rule-only prompt produced markers in 0 of 16
+prose sentences, restating the admissible markers next to each question changed
+nothing, and one worked example of the marker form produced 8 of 11 only because its
+subject matched a probe question, which is contamination, not compliance. With a
+domain-neutral example the same arm produced 1 of 6, and the simplified contract
+produced 3 of 7 with one grounded turn, at a quarter fewer prompt characters. Prose
+therefore sets voice, structure, and honesty, and reliably suppresses "the passage
+says" narration, but it does not make a 2B model cite on demand. Citation coverage
+stays a measured, stored disclosure rather than a requested property, and raising it
+is a runtime or model decision, not a wording edit. A test refuses a system prompt
+that outgrows its character budget, so prompt prose stays cheap to decode on the
+first turn of a conversation and leaves room for passages.
+
+The request the model reads is bounded in code, not by intent.
+`ResearchPrompt.MAX_PROMPT_CHARACTERS` caps the built text at 6,000 characters:
+the question is accepted up to 2,000, every passage keeps at least 300 and at
+most 1,200 characters of body, and titles, sections, dates, and the conversation
+topic are clipped before they are escaped. Excerpts are sized from the space that
+is left after the fixed parts, measured against the escaped length because `&`,
+`<`, and `>` grow when they are written as reference data. When the request still
+cannot fit, retained history is dropped before any passage is cut, so a turn never
+silently loses a source it has to cite. Retained history carries the last two
+earlier questions only: an earlier answer is this model's own prose, and a recorded
+run replayed the first answer word for word two turns later.
+
 Next-question offers are app-derived, never model- or app-invented prose.
-`FollowUpSuggestions` reads the finished question, its evidence, and its answer
-only, then keeps verbatim local library text: a section title of evidence the
-answer never cited, or a heading-like line inside cited evidence whose words the
-answer never reached. Each offer is stored with the turn together with the basis
-and evidence index that produced it, so a reader can check why it appeared. An
+`FollowUpSuggestions` reads the finished question, its evidence, its answer, and
+the questions this conversation already asked, then composes a complete question
+around verbatim local library text: an article title paired with a section title
+of evidence the answer never cited, or with a heading-like line inside a passage
+whose words the answer never reached. Headings are read from every passage, not
+only cited ones, because a turn whose one usable section title was already the
+question's subject would otherwise offer nothing at all. A bare heading is not an offer.
+Sent back on its own it loses the article it came from, retrieval matches any
+other document carrying that word, and the conversation drifts: a recorded run
+went from Kyoto transport to a national lodging essay to a town in Wyoming in
+three taps. An offer that repeats something this conversation already asked is
+dropped for the same reason. Each offer is stored with the turn together with the
+basis and evidence index that produced it, so a reader can check why it appeared. An
 offer is a proposal for the next explicit user action; it does not enter the
 prompt, retrieval, or runtime of the turn that produced it. Answers written by
 an older build that already carried a model-written suggestion block stay
@@ -274,6 +317,20 @@ installation, and a pinned llama.cpp runtime embedded through JNI. The standard
 APK uses CPU/KleidiAI. An ARM64 Snapdragon variant may package OpenCL and
 Hexagon modules without changing the application or data contract.
 
+The inference performance configuration follows llama.cpp's own guidance.
+Threads are auto-detected from the device and clamped to 8, so an eight-core
+phone is not forced onto a four-thread policy. Prompt decoding runs in
+512-token batches with a 256-token physical ubatch. The KV cache stores Q8_0
+and leaves Flash Attention on llama.cpp's automatic selection. On arm64 the
+build uses the pinned KleidiAI kernels; x86_64 builds enable AVX/AVX2/FMA/F16C/
+BMI2 paths that ggml dispatches from CPUID at runtime, so older x86_64 devices
+still run. Full-layer GPU offload exists only in the opt-in Snapdragon
+OpenCL/Hexagon build (`blobs.snapdragonBackends` Gradle property, Qualcomm SDKs
+required at build time); the standard APK stays CPU-only. `mlock` is
+intentionally unused because Android's memlock rlimit makes it a no-op for app
+processes. The pinned model quant is the fixed speed/quality point; changing it
+is a model supply change, not a runtime flag.
+
 The native lifecycle has one owner:
 `backend initialize -> model load -> template validation -> context creation ->
 prompt tokenization -> optional exact-prefix KV reuse -> decode -> cleanup`.
@@ -306,8 +363,17 @@ export read that record instead of parsing stored text independently.
 The UI distinguishes retrieval, generation, pending model preparation, stopped,
 limited, and error states. Evidence is visibly distinct from generated prose.
 The source reader opens the installed library and document identified by recorded
-evidence, including a disabled edition retained solely for source inspection.
-Retrieval only searches enabled packages.
+evidence, including a disabled edition retained solely for source inspection, and
+renders the recorded passage exactly as stored: an ellipsis appended to the
+excerpt would make selection and copy return text no source contains, so the
+read-full action is what signals that the passage is an excerpt. Retrieval only
+searches enabled packages.
+
+The setup flow asks for what the device is missing rather than replaying a
+recorded progress marker: `setupStep` returns the model step while no model is
+installed and the library step while no library is installed, so a device that has
+a model but no local source is offered a library instead of being told to ask a
+first question it cannot answer from sources.
 
 Transcript movement is decided in one place, `ui/chat/ConversationScrollPolicy`, so a
 streaming answer never competes with the reader. A new turn anchors near the top with a
@@ -340,6 +406,76 @@ library manifest and digest, device/OS/ABI, configuration, queries, raw output,
 and measurement method. An observation without reproducible input, executable,
 device, or corpus is historical.
 
+A supply admission is not evidence that the runtime accepts the package. Recorded on
+2026-10-24: installing the admitted `wikivoyage-en@2026-09.4` on `sdk_gphone64_x86_64`
+(Android 16, API 36, emulator, airplane mode) failed in `LibraryValidator` as
+`status=PREPARATION_FAILED` (`offline-grounding-001`), while auditing the archives that pass
+every publisher check found documents the app forbids in eight of the nine admitted libraries.
+`corpus/blobs_corpus/records.py` had exempted `documents.body` from the no-U+FFFD rule that the
+app applies to every `documents` column. Rebuilding that lane under the corrected contract gives
+`wikivoyage-en@2026-09.5` - 34,597 articles from the same pinned 2026-09 archive, archive SHA-256
+`f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc` - which installs and completes
+the fixed research path offline: `installable-wv095-002` reached `COMPLETE`/`STOP` with three
+retrieved passages, `model_support=sourced`, first visible text after 8.3 s and 81.1 s end to end
+on debug APK `4c99cf2e50ae624f1e7c8dd5697b798e6da472d7c74e6580cfe3e3f18d237bf5` and model
+`aaf42c8b7c3cab2b...`. `grounding` stayed `UNVERIFIED` because the answer carried no citation
+markers, and the first attempt of that run ended `finish_reason=CANCELLED` once without
+reproducing. Emulator timings are this device's observation only.
+
+Recorded on 2026-10-24 for the rebuilt Wikivoyage edition's retrieval, so re-admission has a
+number to bind to. Replaying the pinned Android retrieval policy (`LibraryStore.kt` `6c44e154`,
+`RetrievalQuery.kt` `d2beec91`, both re-verified as matching at run time) over
+`evaluation/cases/wikivoyage-en-retrieval-v3.json` - the 50 inherited cases minus the two that
+asked for the removed guides - against package
+`f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc` found 45 of 48 expected titles,
+29 at rank 1, mean reciprocal rank 0.7431. The three misses are the carried-over ones already
+recorded for 2026-09.4: `bali-scooter-permit`, `paris-first-stay`, and `tokyo-rail-network`.
+Running the withdrawn 2026-09.4 package through the same tool and the same 48 cases gives
+identical numbers with no case changing rank, so the rebuild changed no retrieval behaviour.
+Comparing these figures against the older 2026-09.4 summary (47 of 50, 30 at rank 1) would be a
+method error: that summary came from `host_replay.py`, a different scorer, so only the
+same-tool comparison above supports any claim about the rebuild's effect. Host replay numbers are
+not on-device latency, and the case file still marks all 48 as expected hits, so the three known
+misses are carried in this note rather than silently reclassified.
+
+Recorded on 2026-10-24 as an advertisement audit of `README.md`, checked against the artifact a
+user actually installs (public release v0.3.14, `APK-VERIFICATION.json` sha256
+`4212338878d31b02...`, 31,002,796 bytes): "Android 9 or later" holds at `minSdk = 28`; "ARM64 and
+x86_64 are supported" holds because the released APK carries four native libraries per ABI (eight
+total), although the `snapdragonBackends` build variant ships `arm64-v8a` only; the promised import
+formats are exactly the accepted set in `UserLibraryPackage` (`txt`, `md`, `markdown`, `csv`,
+`json`, `pdf`) with a `PDF_NO_TEXT` guard matching "text-based PDFs"; "starter library" matches the
+single `starter` catalog role; and "Release checksums and the signing certificate fingerprint
+accompany every APK" matches the shipped `SHA256SUMS.txt`, `SIGNATURE.txt`, and
+`APK-VERIFICATION.json`. "Installation verifies the package before activating it" is proven in the
+enforcing direction by the `PREPARATION_FAILED` record above. Two claims stay unproven here:
+GrapheneOS compatibility needs a device, and "follow citations to saved articles" is only partly
+delivered - measured marker rates are 1 of 6 answers on the Qwen model and 3 of 6 on the LFM2
+candidate, so citation-following works when a marker is emitted and is not yet reliable enough to
+advertise without qualification.
+
+Recorded on 2026-10-24 as the broadest device run in this repository so far: the complete
+non-`@ManualCheck` instrumented suite ran on `sdk_gphone64_x86_64` (Android 16, API 36, emulator,
+4 cores) and finished `OK (60 tests)` in 510.7 s with no failures, covering citation provenance,
+corpus package install, draft submission, foundation, launch, library relevance, twelve library
+retrieval checks, product storage and UI parity. Debug APK under test
+`6849c249245dc6862b2387ad645444197f6d7e9cec0c609edaf8d125195f463a`, instrumentation APK
+`858f4be3c45b605b7434ece49c51c0b49e590a484f0faf787b11a4edcbdbf7c8`. It is the working tree's
+state, which at that moment carried other engineers' uncommitted edits, so it is regression
+evidence for the tree rather than for a commit, and an emulator is still not phone acceptance.
+
+Recorded on 2026-10-24 about the supply lifecycle: rebuilding an admitted lane is blocked by the
+duplicate-supply gate until the superseded edition is retired. Re-extracting Wikisource under the
+corrected record contract produced 688,802 documents and 11,840 extraction rejections (135 of them
+the replacement-character rule), curating to 622,014 articles, and `blobs_corpus.export` then
+refused it: it repeats 622,014 canonical URLs and body hashes retained in
+`wikisource-en-all-nopic-2026-09.2`. The same check applied to the rebuilt
+`wikivoyage-en-all-nopic-2026-09.5` repeats 34,597 URLs and hashes against the retained
+`wikivoyage-en-all-nopic-2026-09` - that edition only got as far as a package because the rebuild
+skipped the `export` step, so it is installable and measured but not yet admissible while its
+predecessor is retained. Retiring a predecessor is a portfolio decision: the records revisions it
+pins are already published, so it is not something a rebuild can do silently.
+
 Recorded on 2026-10-24 for the response contract: `NativeInferenceTest#
 verifiedModelFileCompletesOfflineChatFlow` ran in airplane mode on
 `sdk_gphone64_x86_64` (Android 16, API 36, emulator), debug APK from this
@@ -361,6 +497,128 @@ An earlier run of the same capture recorded `error=GRAMMAR` and status `error`
 after a wrapped GBNF production failed to parse, which is why one production per
 line is now a checked invariant.
 
-The current rebuild deliberately has no build, test, benchmark, or evaluator
-evidence. Static code inspection can confirm ownership and contracts only; it
-does not prove an Android runtime or product result.
+Recorded on 2026-10-24 for follow-up quality and turn cost, on the same
+`sdk_gphone64_x86_64` emulator (Android 16, API 36), airplane mode, model
+`aaf42c8b7c3cab2b...`, library `wikivoyage-en-2026-09.4` SHA-256
+`940298281ad53bac732feebd2356f2f99356c077817b525ab2ccfcfaa1fdc692`,
+`FollowUpJourneyTest#fiveTurnsOfOfferedFollowUps`, which sends each turn's first
+stored offer back as the next question the way a tap does:
+
+- `journey-baseline-001` (offers were bare section titles): "How do I get around
+  Kyoto?" offered `Sleep`, `Transportation`, `Kyoto`; tapping `Sleep` retrieved a
+  national lodging essay, and tapping `Ten Sleep` from that answer produced a
+  town in Wyoming. Turns took 80.9 s, 45.4 s, and 85.8 s end to end with 17.1-60.4 s
+  before the first visible text, and all three landed `unverified`.
+- After offers became subject questions that name their article
+  (`journey-cite-004`): the same first tap retrieved Kyoto lodging, and the next
+  stayed on Arashiyama sights. No turn left the subject. End to end 22.9-36.5 s
+  with first visible text at 5.4-10.7 s, and one `grounded` turn.
+- Retained answers were the other drift mechanism: with them in the prompt, the
+  turn-2 answer replayed the turn-1 answer word for word before continuing
+  (`journey-cite-002`). Retained history now carries earlier questions only.
+- `GenerationCostTest` isolates the cost on this device. Plain decoding ran 64 ms
+  per token at four threads (130 ms at one, 79 ms at two); the same request under
+  the response grammar ran 180 ms per token. On one real 2,610-character,
+  three-passage prompt the turn took 18.4 s unconstrained and 29.8 s constrained
+  (`cost-baseline-001`, `cost-app-001`). Requesting eight threads on this
+  four-CPU target was not a slowdown but a collapse: 442 s for 75 tokens.
+- Sampling the pruned chain and verifying one candidate against the grammar, with
+  the vocabulary-wide mask kept for rejections only, removed that tax on the same
+  prompt: 63.9 ms per token constrained against 64.3 unconstrained, 11.7 s against
+  14.0 s, and the response document still decoded (`cost-app-002`). The full app
+  path confirms it end to end: `journey-mask-001` ran five turns, every turn
+  stored a decoded support claim, stayed on the Kyoto/Arashiyama subject, produced
+  at least one offer, and took 8.1-16.6 s end to end with 3.9-8.9 s before the
+  first visible text.
+  Emulator figures are this device only and support no phone claim.
+- `journey-final-005` re-ran the journey with a second library
+  (`us-preparedness-guidance-2026-10.2`, SHA-256 `934f0f3355dc9a47...`) against the
+  same model, and records the installed APK digest (`2e19b7a2872338ad...`) so the
+  timings name their artifact. Four turns ran at 11.9-14.5 s each with first visible
+  text at 5.3-7.1 s, every turn offered subject-anchored questions, and the fourth
+  offered none because the library's remaining sections had all been asked already.
+  Reports are pulled to `corpus/evaluation/results/` after each run, which is kept
+  out of git with the other result artifacts.
+- `cost-app-003` and `journey-current-001` re-measure the current build
+  (APK `73ca6f83e93cd808...`, the same model and library): on a real three-passage
+  1,590-character prompt the turn ran 63.4 ms per token unconstrained and 63.1 ms
+  constrained, 12.3 s and 10.0 s end to end, so grammar constraint costs nothing on
+  this artifact either. The journey's four turns took 11.3-15.0 s each with first
+  visible text at 5.4-7.3 s, retrieval at 17-41 ms, every turn decoded a support
+  claim and offered only subject-anchored questions, and the fourth offered none
+  because the library's remaining sections had all been asked.
+- No recorded turn on this model cites inline. Every pulled journey artifact
+  (18 turns across `journey-final-003`, `journey-final-005`, `journey-current-001`
+  and `grammar-kit-001`) has zero `[S1]`-style markers in the answer while each one
+  claims `sourced`, so the disclosure the reader sees comes from `AnswerGrounding`
+  and never from the model's claim. Making the grammar enforce it was tried and
+  measured (`journey-cite-req-001`): hiding the closing quote until a marker appears
+  produced no marker in three turns out of three, because the model answers around
+  the block instead of citing — 1,660-1,790 character answers ran to the output
+  limit at 26.5-29.5 s against 11.3-15.0 s, and the document never closed, so the
+  turn lost its support claim too. The requirement is reverted, an answer must
+  always be able to end, and `aTurnWithPassagesAdmitsMarkersButCanAlwaysCloseTheAnswer`
+  locks that. Re-running the journey on the reverted build
+  (`journey-revert-001`, APK `d72c6e9e748f1687...`) restored 12.5-15.7 s turns with
+  first visible text at 5.3-7.7 s and a decoded claim on all four turns, so the
+  revert is measured rather than assumed. Inline citation coverage on the pinned 2B
+  model is recorded as a model-capability blocker, not claimed as working.
+- Two candidate models measured on one artifact. `lfm2-1b2-q4km` (Liquid AI LFM2-1.2B
+  Q4_K_M, 730,893,248 bytes, SHA-256 `55175400e3f509a9...`) is pinned in
+  `android/models.lock.json` and runs on the existing llama.cpp pin without a runtime
+  change (`llm_arch` `lfm2` is already in the vendored `src/llama-arch.cpp`), and it
+  installs through the normal model-package path. Compared with
+  `qwen35-2b-q4km` on the same APK (`4c99cf2e50ae624f...`), the same library
+  (`934f0f3355dc9a47...`), four threads, a 320-token limit, and one fixed six-question
+  set (`prompt-citation-probe-lfm2-001`, `prompt-citation-probe-qwen-001`):
+  end to end 7.0-17.7 s against 15.8-23.3 s; grammar-constrained decoding 50.3 ms per
+  token against 92.3 (`cost-lfm2-001`, `cost-app-004`); process PSS after a turn
+  1.30 GiB against 1.89 GiB; an answer carried a marker in 3 of 6 questions on one run
+  and 2 of 6 on a re-run, against 1 of 6 for the 2B model. Every
+  turn on both models still claimed `sourced` and every answer but one stayed
+  `unverified`, so the disclosure rule is what keeps the badge honest. Emulator only,
+  4 GB device, no phone claim.
+  The offer journey on the same artifact tells the same story: five tapped-offer turns
+  took 6.4-11.7 s on LFM2 (`lfm2-journey-001`) against 15.9-29.2 s on Qwen
+  (`journey-current-003`), with subject-anchored offers and no markers in either run —
+  markers only appeared on the fixed probe set. One earlier Qwen journey run recorded
+  two finished turns and then stopped with `complete` false and no error, and the same
+  sequence completed five turns afterwards, so that stop is logged as unreproduced
+  rather than explained.
+- The `/no_think` control token is Qwen's own chat-template convention, so it now goes
+  only to a model whose id declares that family
+  (`ResearchPrompt.understandsThinkingControl`); a non-Qwen model gets the question and
+  nothing else. The recorded cost and journey captures taken before this change sent
+  the token to every model. Re-running LFM2 afterwards on APK `6849c249245dc686...`
+  moved nothing that matters: five journey turns at 7.4-10.9 s against 6.4-11.7 s,
+  PSS still 1.30 GiB, and markers in 2 of 6 probe answers against 3 of 6 — which is
+  why the marker counts above are quoted as a range over two runs rather than one.
+- LFM2 is advertised as the third in-app model option, and the license position is
+  explicit rather than assumed. Its catalog entry points at Liquid AI's own pinned
+  revision (`https://huggingface.co/LiquidAI/LFM2-1.2B-GGUF/resolve/5399e76c...`), so
+  the project redistributes no copy of the weights; the app downloads the same verified
+  bytes the evaluation used. Because Section 4(a) of the LFM Open License 1.0 requires
+  giving recipients a copy of the licence, its full text ships as
+  `app/src/main/assets/licenses/LFM-Open-License-1.0.txt` (10,644 bytes, SHA-256
+  `61d7e939a05911c7...`) and appears under Settings → About. Section 5 caps Commercial
+  Use below 10,000,000 USD annual revenue, which the owner accepted for this option on
+  2026-10-24. The bundled fallback catalog carries it at revision `2026102402` and
+  `LaunchTest` pins its id, size, license, and publisher URL; installed through the
+  normal catalog model path it lands as
+  `lfm2-1b2-q4km-5399e76c-55175400e3f509a9` in 8.3 s (`lfm2-catalog-001`). Qwen3.5 2B
+  remains the default.
+- The claim space now follows the passages a turn received. `grammar-zero-004`
+  asked a travel library a question it cannot support: retrieval returned no
+  passage and the completion could only report `support=unsourced`, ending
+  `complete`/`stop` with no marker in the answer at 7.9 s. `grammar-kit-001` asked
+  that library a question it does hold: three passages, `support=sourced` on both
+  turns, 11.2 s and 11.9 s. An earlier build of the narrowed grammar failed on the
+  device with `error=GRAMMAR` because the substituted `support` production lost its
+  GBNF string delimiters, which is why both grammars are asserted against the
+  template text in `StructuredAnswerTest`.
+
+Evidence here is dated, named, and reproducible on the inputs it records; nothing
+in this repository is proved by static inspection alone. What no record yet
+covers is a phone-class device, so speed, battery, and memory remain unclaimed,
+and no catalog package is signed or published, so supply and release remain
+unproven.
