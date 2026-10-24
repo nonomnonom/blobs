@@ -27,6 +27,13 @@ class ResearchPromptTest {
     }
 
     @Test
+    fun theWriterIsToldTheWholeSourceRange() {
+        assertEquals(6, ResearchPrompt.MAX_ANSWER_SOURCES)
+        assertTrue(ResearchPrompt.system.contains("[S1] to [S6]"))
+        assertFalse(ResearchPrompt.system.contains("[S3]"))
+    }
+
+    @Test
     fun sourcePassagesStayReferenceDataAndRetainTheirCitationIndex() {
         val source = Evidence(
             id = "reference/gravity",
