@@ -43,6 +43,32 @@ SOURCE_FORBIDDEN_PREFIXES = (
     "blobs/corpus/work/",
 )
 SOURCE_FORBIDDEN_SUFFIXES = (".gguf", ".jks", ".keystore")
+PACKAGE_SUFFIXES = (".blobs", ".gguf")
+GGUF_URL = re.compile(r"https://huggingface\.co/[^/\s]+/[^/\s]+/resolve/([a-f0-9]{40})/([^/\s]+)")
+GGUF_ORIGIN = re.compile(r"https://huggingface\.co/[^/\s]+/[^/\s]+/tree/([a-f0-9]{40})")
+
+
+def verify_gguf_model(path: Path, manifest: dict) -> None:
+    if not isinstance(manifest, dict) or manifest.get("kind") != "model":
+        raise ValueError("GGUF package does not carry a model manifest")
+    if path.stat().st_size != manifest.get("bytes"):
+        raise ValueError(f"GGUF package bytes differ from PACKAGES.json: {path.name}")
+    if digest(path) != manifest.get("sha256"):
+        raise ValueError(f"GGUF package hash differs from PACKAGES.json: {path.name}")
+    with path.open("rb") as stream:
+        if stream.read(4) != b"GGUF":
+            raise ValueError(f"GGUF package lacks a GGUF header: {path.name}")
+
+
+def gguf_catalog_url(url: str, origin: str, name: str) -> bool:
+    resolve = GGUF_URL.fullmatch(url)
+    tree = GGUF_ORIGIN.fullmatch(origin)
+    return (
+        resolve is not None
+        and tree is not None
+        and resolve.group(1) == tree.group(1)
+        and resolve.group(2) == name
+    )
 
 
 def digest(path: Path) -> str:
@@ -234,7 +260,7 @@ def verify_kit(directory: Path) -> dict:
         raise ValueError(f"APK report has unexpected ABIs: {abis}")
 
     recorded_packages = read_json(files["PACKAGES.json"])
-    package_names = sorted(name for name in actual if name.endswith(".blobs"))
+    package_names = sorted(name for name in actual if name.endswith(PACKAGE_SUFFIXES))
     if len(package_names) != 2 or set(recorded_packages) != set(package_names):
         raise ValueError("Expected exactly the two packages recorded in PACKAGES.json")
     kinds = set()
@@ -242,9 +268,13 @@ def verify_kit(directory: Path) -> dict:
     for name in package_names:
         if safe_relative(name).parent != PurePosixPath("."):
             raise ValueError("Packages must be top-level release files")
-        manifest = verify_package(files[name])
-        if manifest != recorded_packages[name]:
-            raise ValueError(f"Package manifest differs from PACKAGES.json: {name}")
+        if name.endswith(".gguf"):
+            manifest = recorded_packages[name]
+            verify_gguf_model(files[name], manifest)
+        else:
+            manifest = verify_package(files[name])
+            if manifest != recorded_packages[name]:
+                raise ValueError(f"Package manifest differs from PACKAGES.json: {name}")
         kinds.add(manifest["kind"])
         packages.append(
             {
@@ -274,13 +304,9 @@ def verify_kit(directory: Path) -> dict:
         except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
             raise ValueError("Source archive has no valid in-app package catalog") from error
     asset_edition = catalog_edition(catalog)
-    catalog_packages = {
-        item.get("file_name"): item
-        for item in catalog.get("packages", [])
-        if item.get("download_format") == "blobs"
-    }
+    catalog_packages = {item.get("file_name"): item for item in catalog.get("packages", [])}
     if not catalog_packages:
-        raise ValueError("In-app catalog must contain one model and one library")
+        raise ValueError("In-app catalog must contain the delivered model and library")
     for package in packages:
         name = package["file"]
         item = catalog_packages.get(name)
@@ -292,12 +318,20 @@ def verify_kit(directory: Path) -> dict:
             rf"https://huggingface\.co/datasets/nonomnonom/blobs-catalog/resolve/[a-f0-9]{{40}}/packages/{re.escape(name)}",
             url,
         )
+        if name.endswith(".gguf"):
+            format_matches = item is not None and item.get("download_format") == "gguf"
+            origin = item.get("manifest", {}).get("origin", "") if item else ""
+            url_matches = item is not None and gguf_catalog_url(url, origin, name)
+        else:
+            format_matches = item is not None and item.get("download_format") == "blobs"
+            url_matches = url == github_release_url or hf_package_url is not None
         if (
             item is None
+            or not format_matches
+            or not url_matches
             or item.get("manifest", {}).get("kind") != package["kind"]
             or item.get("download_bytes") != package["package_bytes"]
             or item.get("download_sha256") != package["package_sha256"]
-            or (url != github_release_url and hf_package_url is None)
             or item.get("manifest") != recorded_packages[name]
         ):
             raise ValueError(f"In-app catalog differs from the delivered {package['kind']} package")

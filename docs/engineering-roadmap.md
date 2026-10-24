@@ -218,22 +218,23 @@ what is missing there is a phone-class device, not a patch:
   place pack. See `corpus/supply/reviews/admissions-2026-10-24.txt`.
 - The full-Wikipedia partition plan is not created, and its source lock says do
   not acquire or package.
-- Catalog publication is done for the data release; APK release signing is still blocked.
+- Catalog publication is done for the data release, and APK 0.4.0 is signed and published with a
+  replacement release key.
   The catalog asset is now compiled from `corpus/supply/registry.json` plus
   `models.present.json`, so its nine libraries are the admitted editions and every entry carries
   the `records_sha256` the publisher requires. `docs/web/components/asset-tables.tsx` reads that
   same asset, so the public library page names only installable packs. The catalog was signed
   with the v3 P-256 key and uploaded with its packages to `nonomnonom/blobs-catalog`, and the
-  v3-signed envelope was verified through the exact Java path `CatalogCodec` uses. What remains
-  is the APK: `release.ps1` and `android/tools/package_release.py` stop by design because no
-  release keystore or `BLOBS_*` values exist on this host, so no build can be signed as an update
-  for `dev.blobs.app`. Installed 0.3.14 builds also trust only `catalog-public-key-v2.pem`, so
-  they will reject the v3-signed catalog until a v3-trusting APK ships. The
-  `wikivoyage-en@2026-09.3` archive their bundled catalog offers is one of the editions this
-  rebuild replaced because the installer rejects it, so that one download fails for installed
-  users until a new APK ships. Nothing already downloaded breaks: all twelve package URLs pinned
-  by the 0.3.14 catalog still answer at their original commit, even though main no longer lists
-  those files.
+  v3-signed envelope was verified through the exact Java path `CatalogCodec` uses. The 0.3.14
+  signing key is not on this host, in Git history, or in any published artifact, so 0.4.0 was
+  signed with a replacement RSA-4096 key held outside the checkout. Its certificate SHA-256 is
+  `626e4f7f02a11f74ddcab001c79a340c1e47918184bab606946b20cb96a444e3`; the APK is 31,215,434 bytes
+  with SHA-256 `5fb939c2531a8b6d166a7a00f26a4ce2ae64224353854f77af0d462b9faa3be4`. Because the
+  identity changed, 0.3.14 users cannot update in place: they must export their conversations and
+  uninstall first, and the release notes say so. A fresh 0.4.0 install trusts the v3 catalog, so
+  it no longer shows the withdrawn 0.3.14 revisions. Nothing already downloaded breaks: all twelve
+  package URLs pinned by the 0.3.14 catalog still answer at their original commit, even though
+  main no longer lists those files.
 - `UiParityTest#readingControlsKeepDraftAndOpenSavedSourcesAtDoubleText` is the one
 
   red standard check and it is not a tap-delivery problem. At 2x font scale on the
@@ -310,15 +311,13 @@ what is missing there is a phone-class device, not a patch:
   the emulator's four has ever been measured on real silicon. Confirmed with the
   product owner on 2026-10-24: no phone-class device can be attached for now, so
   device acceptance is a recorded blocker, not a step being skipped.
-- Publishing under the rotated v3 catalog key strands existing installs. The owner
-  chose to keep the v3 rotation on 2026-10-24. Installed APK v0.3.14 trusts only
-  `catalog-public-key-v2.pem` (verified by downloading that release's bundled assets),
-  so it rejects a v3-signed catalog and keeps showing its stale bundled revision
-  2026102002 - the twelve libraries the registry has since withdrawn. Changing what
-  those users see therefore requires shipping a new APK built with the corrected
-  catalog asset, which makes the signed release and offline kit part of the fix rather
-  than a later milestone. The release keystore and `BLOBS_*` values stay outside this
-  checkout, so that signing remains owner-supplied.
+- Publishing under the rotated v3 catalog key momentarily stranded existing installs, and 0.4.0
+  resolves it by starting a new signing identity. The owner kept the v3 rotation on 2026-10-24.
+  Installed APK v0.3.14 trusts only `catalog-public-key-v2.pem`, so it rejects a v3-signed catalog
+  and keeps showing its stale bundled revision 2026102002 - the twelve libraries the registry has
+  since withdrawn. APK 0.4.0 bundles the corrected catalog and the v3 trust anchor, but because its
+  signing key differs, 0.3.14 users must export conversations and uninstall before installing it.
+  The release keystore and `BLOBS_*` values stay outside this checkout.
 - CI never runs instrumented tests: `verify` builds and compiles them only, so
   device acceptance stays a manual, recorded step.
 - The pinned `clang-format==23.1.3` rejects the committed native style: an

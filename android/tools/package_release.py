@@ -127,23 +127,49 @@ def write_source_archive(output):
             archive.write(path, "blobs/" + relative.as_posix())
 
 
+def verify_gguf_model(path, item):
+    manifest = item.get("manifest")
+    if (
+        item.get("download_format") != "gguf"
+        or not isinstance(manifest, dict)
+        or manifest.get("kind") != "model"
+    ):
+        raise ValueError("Release model is not admitted as a GGUF download")
+    if path.stat().st_size != item.get("download_bytes") or path.stat().st_size != manifest.get(
+        "bytes"
+    ):
+        raise ValueError("Release model bytes differ from the in-app download catalog")
+    if digest(path) != item.get("download_sha256") or digest(path) != manifest.get("sha256"):
+        raise ValueError("Release model hash differs from the in-app download catalog")
+    with path.open("rb") as stream:
+        if stream.read(4) != b"GGUF":
+            raise ValueError("Release model is not a GGUF file")
+    return manifest
+
+
 def verify_catalog_packages(model, library):
     catalog_path = ROOT / "app/src/main/assets/package-catalog.json"
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     catalog_edition(catalog)
-    expected = {
-        item["file_name"]: item
-        for item in catalog.get("packages", [])
-        if item.get("download_format") == "blobs"
-    }
+    expected = {item["file_name"]: item for item in catalog.get("packages", [])}
+    manifests = {}
     for path, kind in ((model, "model"), (library, "library")):
         item = expected.get(path.name)
         if item is None or item["manifest"]["kind"] != kind:
             raise ValueError(f"Release {kind} filename differs from the in-app download catalog")
+        if path.suffix == ".gguf":
+            if kind != "model":
+                raise ValueError("Only the model package may use a GGUF filename")
+            manifests[path.name] = verify_gguf_model(path, item)
+            continue
+        if path.suffix != ".blobs" or item.get("download_format") != "blobs":
+            raise ValueError(f"Release {kind} format differs from the in-app download catalog")
         if path.stat().st_size != item["download_bytes"] or digest(path) != item["download_sha256"]:
             raise ValueError(f"Release {kind} archive differs from the in-app download catalog")
         if check_package(path) != item["manifest"]:
             raise ValueError(f"Release {kind} manifest differs from the in-app download catalog")
+        manifests[path.name] = item["manifest"]
+    return manifests
 
 
 @contextmanager
@@ -203,12 +229,11 @@ def main():
             "APK signer certificate SHA-256 differs from the protected release fingerprint"
         )
     packages = [(args.model, args.model.name), (args.library, args.library.name)]
-    if any(source.suffix != ".blobs" for source, _ in packages):
-        raise ValueError("Release packages must use .blobs filenames")
+    if args.model.suffix not in {".blobs", ".gguf"} or args.library.suffix != ".blobs":
+        raise ValueError("Release packages must use a GGUF or .blobs model and a .blobs library")
     if args.model.name.casefold() == args.library.name.casefold():
         raise ValueError("Model and library package filenames must differ")
-    verify_catalog_packages(args.model, args.library)
-    manifests = {name: check_package(source) for source, name in packages}
+    manifests = verify_catalog_packages(args.model, args.library)
     if (
         manifests[args.model.name]["kind"] != "model"
         or manifests[args.library.name]["kind"] != "library"
@@ -227,7 +252,10 @@ def write_release(destination, apk, version, report, signature, packages, manife
         raise ValueError("APK changed after verification")
     for source, name in packages:
         shutil.copy2(source, destination / name)
-        if check_package(destination / name) != manifests[name]:
+        copied = destination / name
+        if copied.stat().st_size != source.stat().st_size or digest(copied) != digest(source):
+            raise ValueError(f"Package changed after verification: {name}")
+        if source.suffix == ".blobs" and check_package(copied) != manifests[name]:
             raise ValueError(f"Package changed after verification: {name}")
     for source, name in [
         ("docs/RELEASE.md", "PREPARATION.md"),
@@ -268,6 +296,7 @@ def write_release(destination, apk, version, report, signature, packages, manife
         destination / "APK-VERIFICATION.json",
         [destination / name for _, name in packages],
         ROOT / "app/src/main/kotlin/dev/blobs/app/data/packages/PackageInstaller.kt",
+        manifests,
     )
     (destination / "FOOTPRINT.json").write_text(json.dumps(footprint, indent=2), encoding="utf-8")
     (destination / "SIGNATURE.txt").write_text(signature, encoding="utf-8")

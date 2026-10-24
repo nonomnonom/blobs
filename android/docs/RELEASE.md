@@ -45,19 +45,24 @@ Run `connectedDebugAndroidTest` on an emulator for platform checks. The manual H
 
 ## Sign and assemble
 
-Every update to `dev.blobs.app` must use the same Android signing key as the existing public release. Configure `BLOBS_KEYSTORE`, `BLOBS_STORE_PASSWORD`, `BLOBS_KEY_PASSWORD`, `BLOBS_KEY_ALIAS`, and `BLOBS_CERT_SHA256` in the protected local release environment. `BLOBS_CERT_SHA256` is the 64-character SHA-256 fingerprint of the signer certificate from an already trusted public Blobs APK, not a fingerprint copied from the candidate being released. Then run:
+Every update to `dev.blobs.app` must use the same Android signing key as the existing public release. Configure `BLOBS_KEYSTORE`, `BLOBS_STORE_PASSWORD`, `BLOBS_KEY_PASSWORD`, `BLOBS_KEY_ALIAS`, and `BLOBS_CERT_SHA256` in the protected local release environment. `BLOBS_CERT_SHA256` is the 64-character SHA-256 fingerprint of the signer certificate from an already trusted public Blobs APK, not a fingerprint copied from the candidate being released. Release 0.4.0 is the first release signed with the replacement key created on 2026-10-25 after the 0.3.14 key was found unrecoverable; its certificate fingerprint is `626e4f7f02a11f74ddcab001c79a340c1e47918184bab606946b20cb96a444e3`, and every later update must match it. Then run:
 
 ```powershell
 .\gradlew.bat :app:assembleRelease
 uv run --locked --project ../corpus python tools/verify_apk.py app/build/outputs/apk/release/app-release.apk --certificate-sha256 $env:BLOBS_CERT_SHA256
-uv run --locked --project ../corpus python tools/prepare_model.py qwen35
-hf download nonomnonom/blobs-catalog `
-  --type dataset `
-  --revision cae7f6c11e3bad49897dd17bb580ed5bf2da15ed `
-  --include "packages/wikivoyage-en-2026-09-v3.blobs" `
-  --local-dir .local/model-catalog-assets/wikivoyage
-uv run --locked --project ../corpus python tools/package_release.py --model .\packages\qwen35-2b-q4km.blobs --library .\.local\model-catalog-assets\wikivoyage\packages\wikivoyage-en-2026-09-v3.blobs --certificate-sha256 $env:BLOBS_CERT_SHA256
 ```
+
+The kit takes one raw GGUF model and one `.blobs` library, with filenames that exactly match `app/src/main/assets/package-catalog.json`. Download the pinned files the catalog names; for the GGUF, the catalog URL and `manifest.origin` must point at the same 40-character upstream commit:
+
+```powershell
+hf download LiquidAI/LFM2-1.2B-GGUF `
+  --revision 5399e76c648f4eb8c053feb1ab747277dea5bf8b `
+  --include "LFM2-1.2B-Q4_K_M.gguf" `
+  --local-dir .local\model-catalog-assets\lfm2
+uv run --locked --project ../corpus python tools/package_release.py --model .\.local\model-catalog-assets\lfm2\LFM2-1.2B-Q4_K_M.gguf --library .\.local\model-catalog-assets\wikivoyage\packages\wikivoyage-en-2026-09.5.blobs --certificate-sha256 $env:BLOBS_CERT_SHA256
+```
+
+The assembler checks the GGUF header, byte count, and SHA-256 against both the catalog download metadata and its manifest, and it still verifies the `.blobs` library through the package manifest.
 
 The release assembler checks APK identity and signature, exact package metadata, source archive contents, footprint, and a complete SHA-256 inventory. It creates an immutable `android/release/<version>/` folder.
 
@@ -79,6 +84,8 @@ The archiver first verifies the release kit, then checks every archived file aga
 Publish the APK, source archive, and complete offline ZIP to a GitHub Release matching the APK version. Publish both the ZIP SHA-256 and the `SHA256SUMS.txt` digest in the release notes. Direct users to extract the ZIP and follow its `VERIFY.md` and `INSTALL.md`; uploading only the top-level kit files omits the required license directory. ZIP byte hashes may differ across filesystem metadata or entry ordering even when the checked file contents are identical; always publish the digest of the actual uploaded ZIP.
 
 Never generate a replacement signing key for an existing application identity unless the release intentionally requires users to uninstall their current app. Android will reject an APK signed by a different key as an update; uninstalling removes private conversations and installed packages. Keep the signing key and its recoverable password outside Git and all release artifacts.
+
+The 0.4.0 release is the one documented exception. The 0.3.14 signing key is not on this host, in Git history, or in any published artifact, so 0.4.0 starts a new identity. Users on 0.3.14 must export their conversations before uninstalling; the new APK cannot install over the old one, and the release notes say so.
 
 `tools/release.ps1` deliberately refuses to generate or select a key for you.
 It requires all five protected settings, verifies that `BLOBS_KEYSTORE` names a
