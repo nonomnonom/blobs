@@ -117,7 +117,13 @@ class PackageTests(unittest.TestCase):
             with (
                 patch.object(package_release, "ROOT", root),
                 patch.object(package_release, "verify", return_value=report),
-                patch.object(package_release, "verify_catalog_packages"),
+                patch.object(
+                    package_release,
+                    "verify_catalog_packages",
+                    return_value={
+                        item.name: package_release.check_package(item) for item in inputs
+                    },
+                ),
                 patch.object(package_release, "sdk_directory", return_value=root),
                 patch.object(
                     package_release.subprocess,
@@ -196,6 +202,145 @@ class PackageTests(unittest.TestCase):
             ]
             (kit / "SHA256SUMS.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "Package manifest differs from PACKAGES.json"):
+                verify_release.verify_kit(kit)
+
+    def test_gguf_model_and_library_can_form_a_verifiable_kit(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            apk = root / "app/build/outputs/apk/release/app-release.apk"
+            apk.parent.mkdir(parents=True)
+            apk.write_bytes(b"APK fixture for the GGUF release kit")
+            for relative in ("docs/RELEASE.md", "THIRD_PARTY_NOTICES.md"):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("Release fixture", encoding="utf-8")
+            (root / "app/src/main/assets/licenses").mkdir(parents=True)
+            (root / "app/src/main/assets/licenses/TEST.txt").write_text("license", encoding="utf-8")
+            packages = root / "app/src/main/kotlin/dev/blobs/app/data/packages"
+            packages.mkdir(parents=True)
+            for name in ("PackageInstaller.kt", "PackageManifest.kt"):
+                (packages / name).write_text(
+                    (
+                        package_release.ROOT
+                        / f"app/src/main/kotlin/dev/blobs/app/data/packages/{name}"
+                    ).read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+            model = root / "LFM2-test-Q4_K_M.gguf"
+            model.write_bytes(b"GGUF" + b"model fixture")
+            model_manifest = dict(
+                format=1,
+                kind="model",
+                id="lfm2-test",
+                version="12345678",
+                title="LFM2 test",
+                bytes=model.stat().st_size,
+                sha256=package_release.digest(model),
+                license="Test",
+                origin="https://huggingface.co/Publisher/Model/tree/" + "b" * 40,
+            )
+            library = root / "guide.blobs"
+            (root / "guide.raw").write_text("guide", encoding="utf-8")
+            package(
+                root / "guide.raw",
+                library,
+                kind="library",
+                id="guide",
+                version="1",
+                title="Guide",
+                license="CC0",
+                origin="local:guide",
+            )
+            library_manifest = package_release.check_package(library)
+            catalog = {
+                "format": 1,
+                "release_tag": "v0.1.0",
+                "packages": [
+                    {
+                        "file_name": model.name,
+                        "url": f"https://huggingface.co/Publisher/Model/resolve/{'b' * 40}/{model.name}",
+                        "download_format": "gguf",
+                        "download_bytes": model.stat().st_size,
+                        "download_sha256": package_release.digest(model),
+                        "manifest": model_manifest,
+                    },
+                    {
+                        "file_name": library.name,
+                        "url": f"https://github.com/nonomnonom/blobs/releases/download/v0.1.0/{library.name}",
+                        "download_format": "blobs",
+                        "download_bytes": library.stat().st_size,
+                        "download_sha256": package_release.digest(library),
+                        "manifest": library_manifest,
+                    },
+                ],
+            }
+            catalog_path = root / "app/src/main/assets/package-catalog.json"
+            catalog_path.write_text(json.dumps(catalog), encoding="utf-8")
+            report = dict(
+                apk="app-release.apk",
+                application_id="dev.blobs.app",
+                version_code=2,
+                version_name="0.2.0",
+                bytes=apk.stat().st_size,
+                sha256=package_release.digest(apk),
+                internet_permission=True,
+                zip_alignment_16kb=True,
+                native_libraries=[
+                    {"file": "lib/arm64-v8a/libblobs.so"},
+                    {"file": "lib/x86_64/libblobs.so"},
+                ],
+            )
+            with (
+                patch.object(package_release, "ROOT", root),
+                patch.object(package_release, "verify", return_value=report),
+                patch.object(package_release, "sdk_directory", return_value=root),
+                patch.object(
+                    package_release.subprocess,
+                    "check_output",
+                    return_value="Signer #1 certificate SHA-256 digest: " + "a" * 64,
+                ),
+                patch.object(
+                    package_release, "write_source_archive", side_effect=fixture_source_archive
+                ),
+                patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "package_release.py",
+                        "--model",
+                        str(model),
+                        "--library",
+                        str(library),
+                        "--certificate-sha256",
+                        "a" * 64,
+                    ],
+                ),
+            ):
+                package_release.main()
+            kit = root / "release/0.2.0"
+            self.assertEqual((kit / model.name).read_bytes(), model.read_bytes())
+            verified = verify_release.verify_kit(kit)
+            model_package = next(
+                item for item in verified["packages"] if item["file"] == model.name
+            )
+            self.assertEqual(model_package["kind"], "model")
+            self.assertEqual(model_package["package_sha256"], model_manifest["sha256"])
+            moved = root / "moved.gguf"
+            (kit / model.name).rename(moved)
+            moved.write_bytes(b"GGUF" + b"different model")
+            (kit / model.name).write_bytes(moved.read_bytes())
+            lines = (kit / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines()
+            (kit / "SHA256SUMS.txt").write_text(
+                "\n".join(
+                    f"{package_release.digest(kit / model.name)}  {model.name}"
+                    if line.endswith(f"  {model.name}")
+                    else line
+                    for line in lines
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "PACKAGES.json"):
                 verify_release.verify_kit(kit)
 
     def test_verified_existing_model_does_not_redownload_a_working_copy(self):

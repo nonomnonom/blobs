@@ -101,9 +101,8 @@ def verify(apk, expected_certificate_sha256=None):
     signing_certificate = None
     if expected_certificate_sha256 is not None:
         expected_certificate = normalized_certificate_sha256(expected_certificate_sha256)
-        signature = run_tool(
-            build_tools / ("apksigner" + suffix), "verify", "--verbose", "--print-certs", apk
-        )
+        apksigner = build_tools / ("apksigner.bat" if os.name == "nt" else "apksigner")
+        signature = run_tool(apksigner, "verify", "--verbose", "--print-certs", apk)
         signing_certificate = signing_certificate_sha256(signature)
         if signing_certificate != expected_certificate:
             raise RuntimeError(

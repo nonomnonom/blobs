@@ -289,13 +289,27 @@ def calculate(
     installer_source: Path,
     catalog_path: Path | None = None,
     package_manifest_source: Path | None = None,
+    manifests: dict | None = None,
 ):
     apk = read_apk_report(apk_report_path)
     if len(package_paths) != 2 or len(set(path.resolve() for path in package_paths)) != 2:
         raise ValueError("A release footprint requires one distinct model and one library package")
+    supplied = manifests or {}
     packages = []
     for path in package_paths:
-        manifest = verify_package(path)
+        manifest = supplied.get(path.name)
+        if manifest is None:
+            manifest = verify_package(path)
+        elif path.suffix == ".gguf":
+            if (
+                not isinstance(manifest, dict)
+                or manifest.get("kind") != "model"
+                or path.stat().st_size != manifest.get("bytes")
+                or sha(path) != manifest.get("sha256")
+            ):
+                raise ValueError("Selected model payload differs from its catalog manifest")
+        elif verify_package(path) != manifest:
+            raise ValueError("Selected library payload differs from its catalog manifest")
         packages.append(
             dict(
                 manifest=manifest,
@@ -392,7 +406,7 @@ def calculate(
     return result
 
 
-def release_report(apk_report_path: Path, package_paths, installer_source: Path):
+def release_report(apk_report_path: Path, package_paths, installer_source: Path, manifests=None):
     """Create a path-independent footprint manifest suitable for a release kit."""
     catalog_path = next(
         (
@@ -413,6 +427,7 @@ def release_report(apk_report_path: Path, package_paths, installer_source: Path)
         installer_source,
         catalog_path,
         package_manifest_source,
+        manifests,
     )
     result["catalog_storage"]["source_file"] = (
         "blobs/android/app/src/main/assets/package-catalog.json"

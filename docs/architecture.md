@@ -438,9 +438,9 @@ same-tool comparison above supports any claim about the rebuild's effect. Host r
 not on-device latency, and the case file still marks all 48 as expected hits, so the three known
 misses are carried in this note rather than silently reclassified.
 
-Recorded on 2026-10-24 as an advertisement audit of `README.md`, checked against the artifact a
-user actually installs (public release v0.3.14, `APK-VERIFICATION.json` sha256
-`4212338878d31b02...`, 31,002,796 bytes): "Android 9 or later" holds at `minSdk = 28`; "ARM64 and
+Recorded on 2026-10-24 as an advertisement audit of `README.md`, re-checked on 2026-10-25 against
+the artifact a user actually installs (public release v0.4.0, `APK-VERIFICATION.json` sha256
+`5fb939c2531a8b6d...`, 31,215,434 bytes): "Android 9 or later" holds at `minSdk = 28`; "ARM64 and
 x86_64 are supported" holds because the released APK carries four native libraries per ABI (eight
 total), although the `snapdragonBackends` build variant ships `arm64-v8a` only; the promised import
 formats are exactly the accepted set in `UserLibraryPackage` (`txt`, `md`, `markdown`, `csv`,

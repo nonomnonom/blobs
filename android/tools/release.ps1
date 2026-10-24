@@ -11,9 +11,12 @@ if ($Model) {
     $Model = (Get-Item -LiteralPath $Model -ErrorAction Stop).FullName
     $Library = (Get-Item -LiteralPath $Library -ErrorAction Stop).FullName
     foreach ($package in @($Model, $Library)) {
-        if (-not (Test-Path -LiteralPath $package -PathType Leaf) -or [IO.Path]::GetExtension($package) -cne '.blobs') {
-            throw "Expected a .blobs package file: $package"
+        if (-not (Test-Path -LiteralPath $package -PathType Leaf) -or [IO.Path]::GetExtension($package) -cnotin @('.blobs', '.gguf')) {
+            throw "Expected a .blobs or .gguf package file: $package"
         }
+    }
+    if ([IO.Path]::GetExtension($Library) -cne '.blobs') {
+        throw "The library must be a .blobs package: $Library"
     }
 }
 Push-Location (Join-Path $projectRoot '../corpus')
