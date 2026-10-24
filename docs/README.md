@@ -1,8 +1,7 @@
 # Blobs engineering documentation
 
-This directory describes Blobs as built in this repository. Documents from
-other engines or products are never Blobs specifications, even when a
-historical comparison labels them as evaluation material.
+This directory describes Blobs as built in this repository. Release inputs and
+review records live under `corpus/supply/`; nothing here is a product datasheet.
 
 | Document | Purpose |
 | --- | --- |
@@ -13,7 +12,6 @@ historical comparison labels them as evaluation material.
 | [Evaluation system](evaluation-system.md) | Retrieval, answer, runtime, and offline evidence without mixing metrics |
 | [UI direction](ui-design.md) | Visual and interaction direction for the chat, library, and settings surfaces |
 | [Implementation rules](rules/README.md) | Ownership, naming, language, testing, and workspace rules |
-| [Historical competitor evaluation](competitive-runtime-evaluation.md) | Prior reproducible observations; not a release baseline or proof of winning |
 
 When documents conflict, use architecture for implemented product behaviour,
 the roadmap for future decisions, and the evaluation system for how a claim is
