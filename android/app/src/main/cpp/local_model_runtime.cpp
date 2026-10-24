@@ -39,25 +39,17 @@ std::string cached_model_path;
 std::optional<ModelFileIdentity> cached_model_identity;
 KvCache kv_cache;
 
-bool abort_decode(void *) {
-    return cancelled.load();
-}
+bool abort_decode(void *) { return cancelled.load(); }
 
-bool load_progress(float, void *) {
-    return !cancelled.load();
-}
+bool load_progress(float, void *) { return !cancelled.load(); }
 
 std::optional<ModelFileIdentity> file_identity(const std::string &path) {
-    struct stat info {};
+    struct stat info{};
     if (stat(path.c_str(), &info) != 0 || !S_ISREG(info.st_mode)) {
         return std::nullopt;
     }
     return ModelFileIdentity{
-        info.st_dev,
-        info.st_ino,
-        info.st_size,
-        info.st_mtime,
-        info.st_mtim.tv_nsec,
+        info.st_dev, info.st_ino, info.st_size, info.st_mtime, info.st_mtim.tv_nsec,
     };
 }
 
@@ -93,14 +85,8 @@ std::string render_prompt(llama_model *model, const std::string &system, const s
         throw std::runtime_error("MODEL_TEMPLATE");
     }
     std::vector<char> rendered(static_cast<std::size_t>(length) + 1);
-    if (llama_chat_apply_template(
-            chat_template,
-            messages,
-            2,
-            true,
-            rendered.data(),
-            rendered.size()
-        ) != length) {
+    if (llama_chat_apply_template(chat_template, messages, 2, true, rendered.data(),
+                                  rendered.size()) != length) {
         throw std::runtime_error("MODEL_TEMPLATE");
     }
     std::string prompt(rendered.data(), static_cast<std::size_t>(length));
@@ -169,15 +155,11 @@ void initialize_backends(const std::string &directory) {
     llama_backend_init();
 }
 
-}  // namespace
+} // namespace
 
-void reset_generation() {
-    cancelled = false;
-}
+void reset_generation() { cancelled = false; }
 
-void stop_generation() {
-    cancelled = true;
-}
+void stop_generation() { cancelled = true; }
 
 void release_model() {
     std::lock_guard<std::mutex> lock(model_owner);
@@ -189,16 +171,16 @@ void release_model() {
 
 int generate(const GenerationRequest &request, const TokenSink &sink) {
     const bool grammar_without_root = !request.grammar.empty() && request.grammar_root.empty();
-    if (request.model_path.empty() || request.system_prompt.empty() || request.user_prompt.empty() ||
-        request.output_token_limit < 1 || request.output_token_limit > 512 || request.threads < 1 ||
-        request.threads > 4 || grammar_without_root || !sink) {
+    if (request.model_path.empty() || request.system_prompt.empty() ||
+        request.user_prompt.empty() || request.output_token_limit < 1 ||
+        request.output_token_limit > 512 || request.threads < 1 || request.threads > 4 ||
+        grammar_without_root || !sink) {
         throw std::invalid_argument("NATIVE_ARGUMENT");
     }
 
     std::lock_guard<std::mutex> lock(model_owner);
-    std::call_once(backend_initialized, [&request] {
-        initialize_backends(request.backend_directory);
-    });
+    std::call_once(backend_initialized,
+                   [&request] { initialize_backends(request.backend_directory); });
     if (cancelled.load()) {
         return kGenerationCancelled;
     }
@@ -209,39 +191,20 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     }
     const auto prompt = render_prompt(model, request.system_prompt, request.user_prompt);
     const auto *vocab = llama_model_get_vocab(model);
-    const int token_count = -llama_tokenize(
-        vocab,
-        prompt.data(),
-        prompt.size(),
-        nullptr,
-        0,
-        true,
-        true
-    );
+    const int token_count =
+        -llama_tokenize(vocab, prompt.data(), prompt.size(), nullptr, 0, true, true);
     if (token_count <= 0 || token_count + request.output_token_limit > kMaximumContextTokens) {
         throw std::runtime_error("CONTEXT_FULL");
     }
     std::vector<llama_token> prompt_tokens(static_cast<std::size_t>(token_count));
-    if (llama_tokenize(
-            vocab,
-            prompt.data(),
-            prompt.size(),
-            prompt_tokens.data(),
-            token_count,
-            true,
-            true
-        ) < 0) {
+    if (llama_tokenize(vocab, prompt.data(), prompt.size(), prompt_tokens.data(), token_count, true,
+                       true) < 0) {
         throw std::runtime_error("TOKENIZE");
     }
 
     const int capacity = context_capacity(token_count, request.output_token_limit);
-    llama_context *context = kv_cache.prepare(
-        model,
-        capacity,
-        request.threads,
-        abort_decode,
-        nullptr
-    );
+    llama_context *context =
+        kv_cache.prepare(model, capacity, request.threads, abort_decode, nullptr);
     if (!context) {
         throw std::runtime_error("CONTEXT_ALLOC");
     }
@@ -277,11 +240,9 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
         }
         int decode_result = 0;
         try {
-            decode_result = decode(
-                prompt_tokens.data() + position,
-                std::min(kKvDecodeBatchTokens, token_count - position),
-                position
-            );
+            decode_result =
+                decode(prompt_tokens.data() + position,
+                       std::min(kKvDecodeBatchTokens, token_count - position), position);
         } catch (...) {
             discard_cache();
             throw;
@@ -298,10 +259,8 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     kv_cache.remember_prompt(prompt_tokens);
 
     using Sampler = std::unique_ptr<llama_sampler, decltype(&llama_sampler_free)>;
-    Sampler sampler(
-        llama_sampler_chain_init(llama_sampler_chain_default_params()),
-        llama_sampler_free
-    );
+    Sampler sampler(llama_sampler_chain_init(llama_sampler_chain_default_params()),
+                    llama_sampler_free);
     if (!sampler) {
         throw std::runtime_error("CONTEXT_ALLOC");
     }
@@ -314,17 +273,14 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     if (!request.grammar.empty()) {
         // Constrained decoding: the sampler can only accept a token that keeps the response
         // document valid. A grammar that fails to parse is a build fault, not a model result.
-        llama_sampler *constraint = llama_sampler_init_grammar(
-            vocab, request.grammar.c_str(), request.grammar_root.c_str()
-        );
+        llama_sampler *constraint = llama_sampler_init_grammar(vocab, request.grammar.c_str(),
+                                                               request.grammar_root.c_str());
         if (!constraint) {
             throw std::runtime_error("GRAMMAR");
         }
         llama_sampler_chain_add(sampler.get(), constraint);
     }
-    add_sampler(
-        llama_sampler_init_penalties(llama_vocab_n_tokens(vocab), 256, 1.0f, 0.0f, 1.2f)
-    );
+    add_sampler(llama_sampler_init_penalties(llama_vocab_n_tokens(vocab), 256, 1.0f, 0.0f, 1.2f));
     add_sampler(llama_sampler_init_top_k(20));
     add_sampler(llama_sampler_init_top_p(0.9f, 1));
     add_sampler(llama_sampler_init_temp(0.3f));
@@ -381,4 +337,4 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     return kGenerationTokenLimit;
 }
 
-}  // namespace blobs
+} // namespace blobs

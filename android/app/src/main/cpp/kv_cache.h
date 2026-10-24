@@ -16,14 +16,9 @@ inline constexpr int kKvDecodeBatchTokens = 256;
  * or cancelled decode, before replacing model weights, and on memory trim.
  */
 class KvCache {
-public:
-    llama_context *prepare(
-        llama_model *model,
-        int capacity,
-        int threads,
-        ggml_abort_callback abort_callback,
-        void *abort_callback_data
-    );
+  public:
+    llama_context *prepare(llama_model *model, int capacity, int threads,
+                           ggml_abort_callback abort_callback, void *abort_callback_data);
 
     // Removes stale KV cells and returns the first prompt token that must be decoded.
     int reuse_prefix(const std::vector<llama_token> &prompt_tokens);
@@ -32,17 +27,12 @@ public:
     void remember_prompt(const std::vector<llama_token> &prompt_tokens);
     void reset();
 
-private:
+  private:
     using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;
 
-    Context create_context(
-        llama_model *model,
-        int capacity,
-        int threads,
-        ggml_abort_callback abort_callback,
-        void *abort_callback_data,
-        ggml_type cache_type
-    ) const;
+    Context create_context(llama_model *model, int capacity, int threads,
+                           ggml_abort_callback abort_callback, void *abort_callback_data,
+                           ggml_type cache_type) const;
 
     Context context_{nullptr, llama_free};
     std::vector<llama_token> prompt_tokens_;
@@ -51,4 +41,4 @@ private:
     int threads_ = 0;
 };
 
-}  // namespace blobs
+} // namespace blobs

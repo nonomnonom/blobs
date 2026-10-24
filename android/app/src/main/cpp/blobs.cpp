@@ -27,42 +27,26 @@ void throw_java(JNIEnv *env, const char *type, const char *message) {
     }
 }
 
-}  // namespace
+} // namespace
 
-extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_reset(
-    JNIEnv *,
-    jobject
-) {
+extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_reset(JNIEnv *,
+                                                                                  jobject) {
     blobs::reset_generation();
 }
 
-extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_stop(
-    JNIEnv *,
-    jobject
-) {
+extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_stop(JNIEnv *,
+                                                                                 jobject) {
     blobs::stop_generation();
 }
 
-extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_releaseModel(
-    JNIEnv *,
-    jobject
-) {
+extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_releaseModel(JNIEnv *,
+                                                                                         jobject) {
     blobs::release_model();
 }
 
 extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_generateNative(
-    JNIEnv *env,
-    jobject,
-    jbyteArray path,
-    jbyteArray system,
-    jbyteArray user,
-    jbyteArray grammar,
-    jbyteArray grammar_root,
-    jbyteArray backend_directory,
-    jint limit,
-    jint threads,
-    jobject sink
-) {
+    JNIEnv *env, jobject, jbyteArray path, jbyteArray system, jbyteArray user, jbyteArray grammar,
+    jbyteArray grammar_root, jbyteArray backend_directory, jint limit, jint threads, jobject sink) {
     if (!path || !system || !user || !grammar || !grammar_root || !backend_directory || !sink ||
         limit < 1 || limit > 512 || threads < 1 || threads > 4) {
         throw_java(env, "java/lang/IllegalArgumentException", "NATIVE_ARGUMENT");
@@ -93,45 +77,37 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
             limit,
             threads,
         };
-        const auto result = blobs::generate(
-            request,
-            [&](const char *token, std::size_t size) {
-                if (size > static_cast<std::size_t>(std::numeric_limits<jsize>::max())) {
-                    callback_failed = true;
-                    throw_java(env, "java/lang/IllegalStateException", "TOKEN_SIZE");
-                    return false;
-                }
-                const auto token_size = static_cast<jsize>(size);
-                if (!output || output_capacity < token_size) {
-                    const auto replacement = env->NewByteArray(token_size);
-                    if (!replacement) {
-                        callback_failed = true;
-                        return false;
-                    }
-                    if (output) {
-                        env->DeleteLocalRef(output);
-                    }
-                    output = replacement;
-                    output_capacity = token_size;
-                }
-                env->SetByteArrayRegion(
-                    output,
-                    0,
-                    token_size,
-                    reinterpret_cast<const jbyte *>(token)
-                );
-                if (env->ExceptionCheck()) {
-                    callback_failed = true;
-                    return false;
-                }
-                const auto accepted = env->CallBooleanMethod(sink, callback, output, token_size);
-                if (env->ExceptionCheck()) {
-                    callback_failed = true;
-                    return false;
-                }
-                return accepted == JNI_TRUE;
+        const auto result = blobs::generate(request, [&](const char *token, std::size_t size) {
+            if (size > static_cast<std::size_t>(std::numeric_limits<jsize>::max())) {
+                callback_failed = true;
+                throw_java(env, "java/lang/IllegalStateException", "TOKEN_SIZE");
+                return false;
             }
-        );
+            const auto token_size = static_cast<jsize>(size);
+            if (!output || output_capacity < token_size) {
+                const auto replacement = env->NewByteArray(token_size);
+                if (!replacement) {
+                    callback_failed = true;
+                    return false;
+                }
+                if (output) {
+                    env->DeleteLocalRef(output);
+                }
+                output = replacement;
+                output_capacity = token_size;
+            }
+            env->SetByteArrayRegion(output, 0, token_size, reinterpret_cast<const jbyte *>(token));
+            if (env->ExceptionCheck()) {
+                callback_failed = true;
+                return false;
+            }
+            const auto accepted = env->CallBooleanMethod(sink, callback, output, token_size);
+            if (env->ExceptionCheck()) {
+                callback_failed = true;
+                return false;
+            }
+            return accepted == JNI_TRUE;
+        });
         if (output) {
             env->DeleteLocalRef(output);
         }

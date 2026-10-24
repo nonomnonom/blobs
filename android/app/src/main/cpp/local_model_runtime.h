@@ -29,4 +29,4 @@ void stop_generation();
 void release_model();
 int generate(const GenerationRequest &request, const TokenSink &sink);
 
-}  // namespace blobs
+} // namespace blobs
