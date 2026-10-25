@@ -493,35 +493,27 @@ broken is theirs: an *identical* prompt still reported `reused_prefix_tokens: 0`
 defect in the comparison or the discard path, not a capacity choice - and it is worth far more than
 1.5 s, because an identical prompt shares everything.
 
-### A tighter output cap hung a turn for 600 s - the tail is not free to cut
+### A 600 s stall I blamed on the cap, and was wrong about
 
-`MAX_RESEARCH_OUTPUT_TOKENS` 200 -> 140, measured on the four slowest cases (`cap140`). The two that
-finished were unchanged in content and inside noise: 937 and 901 characters, 6 citations each, both
-ending cleanly on `[S6]`, first one 33,704 -> 36,235 ms and the other 40,585 -> 30,336 ms. Qwen's
-tokenizer covers those answers in ~140 tokens anyway, so the cap did not bind and there was nothing
-for it to win.
+`MAX_RESEARCH_OUTPUT_TOKENS` 200 -> 140 produced one run (`cap140`) where two cases finished and the
+third timed out the UI wait at 600,000 ms. I wrote that up as "a cap that truncates the response
+document mid-structure can leave a turn unresolved", and built a follow-up experiment on it.
 
-The third case never came back: `synth-power-outage-household` timed out the UI wait at 600,000 ms
-after two successful turns in the same process. That is not the pre-send hang from stale app state -
-the run was mid-suite - it is a turn that started and never reached a state the reader can see as
-finished. Reverted.
+The reproduction (`cap140b`, same build, same four cases, same device) **completed all four** in
+36,860 / 31,351 / 31,165 / 34,497 ms with answers identical to the 200-token runs to the character -
+937 / 901 / 457 / 521. The stall was environmental, not causal, and the claim in `9085433` is
+retracted here.
 
-Two things follow, and the second matters more than any latency number in this file:
+Two things are left standing, and one of them kills a whole line of work:
 
-- Cutting the answer budget is not a free lever. The answers on this suite already fit in ~140
-  tokens, so a lower cap buys nothing on the cases that matter and risks the ones that do not.
-- **A bound output cap that truncates the response document mid-structure can leave a turn
-  unresolved.** `cap200tail` re-ran the same four cases on the committed build, where the cap does
-  not bind, and all four completed - `synth-power-outage-household` in 34,224 ms. The answers are
-  byte-identical across all three runs of these cases (937 / 901 / 457 / 521 characters, 6 / 6 / 4 /
-  4 citations), because greedy decoding is deterministic - which is what makes the one difference
-  stand out: the stall appeared only in the run where the cap bound. Not root-caused; the status
-  logic itself is correct (`TOKEN_LIMIT` with a non-blank answer completes), so the suspect is the
-  `checkpoint?.join()` before the terminal write, or a sink that stops accepting while the native
-  loop is still inside its budget. A turn that never finishes is
-  infinitely slow, so this is the highest-severity finding of the speed work even though it cost no
-  milliseconds. It needs its own reproduction: a generation that hits `TOKEN_LIMIT` mid-response
-  document, watched through to whatever the UI does. Until that is understood, the cap stays at 200.
+- The cap does not bind on this suite at all. A 937-character, six-citation answer fits inside 140
+  Qwen tokens, so 140 and 200 produce byte-identical output. **Shortening the answer budget cannot
+  make these turns faster, because the model already stops on its own** - the remaining decode time
+  is the cost of the text the reader actually gets, not padding. The lever is gone.
+- The same output measured 47,784 ms and 36,860 ms on the bangkok turn, 42,858 and 31,351 on
+  japan-rail. Identical tokens, identical text, 24-31 % apart. That is the second time this session
+  a spread I called ±20 % has turned out larger, and it means per-case latency claims on this
+  emulator need three or more repeats before they mean anything.
 
 ### One experiment of mine was wrong and was removed
 
