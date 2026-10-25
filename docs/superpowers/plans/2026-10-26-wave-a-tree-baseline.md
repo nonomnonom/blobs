@@ -471,10 +471,27 @@ model re-prefills every prompt from token zero on every turn. That is the same d
 probe found with timers (`reused_prefix_tokens: 0` on an identical prompt, `context_prepare_ms: 0`),
 now confirmed on a workload where it costs real time, measured here without their timers.
 
-So the last named lever in this wave is not slow, it is absent, and it is not in a file this lane
-should fix twice: the repair belongs in `KvCache::reuse_prefix`. Its value is now bounded and
-measurable - up to ~7 s on every turn after the first, on top of the 24-27 s median already
-achieved.
+That understated it, and the fixed-capacity build that this note first reverted for being neutral
+on first turns answers the question on the right workload (`reuse-f`, same three turns, answers
+byte-identical to `reuse-b2`):
+
+| turn | first text, bucketed | first text, fixed capacity | end to end, bucketed | fixed |
+| --- | --- | --- | --- | --- |
+| reuse-t1 (no prefix to reuse) | 17,187 ms | 17,079 ms (+1 %) | 45,594 ms | 44,100 ms (+3 %) |
+| reuse-t2 | 16,469 ms | **15,278 ms (+7 %)** | 26,200 ms | **23,634 ms (+10 %)** |
+| reuse-t3 | 17,413 ms | **16,289 ms (+6 %)** | 26,657 ms | **23,662 ms (+11 %)** |
+
+Turn one is the control: it cannot reuse anything, and it moved 1 %. The follow-ups moved 6-7 % of
+first text and 10-11 % end to end, so prefix reuse is real but **small - about 1.2-1.9 s per
+follow-up turn**, because a follow-up shares only the system block and the earlier questions, not
+the passages. The ~7 s estimate above was wrong and is corrected here.
+
+Not shipped in this lane: the cost is a permanent 4096-token KV cache on a 2 GB phone, which has not
+been measured, and `c697823` already pins one capacity in the Wave A lane, so it should arrive
+through the merge with a PSS number attached rather than as a duplicate. What remains genuinely
+broken is theirs: an *identical* prompt still reported `reused_prefix_tokens: 0` there, which is a
+defect in the comparison or the discard path, not a capacity choice - and it is worth far more than
+1.5 s, because an identical prompt shares everything.
 
 ### One experiment of mine was wrong and was removed
 
