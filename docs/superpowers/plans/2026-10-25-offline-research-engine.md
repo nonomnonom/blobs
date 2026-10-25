@@ -321,3 +321,28 @@ traffic, congestion*; those words are in S1 `Bangkok`. The Korea/Indonesia turn,
 `Rail travel in South Korea` for a claim about the 1945 Constitution, dropped the same way. A turn
 made only of verbatim digest lines still reaches `GROUNDED`, because each line's words come from the
 passage it names.
+
+### Fourth model option: Qwen2.5 0.5B Q4_K_M (owner instruction 2026-10-25)
+
+Locked to the official Qwen organisation repository at revision `9217f5db79a29953eb74d5343926648285ec7e67`,
+file `qwen2.5-0.5b-instruct-q4_k_m.gguf`, 491,400,032 bytes, SHA-256
+`74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db` — read from the pinned LFS
+metadata and recomputed from the downloaded bytes, which matched. The file's own GGUF header says
+`general.architecture = qwen2`, `context_length = 32768`, 24 blocks, 896 wide, and the pinned
+llama.cpp already declares `LLM_ARCH_QWEN2`, so no runtime change was needed. It is spliced into the
+bundled `package-catalog.json` (revision `2026102501`, 13 packages) as the only model whose band is
+the 2 GB class, so it does not become the recommendation on 3 GB and above.
+
+Measured on `blobs-e2e` (2 GB profile, 4 cores, airplane mode, same APK as the LFM2 baseline) on the
+Japan rail question: retrieval 2,121 ms, first visible text **43,941 ms** against LFM2's 53,214-76,541
+ms, end to end 99,087 ms against 79,769-87,628 ms. The 0.5B does not stay inside the 320-token
+response document: it ran to `TOKEN_LIMIT` and its prose was an uncited 1,196-character list of 19
+prefectures. That exposed a real gap in the trust gate, now closed: `CitedDigest.gate` replaces an
+uncited answer even when the model ran out of tokens, so the same turn shows six cited digest lines
+(markers S1-S6, 901 characters) instead of uncited claims, and a cancelled turn still keeps whatever
+partial prose the reader was watching. `NativeInferenceTest` still fails for this model by design,
+because it asserts a closed response document.
+
+Not yet done for this option: peak memory on the 2 GB profile is unmeasured, and the published remote
+catalog does not list it, so existing installs only see it after a catalog upload, which needs owner
+approval.

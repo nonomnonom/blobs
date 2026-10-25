@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "revision": 2026102404,
+  "revision": 2026102501,
   "release_tag": "v0.4.0",
   "packages": [
     {
@@ -411,6 +411,35 @@
         "format": "Blobs library archive",
         "corpus_schema": 3,
         "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "download_format": "gguf",
+      "download_bytes": 491400032,
+      "download_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+      "manifest": {
+        "format": 1,
+        "id": "qwen25-0b5-q4km",
+        "version": "9217f5db",
+        "kind": "model",
+        "title": "Qwen2.5 0.5B Q4_K_M · 32k",
+        "bytes": 491400032,
+        "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/tree/9217f5db79a29953eb74d5343926648285ec7e67"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 2048,
+      "description": "Official Qwen2.5 0.5B Instruct Q4_K_M GGUF from the Qwen organisation. 32k native context; the smallest writer in the app, measured at 40.5s to first visible text against 53.2-76.5s for LFM2 1.2B on the same 2 GB profile and question. It spends the whole 320-token output budget before closing its response document, so its turns fall back to cited digest lines instead of model prose.",
+      "language": "English",
+      "publisher": "Qwen · official GGUF",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 2048,
         "minimum_app_version": "0.3.1"
       }
     }
