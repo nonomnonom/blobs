@@ -515,6 +515,33 @@ Two things are left standing, and one of them kills a whole line of work:
   a spread I called ±20 % has turned out larger, and it means per-case latency claims on this
   emulator need three or more repeats before they mean anything.
 
+### Three independent captures, and the number they agree on
+
+`q554-suite`, `q554-suite3` and `q554-suite5` ran the same 14-case suite on the same device, shelf,
+model (`qwen25-0b5-q4km`) and build, with nothing else attached to the host. Nine cases completed in
+all three:
+
+| capture | median first visible text | median end to end | under 30 s |
+| --- | --- | --- | --- |
+| 1 | 11,646 ms | 25,468 ms | 7 of 9 |
+| 2 | 12,910 ms | 28,890 ms | 6 of 9 |
+| 3 | 12,359 ms | 27,421 ms | 6 of 9 |
+
+So the 0.5B research turn is **25,5-28,9 seconds at the median and ~12 seconds to first visible
+text**, replicated three times, against the 97,587 ms median this suite measured before the speed
+work: **3.4-3.8x end to end, 6.4x to first text**. Grounding held everywhere - 27 of 27 turns across
+the three captures were cited and `cited_source_reader_verified`.
+
+The honest remainder: six or seven of nine cases clear 30 seconds, and the worst case's per-capture
+median is 43,718 ms. "Well under 30 seconds on every turn" is therefore not met on this hardware.
+Every lever the wave names has now been measured and either landed or closed with numbers: prefill
+(AVX2 + llamafile, 56 -> ~6 ms/token), retrieval (fan-out 1.8x, floor is the slowest single library
+at 2.4-8.7 s), decode (greedy removed the sampling tail; the token cap never binds so answer length
+is not padding), and prefix reuse (+1 % on a control that cannot reuse, +6-7 % on follow-ups, capped
+by the fact that a RAG prompt's body is retrieved passages). The one lever still unspent is the
+query shape in `RetrievalQuery.kt` - pinned, mirrored by the frozen replay, and worth 3-6 seconds of
+every turn, which is now the largest remaining piece of the gap.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
