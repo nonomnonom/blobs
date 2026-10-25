@@ -61,6 +61,44 @@ whole token budget before closing its answer, so it is fast but not a writer —
 digest-style answers on 2 GB devices, shorten its prompt, or drop it as a default?
 Everything below is the detail behind those two questions.
 
+### 0.1 What Wave A measured on 2026-10-26 (this section supersedes §1's inference and §7.3's open question)
+
+The stage timers landed, and four turns on the 2 GB emulator profile answered the question the whole
+design was written around. Device `blobs-e2e` (API 36, x86_64, four threads), APK
+`dffbbe9890554d93…`, model LFM2-1.2B Q4_K_M, one `wikivoyage-en` library, artifacts
+`corpus/evaluation/results/wavea-e2e-ui-1.json` and `…/wavea-probe-ui-1.json`, both
+`device_acceptance: unverified`.
+
+| turn | prompt chars | prompt tokens | load | retrieval | context prepare | **prefill** | first text | reused prefix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `compare-bangkok-hanoi` | 4 862 | 1 426 | 2 155 ms | 2 455 ms | 35 ms | **80 644 ms** | 85 837 ms | 0 |
+| `synth-japan-rail-week` | 3 483 | 998 | 0 ms | 2 037 ms | 0 ms | **56 283 ms** | 58 873 ms | 0 |
+| `prefix-probe-a` | 4 261 | 1 222 | 1 187 ms | — | 21 ms | **68 113 ms** | 71 516 ms | 0 |
+| `prefix-probe-b` | 4 261 | 1 222 | 0 ms | — | 0 ms | **71 737 ms** | 74 233 ms | **0** |
+
+Four conclusions, each of which changes a §7.4 lever ranking:
+
+1. **Prefill is the wait, and it is linear in tokens.** 55.7-58.7 ms per prompt token across 998, 1 222
+   and 1 426-token prompts. §7.3's "superlinear in prompt characters" reading is retracted; 15.3 ms per
+   character was the same law seen through a ~3.4 chars/token ratio.
+2. **The 12.6 s intercept is gone.** Turn 1's 85.8 s first text equals load 2.2 + retrieval 2.5 +
+   prefill 80.6 within measurement noise, so the "~8 s outside `generate`" suspicion was wrong for this
+   path; nothing further needs attributing.
+3. **Fixed capacity did what slice 1 promised**: turn 2 reports `context_prepare_ms` 0 and `load_ms` 0,
+   where the baseline paid a rebuild and a 2.2 s load on every cold start.
+4. **Prefix reuse does not work, and it is a code defect, not a prompt-shape effect.** `prefix-probe-b`
+   re-asked the same question in the same process: identical 4 261-character prompt, identical 1 222
+   tokens, still `reused_prefix_tokens: 0`, and 71.7 s instead of 68.1 s. The context survived (prepare
+   0 ms), so the loss is inside `KvCache::reuse_prefix` — the matching scan or `llama_memory_seq_rm`
+   against a `kv_unified` memory. **This is now the largest single speed item in the product**, bigger
+   than any warm-path or governor work: a follow-up turn that skipped its shared prefix would pay
+   roughly the delta between turns instead of a whole prefill.
+
+Consequences for the plan: the warm path (Wave B) still removes a real 2.2 s cold load and per-turn
+SQLite opens, but it cannot move a 60-80 s first character; the prompt bound now has a hard cost
+argument (each 2 000-character passage ≈ 500 tokens ≈ 28 s); and a new slice — **fix prefix reuse** —
+belongs ahead of both. See `docs/engineering-roadmap.md` for the same numbers in the durable record.
+
 ## 1. Problem
 
 A turn is genuinely token-streamed, but the reader waits a long time before the

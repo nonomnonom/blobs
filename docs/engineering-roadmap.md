@@ -302,6 +302,27 @@ what is missing there is a phone-class device, not a patch:
   is llama.cpp's own default order. Re-measured on the same prompt: 63.9 ms per
   token constrained against 64.3 unconstrained, and the response document still
   decodes (`cost-app-002`).
+- Turn stages are now individually timed, and the measurement settles the open question from
+  2026-10-25 about where a shelf turn's wait actually goes. On the 2 GB emulator profile
+  (`blobs-e2e`, API 36, x86_64, four threads, APK `dffbbe9890554d93…`, LFM2-1.2B Q4_K_M, one
+  `wikivoyage-en` library, four turns across `wavea-e2e-1` and `wavea-probe-1`):
+  **prefill is the wait** — 55.7-58.7 ms per prompt token, steady across 998, 1 222 and 1 426-token
+  prompts, so the cost is linear in tokens and the earlier "superlinear in prompt characters" reading
+  is retracted. `compare-bangkok-hanoi` spent 80.6 s of prefill inside a 85.8 s first character, with
+  2.2 s cold model load, 2.5 s retrieval and 35 ms context prepare accounting for the rest; the second
+  turn of the same run loaded in 0 ms (`model_cached: true`) and prepared in 0 ms because the capacity
+  is now fixed at 4 096 rather than doubling per prompt.
+- **Prefix reuse is broken inside the runtime, not by prompt divergence.** `wavea-probe-1` ran the same
+  question twice in one process: identical 4 261-character prompts, identical 1 222 token counts, and
+  `reused_prefix_tokens` still 0 on the second turn, which cost 71.7 s rather than the 68.1 s of the
+  first. The context object itself survived (turn two reported `context_prepare_ms` 0), so the loss is
+  in `KvCache::reuse_prefix` — either the matching scan or the `llama_memory_seq_rm` call against a
+  `kv_unified` memory — not in the tokens being compared. This is now the single largest known speed
+  item: a working reuse would remove most of one prefill per follow-up turn. It is a recorded defect,
+  and no speed claim is made for it.
+- Every capture from this wave names its APK digest, fingerprint, API, ABI, thread count, prompt size and
+  stage timings, and each states `device_acceptance: unverified`. Records live in
+  `corpus/evaluation/results/wavea-e2e-ui-1.json` and `…/wavea-probe-ui-1.json`.
 - Thread policy is measured, not guessed: eight threads on a four-CPU target took
   442 s for 75 tokens against 4.8 s at four threads (`cost-baseline-001`), so the
   count comes from the device processor count and is resolved once per process.
