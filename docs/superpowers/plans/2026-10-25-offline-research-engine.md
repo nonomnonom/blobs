@@ -239,6 +239,11 @@ Contrast with the rejected query-side expansion, which cost two expected-title h
 index is the direction the measurement supports. Building every package with porter still needs a
 native run over the affected libraries and a reviewed replay per package, plus owner approval to
 republish, and it retires every currently published edition.
+The two halves were then checked together on the small library, where the fallback is the part that
+matters: `nairobi-health-places-2026-10.1-retrieval-v1` stays **10/10 under both tokenizers with the
+fallback armed**, so neither change breaks that package's own pinned suite, and the plural questions
+behave as diagnosed — `orig` plus fallback returns hospitals for "what pharmacies are listed",
+`porter` plus fallback returns `Curex Pharmacy`, `Gifted Pharmacy`, `Drug Safe Pharmacy`.
 
 **Still open, in priority order:** the writer is the binding constraint (a one-sentence
 one-sided answer and a zero-citation answer both came out of six adequate sources on LFM2-1.2B);
