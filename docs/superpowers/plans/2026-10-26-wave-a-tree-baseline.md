@@ -388,6 +388,25 @@ arrive through that merge rather than as a duplicate here. What is left for reus
 measure: their own probe still saw `reused_prefix_tokens: 0` on an identical prompt with
 `context_prepare_ms: 0`, which is a defect inside `KvCache::reuse_prefix`, not a capacity question.
 
+### The noise floor is ±20 %, and that re-rates two of my own claims
+
+Removing the repetition penalty from the greedy chain was meant to price one more vocabulary-wide
+pass per token. On the four slowest cases (`nopen2`, byte-identical answers, identical citation counts
+6 / 6 / 4 / 4) the build got **18 % slower**: total end to end 143,128 -> 169,018 ms, with per-case
+decode moving 19.8 -> 25.2, 28.0 -> 29.0, 17.1 -> 29.5 and 18.0 -> 24.2 s on the same generated
+tokens. Same work, different wall clock. Reverted.
+
+That is the measurement floor of this emulator for a single 30-second turn, and it means:
+
+- the AVX2 result stands on its own - 88,969 / 162,212 / 98,955 -> 18,551 / 15,566 / 20,129 ms is a
+  5x shift, far outside any spread this device shows;
+- the llamafile "+11 %" and the greedy "-12 s per turn" are **directional, not established**. They
+  are inside or barely outside a ±20 % per-case spread, and only the 14-case aggregate (median
+  97,587 -> 25,798 ms) is large enough to carry them;
+- any future claim on this host needs either a paired repeat or an aggregate over the suite. Four
+  cases with one number each is not evidence of a 10 % effect, and I have already printed two of
+  those.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
