@@ -193,3 +193,45 @@ while Wave A is open. Both halves were measured on device: a build carrying the 
 exactly four chips on `compare-tubeless-tubed-tyres` (`bound-ui-1`: 4 published passages, cited S1-S4
 contiguously, reader verified, first text 97,465 ms), while the branch as committed shows the
 untrimmed six. The six-chip layout itself is captured in `packing-ui-1`.
+
+## The prefill multiplier was a build flag, not a model limit
+
+The Wave A stage timers settled where a turn goes: of ~86 s, **prefill was 80.6 s** and every other
+stage - model load 2.2 s, template 6 ms, tokenize 5 ms, context prepare 35 ms, grammar 0 ms, sampler
+0 ms, first token 14 ms - was under 70 ms in total. Prefill cost 55.7-58.7 ms per prompt token,
+which is barely twice the documented 64 ms per token of plain decode on this target. A runtime whose
+prefill costs what its decode costs is not batching its matrix multiplies.
+
+Two settings explain it, and neither was a llama.cpp limit. `cpp/CMakeLists.txt` enabled only
+`GGML_SSE42` for x86_64 - the quantised GEMM kernels want AVX2 - and `GGML_LLAMAFILE` was forced
+`OFF` with no reason recorded anywhere (`git log -S` reaches one squash commit). AVX/AVX2/FMA/F16C/
+BMI2 are now enabled for x86_64, which is safe because ggml dispatches on CPUID at runtime.
+
+Measured on `emulator-5554` (blobs-research, 8 GB), same shelf, same model `lfm2-1b2-q4km`, same
+four cases, against `budget-1`:
+
+| case | first visible text | end to end | retrieval |
+| --- | --- | --- | --- |
+| compare-disc-rim-brakes | 88,969 -> **18,551 ms** | 114,609 -> **40,327 ms** | 4,405 -> 2,644 ms |
+| compare-tubeless-tubed-tyres | 162,212 -> **15,566 ms** | 209,483 -> **34,208 ms** | 8,693 -> 5,273 ms |
+| compare-bangkok-hanoi | 98,955 -> **20,129 ms** | 110,016 -> **45,866 ms** | 18,486 -> 11,086 ms |
+
+**Five times faster to the first character, 2.4-6x faster end to end**, and prefill is now roughly
+6 ms per token instead of 56. The turn is no longer dominated by one stage: retrieval at 2.6-11 s is
+now the same order as the whole model path, so the retrieval fan-out fix moved up the queue with it.
+
+Two things this does not do. It does not make the phone faster: arm64 already had NEON and KleidiAI,
+and `GGML_LLAMAFILE` is still forced off for it, which is the next measurement. And it does not
+justify raising the thread cap - the documented scaling is 130 ms per token at one thread, 79 at two,
+64 at four, and asking for eight on this four-CPU target collapsed to 442 s for 75 tokens.
+
+### One experiment of mine was wrong and was removed
+
+Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
+on the belief that a turn pays a cold FTS open per library. It does not: with pooling in place, the
+first turn of a fresh process retrieved in 4,083 ms and the second in 4,669 ms - no cold penalty, so
+the pages were already resident and the seconds are query work. Worse, the pooled `open()` performed
+the multi-second SQLite open **inside a global monitor**, which stalled a following caller: two
+consecutive four-case captures hung before the first turn with the question sitting unsent in the
+composer. Reverted, not fixed. The retrieval win has to come from running the per-library queries
+concurrently and deterministically, not from caching handles.

@@ -54,7 +54,15 @@ else()
 endif()
 if(ANDROID_ABI STREQUAL "x86_64" OR CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
     # SSE4.2 is part of Android's x86_64 ABI; AVX features remain runtime-dependent.
+    # ggml dispatches on CPUID at runtime, so enabling them is safe on any x86_64 device, and
+    # without AVX2 the quantised GEMM kernels fall back to scalar: prefill measured 56 ms per
+    # token, which is every millisecond of a turn.
     set(GGML_SSE42 ON CACHE BOOL "" FORCE)
+    set(GGML_AVX ON CACHE BOOL "" FORCE)
+    set(GGML_AVX2 ON CACHE BOOL "" FORCE)
+    set(GGML_FMA ON CACHE BOOL "" FORCE)
+    set(GGML_F16C ON CACHE BOOL "" FORCE)
+    set(GGML_BMI2 ON CACHE BOOL "" FORCE)
 endif()
 set(LLAMA_OPENSSL OFF CACHE BOOL "" FORCE)
 set(LLAMA_CURL OFF CACHE BOOL "" FORCE)
