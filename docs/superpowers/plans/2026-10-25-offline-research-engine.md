@@ -180,8 +180,22 @@ and the guard was not edited to make it pass. The A/B above therefore used the r
 functions (`retrieval_spec`, `direct_title_ids`, `retrieve`) on the verified package rather than
 the guarded CLI, and no new reviewed replay has been recorded.
 
+**One-sided comparison coverage, shipped.** The trust gate first fired only on a zero-citation
+answer, so a Bangkok/Hanoi turn that cited one Bangkok district page stayed one-sided. The gate now
+also tops up a finished turn that marked one source out of three or more: it keeps the model's prose
+and appends up to two verbatim cited lines from sources it ignored, skipping every passage from the
+guide the answer already used. `run-6src-5` showed the first version wasting one of the two lines on
+a second Bangkok lead; `run-6src-6` (`run6-ui-report.json`) with the subject-aware rule answered the
+same question with the model's Bangkok sentence `[S4]` plus `Hanoi` `[S2]` and `Southeast Asia`
+`[S3]`, and every sentence in the turn carries a marker, which is the structural condition for
+`GROUNDED`. The Japan synthesis turn still produces zero markers, so it still takes the full
+six-line digest. Covered by `CitedDigestTest` (replace, top-up, subject skip, two-citation and
+same-subject-only no-ops) and `./gradlew verify`.
+
 **Still open, in priority order:** the writer is the binding constraint (a one-sentence
 one-sided answer and a zero-citation answer both came out of six adequate sources on LFM2-1.2B);
-comparison turns cover one subject; and 12 of the 14 suite cases have never run through the UI.
+12 of the 14 suite cases have never run through the UI.
+The other seven intended libraries are built and on disk in `corpus/work/packages/`
+(245 MB-1.7 GB each, about 7.8 GB in total) but none is installed on the test device.
 The other seven intended libraries are built and on disk in `corpus/work/packages/`
 (245 MB-1.7 GB each, about 7.8 GB in total) but none is installed on the test device.

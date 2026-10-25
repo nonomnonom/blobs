@@ -80,6 +80,155 @@ class CitedDigestTest {
     }
 
     @Test
+    fun alreadyCitedSourcesAreNotRepeated() {
+        val digest = CitedDigest.build(
+            listOf(
+                evidence(1, "Bangkok's elevated train avoids the worst of the traffic."),
+                evidence(2, "Hanoi's old quarter is compact enough to cross on foot."),
+                evidence(3, "Both cities are walkable in the early morning.")
+            ),
+            skipIndices = setOf(1)
+        )
+
+        assertEquals(
+            "- Hanoi's old quarter is compact enough to cross on foot. [S2]\n" +
+                "- Both cities are walkable in the early morning. [S3]",
+            digest
+        )
+    }
+
+    @Test
+    fun requestedLineCountCapsTheDigest() {
+        val digest = CitedDigest.build(
+            (1..4).map { index ->
+                evidence(index, "Passage $index describes how the route works in practice today.")
+            },
+            maximumLines = 2
+        )
+
+        assertEquals(
+            "- Passage 1 describes how the route works in practice today. [S1]\n" +
+                "- Passage 2 describes how the route works in practice today. [S2]",
+            digest
+        )
+    }
+
+    @Test
+    fun aTurnThatUsedNoneOfItsSourcesIsReplaced() {
+        val sources = listOf(
+            evidence(1, "Bangkok sprawls across high-rise districts and heavy traffic."),
+            evidence(2, "Hanoi's old quarter is compact enough to cross on foot in a morning.")
+        )
+
+        val gated = CitedDigest.gate("Bangkok is a large and busy city.", sources)
+
+        assertEquals(CitedDigest.build(sources), gated)
+    }
+
+    @Test
+    fun aOneSidedComparisonGainsTheSubjectsItDropped() {
+        val sources = listOf(
+            evidence(1, "Bangkok sprawls across high-rise districts and heavy traffic."),
+            evidence(2, "Hanoi's old quarter is compact enough to cross on foot in a morning."),
+            evidence(3, "Southeast Asia rewards a first visitor with short hops between capitals."),
+            evidence(4, "Ramkhamhaeng sits on the eastern bank of the Chao Phraya river.")
+        )
+        val prose = "Bangkok sprawls across high-rise districts and heavy traffic [S1]."
+
+        val gated = CitedDigest.gate(prose, sources)
+
+        assertEquals(
+            "$prose\n\n" +
+                "- Hanoi's old quarter is compact enough to cross on foot in a morning. [S2]\n" +
+                "- Southeast Asia rewards a first visitor with short hops between capitals. [S3]",
+            gated
+        )
+        assertTrue(AnswerText.hasCompleteCitationCoverage(gated.orEmpty(), 3))
+    }
+
+    @Test
+    fun theTopUpSkipsTheSubjectTheAnswerAlreadyUsed() {
+        val sources = listOf(
+            evidence(
+                1,
+                "Bangkok sprawls across high-rise districts and heavy traffic.",
+                "Bangkok"
+            ),
+            evidence(
+                2,
+                "Hanoi's old quarter is compact enough to cross on foot in a morning.",
+                "Hanoi"
+            ),
+            evidence(
+                3,
+                "Southeast Asia rewards a first visitor with short hops between capitals.",
+                "Southeast Asia"
+            ),
+            evidence(
+                4,
+                "Ramkhamhaeng sits on the eastern bank of the Chao Phraya river.",
+                "Bangkok/Ramkhamhaeng"
+            )
+        )
+        val prose = "Bangkok sprawls across high-rise districts and heavy traffic [S4]."
+
+        val gated = CitedDigest.gate(prose, sources)
+
+        assertEquals(
+            "$prose\n\n" +
+                "- Hanoi's old quarter is compact enough to cross on foot in a morning. [S2]\n" +
+                "- Southeast Asia rewards a first visitor with short hops between capitals. [S3]",
+            gated
+        )
+    }
+
+    @Test
+    fun anAnswerThatAlreadyUsesTwoSourcesStands() {
+        val sources = listOf(
+            evidence(1, "Bangkok sprawls across high-rise districts and heavy traffic."),
+            evidence(2, "Hanoi's old quarter is compact enough to cross on foot in a morning."),
+            evidence(3, "Southeast Asia rewards a first visitor with short hops between capitals.")
+        )
+        val prose = "Bangkok sprawls [S1]. Hanoi is walkable [S2]."
+
+        assertNull(CitedDigest.gate(prose, sources))
+    }
+
+    @Test
+    fun anAnswerWithNoOtherSubjectToNameStands() {
+        val sources = listOf(
+            evidence(
+                1,
+                "Silom fills with office workers at lunch and empties after dark.",
+                "Bangkok/Silom"
+            ),
+            evidence(
+                2,
+                "Thonburi lies on the west bank of the river, away from the traffic.",
+                "Bangkok/Thonburi"
+            ),
+            evidence(
+                3,
+                "Khao San Road draws budget travellers with cheap rooms and street food.",
+                "Bangkok/Khao San Road"
+            )
+        )
+
+        assertNull(CitedDigest.gate("Silom is busy at lunch [S1].", sources))
+    }
+
+    @Test
+    fun aThinEvidenceSetIsNotPadded() {
+        val sources = listOf(
+            evidence(1, "Bangkok sprawls across high-rise districts and heavy traffic."),
+            evidence(2, "Hanoi's old quarter is compact enough to cross on foot in a morning.")
+        )
+
+        assertNull(CitedDigest.gate("Bangkok sprawls across high-rise districts [S1].", sources))
+        assertNull(CitedDigest.gate("Bangkok sprawls.", emptyList()))
+    }
+
+    @Test
     fun navigationListsAreNotTreatedAsProse() {
         val digest = CitedDigest.build(
             listOf(

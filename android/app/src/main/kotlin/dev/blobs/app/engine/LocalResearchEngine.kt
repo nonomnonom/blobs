@@ -163,18 +163,14 @@ internal class LocalResearchEngine(
         }
 
         val decoded = StructuredAnswer.decode(AnswerText.visible(output.completeUtf8Text()))
-        val digest = if (
-            nativeResult == NativeBridge.FINISHED &&
-            evidence.isNotEmpty() &&
-            AnswerText.citations(answer, evidence.size).isEmpty()
-        ) {
-            CitedDigest.build(evidence)
+        val digested = if (nativeResult == NativeBridge.FINISHED) {
+            CitedDigest.gate(answer, evidence)
         } else {
             null
         }
         return ResearchOutcome(
-            answer = digest ?: answer,
-            support = if (digest != null) ModelSupport.SOURCED else decoded?.support,
+            answer = digested ?: answer,
+            support = if (digested != null) ModelSupport.SOURCED else decoded?.support,
             evidence = evidence,
             finish = when (nativeResult) {
                 NativeBridge.FINISHED -> ResearchFinish.FINISHED
