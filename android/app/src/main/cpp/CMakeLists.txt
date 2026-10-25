@@ -42,7 +42,9 @@ else()
 endif()
 set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
 set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
-set(GGML_LLAMAFILE OFF CACHE BOOL "" FORCE)
+# llama.cpp's blocked GEMM path is what makes prefill scale with the batch instead of
+# costing a decode per token; it was off with no reason recorded in the tree or the docs.
+set(GGML_LLAMAFILE ON CACHE BOOL "" FORCE)
 if(ANDROID_ABI STREQUAL "arm64-v8a")
     set(GGML_CPU_KLEIDIAI ON CACHE BOOL "" FORCE)
     set(FETCHCONTENT_SOURCE_DIR_KLEIDIAI "${CMAKE_CURRENT_SOURCE_DIR}/../../../../third_party/kleidiai-v1.31.0" CACHE PATH "Pinned, verified Arm kernels" FORCE)

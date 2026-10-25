@@ -225,6 +225,15 @@ and `GGML_LLAMAFILE` is still forced off for it, which is the next measurement. 
 justify raising the thread cap - the documented scaling is 130 ms per token at one thread, 79 at two,
 64 at four, and asking for eight on this four-CPU target collapsed to 442 s for 75 tokens.
 
+`GGML_LLAMAFILE` was then turned on for both ABIs and re-measured on the same four cases. On x86_64
+it adds little once AVX2 exists: median first visible text 18,551 -> 16,582 ms and median end to end
+40,327 -> 35,256 ms, with one case unchanged within noise. That is the expected shape - llamafile's
+blocked GEMM is the thing AVX2 unlocked here - but it is kept because **arm64 has no AVX2 at all**:
+on a phone this flag is the difference between the NEON path and the scalar one, and the phone is the
+device that matters. End to end on this build is now 31.6-44.2 s against the 97.6 s median the same
+shelf measured an hour earlier, so retrieval at a 7.8 s median is now the largest single non-model
+term and the fan-out fix is next.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
