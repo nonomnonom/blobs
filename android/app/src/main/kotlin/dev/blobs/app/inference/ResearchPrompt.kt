@@ -8,9 +8,14 @@ internal data class ResearchPrompt(
     val sources: List<Evidence>,
     val historyPairCount: Int
 ) {
+    /** The passage set and the history that fit one bounded request. */
+    data class PromptBudget(val sources: List<Evidence>, val history: List<Pair<String, String>>)
+
     companion object {
         const val MAX_ANSWER_SOURCES = 6
         const val MAX_QUESTION_CHARACTERS = 4_000
+        const val MAX_PROMPT_CHARACTERS = 6_000
+        const val MINIMUM_SOURCES_FOR_ANSWER = 1
 
         val system = """
             You are Blobs, an offline research assistant. Reply in the user's language and answer directly.
@@ -32,10 +37,60 @@ internal data class ResearchPrompt(
             query: String,
             history: List<Pair<String, String>>,
             sources: List<Evidence>,
+            promptCharacterBudget: Int = MAX_PROMPT_CHARACTERS,
             generate: (ResearchPrompt) -> T
-        ): T = generate(create(question, query, history, sources))
+        ): T = generate(create(question, query, history, sources, promptCharacterBudget))
 
         private fun create(
+            question: String,
+            query: String,
+            history: List<Pair<String, String>>,
+            sources: List<Evidence>,
+            promptCharacterBudget: Int
+        ): ResearchPrompt {
+            val budget = plan(question, query, history, sources, promptCharacterBudget)
+            return render(question, query, budget.history, budget.sources)
+        }
+
+        /**
+         * Decides what the model is given. History is shed before any passage is cut, because a
+         * replayed earlier answer costs less than the source it would displace, and a turn must never
+         * lose a passage it has to cite in order to keep context it does not have to cite.
+         */
+        fun plan(
+            question: String,
+            query: String,
+            history: List<Pair<String, String>>,
+            sources: List<Evidence>,
+            promptCharacterBudget: Int = MAX_PROMPT_CHARACTERS
+        ): PromptBudget {
+            val blocks = sources.map { blockCharacters(it) }
+            if (blocks.isEmpty()) return PromptBudget(emptyList(), history)
+            val withHistory = fitCount(
+                blocks,
+                envelopeCharacters(question, query, history),
+                promptCharacterBudget
+            )
+            if (withHistory > 0) return PromptBudget(sources.take(withHistory), history)
+            val withoutHistory = fitCount(
+                blocks,
+                envelopeCharacters(question, query, emptyList()),
+                promptCharacterBudget
+            )
+            if (withoutHistory > 0) return PromptBudget(sources.take(withoutHistory), emptyList())
+            return PromptBudget(sources.take(MINIMUM_SOURCES_FOR_ANSWER), emptyList())
+        }
+
+        /** The exact passage set [plan] would render, so callers show what the model is given. */
+        fun carriedSources(
+            question: String,
+            query: String,
+            history: List<Pair<String, String>>,
+            sources: List<Evidence>,
+            promptCharacterBudget: Int = MAX_PROMPT_CHARACTERS
+        ): List<Evidence> = plan(question, query, history, sources, promptCharacterBudget).sources
+
+        private fun render(
             question: String,
             query: String,
             history: List<Pair<String, String>>,
@@ -82,6 +137,34 @@ internal data class ResearchPrompt(
                 sources = sources,
                 historyPairCount = includedHistory.size
             )
+        }
+
+        /** What one source costs the rendered prompt, measured after the escaping it will get. */
+        private fun blockCharacters(source: Evidence): Int =
+            untrustedReferenceText(source.title).length +
+                untrustedReferenceText(source.section).length +
+                untrustedReferenceText(source.updated).length +
+                "\n<source id=\"S99\">\nSection: \nSource date: \n</source>\n".length +
+                untrustedReferenceText(
+                    excerpt(source.text, MAX_SOURCE_EXCERPT_CHARACTERS)
+                ).length
+
+        private fun envelopeCharacters(
+            question: String,
+            query: String,
+            history: List<Pair<String, String>>
+        ): Int = render(question, query, history, emptyList()).text.length
+
+        /** Sources arrive ranked best-first, so a budget keeps a prefix — never a middle. Zero means the history has to go first. */
+        private fun fitCount(blockCharacters: List<Int>, fixedCharacters: Int, budget: Int): Int {
+            var total = fixedCharacters
+            var kept = 0
+            for (characters in blockCharacters) {
+                if (total + characters > budget) break
+                total += characters
+                kept++
+            }
+            return kept
         }
 
         private fun excerpt(text: String, limit: Int): String {

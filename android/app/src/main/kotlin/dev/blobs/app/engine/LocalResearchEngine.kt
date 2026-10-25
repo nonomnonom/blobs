@@ -97,13 +97,22 @@ internal class LocalResearchEngine(
 
         onPhase(ResearchPhase.SEARCHING)
         val retrievalStartedAt = SystemClock.elapsedRealtime()
-        val evidence = library.retrieve(
+        val retrieved = library.retrieve(
             packages = request.libraries,
             question = query,
             scope = request.scope,
             maximumResults = ResearchPrompt.MAX_ANSWER_SOURCES
         )
         val retrievalElapsedMs = SystemClock.elapsedRealtime() - retrievalStartedAt
+        // One trim, applied before anything is shown: the reader, the prompt, the citations and the
+        // stored turn all describe the same passage set, and no evidence is displayed that the model
+        // was not given.
+        val evidence = ResearchPrompt.carriedSources(
+            question = request.question,
+            query = query,
+            history = request.history,
+            sources = retrieved
+        )
         onEvidence(evidence)
         onPhase(if (evidence.isEmpty()) ResearchPhase.GENERATING else ResearchPhase.REVIEWING)
 

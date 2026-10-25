@@ -671,7 +671,7 @@ pass-through, and the only caps are per-field — `MAX_ANSWER_SOURCES = 6`,
 `release/0.4.0` differs from the feature branch in one number only, `MAX_ANSWER_SOURCES` 3 versus 6, so
 this is not a regression introduced by going to six sources; it is an unimplemented documented
 invariant. That changes the shape of the work: the task **adds** behaviour (and therefore needs the
-drop rule, the refusal rule and a test for each), and it must make `docs/architecture.md:251` true
+drop rule, the floor rule and a test for each), and it must make `docs/architecture.md:251` true
 instead of rewriting it. Given §7.3's measured ~15 ms per prompt character on the shelf path, a global
 bound and making it plan-supplied remains the highest-leverage change in this design.
 `goal.md:13-14` already names "a bounded prompt" as part of the fixed turn path, so
@@ -679,24 +679,34 @@ this is a contract fix rather than a tuning preference:
 
 - `Automatic`/`Turbo` keep the assembled prompt under a stated character budget,
   and the budget **shrinks as the selected scope grows**, because that is where the
-  per-character cost adds up fastest.
+  per-character cost adds up fastest. **Wave A ships the budget only as one shared
+  constant** (`MAX_PROMPT_CHARACTERS = 6_000`, applied by `ResearchPrompt.plan`);
+  the scope-dependent and mode-dependent budgets are Wave C's `SpeedPlan` work.
 - `Saver` uses a smaller budget and 3 sources — per §7.3 the single most effective
-  speed lever available on a shelf.
+  speed lever available on a shelf. Deferred to Wave C, same reason.
 - Trimming is deterministic (same input, same prompt) and recorded:
   `prompt_characters` already flows into `ResearchUsage`, so every record shows what
   the model was actually given.
 - Panel/answer agreement: a passage listed in the turn's `evidence` must be in the
   prompt the model saw. If the budget cannot carry all of them, evidence is
   trimmed **with** the panel rather than after it, so a reader never clicks a
-  source the answer never had.
-- **Never trim to zero passages silently.** `docs/bounty-contract.md` (as edited
+  source the answer never had. Implemented: `LocalResearchEngine` calls
+  `ResearchPrompt.carriedSources` right after retrieval and publishes that set to
+  `onEvidence`, so panel, prompt, gate and stored turn read one list.
+- **Never trim to zero passages.** `docs/bounty-contract.md` (as edited
   2026-10-25) narrows the claim space: a completion for a turn that received no
   passage is offered only `unsourced` and its answer text cannot contain a marker
   at all. A budget that shrank a 6-source turn down to no passages therefore
   changes what the turn is allowed to *claim*, which is a product-visible
-  consequence, not a performance detail. If the budget cannot carry at least one
-  passage alongside the question, the turn must not run: reduce `answerTokenLimit`
-  first, and only then report a scope problem to the reader.
+  consequence, not a performance detail.
+  **Implemented differently than first specified.** This section said "if the budget
+  cannot carry at least one passage alongside the question, the turn must not run".
+  Measured against the real caps that is wrong: `MAX_QUESTION_CHARACTERS = 4_000` plus
+  one 2 000-character excerpt already exceeds a 6 000 budget, so the refusal would have
+  converted slow answers into failed turns. What ships is a shedding order instead of a
+  stop: retained history goes first (300+500 per pair), then the ranked tail, and one
+  passage always survives when retrieval returned any. An empty passage set can now only
+  come from a retrieval miss, which is the case `bounty-contract.md` already governs.
 
 ## 7. Latency budget (arithmetic, not aspiration)
 

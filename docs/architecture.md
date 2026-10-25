@@ -249,13 +249,18 @@ first turn of a conversation and leaves room for passages.
 
 The request the model reads is bounded in code, not by intent.
 `ResearchPrompt.MAX_PROMPT_CHARACTERS` caps the built text at 6,000 characters:
-the question is accepted up to 2,000, every passage keeps at least 300 and at
-most 1,200 characters of body, and titles, sections, dates, and the conversation
-topic are clipped before they are escaped. Excerpts are sized from the space that
-is left after the fixed parts, measured against the escaped length because `&`,
-`<`, and `>` grow when they are written as reference data. When the request still
-cannot fit, retained history is dropped before any passage is cut, so a turn never
-silently loses a source it has to cite. Retained history carries the last two
+the question is accepted up to 4,000, each passage keeps at most 2,000 characters of
+body, and titles, sections, dates, and the conversation topic are clipped before they
+are escaped. A source is costed by what the rendered prompt carries for it, measured
+against the escaped length because `&`, `<`, and `>` grow when they are written as
+reference data. When the request cannot fit, retained history is dropped before any
+passage is cut, so a turn never silently loses a source it has to cite; after that,
+sources go from the tail of the ranked list, so the passages the model keeps are
+always its highest-ranked ones. At least one passage survives a squeeze whenever the
+retrieval returned any, because an answer the app refuses to write is worse than one
+that takes longer. A trimmed passage is not shown to the reader either: the turn's
+evidence list is the carried prefix, so `S1..Sk` label exactly what was sent. Retained
+history carries the last two
 earlier questions only: an earlier answer is this model's own prose, and a recorded
 run replayed the first answer word for word two turns later.
 
