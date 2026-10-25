@@ -370,6 +370,24 @@ So greedy is not looping and not silently degrading: the quality signal the app 
 whose passage the reader can open and match - held on every turn. What is left is the four long
 turns, and those are the ones prefix reuse would pay for.
 
+### Prefix reuse: the precondition is real, the win here is not
+
+`context_capacity` in this branch doubles a bucket between 512 and 4096, and `KvCache::prepare`
+treats a capacity change like a model change - it frees the context and the remembered prefix with
+it. That is the mechanism the design blamed for reuse never landing, so it was pinned to one fixed
+4096 and measured on the same four cases.
+
+Nothing moved: median end to end 27,321 -> 27,019 ms, and all four answers were byte-identical.
+First turns of fresh conversations do not cross bucket boundaries often enough for the churn to
+cost, and a follow-up turn only shares the system block plus earlier questions, which is a few
+hundred tokens of a ~1,400-token prompt. Reverted, because the fixed capacity is not free: it holds
+a 4096-token KV cache on a 2 GB phone at all times.
+
+The change belongs to `c697823` in the Wave A lane, which already pins one capacity, and it should
+arrive through that merge rather than as a duplicate here. What is left for reuse is theirs to
+measure: their own probe still saw `reused_prefix_tokens: 0` on an identical prompt with
+`context_prepare_ms: 0`, which is a defect inside `KvCache::reuse_prefix`, not a capacity question.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
