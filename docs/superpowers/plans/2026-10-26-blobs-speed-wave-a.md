@@ -506,14 +506,11 @@ private fun keptCount(
 `render` is not a helper that exists yet: today's `create` (`:38-85`) *is* the renderer. Split it so the
 budget can measure the envelope without re-entering the trimming path — make the current body
 `private fun render(question, query, history, sources): ResearchPrompt`, then have `create` call
-`keptCount(...)` and `render(question, query, history, sources.take(kept))`. Without that split,
+`plan(...)` and `render(question, query, history, sources.take(kept))`. Without that split,
 `envelopeCharacters` calls `create` calls `envelopeCharacters` and the first turn overflows the stack.
 
-Then set `ResearchPrompt.sources` to exactly the carried prefix — `render` already returns
-`sources = sources`, so passing the prefix is what makes persistence, the sources panel and the grammar
-all describe the passages the model really saw. Keeping a prefix instead of dropping the largest blocks is the part of this design that is not a
-taste call: the survivor labels stay `S1..Sk` contiguous, and three places index a marker by
-**position in the carried list** — `CitedDigest.gate` (`inference/CitedDigest.kt:30-32`),
+Prefix-keeping is not a taste call: the survivor labels stay `S1..Sk` contiguous, and three places index a
+marker by **position in the carried list** — `CitedDigest.gate` (`inference/CitedDigest.kt:30-32`),
 `AnswerText.citations(text, count)` (`inference/AnswerText.kt:115-131`) and
 `AnswerText.citationsMatchTheirPassages` (`:203-205`). Dropping a middle source and renumbering the
 survivors would repoint every citation in the turn at a different passage; dropping a middle source and
@@ -521,26 +518,31 @@ survivors would repoint every citation in the turn at a different passage; dropp
 `StructuredAnswer.markerAlternation` (`:37`) is built once from `MAX_ANSWER_SOURCES`. Prefix-keeping
 needs neither: `citations()` ignores any marker outside `1..count`, so an answer that still emits `[S5]`
 after `S5` was trimmed counts as **uncited**, and the existing gate replaces the prose with the cited
-digest. That is the safe direction of failure and it is already tested behaviour. Refuse before any
-completion when the question alone cannot leave room for one passage:
+digest. That is the safe direction of failure and it is already tested behaviour.
 
-```kotlin
-require(sources.isEmpty() || kept >= MINIMUM_SOURCES_FOR_ANSWER) {
-    "PROMPT_BUDGET question=${question.length} sources=${sources.size} budget=$promptCharacterBudget"
-}
-```
+**Implemented rule, which supersedes the `PROMPT_BUDGET` refusal this task first specified.** A
+4 000-character question plus one 2 000-character excerpt already costs more than 6 000, so refusing the
+completion would have turned slow answers into failed turns — a visible regression against `goal.md`'s
+"a retrieval miss never hides an otherwise usable answer". What ships:
 
-The `sources.isEmpty()` arm is deliberate: a retrieval miss is a legitimate turn and
-answers `unsourced` under `docs/bounty-contract.md`, while a turn trimmed down to zero
-passages would silently change what it is allowed to claim. If the block helper above does
-not fit the current shape of `create`, keep `create`'s existing structure and apply the
-same rule — measure what would be rendered, drop the largest, never drop below one
-passage, never renumber — rather than replacing its formatting logic.
+1. `plan(question, query, history, sources, budget)` returns `PromptBudget(sources, history)`; `create`
+   renders from it, and `carriedSources(...)` exposes the same decision to callers.
+2. When the list does not fit, **retained history is dropped before any passage is cut** — the rule
+   `docs/architecture.md` already argued for, since history costs 300+500 per pair while a passage costs
+   up to 2 053.
+3. If it still does not fit, the prompt carries `MINIMUM_SOURCES_FOR_ANSWER = 1` passage and no history.
+   An empty passage set then comes only from a retrieval miss, never from the budget.
+4. `keptCount`/`fitCount` is the pure prefix scan; the floor lives in `plan`, so the scan can report zero
+   and let history go first.
 
-Finally record the bound where it was claimed: `docs/architecture.md:251` already says
-`ResearchPrompt.MAX_PROMPT_CHARACTERS` caps the built text at 6 000 characters. After this task that
-sentence becomes true, so extend it with the drop rule and the marker-stability rule instead of
-rewriting it.
+Because the engine calls `carriedSources` immediately after retrieval and before `onEvidence`, the reader,
+the prompt, the citations and the stored turn all describe the same set — no source is ever displayed that
+the model was not given.
+
+Finally record the bound where it was claimed: `docs/architecture.md:250-262` already says
+`ResearchPrompt.MAX_PROMPT_CHARACTERS` caps the built text at 6 000 characters, but also quoted a 2 000
+question cap, a 300–1 200 passage band, and "excerpts sized from the space left" — none of which existed.
+That paragraph was rewritten to describe what the code now does.
 
 - [ ] **Step 4: Make every consumer describe the carried prefix**
 
@@ -584,16 +586,22 @@ git commit -m "fix(engine): bound the prompt with a global character budget"
 ### Task 5: Make the captures able to answer the 8× question
 
 **Files:**
+- Create: `android/app/src/androidTest/kotlin/dev/blobs/app/RecordFields.kt` (one shared header writer)
 - Modify: `android/app/src/androidTest/kotlin/dev/blobs/app/PublicResearchWorkflowTest.kt` (report header + per-case fields)
-- Modify: `android/app/src/androidTest/kotlin/dev/blobs/app/FollowUpJourneyTest.kt`, `AppJourneyPerformanceTest.kt` (device identity + acceptance status)
-- Create: `android/app/src/androidTest/kotlin/dev/blobs/app/RecordFields.kt` (one shared header builder)
-- Test: `android/app/src/test/kotlin/dev/blobs/app/CopyDensityTest.kt` remains untouched; correctness of the fields is asserted on the pulled JSON
+- Modify: `android/app/src/androidTest/kotlin/dev/blobs/app/AppJourneyPerformanceTest.kt` (header + per-turn prompt shape)
+- Modify: `android/app/src/androidTest/kotlin/dev/blobs/app/NativeInferenceTest.kt` (both turn reports)
+
+**Tree note:** the two captures this task first named, `GenerationCostTest.kt` and
+`FollowUpJourneyTest.kt`, exist only as untracked files in the shared checkout `D:/rimbara/blobs`; neither
+is on `feat/offline-research-engine`, so wiring them here would commit another session's work. Their
+equivalents on this branch are the turn reports inside `NativeInferenceTest` (`recordOfflineChatFlow` and
+`chat-no-sources`), which already read `container.work` and write the same identity keys.
 
 **Interfaces:**
-- Consumes: `Build.FINGERPRINT`, `Build.VERSION.SDK_INT`, `inferenceThreads(...)` (`inference/NativeBridge.kt:3-6`), `container.work.lastPerformanceSnapshot` (`WorkPerformanceSnapshot.kt:4-11`).
-- Produces: `internal fun reportHeader(context: Context, runId: String): JSONObject` and `internal fun installedApkSha256(context: Context): String` in `RecordFields.kt`, writing `format`, `run_id`, `application_id`, `installed_apk_sha256`, `device_acceptance`, `fingerprint`, `api`, `abi`, `inference_threads`. (`allowed_cores` is deliberately absent — that value arrives with Wave C's governor, and writing a placeholder for it here would be a field that always lies.)
+- Consumes: `Build.FINGERPRINT`, `Build.VERSION.SDK_INT`, `inferenceThreads(...)` (`inference/NativeBridge.kt`), `container.work.lastPerformanceSnapshot` (`WorkPerformanceSnapshot.kt`), `NativeTurnTimings.json()`.
+- Produces: `internal fun JSONObject.putReportHeader(context: Context, runId: String): JSONObject` and `internal fun installedApkSha256(context: Context): String` in `RecordFields.kt`, writing `format`, `run_id`, `application_id`, `installed_apk_sha256`, `device_acceptance`, `fingerprint`, `api`, `abi`, `inference_threads`. Android's `org.json.JSONObject` has no `putAll`, which is why this is an extension that fills the caller's object rather than a builder that returns one. (`allowed_cores` is deliberately absent — that value arrives with Wave C's governor, and writing a placeholder for it here would be a field that always lies.)
 
-- [ ] **Step 1: Write the shared header builder**
+- [ ] **Step 1: Write the shared header writer**
 
 ```kotlin
 package dev.blobs.app
@@ -605,44 +613,44 @@ import dev.blobs.app.inference.inferenceThreads
 import org.json.JSONObject
 
 /** Every capture report must carry these keys; goal.md bars speed claims without them. */
-internal fun reportHeader(context: Context, runId: String): JSONObject = JSONObject()
-    .put("format", 1)
-    .put("run_id", runId)
-    .put("application_id", context.packageName)
-    .put("installed_apk_sha256", installedApkSha256(context))
-    .put("fingerprint", Build.FINGERPRINT)
-    .put("api", Build.VERSION.SDK_INT)
-    .put("abi", Build.SUPPORTED_ABIS.firstOrNull().orEmpty())
-    .put("device_acceptance", "unverified")
-    .put("inference_threads", inferenceThreads(Runtime.getRuntime().availableProcessors()))
+internal fun JSONObject.putReportHeader(context: Context, runId: String): JSONObject = apply {
+    put("format", 1)
+    put("run_id", runId)
+    put("application_id", context.packageName)
+    put("installed_apk_sha256", installedApkSha256(context))
+    put("fingerprint", Build.FINGERPRINT)
+    put("api", Build.VERSION.SDK_INT)
+    put("abi", Build.SUPPORTED_ABIS.firstOrNull().orEmpty())
+    put("device_acceptance", DEVICE_ACCEPTANCE_UNVERIFIED)
+    put("inference_threads", inferenceThreads(Runtime.getRuntime().availableProcessors()))
+}
+
+/** Hashed from the APK the instrumentation actually runs, not the file on the build host. */
+internal fun installedApkSha256(context: Context): String
 ```
 
-`installedApkSha256` is currently a private duplicate in two classes
-(`FollowUpJourneyTest.kt:159`, `GenerationCostTest.kt:279`). Move one copy into
-`RecordFields.kt` as `internal fun installedApkSha256(context: Context): String` with the
-body taken verbatim from `FollowUpJourneyTest`, and delete both private copies. Then add
-`airplane_mode` (and keep `active_network`) in the captures that already set them, so no
-capture loses a key it used to have.
+`installedApkSha256` is written here as SHA-256 over `context.applicationInfo.sourceDir`; the private
+copies in the untracked captures can be deleted when that lane merges, not before. Keep each file's
+existing extra-key spellings (`airplane_mode` vs `airplane_mode_enabled` differ between captures today)
+so old reports stay comparable where a key already exists.
 
 - [ ] **Step 2: Use it in the three report builders**
 
-Replace each hand-built header (`FollowUpJourneyTest.kt:56-66`, `GenerationCostTest.kt:53-62` and `:151-159`, `AppJourneyPerformanceTest.kt`'s report, `PublicResearchWorkflowTest.kt:105-118`) with `reportHeader(context, runId)` plus that capture's extra keys (`cases_sha256`, `suite_id`, `scope`, `selected_model`, `packages`, `model_sha256`, `library_sha256`). Keep each file's existing key spellings so old reports stay comparable where a key already exists.
+Replace each hand-built header (`NativeInferenceTest.kt`'s `recordOfflineChatFlow` and `chat-no-sources`
+reports, `AppJourneyPerformanceTest.kt`'s report, `PublicResearchWorkflowTest.kt`'s report) with
+`putReportHeader(context, runId)` plus that capture's extra keys (`cases_sha256`, `suite_id`, `scope`,
+`selected_model`, `packages`, `model_sha256`, `library_sha256`). The library-validation and
+package-install reports keep their own headers: they are not turn timings and Wave A does not claim them.
 
 - [ ] **Step 3: Add the per-case prompt shape the shelf suite never recorded**
 
-Where the shelf runner already reads `lastPerformanceSnapshot` (`PublicResearchWorkflowTest.kt:209-211`), extend that block:
-
-```kotlin
-container.work.lastPerformanceSnapshot?.let { performance ->
-    result.put("prompt_characters", performance.promptCharacters)
-    result.put("source_count", performance.sourceCount)
-    result.put("history_pair_count", performance.historyPairCount)
-    result.put("generation_attempts", performance.generationAttempts)
-    result.put("output_token_limit", performance.outputTokenLimit)
-}
-```
-
-Add the same five keys to `FollowUpJourneyTest.kt`'s per-turn `performance` object so the two paths become comparable field-for-field.
+Where the shelf runner already reads `lastPerformanceSnapshot` (`PublicResearchWorkflowTest.kt`), extend
+that block with `prompt_characters`, `source_count`, `history_pair_count`, `generation_attempts`,
+`output_token_limit` and `native_stages`, and assert on a `COMPLETE` turn that
+`prompt_characters <= ResearchPrompt.MAX_PROMPT_CHARACTERS` and that the turn's stored evidence count
+equals `source_count` — the two claims the prompt bound actually makes. Add the same keys to
+`AppJourneyPerformanceTest`'s per-turn object and `NativeInferenceTest`'s zero-source report, so the two
+paths become comparable field-for-field.
 
 - [ ] **Step 4: Prove the fields exist and are non-zero**
 
@@ -684,7 +692,7 @@ git commit -m "test(device): name the build, device and prompt shape in every ca
 
 - Every stage of a turn has a number attached, and the stage sum reconciles with `elapsed_ms` within 20 %.
 - `context_capacity` is one fixed value per model, `reused_prefix_tokens > 0` on the second turn, and turn 2's `first_token_ms` is at least 20 % below turn 1's — or the baseline note records why that failed and what it re-rates.
-- A shelf-prompt turn cannot exceed `MAX_PROMPT_CHARACTERS`, the evidence list equals what the model was given, and a zero-passage turn is refused rather than silently downgraded to `unsourced`.
+- A shelf-prompt turn cannot exceed `MAX_PROMPT_CHARACTERS`, the evidence list equals what the model was given, and a squeezed budget still carries one passage rather than refusing the answer or downgrading it to `unsourced`.
 - Every new capture names its APK digest, device fingerprint, API level, ABI, threads, prompt size and source count, and says `device_acceptance: unverified`.
 - `bash ./gradlew verify` passes, and the paired measurement from Task 5 Step 5 exists as a number in the roadmap.
 

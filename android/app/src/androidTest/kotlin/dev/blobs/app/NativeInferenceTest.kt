@@ -298,21 +298,22 @@ class NativeInferenceTest {
         saveReport(
             reportFile,
             JSONObject().apply {
-                put("format", 1)
-                put("run_id", runId)
+                putReportHeader(context, runId)
                 put("complete", true)
                 put(
                     "scope",
                     "Casual chat with an installed offline model and no available library sources."
                 )
-                put("application_id", context.packageName)
-                put("fingerprint", Build.FINGERPRINT)
-                put("api", Build.VERSION.SDK_INT)
                 put("question", question)
                 put("status", turn.status)
                 put("answer", turn.answer)
                 put("evidence", turn.evidence)
                 put("elapsed_ms", elapsedMs)
+                container.work.lastPerformanceSnapshot?.let { performance ->
+                    put("prompt_characters", performance.promptCharacters)
+                    put("source_count", performance.sourceCount)
+                    put("native_stages", performance.nativeStageTimings?.json() ?: JSONObject.NULL)
+                }
             }
         )
     }
@@ -364,13 +365,9 @@ class NativeInferenceTest {
         check(!output.exists())
         val id = "answer-$runId"
         val report = JSONObject().apply {
-            put("format", 1)
-            put("run_id", runId)
+            putReportHeader(context, runId)
             put("complete", false)
             put("question", question)
-            put("application_id", context.packageName)
-            put("fingerprint", Build.FINGERPRINT)
-            put("api", Build.VERSION.SDK_INT)
             put("airplane_mode_enabled", airplaneModeEnabled)
             put("generation_started", false)
             put(

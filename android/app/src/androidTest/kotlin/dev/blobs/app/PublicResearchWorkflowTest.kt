@@ -2,7 +2,6 @@ package dev.blobs.app
 
 import android.graphics.Bitmap
 import android.net.ConnectivityManager
-import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.AtomicFile
@@ -22,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.blobs.app.data.library.Evidence
 import dev.blobs.app.data.preferences.ThemeMode
+import dev.blobs.app.inference.ResearchPrompt
 import dev.blobs.app.ui.AppViewModel
 import dev.blobs.app.ui.Page
 import java.io.File
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -103,13 +104,12 @@ class PublicResearchWorkflowTest {
             }
         }
         val results = JSONArray()
-        val report = JSONObject().put("format", 1).put("run_id", runId)
+        val report = JSONObject().putReportHeader(context, runId)
             .put("cases_sha256", digest).put("suite_id", suite.getString("id"))
             .put(
                 "scope",
                 "Public questions through the actual Compose chat UI; normally installed assets"
             )
-            .put("fingerprint", Build.FINGERPRINT).put("api", Build.VERSION.SDK_INT)
             .put("airplane_mode", true).put("active_network", JSONObject.NULL)
             .put("selected_model", selected.key).put("complete", false).put("results", results)
             .put(
@@ -212,6 +212,25 @@ class PublicResearchWorkflowTest {
                             it.firstVisibleTextElapsedMs ?: JSONObject.NULL
                         )
                         .put("end_to_end_elapsed_ms", it.endToEndElapsedMs)
+                        .put("prompt_characters", it.promptCharacters)
+                        .put("source_count", it.sourceCount)
+                        .put("history_pair_count", it.historyPairCount)
+                        .put("generation_attempts", it.generationAttempts)
+                        .put("output_token_limit", it.outputTokenLimit)
+                        .put("native_stages", it.nativeStageTimings?.json() ?: JSONObject.NULL)
+                    if (turn.status == "COMPLETE") {
+                        val shownSources = Evidence.decode(turn.evidence).size
+                        assertTrue(
+                            "A completed turn carried ${it.promptCharacters} prompt characters " +
+                                "past the ${ResearchPrompt.MAX_PROMPT_CHARACTERS} bound",
+                            it.promptCharacters <= ResearchPrompt.MAX_PROMPT_CHARACTERS
+                        )
+                        assertTrue(
+                            "The turn showed $shownSources sources while the model was given " +
+                                "${it.sourceCount}",
+                            shownSources == it.sourceCount
+                        )
+                    }
                 }
                 results.put(result)
                 save()
