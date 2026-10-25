@@ -79,6 +79,29 @@ them true, and rewriting them here would only create a conflict — but no Wave 
 as evidence of what ships. The `verify`-time docs check does not compare prose to binaries, which is
 how this survived a release.
 
+## Merge contract with the `feat/offline-research-engine` lane (agreed 2026-10-26)
+
+The other session owns `D:/rimbara/blobs/.worktrees/offline-research-engine` and its uncommitted native
+edits; this branch owns Wave A. Coordination settled as:
+
+- Their `4a2905e "bound the prompt with a global character budget"` is **superseded** by `188b1c2` here.
+  At merge, keep this branch's `ResearchPrompt.plan` / `PromptBudget` and **drop theirs**, including the
+  `PROMPT_BUDGET` throw path — any test in their lane that asserts a throw has to go with it, because a
+  budget that fails a turn is a product regression (`goal.md`: a retrieval miss never hides an otherwise
+  usable answer).
+- They do not touch `ResearchPrompt.kt`, `LocalResearchEngine.kt`, `NativeBridge.kt`,
+  `ResearchPromptTest.kt` or `docs/architecture.md` while this branch is open.
+- Their paired bound measurement (8 GB profile, `lfm2-1b2-q4km`, suite sha `7f8955d1240d`) confirms the
+  budget binds by removing 1-2 of 6 passages on comparison questions. Read against this branch's
+  55.7-58.7 ms per prompt token, `compare-disc-rim-brakes` (1 143 passage chars removed ≈ 335 tokens ≈
+  19 s predicted, 20.8 s observed) matches, and `compare-tubeless-tubed-tyres` (1 434 chars ≈ 420 tokens
+  ≈ 24 s predicted, +47 s observed) does not. **No single-run latency claim for the bound is supportable
+  yet**, which is what this file's gate says; the delta is prefill-independent variance.
+- Device split: `emulator-5554` = blobs-research (8 GB) is theirs; `emulator-5556` = blobs-e2e (2 GB) is
+  this branch's. This branch left 5556 with `dev.blobs.app.debug` replaced by this build (APK digest
+  `dffbbe9890554d93…`), airplane mode on (its prior state), and two extra staged run directories
+  `files/evaluation/wavea-e2e-1` and `wavea-probe-1`.
+
 ## Gate
 
 `git -C D:/rimbara/blobs-wave-a status --porcelain` is empty for `android/app/src/main/cpp`. If any
