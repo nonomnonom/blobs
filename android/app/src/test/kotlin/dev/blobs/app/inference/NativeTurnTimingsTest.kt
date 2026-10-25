@@ -34,8 +34,9 @@ class NativeTurnTimingsTest {
 
     @Test
     fun aMissingNativeReadIsAllAbsentSlots() {
+        val short = longArrayOf(1, 2, 3)
         assertEquals(NativeTurnTimings.unavailable, NativeTurnTimings.fromNative(null))
-        assertEquals(NativeTurnTimings.unavailable, NativeTurnTimings.fromNative(longArrayOf(1, 2, 3)))
+        assertEquals(NativeTurnTimings.unavailable, NativeTurnTimings.fromNative(short))
         assertTrue(NativeTurnTimings.unavailable.loadMs < 0)
         assertTrue(NativeTurnTimings.unavailable.promptTokens < 0)
     }

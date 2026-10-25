@@ -4,6 +4,9 @@ import org.json.JSONObject
 
 private const val MAX_INFERENCE_THREADS = 4
 
+// Slots returned by lastTimingsNative(); NativeTurnTimings maps them in this order.
+private const val TIMING_SLOTS = 13
+
 internal fun inferenceThreads(availableProcessors: Int): Int =
     availableProcessors.coerceIn(1, MAX_INFERENCE_THREADS)
 
@@ -54,10 +57,9 @@ internal data class NativeTurnTimings(
         val unavailable = NativeTurnTimings(-1, -1, -1, -1, -1, -1, -1, -1, -1, false, -1, -1, -1)
 
         /** The JNI side returns these thirteen slots in this order; a short array is a failed read. */
-        fun fromNative(values: LongArray?): NativeTurnTimings = if (values == null || values.size < 13) {
-            unavailable
-        } else {
-            NativeTurnTimings(
+        fun fromNative(values: LongArray?): NativeTurnTimings {
+            if (values == null || values.size < TIMING_SLOTS) return unavailable
+            return NativeTurnTimings(
                 loadMs = values[0],
                 templateMs = values[1],
                 tokenizeMs = values[2],
