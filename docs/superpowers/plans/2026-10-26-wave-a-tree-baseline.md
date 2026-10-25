@@ -454,6 +454,28 @@ That closes every native lever the wave names except prefix reuse: llamafile and
 large, batch shape, KV type, mmap and flash attention are measured as nothing on this hardware, and
 the two decode cuts (token cap, greedy tail) are in.
 
+### Prefix reuse measured where it should pay: it pays nothing yet
+
+`reuse-b2` ran a three-turn conversation on the 0.5B (`compare-bangkok-hanoi`, then two follow-ups
+in the same thread), which is the workload prefix reuse exists for:
+
+| turn | retrieval | first text | end to end | passage chars | answer |
+| --- | --- | --- | --- | --- | --- |
+| reuse-t1 | 6,773 ms | 17,187 ms | 45,594 ms | 4,073 | 937 chars |
+| reuse-t2 | 4,966 ms | 16,469 ms | 26,200 ms | 3,976 | 382 chars |
+| reuse-t3 | 7,473 ms | 17,413 ms | 26,657 ms | 3,456 | 282 chars |
+
+Turn two and three share their whole system block and part of their history with the turn before
+them, and their first text is **not one millisecond faster** - 16,5 and 17,4 s against 17,2 s. The
+model re-prefills every prompt from token zero on every turn. That is the same defect the Wave A
+probe found with timers (`reused_prefix_tokens: 0` on an identical prompt, `context_prepare_ms: 0`),
+now confirmed on a workload where it costs real time, measured here without their timers.
+
+So the last named lever in this wave is not slow, it is absent, and it is not in a file this lane
+should fix twice: the repair belongs in `KvCache::reuse_prefix`. Its value is now bounded and
+measurable - up to ~7 s on every turn after the first, on top of the 24-27 s median already
+achieved.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
