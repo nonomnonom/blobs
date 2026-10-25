@@ -27,6 +27,15 @@
       "minimum_ram_mb": 4096,
       "recommended_up_to_memory_mb": 32768,
       "publication": "authorized"
+    },
+    "qwen25-0b5-q4km": {
+      "title": "Qwen2.5 0.5B Q4_K_M · 32k",
+      "description": "Official Qwen2.5 0.5B Instruct Q4_K_M GGUF from the Qwen organisation. 32k native context; the smallest writer in the app, added to test whether a 2 GB phone can hold a faster research turn. Quality and peak memory are not measured yet.",
+      "language": "English",
+      "publisher": "Qwen · official GGUF",
+      "minimum_ram_mb": 3072,
+      "recommended_up_to_memory_mb": 16384,
+      "publication": "local-only"
     }
   }
 }
