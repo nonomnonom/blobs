@@ -59,33 +59,55 @@ Task 4's bound was measured here before the lane split, on this branch at `4a290
 the `eightg-1` baseline: same 8 GB AVD, same shelf (all nine packages byte-identical by
 `sha256`), same model `lfm2-1b2-q4km`, same suite `research-comparison-synthesis-v1` at
 `cases_sha256 7f8955d1240d`.
-The first four paired `COMPLETE` cases of `budget-1`:
+`budget-1` ran the suite to 13 of 14 results (two cases skip without `wikipedia-top1m-mini`; the
+fourteenth died on a 600 s UI wait, which is itself a sign the machine was contended). Eleven cases
+are paired with `eightg-1`. The bound bit on four of them, and the other seven — identical prompts,
+identical passages, identical character counts — are a free control for how the device felt:
 
 | case | passages | passage chars | answer chars | first visible text |
 | --- | --- | --- | --- | --- |
-| compare-disc-rim-brakes | 6 → 5 | 5,113 → 3,970 | 710 → 458 | 109,731 → 88,969 ms |
-| compare-tubeless-tubed-tyres | 6 → 4 | 5,915 → 4,481 | 682 → 400 | 114,804 → 162,212 ms |
-| compare-bangkok-hanoi | 6 (unbound) | 4,073 (unbound) | 798 | 87,460 → 98,955 ms |
-| compare-magna-carta-bill-rights | 4 (unbound) | 3,016 (unbound) | 1,263 | 65,940 → 76,600 ms |
+| compare-disc-rim-brakes | 6 → 5 | 5,113 → 3,970 | 710 → 458 | 109,731 → 88,969 ms (-19 %) |
+| compare-tubeless-tubed-tyres | 6 → 4 | 5,915 → 4,481 | 682 → 400 | 114,804 → 162,212 ms (+41 %) |
+| synth-winter-storm-home | 6 → 4 | 5,995 → 4,403 | 596 → 1,444 | 119,621 → 105,003 ms (-12 %) |
+| synth-power-outage-household | 6 → 4 | 5,168 → 3,748 | 660 → 457 | 109,323 → 95,497 ms (-13 %) |
+| compare-bangkok-hanoi | 6 (kept) | 4,073 | 798 | 87,460 → 98,955 ms (+13 %) |
+| compare-magna-carta-bill-rights | 4 (kept) | 3,016 | 1,263 | 65,940 → 76,600 ms (+16 %) |
+| compare-gettysburg-drafts | 4 (kept) | 3,454 | 1,043 | 69,687 → 79,281 ms (+14 %) |
+| compare-korea-indonesia-emergency-powers | 6 (kept) | 2,765 | 889 | 59,272 → 68,691 ms (+16 %) |
+| synth-house-cash-mortgage | 1 (kept) | 1,222 | 119 | 41,317 → 44,670 ms (+8 %) |
+| synth-japan-rail-week | 6 (kept) | 2,672 | 901 | 65,214 → 74,772 ms (+15 %) |
+| synth-geneva-conventions | 2 (kept) | 1,468 | 1,590 | 36,398 → 49,767 ms (+37 %) |
 
-What the numbers say, and why the other lane's rule is the one to keep:
+- The seven unbound cases are all slower, median **+15 %**, with unchanged prompts. So the machine,
+  not the code, accounts for about a fifth of every turn in this run.
+- The four bound cases cut 22-28 % of the prompt characters and moved -19 %, -13 %, -12 % and +41 %.
+  Against the +15 % control that is roughly **-27 percentage points** for the cases the bound
+  reaches, with one case (tubeless) moving the wrong way by more than the control explains. Three of
+  the four land near the ~16 ms-per-character prediction (1,143-1,592 characters cut should save
+  18-26 s; observed -20.8, -13.8, -14.6 s).
+- It bound on **4 of 11** cases, because it only bites above ~4,500 characters of passages.
+- It never failed a turn: no `PROMPT_BUDGET` throw appeared in thirteen cases, so the rule's worst
+  case did not fire here — which is not the same as it being safe, and the other lane's
+  never-throw floor makes it moot.
 
-- A 6,000-character total budget **is not 6,000 characters of evidence**, and the two bound cases
-  bracket what is left for the sources. These are first turns, so no history is in the prompt: the
-  scaffold — system instructions, the 175-character question, the chat template — is paid for before
-  any passage is added. `disc-rim-brakes` kept 5 of 6 passages (3,970 characters, the 6th would have
-  made 5,113) and `tubeless-tubed-tyres` kept 4 of 6 (4,481, the 5th would have made 5,651), so the
-  space actually available to read is between 4,481 and 5,112 characters and the scaffold costs
-  between 888 and 1,519. Six sources at the observed median passage length of 858 characters fit in
-  that; six max-length passages never would. Breadth of sources is the thing the owner asked for, so
-  shedding retained history has to come before cutting any passage.
-- It has **no demonstrable latency win yet**: median +14.7 % on first visible text over n=4, with
-  both signs present. Run-to-run noise on this profile swamps the effect the bound could have —
-  retrieval alone moved 14,258 → 4,405 ms on one case and 6,342 → 8,693 ms on another.
-- Therefore no single-run claim about the prompt bound is supportable on this device profile. Paired
-  runs, or the stage-decomposed timings from `0339ee6`, are the only way to rate it against the
-  other levers. That conclusion re-rates Wave B against Wave C and belongs in the wave sequencing
-  decision.
+Read together: the bound is worth something on the large-prompt tail, at the price of 1-2 of six
+sources on exactly the comparison questions where breadth is the point. That is why the surviving
+rule has to shed retained history first, and why the ceiling on a *passage* is the cheaper lever if
+it ever binds — which today it does not.
+
+Two more things the table settles. A 6,000-character total budget **is not 6,000 characters of
+evidence**, and the bound cases bracket what is left for the sources: these are first turns, so no
+history is in the prompt and the scaffold — system instructions, the 175-character question, the chat
+template — is paid for before any passage is added. `disc-rim-brakes` kept 5 of 6 passages (3,970
+characters, the 6th would have made 5,113) and `tubeless-tubed-tyres` kept 4 of 6 (4,481, the 5th
+would have made 5,651), so the space actually available to read is between 4,481 and 5,112 characters
+and the scaffold costs between 888 and 1,519. Six sources at the observed median passage length of 858
+characters fit in that; six max-length passages never would.
+
+And the ±40 % spread between cases means a single paired run cannot carry a claim on its own: four
+bound cases is enough to see a direction against an in-run control, not enough to quote a number. The
+stage-decomposed timings from `0339ee6` are what turn this into an attributable per-stage figure, and
+that is the run to pair against next.
 
 ## The §7.3 attribution, computed from the capture that already exists
 
@@ -108,8 +130,13 @@ decoded 9,862 answer characters in 319 s — **8.6 tokens/s**. Prefill is runnin
 decode, which is not what llama.cpp does when the batch path is working; on this tree it cannot:
 `GGML_LLAMAFILE` is forced off, x86_64 SIMD is limited to SSE4.2, and the ubatch is 128.
 
-That reframes the levers, in order of what they actually buy on a median turn:
+`budget-1` re-fits the same relationship on a different build a day later and reproduces the
+direction without the tightness: 23.4 ms per character, R² 0.675 over 11 cases, decode 6.9 tok/s
+against the baseline's 8.6. That is the shape of a contended machine — same story, worse numbers —
+and it is the reason every figure in this note is quoted as an order of magnitude rather than a
+specification. The prefill-dominates finding survives it; the exact slope does not.
 
+That reframes the levers, in order of what they actually buy on a median turn:
 - **Native prefill throughput** (llamafile, x86_64 AVX paths, ubatch): at a normal 100 tok/s the
   same 3,948-character prompt costs ~11 s instead of ~63 s, so **~52 s saved and no content
   removed**. This is Wave C's territory, and it is the biggest single term in the wave.
