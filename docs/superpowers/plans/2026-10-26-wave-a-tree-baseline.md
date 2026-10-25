@@ -311,6 +311,19 @@ That constant is `engine/LocalResearchEngine.kt:17`, a file this lane agreed not
 is open (`ddfa6e1`), so the change is handed to that lane with these numbers rather than applied
 here.
 
+### Batch shape is exhausted: 512 was tried and reverted
+
+`kKvDecodeBatchTokens` (`cpp/kv_cache.h:10`) sets `n_batch`, `n_ubatch` (half of it) and the prefill
+loop stride. llama.cpp defaults far higher, so it was raised to 512 and measured on the same four
+cases. First visible text moved 13,636 -> 12,571 ms on `compare-disc-rim-brakes` - about 8 %, at
+noise level - end to end got worse (31,567 -> 36,936 ms), and the next case crashed the
+instrumentation (`Tests run: 1, Failures: 1`, report left at `complete: false`). Reverted.
+
+With AVX2, llamafile and Q8_0 KV already in place, prefill is ~6 ms per token and there is nothing
+left in batch shape. What is left is length: `MAX_RESEARCH_OUTPUT_TOKENS` (320) in
+`engine/LocalResearchEngine.kt:17`, which this lane is barred from editing, and the `reuse_prefix`
+defect in the Wave A lane.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
