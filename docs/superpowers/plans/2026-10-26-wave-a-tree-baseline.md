@@ -421,6 +421,28 @@ parallel fan-out the remaining floor is the slowest single library, 5.5-8.9 s. C
 changing the query, which is `RetrievalQuery.kt`: pinned, mirrored by the frozen replay, and not a
 call to make casually.
 
+### The median reproduces: two independent 14-case captures
+
+`q554-suite3` repeated the whole suite on the same device, shelf, model and build with nothing else
+attached, giving ten paired complete cases against `q554-suite`:
+
+| | capture 1 | capture 2 |
+| --- | --- | --- |
+| median end to end | 24,260 ms | 27,463 ms |
+| median first visible text | 12,098 ms | 13,546 ms |
+| cases under 30 s | 8 of 10 | 7 of 10 |
+| every case cited, reader verified | yes | 10 of 10 |
+
+So the headline is not a lucky run: a 0.5B research turn lands at a **24-27 second median**, from a
+97,587 ms baseline on the same suite, and grounding held on every turn of both captures.
+
+What also reproduces is the tail, which means it is not noise: `synth-japan-rail-week` 40,585 ->
+43,942 ms and `compare-bangkok-hanoi` 33,704 -> 37,160 ms. Both are six-passage turns with ~900
+character answers, i.e. 200 tokens of decode at 130-150 ms each. Closing them needs one of two
+decisions, neither of which is mine to make silently: shorter answers (the cap is already 200 and
+these use all of it), or a cheaper query shape in `RetrievalQuery.kt`, which is pinned and mirrored
+by the frozen replay.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
