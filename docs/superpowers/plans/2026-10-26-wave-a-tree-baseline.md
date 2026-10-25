@@ -353,6 +353,23 @@ This is a decoding-behaviour change, so it is gated on the 14-case suite, not on
 loop, and identical answers on four cases is evidence, not proof. The repetition penalty stays at 1.2
 for that reason. Pending that run this is recorded as measured but not settled.
 
+### The 14-case gate: greedy holds, and the suite is 3.8x faster
+
+`q554-suite` ran the whole `research-comparison-synthesis-v1` suite (sha `7f8955d1…`, the same file
+the 97.6 s median baseline used) with `qwen25-0b5-q4km` on the optimized build: **complete, 12
+cases run, 2 skipped for the missing `wikipedia-top1m-mini`**.
+
+- median first visible text **12,694 ms**, median end to end **25,798 ms**
+- 8 of 12 cases under 30 s; the four over it are 31,242 / 33,704 / 37,597 / 40,585 ms
+- **all 12 cases cited** (1-6 markers each) and `cited_source_reader_verified` was true on all 12
+
+Against `eightg-1` (LFM2-1.2B, same suite, same device, same shelf, before any of this): median
+78,573 -> 12,694 ms first text (**6.2x**) and 97,587 -> 25,798 ms end to end (**3.8x**).
+
+So greedy is not looping and not silently degrading: the quality signal the app reports - a citation
+whose passage the reader can open and match - held on every turn. What is left is the four long
+turns, and those are the ones prefix reuse would pay for.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
