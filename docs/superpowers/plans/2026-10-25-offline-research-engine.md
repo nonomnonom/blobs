@@ -151,9 +151,11 @@ observations only.
 turn retrieved six passages and the model still produced zero citations, so the gate replaced
 the hallucinated itinerary with six cited digest lines ("Sourced · 6 cited"). The Bangkok and
 Hanoi comparison retrieved `Bangkok`, `Hanoi` and `Southeast Asia` as S1-S3 and answered with
-one Bangkok sentence citing S4, a district page; Hanoi never appears. Emulator timings from the
-same lane's captures were 53,214-76,541 ms to first visible text and 80,108-87,625 ms per turn;
-`PublicResearchWorkflowTest` records no timings, so a timed re-capture is still owed.
+one Bangkok sentence citing S4, a district page; Hanoi never appears. The same report records the
+turn timings: `retrieval_elapsed_ms` 1,988 and 1,900 ms, `first_visible_text_elapsed_ms` 76,541 and
+53,214 ms, `end_to_end_elapsed_ms` 87,628 and 80,110 ms, and runs 5 and 6 repeat them to within
+about a second, so those figures are attributed to this run set. What these captures do not record
+is the installed APK digest and peak memory.
 
 **Singular query expansion, measured and rejected.** A candidate `QueryExpansion` appended
 singular forms to the retrieval question only (never the prompt). On the device (`run-6src-4`,
@@ -201,21 +203,25 @@ same-subject-only no-ops) and `./gradlew verify`.
 
 **Still open, in priority order:** the writer is the binding constraint (a one-sentence
 one-sided answer and a zero-citation answer both came out of six adequate sources on LFM2-1.2B);
-12 of the 14 suite cases have never run through the UI.
-The other seven intended libraries are built and on disk in `corpus/work/packages/`
-(245 MB-1.7 GB each, about 7.8 GB in total) but none is installed on the test device.
+and 12 of the 14 suite cases have never run through the UI.
 
-**Why Task 3 is only two-fourteenths done, and what would unblock it.** Two measured limits, not
-choices. First, `research-comparison-synthesis-v1.json` declares `intended_libraries` for the whole
-suite and `PublicResearchWorkflowTest` refuses to start unless all of them are installed and
-enabled, so no subset can run against a partial shelf; the fix is one small change (read an
-optional per-case `intended_libraries`, fall back to the suite array) and it is deliberately not
-written yet, because nothing can exercise it under the second limit: the host volume holding the
-AVD has 7.0 GB free of 466 GB, staging `howto-repair` plus `howto-practical` alone needs about
-790 MB of emulator storage, and `host_replay.unpack` refuses to start without the payload plus
-1 GiB free. Timings and peak PSS are also still owed: `PublicResearchWorkflowTest` records no
-per-turn timings, so the 53-76 s first-text and 80-88 s turn figures quoted earlier in this plan
-carry no report of their own in this run set and must be treated as historical until re-captured
-with the run id, APK and model that produced them.
-The other seven intended libraries are built and on disk in `corpus/work/packages/`
-(245 MB-1.7 GB each, about 7.8 GB in total) but none is installed on the test device.
+**What blocked the other twelve cases, and what changed.** The blocker was storage, not the case
+file: `research-comparison-synthesis-v1.json` declares `intended_libraries` for the whole suite and
+`PublicResearchWorkflowTest` refuses to start unless all eight are installed and enabled, while the
+only AVD held the two packages it had staged on a 10 GB `/data` partition that was already 69 % used,
+on a host volume with single-digit gigabytes free. Two measurements during that check are worth
+keeping: `hw.ramSize` applies on a cold boot, but `disk.dataPartition.size` does **not** resize an
+existing userdata image — setting 24 G left `/data` at 9.7 GB. So a second profile was created on the
+volume with room, `blobs-research` (8 GB RAM, 24 GB `/data`), and the eight libraries plus both models
+are being staged there through the product path
+(`PackageLifecyclePerformanceTest#downloadsAndInstallsPinnedCatalogPackage`, one `packageId` per run,
+signed catalog revision 2026102404). Because all eight install together, no per-case
+`intended_libraries` hook is needed. Nothing measured on an 8 GB profile is 2 GB phone-class
+evidence: `blobs-e2e` remains the profile for latency and memory, and it is back at `hw.ramSize=2G`
+with its staged model and library intact.
+
+**Correction to an earlier claim in this plan.** `PublicResearchWorkflowTest` *does* record
+per-turn timings (`retrieval_elapsed_ms`, `first_visible_text_elapsed_ms`,
+`first_observed_work_text_ms`, `end_to_end_elapsed_ms`, `elapsed_ms`, `ui_wall_elapsed_ms`), quoted
+above from `run3-ui-report.json`. The genuinely missing identity fields in that capture are the
+installed APK digest and peak memory.
