@@ -493,6 +493,28 @@ broken is theirs: an *identical* prompt still reported `reused_prefix_tokens: 0`
 defect in the comparison or the discard path, not a capacity choice - and it is worth far more than
 1.5 s, because an identical prompt shares everything.
 
+### A tighter output cap hung a turn for 600 s - the tail is not free to cut
+
+`MAX_RESEARCH_OUTPUT_TOKENS` 200 -> 140, measured on the four slowest cases (`cap140`). The two that
+finished were unchanged in content and inside noise: 937 and 901 characters, 6 citations each, both
+ending cleanly on `[S6]`, first one 33,704 -> 36,235 ms and the other 40,585 -> 30,336 ms. Qwen's
+tokenizer covers those answers in ~140 tokens anyway, so the cap did not bind and there was nothing
+for it to win.
+
+The third case never came back: `synth-power-outage-household` timed out the UI wait at 600,000 ms
+after two successful turns in the same process. That is not the pre-send hang from stale app state -
+the run was mid-suite - it is a turn that started and never reached a state the reader can see as
+finished. Reverted.
+
+Two things follow, and the second matters more than any latency number in this file:
+
+- Cutting the answer budget is not a free lever. The answers on this suite already fit in ~140
+  tokens, so a lower cap buys nothing on the cases that matter and risks the ones that do not.
+- **Something in the token-limit path can leave a turn unresolved.** A turn that never finishes is
+  infinitely slow, so this is the highest-severity finding of the speed work even though it cost no
+  milliseconds. It needs its own reproduction: a generation that hits `TOKEN_LIMIT` mid-response
+  document, watched through to whatever the UI does. Until that is understood, the cap stays at 200.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
