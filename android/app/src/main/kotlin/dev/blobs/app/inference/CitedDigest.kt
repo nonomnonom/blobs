@@ -20,14 +20,17 @@ internal object CitedDigest {
     private val navigationBullet = Regex("\\s[•|»]\\s")
 
     /**
-     * Decides what a finished turn actually shows. An answer that used none of its sources is
-     * replaced; an answer that marked one source out of three or more keeps its prose and gains two
-     * lines for the sources it ignored, which is the measured shape of a comparison that dropped a
-     * subject. Anything else stands.
+     * Decides what a turn actually shows. An answer that used none of its sources is replaced; an
+     * answer that marked one source out of three or more keeps its prose and gains two lines for the
+     * sources it ignored, which is the measured shape of a comparison that dropped a subject.
+     *
+     * A turn that ran out of tokens or failed keeps its prose only when that prose cites something:
+     * an uncited run-out is a list of claims, and the reader gets the cited digest instead.
      */
-    fun gate(answer: String, evidence: List<Evidence>): String? {
+    fun gate(answer: String, evidence: List<Evidence>, finished: Boolean = true): String? {
         if (evidence.isEmpty()) return null
         val cited = AnswerText.citedSourceIndices(answer, evidence.size)
+        if (!finished) return if (cited.isEmpty()) build(evidence) else null
         val digest = when {
             cited.isEmpty() -> build(evidence)
 

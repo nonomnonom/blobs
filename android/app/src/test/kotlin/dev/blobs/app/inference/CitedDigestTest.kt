@@ -195,6 +195,39 @@ class CitedDigestTest {
     }
 
     @Test
+    fun aBlankAnswerTakesTheDigestEvenWhenTheModelRanOutOfTokens() {
+        val sources = listOf(
+            evidence(1, "Bangkok sprawls across high-rise districts and heavy traffic."),
+            evidence(2, "Hanoi's old quarter is compact enough to cross on foot in a morning.")
+        )
+
+        assertEquals(CitedDigest.build(sources), CitedDigest.gate("", sources, finished = false))
+    }
+
+    @Test
+    fun partialProseFromARunOutIsLeftForTheReader() {
+        val sources = listOf(
+            evidence(1, "Bangkok sprawls across high-rise districts and heavy traffic."),
+            evidence(2, "Hanoi's old quarter is compact enough to cross on foot in a morning.")
+        )
+        val prose = "Bangkok sprawls across high-rise districts [S1]."
+
+        assertNull(CitedDigest.gate(prose, sources, finished = false))
+    }
+
+    @Test
+    fun anUncitedRunOutAnswerStillTakesTheDigest() {
+        val sources = listOf(
+            evidence(1, "Bangkok sprawls across high-rise districts and heavy traffic."),
+            evidence(2, "Hanoi's old quarter is compact enough to cross on foot in a morning.")
+        )
+        val rambling = "The bases are as follows: 1. Kyoto, known for its temples. 2. Tokyo,"
+        val expected = CitedDigest.build(sources)
+
+        assertEquals(expected, CitedDigest.gate(rambling, sources, finished = false))
+    }
+
+    @Test
     fun anAnswerWithNoOtherSubjectToNameStands() {
         val sources = listOf(
             evidence(
