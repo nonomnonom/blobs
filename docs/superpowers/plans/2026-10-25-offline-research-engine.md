@@ -197,5 +197,18 @@ one-sided answer and a zero-citation answer both came out of six adequate source
 12 of the 14 suite cases have never run through the UI.
 The other seven intended libraries are built and on disk in `corpus/work/packages/`
 (245 MB-1.7 GB each, about 7.8 GB in total) but none is installed on the test device.
+
+**Why Task 3 is only two-fourteenths done, and what would unblock it.** Two measured limits, not
+choices. First, `research-comparison-synthesis-v1.json` declares `intended_libraries` for the whole
+suite and `PublicResearchWorkflowTest` refuses to start unless all of them are installed and
+enabled, so no subset can run against a partial shelf; the fix is one small change (read an
+optional per-case `intended_libraries`, fall back to the suite array) and it is deliberately not
+written yet, because nothing can exercise it under the second limit: the host volume holding the
+AVD has 7.0 GB free of 466 GB, staging `howto-repair` plus `howto-practical` alone needs about
+790 MB of emulator storage, and `host_replay.unpack` refuses to start without the payload plus
+1 GiB free. Timings and peak PSS are also still owed: `PublicResearchWorkflowTest` records no
+per-turn timings, so the 53-76 s first-text and 80-88 s turn figures quoted earlier in this plan
+carry no report of their own in this run set and must be treated as historical until re-captured
+with the run id, APK and model that produced them.
 The other seven intended libraries are built and on disk in `corpus/work/packages/`
 (245 MB-1.7 GB each, about 7.8 GB in total) but none is installed on the test device.
