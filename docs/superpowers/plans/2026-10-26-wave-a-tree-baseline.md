@@ -407,6 +407,20 @@ That is the measurement floor of this emulator for a single 30-second turn, and 
   cases with one number each is not evidence of a 10 % effect, and I have already printed two of
   those.
 
+### Retrieval is CPU-bound query work, not I/O
+
+`PRAGMA mmap_size=64 MiB` on the read-only library connections was meant to stop the FTS index
+pages arriving through `read()`. On the four slowest cases (`mmap-1`, all four complete) retrieval
+went 25,608 -> 28,291 ms in total - 10 % worse, inside the noise floor, so there is nothing to win.
+Reverted.
+
+Combined with the cold-open result (4,083 ms cold vs 4,669 ms warm) that closes both I/O theories
+for retrieval: the file is already resident and mapping it changes nothing. What is left is the cost
+of the query itself - an OR of terms, bigrams and a title match scored with bm25 - and after the
+parallel fan-out the remaining floor is the slowest single library, 5.5-8.9 s. Changing that means
+changing the query, which is `RetrievalQuery.kt`: pinned, mirrored by the frozen replay, and not a
+call to make casually.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
