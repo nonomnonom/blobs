@@ -234,6 +234,34 @@ device that matters. End to end on this build is now 31.6-44.2 s against the 97.
 shelf measured an hour earlier, so retrieval at a 7.8 s median is now the largest single non-model
 term and the fan-out fix is next.
 
+### Qwen2.5 0.5B against LFM2-1.2B on the same fast build
+
+The 0.5B was installed through the product path (`downloadsAndInstallsPinnedCatalogPackage`,
+`q554-install`, 120.9 s for 491,400,032 bytes) and run on `emulator-5554` with the same shelf, the
+same four cases and the same APK as `llamafile-1`, so the only variable is the model.
+
+| case | 0.5B first text | 0.5B end to end | LFM2 first text | LFM2 end to end | retrieval |
+| --- | --- | --- | --- | --- | --- |
+| compare-disc-rim-brakes | 13,686 ms | 36,720 ms | 13,376 ms | 31,596 ms | 3,208 ms |
+| compare-tubeless-tubed-tyres | 15,081 ms | 61,332 ms | 15,244 ms | 33,982 ms | 5,132 ms |
+| compare-bangkok-hanoi | 19,133 ms | 35,408 ms | 20,294 ms | 44,162 ms | 10,874 ms |
+| compare-magna-carta-bill-rights | 16,883 ms | 30,685 ms | - | - | 11,086 ms |
+
+Three findings, none of them the expected one:
+
+- **The 0.5B is not faster than LFM2 any more.** Time to first text is a tie (medians 15,982 and
+  ~15,310 ms), because prefill is now cheap enough that the model size barely moves it.
+- **Decode is the new dominant term.** End to end minus first text is 16-46 s, and the 0.5B's worst
+  case is 46 s for a 400-character answer - about 2.8 tokens per second, slower than LFM2's 19 s on
+  the same turn. A small model that will not stop talking is slower than a bigger one that does.
+- **Retrieval is now 9-36 % of the turn** (3,208-11,086 ms) while the whole model path costs about
+  15 s. It went from a rounding error to the second biggest term, which is what makes the parallel
+  per-library fan-out the next change rather than any further prefill work.
+
+So the owner's bar - a 0.5B turn under 30 s - is met on first text (13.7-19.1 s) and on two of four
+cases end to end (30.7 and 35.4 s), and is missed by the two cases where the model keeps generating.
+The remaining path to it is output length and retrieval fan-out, not the model.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
