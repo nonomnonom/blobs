@@ -510,7 +510,15 @@ Two things follow, and the second matters more than any latency number in this f
 
 - Cutting the answer budget is not a free lever. The answers on this suite already fit in ~140
   tokens, so a lower cap buys nothing on the cases that matter and risks the ones that do not.
-- **Something in the token-limit path can leave a turn unresolved.** A turn that never finishes is
+- **A bound output cap that truncates the response document mid-structure can leave a turn
+  unresolved.** `cap200tail` re-ran the same four cases on the committed build, where the cap does
+  not bind, and all four completed - `synth-power-outage-household` in 34,224 ms. The answers are
+  byte-identical across all three runs of these cases (937 / 901 / 457 / 521 characters, 6 / 6 / 4 /
+  4 citations), because greedy decoding is deterministic - which is what makes the one difference
+  stand out: the stall appeared only in the run where the cap bound. Not root-caused; the status
+  logic itself is correct (`TOKEN_LIMIT` with a non-blank answer completes), so the suspect is the
+  `checkpoint?.join()` before the terminal write, or a sink that stops accepting while the native
+  loop is still inside its budget. A turn that never finishes is
   infinitely slow, so this is the highest-severity finding of the speed work even though it cost no
   milliseconds. It needs its own reproduction: a generation that hits `TOKEN_LIMIT` mid-response
   document, watched through to whatever the UI does. Until that is understood, the cap stays at 200.
