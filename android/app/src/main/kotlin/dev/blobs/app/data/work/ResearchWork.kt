@@ -21,6 +21,7 @@ import dev.blobs.app.inference.AnswerGrounding
 import dev.blobs.app.inference.AnswerText
 import dev.blobs.app.inference.FollowUpSuggestions
 import dev.blobs.app.inference.ModelSupport
+import dev.blobs.app.inference.NativeTurnTimings
 import dev.blobs.app.inference.ResearchPrompt
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -69,6 +70,7 @@ internal class ResearchWork(
             var retrievalElapsedMs = 0L
             var firstVisibleTextElapsedMs: Long? = null
             var researchUsage: ResearchUsage? = null
+            var nativeStageTimings: NativeTurnTimings? = null
             var evidence = "[]"
             var begun = false
             var checkpoint: Job? = null
@@ -158,6 +160,7 @@ internal class ResearchWork(
                 answer = outcome.answer
                 evidence = Evidence.encode(outcome.evidence)
                 retrievalElapsedMs = outcome.timings.retrievalElapsedMs
+                nativeStageTimings = outcome.timings.native
                 researchUsage = outcome.usage
                 val finished = terminalBody(question, answer, outcome.evidence)
                 answer = finished.body
@@ -283,7 +286,8 @@ internal class ResearchWork(
                         usage?.promptCharacters ?: 0,
                         usage?.historyPairCount ?: 0,
                         usage?.generationAttempts ?: 0,
-                        usage?.outputTokenLimit ?: MAX_RESEARCH_OUTPUT_TOKENS
+                        usage?.outputTokenLimit ?: MAX_RESEARCH_OUTPUT_TOKENS,
+                        nativeStageTimings
                     )
                 }
                 accepted.complete(false)

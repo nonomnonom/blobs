@@ -119,3 +119,21 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
     }
     return blobs::kGenerationFailure;
 }
+
+// Index order is owned by NativeTurnTimings.fromNative() in NativeBridge.kt; keep both in step.
+extern "C" JNIEXPORT jlongArray JNICALL
+Java_dev_blobs_app_inference_NativeBridge_lastTimingsNative(JNIEnv *env, jobject) {
+    const auto timings = blobs::last_generation_timings();
+    const jlong values[] = {
+        timings.load_ms,   timings.template_ms, timings.tokenize_ms,      timings.context_prepare_ms,
+        timings.grammar_ms, timings.sampler_ms, timings.prefill_ms,      timings.first_token_ms,
+        timings.total_ms,  timings.model_cached ? 1 : 0, timings.reused_prefix_tokens,
+        timings.prompt_tokens, timings.context_capacity,
+    };
+    auto *result = env->NewLongArray(static_cast<jsize>(sizeof(values) / sizeof(values[0])));
+    if (result) {
+        env->SetLongArrayRegion(result, 0, static_cast<jsize>(sizeof(values) / sizeof(values[0])),
+                               values);
+    }
+    return result;
+}

@@ -9,6 +9,7 @@ import dev.blobs.app.inference.AnswerText
 import dev.blobs.app.inference.CitedDigest
 import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.NativeBridge
+import dev.blobs.app.inference.NativeTurnTimings
 import dev.blobs.app.inference.ResearchPrompt
 import dev.blobs.app.inference.StructuredAnswer
 import dev.blobs.app.inference.TokenSink
@@ -43,7 +44,8 @@ internal enum class ResearchFinish {
 internal data class ResearchTimings(
     val retrievalElapsedMs: Long,
     val firstAnswerElapsedMs: Long?,
-    val totalElapsedMs: Long
+    val totalElapsedMs: Long,
+    val native: NativeTurnTimings = NativeTurnTimings.unavailable
 )
 
 internal data class ResearchUsage(
@@ -113,6 +115,7 @@ internal class LocalResearchEngine(
         var promptCharacters = 0
         var historyPairCount = 0
         var generationAttempts = 0
+        var nativeTimings = NativeTurnTimings.unavailable
         fun renderAnswer() {
             if (renderedBytes == output.size) return
             renderedBytes = output.size
@@ -137,7 +140,7 @@ internal class LocalResearchEngine(
                 generationAttempts++
                 promptCharacters = prompt.text.length
                 historyPairCount = prompt.historyPairCount
-                runtime.generate(
+                val result = runtime.generate(
                     modelPathBytes,
                     systemPromptBytes,
                     prompt.text.toByteArray(Charsets.UTF_8),
@@ -157,6 +160,8 @@ internal class LocalResearchEngine(
                         }
                     }
                 )
+                nativeTimings = runtime.lastTurnTimings()
+                result
             }
         } finally {
             renderAnswer()
@@ -181,7 +186,8 @@ internal class LocalResearchEngine(
             timings = ResearchTimings(
                 retrievalElapsedMs = retrievalElapsedMs,
                 firstAnswerElapsedMs = firstAnswerElapsedMs,
-                totalElapsedMs = SystemClock.elapsedRealtime() - startedAt
+                totalElapsedMs = SystemClock.elapsedRealtime() - startedAt,
+                native = nativeTimings
             ),
             usage = ResearchUsage(
                 sourceCount = evidence.size,
