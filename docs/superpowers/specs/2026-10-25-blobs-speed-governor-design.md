@@ -99,6 +99,27 @@ SQLite opens, but it cannot move a 60-80 s first character; the prompt bound now
 argument (each 2 000-character passage ≈ 500 tokens ≈ 28 s); and a new slice — **fix prefix reuse** —
 belongs ahead of both. See `docs/engineering-roadmap.md` for the same numbers in the durable record.
 
+**Addendum, 2026-10-26 later the same day: the 56 ms/token figure is a build property, not a constant.**
+It was measured on this branch's baseline, which forces no AVX features (`CMakeLists.txt` relies on
+SSE4.2, the only x86_64 guarantee in the Android ABI). The `feat/offline-research-engine` lane landed
+`35869bf` enabling `GGML_AVX/AVX2/FMA/F16C/BMI2`, and on its 8 GB emulator with the same shelf, model and
+case suite first visible text fell from 88 969 / 162 212 / 98 955 ms to **18 551 / 15 566 / 20 129 ms** —
+prefill ≈ 6 ms/token. `2e736fa` added `GGML_LLAMAFILE` (~11 % more on x86_64, but arm64 has no AVX2
+fallback, so on a phone that flag is the difference) and `6919d3a` ran the per-library FTS searches on
+the common pool (retrieval 3 209 → 1 876, 4 686 → 2 606, 10 969 → 5 967 ms at identical passage counts).
+Two consequences the owner should weigh, and neither is measured on a phone:
+
+1. **§7.4's lever ranking inverts with the build.** Prompt size was the top lever because prefill cost
+   56 ms/token; at 6 ms/token the same prompt is ~7 s, and the remaining tails are decode length (hence
+   the 200-token bound above), cold load (Wave B's warm path), and retrieval.
+2. **Prefix reuse is now a smaller prize and still a defect.** The identical-prompt control above stands;
+   what changed is what it costs: ~7 s per repeated turn instead of ~70 s. It no longer outranks the
+   answer-length policy, and the other lane's outlier turn (57 632 ms end to end, 400-character answer,
+   44.7 s of decode at the token limit) is the evidence for that ordering.
+
+These are the other lane's numbers on its device, recorded here because they change this design's
+priorities — they are not this branch's measurement, and no phone-class device has produced either set.
+
 ## 1. Problem
 
 A turn is genuinely token-streamed, but the reader waits a long time before the
@@ -251,7 +272,7 @@ even the largest term.
 | Device priority | Adaptive per device, not flagship-first |
 | What may be traded away | Answer length may be shortened |
 | GPU / NPU path | Experimental, behind a build variant, no numbers claimed |
-| Answer bound 320 → 200 in **every** mode | **Approved** (2026-10-25, second round) |
+| Answer bound 320 → 200 in **every** mode | **Approved** (2026-10-25, second round). Implemented flat as `MAX_RESEARCH_OUTPUT_TOKENS = 200` in Wave A; plan-supplied 200/160 per mode still waits on §6.6's `SpeedPlan` |
 | Make LFM2 the default model | **Out of scope.** The owner instead added a fourth model, `qwen25-0b5-q4km` (491 400 032 bytes, `minimum_ram_mb` 2048), on the `feat/offline-research-engine` worktree |
 | Status of this document | The owner treats `docs/superpowers/` as internal documentation: the durable outcomes must be carried into `docs/architecture.md` / `docs/engineering-roadmap.md` (§9.1), not left living here |
 

@@ -9,6 +9,15 @@
   branch ever implemented — and it now sheds retained history before it cuts any passage, so a squeezed
   shelf still answers instead of failing. Context capacity stopped doubling per turn, so the KV context
   survives between turns on the same model.
+- Answer bound: `MAX_RESEARCH_OUTPUT_TOKENS` drops 320 → 200 for every mode, the product owner's
+  decision of 2026-10-25, now that the turn's cost is understood stage by stage. Once prefill stopped
+  dominating, the long tail of a turn was decoding prose nobody needed: at the 50.3 ms per token
+  grammar-constrained decode recorded for LFM2 (`cost-lfm2-001`), 120 fewer tokens is roughly 6 s off a
+  turn that runs to the limit, and it frees 120 context tokens for the prompt. It does not move the
+  median: recorded answers run 71-120 tokens, so this bounds the worst case rather than the typical
+  turn. Answers are visibly shorter; a truncated turn keeps its prose only when it cited something,
+  otherwise the cited digest
+  replaces it, which is the existing `CitedDigest.gate` behaviour and unchanged here.
 - Measured on the 2 GB emulator profile (LFM2-1.2B, one library, four turns, records
   `wavea-e2e-ui-1` and `wavea-probe-ui-1`): prefill costs 55.7-58.7 ms per prompt token and is the
   whole wait, while prefix reuse returns zero even for a byte-identical prompt — a defect in

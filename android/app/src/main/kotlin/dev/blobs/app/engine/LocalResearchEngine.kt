@@ -14,8 +14,10 @@ import dev.blobs.app.inference.ResearchPrompt
 import dev.blobs.app.inference.StructuredAnswer
 import dev.blobs.app.inference.TokenSink
 
-// The response document costs a bounded envelope, so the prose keeps the earlier 256-token room.
-internal const val MAX_RESEARCH_OUTPUT_TOKENS = 320
+// Owner-set answer bound for every mode (2026-10-25): once prefill stopped dominating the turn, the
+// longest remaining tail was decoding prose the reader did not need. It also frees 120 context tokens
+// for the prompt, since the request must fit prompt plus output in one fixed capacity.
+internal const val MAX_RESEARCH_OUTPUT_TOKENS = 200
 private const val STREAM_RENDER_INTERVAL_MS = 50L
 private const val MAX_RESEARCH_OUTPUT_BYTES = 32 * 1024
 

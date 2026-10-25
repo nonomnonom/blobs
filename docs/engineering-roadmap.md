@@ -317,9 +317,21 @@ what is missing there is a phone-class device, not a patch:
   `reused_prefix_tokens` still 0 on the second turn, which cost 71.7 s rather than the 68.1 s of the
   first. The context object itself survived (turn two reported `context_prepare_ms` 0), so the loss is
   in `KvCache::reuse_prefix` — either the matching scan or the `llama_memory_seq_rm` call against a
-  `kv_unified` memory — not in the tokens being compared. This is now the single largest known speed
-  item: a working reuse would remove most of one prefill per follow-up turn. It is a recorded defect,
-  and no speed claim is made for it.
+  `kv_unified` memory — not in the tokens being compared. It is a recorded defect, and no speed claim is
+  made for it.
+- **The 56 ms/token figure is a build property, and it changes the lever ranking.** It was measured on a
+  baseline that forces no AVX features (only SSE4.2, the x86_64 ABI guarantee). The
+  `feat/offline-research-engine` lane then landed `35869bf` (AVX/AVX2/FMA/F16C/BMI2 for x86_64) and, on
+  its 8 GB emulator with the same shelf, model and case suite, first visible text fell from 88 969 /
+  162 212 / 98 955 ms to **18 551 / 15 566 / 20 129 ms** — prefill ≈ 6 ms/token. `2e736fa` added
+  `GGML_LLAMAFILE` (~11 % more on x86_64; arm64 has no AVX2 fallback, so on a phone that flag carries it)
+  and `6919d3a` ran the per-library FTS searches on the common pool (retrieval 3 209 → 1 876, 4 686 →
+  2 606, 10 969 → 5 967 ms at identical passage counts). Consequences: at 6 ms/token a repeated turn
+  wastes ~7 s on the dead prefix reuse instead of ~70 s, so that defect no longer outranks
+  answer-length policy; and the answer bound `MAX_RESEARCH_OUTPUT_TOKENS` moved 320 → 200 for every mode
+  (the owner's 2026-10-25 decision) because the longest remaining tail is decode, evidenced by a
+  57 632 ms turn whose visible answer was 400 characters. Neither set is phone evidence: the AVX2 numbers
+  come from the other lane on the 8 GB emulator, and every figure here says `unverified`.
 - Every capture from this wave names its APK digest, fingerprint, API, ABI, thread count, prompt size and
   stage timings, and each states `device_acceptance: unverified`. Records live in
   `corpus/evaluation/results/wavea-e2e-ui-1.json` and `…/wavea-probe-ui-1.json`.
