@@ -14,7 +14,11 @@ import dev.blobs.app.inference.StructuredAnswer
 import dev.blobs.app.inference.TokenSink
 
 // The response document costs a bounded envelope, so the prose keeps the earlier 256-token room.
-internal const val MAX_RESEARCH_OUTPUT_TOKENS = 320
+// 320 measured as pure cost, not as useful length: the worst 0.5B turn spent 44.7 s decoding and
+// kept only 400 characters after citation validation, i.e. it ran to the limit and most of what it
+// generated was discarded. 200 tokens is about 150 words, which is the length the surviving
+// answers on the comparison suite actually have.
+internal const val MAX_RESEARCH_OUTPUT_TOKENS = 200
 private const val STREAM_RENDER_INTERVAL_MS = 50L
 private const val MAX_RESEARCH_OUTPUT_BYTES = 32 * 1024
 

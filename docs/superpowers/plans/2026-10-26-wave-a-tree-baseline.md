@@ -324,6 +324,35 @@ left in batch shape. What is left is length: `MAX_RESEARCH_OUTPUT_TOKENS` (320) 
 `engine/LocalResearchEngine.kt:17`, which this lane is barred from editing, and the `reuse_prefix`
 defect in the Wave A lane.
 
+### Decode was the sampler, not the model
+
+Two changes, measured on `emulator-5554` with `qwen25-0b5-q4km`, the same shelf and the same four
+cases at each step.
+
+`MAX_RESEARCH_OUTPUT_TOKENS` 320 -> 200 (`q554-cap200`): the worst turn went 57,632 -> 41,699 ms and
+**every surviving answer was byte-identical** (458 / 400 / 937 characters, 5 / 4 / 6 citations). The
+120 tokens it used to spend had contributed nothing - they were generated and then dropped by
+citation validation. The median did not move; this change removes a tail.
+
+The sampling tail itself was the real cost. Replacing `top_k(20) -> top_p(0.9) -> temp(0.3) ->
+dist(42)` with `greedy`, keeping the grammar constraint and the repetition penalty, gave
+(`q554-greedy`, complete, 4 of 4 cases):
+
+| case | sampled | greedy | answer |
+| --- | --- | --- | --- |
+| compare-disc-rim-brakes | 36,955 ms | **25,225 ms** | 458 chars, 5 citations - identical |
+| compare-tubeless-tubed-tyres | 41,699 ms | **28,405 ms** | 400 chars, 4 citations - identical |
+| compare-bangkok-hanoi | 30,582 ms | 34,104 ms | 937 chars, 6 citations - identical |
+| compare-magna-carta-bill-rights | - | **26,237 ms** | 384 chars, 4 citations |
+
+Three of four turns now finish under 30 seconds and the paired answers did not change at all, which
+is what a temperature of 0.3 predicts. The cost being removed is three vocabulary-wide passes over a
+151,669-entry vocabulary per token, on a model whose own forward pass is smaller than that scan.
+
+This is a decoding-behaviour change, so it is gated on the 14-case suite, not on four: greedy can
+loop, and identical answers on four cases is evidence, not proof. The repetition penalty stays at 1.2
+for that reason. Pending that run this is recorded as measured but not settled.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built

@@ -281,10 +281,10 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
         llama_sampler_chain_add(sampler.get(), constraint);
     }
     add_sampler(llama_sampler_init_penalties(llama_vocab_n_tokens(vocab), 256, 1.0f, 0.0f, 1.2f));
-    add_sampler(llama_sampler_init_top_k(20));
-    add_sampler(llama_sampler_init_top_p(0.9f, 1));
-    add_sampler(llama_sampler_init_temp(0.3f));
-    add_sampler(llama_sampler_init_dist(42));
+    // EXPERIMENT (not to ship): the sampling tail is three vocab-wide passes per token over a
+    // 151,669-entry Qwen vocabulary. Greedy keeps the grammar constraint and measures what that
+    // tail costs.
+    add_sampler(llama_sampler_init_greedy());
 
     std::vector<char> piece(256);
     for (int index = 0; index < request.output_token_limit; ++index) {
