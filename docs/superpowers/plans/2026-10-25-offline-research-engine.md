@@ -168,17 +168,24 @@ retrieval policy stays frozen. The plural gap is an index property: `passages_ft
 `tokenize='unicode61'`, so the fix belongs in the package build (a stemming tokenizer), which
 means rebuilding and republishing every library, not rewriting the reader's question.
 
-**Frozen replay blocker.** `corpus/evaluation/retrieval/host_replay.py` and `package_report.py`
-refuse to run: committed `RetrievalQuery.kt` hashes to
-`c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68` while the pin expects
-`d2beec91da15db229894e0aabdf944678f03e60d1a6b3cdf3e156f37c7296625`. `LibraryStore.kt` still
-matches its pin (`6c44e154b496ebe2f601c74583fd2f3f3224650dff77c60a64eab4acf122354a`). No commit
-carries the pinned bytes: `f5eaab7` (the last commit touching the file) and both later
-checkpoints hold `c5a6f042…`, `161f371` held `c6102dc4…`. The only copy matching the pin is an
-uncommitted edit in the shared main checkout, made by another session, so it was left untouched
-and the guard was not edited to make it pass. The A/B above therefore used the replay's own
-functions (`retrieval_spec`, `direct_title_ids`, `retrieve`) on the verified package rather than
-the guarded CLI, and no new reviewed replay has been recorded.
+**Frozen replay pin, fixed the same day.** The guard did fail: `host_replay.py` pinned
+`RetrievalQuery.kt` at `d2beec91…`, but no commit in the repository — none of the twelve versions
+that path has ever had — carries those bytes. That pinned file is an uncommitted 10-24 09:36 edit in
+the shared main checkout that adds `should`, `know`, `want` and `need` to `stopWords`, and the Python
+mirror had copied those four words, so the replay was modelling a policy that never shipped. Fixed by
+pinning to committed truth instead of the working tree: `QUERY_SHA256` is now
+`c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68` (HEAD, both checkouts) and the
+mirror's `STOP_WORDS` lost the same four words, which restores exact parity on all five word sets
+(`stopWords` 65, `broadTitleIntentWords` 72, `titleNoiseWords` 2, `lowSpecificityNumberWords` 25,
+`NON_TOPICAL_WORDS` 100) and on the Kotlin bounds (`6`/`4`/`3`/`6000`/`2000`).
+`package_report.py` then ran clean on the pinned package
+(`f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc`, `wikivoyage-en@2026-09.5`,
+48 cases) and its report is `corpus/work/evaluation/results/wikivoyage-en-2026-09.5-retrieval-v4-committed.json`:
+**45 of 48 expected-title hits, identical to the recorded v3 figure, no case gained or lost its
+expected title**, with 6 cases re-ordering tail passages. So the stale pin was a review hazard rather
+than a recall loss. If the uncommitted stop-word edit is ever committed, this guard will fail again by
+design and the mirror must drop those four words in the same change. The A/B quoted above stays valid:
+both arms ran through this same mirror, and the corrected baseline is still 45.
 
 **One-sided comparison coverage, shipped.** The trust gate first fired only on a zero-citation
 answer, so a Bangkok/Hanoi turn that cited one Bangkok district page stayed one-sided. The gate now

@@ -19,8 +19,10 @@ from blobs_corpus.names import name_key
 
 # Any retrieval-policy change requires a new native run and a reviewed replay.
 # Single-library parity compares exact passage identities and text hashes.
+# These digests bind to the committed Kotlin, so an uncommitted edit in a shared checkout
+# cannot silently re-point the mirror; the guard fails and the policy gets reviewed first.
 LIBRARY_STORE_SHA256 = "6c44e154b496ebe2f601c74583fd2f3f3224650dff77c60a64eab4acf122354a"
-QUERY_SHA256 = "d2beec91da15db229894e0aabdf944678f03e60d1a6b3cdf3e156f37c7296625"
+QUERY_SHA256 = "c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68"
 STOP_WORDS = {
     "the",
     "and",
@@ -87,10 +89,6 @@ STOP_WORDS = {
     "describe",
     "guide",
     "list",
-    "should",
-    "know",
-    "want",
-    "need",
 }
 TITLE_INTENT_STOP_WORDS = STOP_WORDS | {
     "i",
