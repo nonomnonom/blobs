@@ -113,12 +113,13 @@ internal class LocalResearchEngine(
         var promptCharacters = 0
         var historyPairCount = 0
         var generationAttempts = 0
+        var carriedSources = evidence
         fun renderAnswer() {
             if (renderedBytes == output.size) return
             renderedBytes = output.size
             answer = AnswerText.validSourceCitations(
                 readable(AnswerText.visible(output.completeUtf8Text())),
-                evidence.size
+                carriedSources.size
             )
             if (firstAnswerElapsedMs == null && answer.isNotBlank()) {
                 firstAnswerElapsedMs = SystemClock.elapsedRealtime() - startedAt
@@ -137,6 +138,7 @@ internal class LocalResearchEngine(
                 generationAttempts++
                 promptCharacters = prompt.text.length
                 historyPairCount = prompt.historyPairCount
+                carriedSources = prompt.sources
                 runtime.generate(
                     modelPathBytes,
                     systemPromptBytes,
@@ -166,12 +168,16 @@ internal class LocalResearchEngine(
         val digested = if (nativeResult == NativeBridge.CANCELLED) {
             null
         } else {
-            CitedDigest.gate(answer, evidence, finished = nativeResult == NativeBridge.FINISHED)
+            CitedDigest.gate(
+                answer,
+                carriedSources,
+                finished = nativeResult == NativeBridge.FINISHED
+            )
         }
         return ResearchOutcome(
             answer = digested ?: answer,
             support = if (digested != null) ModelSupport.SOURCED else decoded?.support,
-            evidence = evidence,
+            evidence = carriedSources,
             finish = when (nativeResult) {
                 NativeBridge.FINISHED -> ResearchFinish.FINISHED
                 NativeBridge.CANCELLED -> ResearchFinish.CANCELLED
@@ -184,7 +190,7 @@ internal class LocalResearchEngine(
                 totalElapsedMs = SystemClock.elapsedRealtime() - startedAt
             ),
             usage = ResearchUsage(
-                sourceCount = evidence.size,
+                sourceCount = carriedSources.size,
                 promptCharacters = promptCharacters,
                 historyPairCount = historyPairCount,
                 generationAttempts = generationAttempts,
