@@ -343,6 +343,32 @@ uncited answer even when the model ran out of tokens, so the same turn shows six
 partial prose the reader was watching. `NativeInferenceTest` still fails for this model by design,
 because it asserts a closed response document.
 
-Not yet done for this option: peak memory on the 2 GB profile is unmeasured, and the published remote
-catalog does not list it, so existing installs only see it after a catalog upload, which needs owner
-approval.
+Not yet done for this option: the published remote catalog does not list it yet, so existing
+installs only see it after a catalog upload.
+
+Peak memory is now measured. Sampling `dumpsys meminfo dev.blobs.app.debug` every two seconds
+through a full turn on the 2 GB profile (`qwen25-pss-1`, same APK and question as the timing runs)
+peaked at **738,175 kB TOTAL PSS ≈ 0.70 GiB**, against the 1.30 GiB recorded for LFM2-1.2B on the
+same class of device — the number that makes a 2 GB phone plausible, and it holds while the model is
+loaded and generating, not just at idle.
+
+**Published 2026-10-25 on owner instruction.** `publish_hf_assets.py` ran against the retained
+publish folder, and because the nine package files were byte-identical to what HF already holds the
+upload transferred 0 bytes ("No files have been modified"), so only the download list changed:
+catalog revision `2026102502`, 13 packages (4 models, 9 libraries), assets pinned at
+`3059b4150abc5a872232d2b8bfd7327bfc7d7b77`, catalog commit `eb58273f3727d687f5a4a380678ad2647a593490`.
+The bundled asset was rewritten to match the published bytes (revision plus the nine re-pinned
+library URLs, nothing else). `android/tools/check_published_catalog.py` fetches the live
+`catalog.signed.json` and verifies it the way the app does — signature against
+`catalog-public-key-v3.pem`, then revision and content — and reports
+`bundled asset matches published catalog: True`. On device, an install built before this catalog
+accepted it: `refreshesPublishedLibrariesWithoutDownloadingPackages` passed in 11.0 s, which covers
+signature verification, the rollback guard, and the 13-package list without touching installed
+packages. That test had to be corrected first: it asserted three library ids retired in the 0.4.0
+supply round, the same staleness as `LaunchTest`, and its earlier failure was the stale expectation,
+not the refresh.
+
+Two things this publication does not do: it does not ship an APK (the 0.4.0 release artefacts still
+carry the older bundled list, so a released build only sees the new model after a release), and it
+does not put the weights in our own repository — the entry resolves in the upstream Qwen
+organisation, so Blobs redistributes no copy.
