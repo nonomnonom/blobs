@@ -111,6 +111,28 @@ retrieval misses, partial answers, and cancellation must be recorded as
 observed; never rewrite them as a failure merely because they differ from an
 example.
 
+## Public research workflow across the shelf
+
+`PublicResearchWorkflowTest#questionsThroughChatAndSourceReader` drives the real Compose chat with a
+staged case file (`files/evaluation/<runId>/cases.json`, whose device digest is passed as
+`casesSha256`), opens the cited source reader, and records per turn: status, answer, evidence,
+retrieval, first-visible-text and end-to-end timings. Airplane mode is asserted, not assumed.
+
+Each case may declare `intended_libraries`; when it does not, the suite-level array applies. A case
+whose shelf is missing records `status: SKIPPED` with `missing_libraries` and the run continues, so a
+partial shelf yields partial coverage instead of a false answer or a dead run. This matters because
+the published shelf does not fit one device: `wikipedia-top1m-mini` needs about 25.4 GB against a
+24 GB `/data` once the other seven libraries are installed, and its in-app install fails with the
+`storage_failed` notice after the download completes. `disk.dataPartition.size` does not resize an
+existing userdata image, so a bigger shelf means a new AVD, and an 8 GB AVD is functional coverage
+evidence only - never a 2 GB phone-class claim.
+
+To stage catalog packages through the product path on a fresh AVD, run
+`PackageLifecyclePerformanceTest#downloadsAndInstallsPinnedCatalogPackage` once per package with
+`-e packageId <id> -e runId <id>`, network on, and pull each `package-lifecycle-<runId>.json` before
+the next one; the app deletes a verified download after install, so the peak cost is one package's
+download plus its unpacked payload.
+
 ## Other captures
 
 - `MultiLibraryRetrievalScalingTest` records retrieval across caller-staged

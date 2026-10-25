@@ -269,3 +269,41 @@ per-turn timings (`retrieval_elapsed_ms`, `first_visible_text_elapsed_ms`,
 `first_observed_work_text_ms`, `end_to_end_elapsed_ms`, `elapsed_ms`, `ui_wall_elapsed_ms`), quoted
 above from `run3-ui-report.json`. The genuinely missing identity fields in that capture are the
 installed APK digest and peak memory.
+
+### Multi-library shelf, first run (eightg-1, 2026-10-25, `blobs-research`)
+
+`wikipedia-top1m-mini` (4.75 GB) does not fit beside the other seven libraries: the shelf needs
+about 25.4 GB against a 24 GB `/data`, and its install failed with the app's `storage_failed`
+notice after completing the download. So the capture ran on seven libraries plus both models
+(16.1 GB installed) with a per-case shelf: `PublicResearchWorkflowTest` now reads an optional
+`intended_libraries` array per case, records `SKIPPED` with `missing_libraries` instead of aborting,
+and the suite file declares the mapping for all 14 cases. Offline was proven before the run
+(`ping -c 1 8.8.8.8` → `connect: Network is unreachable`), airplane mode 1, `lfm2-1b2-q4km`,
+instrumentation time 1,334 s, `complete: true`, evidence in
+`corpus/evaluation/results/2026-10-25-8g-research/`.
+
+Grade: **2 of 12 run cases cite every expected source** (`compare-tubeless-tubed-tyres` S1-S6,
+`compare-bangkok-hanoi` S2/S3/S4), 10 partial, 2 skipped. Retrieval is the new headline: with seven
+libraries enabled, `retrieval_elapsed_ms` is **3,711 / 11,595 / 16,113 ms (min/median/max)** against
+1,316-1,988 ms on a one-library shelf, and first visible text moved to 36-120 s
+(median 78.6 s), end to end 67.6-155.3 s (median 97.6 s). This is an 8 GB emulator, so it is not
+2 GB phone-class evidence, but the direction is a product problem: search cost grows with the shelf.
+
+Two distinct defects the run exposes, neither of them the writer:
+
+- **Cross-library misrouting.** For every primary-document question except Magna Carta, the sources
+  the engine surfaced were Wikivoyage *place* articles, not the Wikisource documents, which are
+  installed and verifiably present (all nine expected document ids appear in the published
+  `wikisource-en-all-nopic-2026-09.3` records). `compare-gettysburg-drafts` retrieved `Gettysburg`
+  (the borough) and `Bancroft` (a place); `synth-geneva-conventions` retrieved `Geneva` and
+  `Lake Geneva` and stopped at two passages; `compare-korea-indonesia-emergency-powers` retrieved
+  country travel guides. bm25 scores are computed per library and then merged on title/subject
+  overlap, so an exact place-name title wins against a primary source whose body is the real answer.
+- **A coverage-only grounding check can certify a nonsense citation.** In the Korea/Indonesia turn
+  the model wrote "The 1945 Constitution of Indonesia, as stated in [S4]" where S4 is
+  `Rail travel in South Korea`. Every sentence carries a marker, so `AnswerGrounding` reaches
+  `grounded` on shape alone. Markers prove form, not reference; nothing today checks that the cited
+  passage actually contains the sentence's distinctive terms.
+
+Five cases also returned fewer than six passages (1-4), which caps what the writer can cite:
+`synth-house-cash-mortgage` returned one.

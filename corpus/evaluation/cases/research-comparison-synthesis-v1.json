@@ -24,6 +24,9 @@
       "expected_document_ids": [
         "wiki-aef977fc2141d0a33cb702dadf489df7",
         "wiki-ce155af0fb1cae77bb3c831bcd50375e"
+      ],
+      "intended_libraries": [
+        "wikipedia-top1m-mini"
       ]
     },
     {
@@ -37,6 +40,9 @@
       "expected_document_ids": [
         "wiki-6a61ac687d4058d4ee4c4eb6d4db7a40",
         "wiki-03823aae214296489d43e52e78bec9c3"
+      ],
+      "intended_libraries": [
+        "wikipedia-top1m-mini"
       ]
     },
     {
@@ -48,6 +54,9 @@
       ],
       "expected_document_ids": [
         "wiki-865944e6ded7bc7821408a2df892f16a"
+      ],
+      "intended_libraries": [
+        "howto-repair"
       ]
     },
     {
@@ -59,6 +68,9 @@
       ],
       "expected_document_ids": [
         "wiki-2c363e471e1ef0fdf795eabf39622190"
+      ],
+      "intended_libraries": [
+        "howto-repair"
       ]
     },
     {
@@ -72,6 +84,9 @@
       "expected_document_ids": [
         "wiki-2762e6724004afeebc34996e226877ef",
         "wiki-1f9aa07fe3bf42c58d31244738bb554a"
+      ],
+      "intended_libraries": [
+        "wikivoyage-en"
       ]
     },
     {
@@ -85,6 +100,12 @@
       "expected_document_ids": [
         "wiki-80791d8599080b60a13987d2a9235588",
         "wiki-5360edb0b3459dcc96c563d6b333c5ca"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
       ]
     },
     {
@@ -98,6 +119,12 @@
       "expected_document_ids": [
         "wiki-1ff6a318deb6723ba1c9e726808a0a62",
         "wiki-50259a13a500f796e28533f5c00a41b5"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
       ]
     },
     {
@@ -111,6 +138,12 @@
       "expected_document_ids": [
         "wiki-fe2af70687bbd8f93609721afb2c390b",
         "wiki-afc746e4f7f380fefd2c8f02e96d211b"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
       ]
     },
     {
@@ -126,6 +159,9 @@
         "wiki-33e0f87db0e369fd54bcf0719ea9c861",
         "wiki-5a1b43740586bd6050a48f09904e759e",
         "wiki-6af05aea9839584b6bb55b1f62129216"
+      ],
+      "intended_libraries": [
+        "howto-practical"
       ]
     },
     {
@@ -139,6 +175,9 @@
       "expected_document_ids": [
         "wiki-b45baa02554cee906059bb995a2de28a",
         "wiki-25a3d0b53450fa2de75166c8260479f8"
+      ],
+      "intended_libraries": [
+        "wikivoyage-en"
       ]
     },
     {
@@ -154,6 +193,12 @@
         "wiki-a7bc7fa0b614a28105089c00186081ec",
         "wiki-a980d9d950aa8b4db1792644cf9bdec9",
         "wiki-a9bf5c188e41e5ae254c685b4a35fb62"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
       ]
     },
     {
@@ -169,6 +214,10 @@
         "wiki-12a18f392b40a6794704eac28f0f87cc",
         "wiki-f7610869bae3381e8b1093160564845a",
         "wiki-2b69729158188f0a4ae92ef4b24b23d5"
+      ],
+      "intended_libraries": [
+        "howto-repair",
+        "howto-practical"
       ]
     },
     {
@@ -184,6 +233,10 @@
         "wiki-1aad5d7b273cdf66ce21732a5ee65e6b",
         "wiki-48ef7ae83bd6823e6ba87081d0a34940",
         "wiki-12a18f392b40a6794704eac28f0f87cc"
+      ],
+      "intended_libraries": [
+        "howto-repair",
+        "howto-practical"
       ]
     },
     {
@@ -197,6 +250,9 @@
       "expected_document_ids": [
         "wiki-865944e6ded7bc7821408a2df892f16a",
         "wiki-2c363e471e1ef0fdf795eabf39622190"
+      ],
+      "intended_libraries": [
+        "howto-repair"
       ]
     }
   ]
