@@ -112,6 +112,23 @@ class TurnResponseTest {
     }
 
     @Test
+    fun completeCoverageOverAnUnrelatedPassageIsNotGrounded() {
+        val railGuide = source(
+            "Rail",
+            text = "Rail travel in South Korea runs express services between the islands."
+        )
+        val response = projection(
+            turn(
+                "The 1945 Constitution of Indonesia does not detail any emergency powers. [S1]",
+                support = ModelSupport.SOURCED.storedValue
+            ),
+            listOf(railGuide)
+        )
+
+        assertEquals(TurnGrounding.UNVERIFIED, response.grounding)
+    }
+
+    @Test
     fun lifecycleFieldsProjectToTheirOwnVocabulary() {
         val response = projection(
             turn(
@@ -199,7 +216,7 @@ class TurnResponseTest {
         modelSupport = support
     )
 
-    private fun source(section: String) = Evidence(
+    private fun source(section: String, text: String = "Compost heats in stages.") = Evidence(
         id = "reference/$section",
         title = section,
         publisher = "Reference",
@@ -208,7 +225,7 @@ class TurnResponseTest {
         updated = "2026-01-01",
         saved = "2026-01-02",
         section = section,
-        text = "Compost heats in stages.",
+        text = text,
         edition = "test"
     )
 }

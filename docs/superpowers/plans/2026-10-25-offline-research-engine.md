@@ -307,3 +307,17 @@ Two distinct defects the run exposes, neither of them the writer:
 
 Five cases also returned fewer than six passages (1-4), which caps what the writer can cite:
 `synth-house-cash-mortgage` returned one.
+
+**Citation content guard, shipped after that capture.** `AnswerText.citationsMatchTheirPassages`
+now rejects a marker whose sentence shares no distinctive word (five letters or more, at least two of
+them) with any passage that sentence cites, and `AnswerGrounding` requires it alongside structural
+coverage, so shape alone can no longer earn the disclosure. Verified on the device against the two
+turns that motivated it (`eightg-2`, screenshots and report in
+`corpus/evaluation/results/2026-10-25-8g-research/`): the Bangkok/Hanoi badge fell from `Sourced` to
+`Partly sourced · 3 cited`, and the check is right — the model wrote "Bangkok is one of Asia's most
+cosmopolitan cities, with a vibrant nightlife … heavy traffic congestion … [S4]" while S4 is
+`Bangkok/Ramkhamhaeng`, whose text contains none of *cosmopolitan, vibrant, nightlife, high-rise,
+traffic, congestion*; those words are in S1 `Bangkok`. The Korea/Indonesia turn, which cites
+`Rail travel in South Korea` for a claim about the 1945 Constitution, dropped the same way. A turn
+made only of verbatim digest lines still reaches `GROUNDED`, because each line's words come from the
+passage it names.
