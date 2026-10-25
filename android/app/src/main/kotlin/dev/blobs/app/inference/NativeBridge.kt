@@ -109,6 +109,7 @@ internal class NativeBridge(private val backendDirectory: String = "") {
         backendDirectory.toByteArray(Charsets.UTF_8),
         limit,
         inferenceThreads(Runtime.getRuntime().availableProcessors()),
+        LOCAL_RESEARCH_CONTEXT_TOKENS,
         sink
     )
 
@@ -121,6 +122,7 @@ internal class NativeBridge(private val backendDirectory: String = "") {
         backendDirectory: ByteArray,
         limit: Int,
         threads: Int,
+        contextTokens: Int,
         sink: TokenSink
     ): Int
 

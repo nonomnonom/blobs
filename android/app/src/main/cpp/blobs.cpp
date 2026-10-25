@@ -46,9 +46,11 @@ extern "C" JNIEXPORT void JNICALL Java_dev_blobs_app_inference_NativeBridge_rele
 
 extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_generateNative(
     JNIEnv *env, jobject, jbyteArray path, jbyteArray system, jbyteArray user, jbyteArray grammar,
-    jbyteArray grammar_root, jbyteArray backend_directory, jint limit, jint threads, jobject sink) {
+    jbyteArray grammar_root, jbyteArray backend_directory, jint limit, jint threads,
+    jint context_tokens, jobject sink) {
     if (!path || !system || !user || !grammar || !grammar_root || !backend_directory || !sink ||
-        limit < 1 || limit > 512 || threads < 1 || threads > 4) {
+        limit < 1 || limit > 512 || threads < 1 || threads > 4 || context_tokens < 1 ||
+        context_tokens > 65536) {
         throw_java(env, "java/lang/IllegalArgumentException", "NATIVE_ARGUMENT");
         return blobs::kGenerationFailure;
     }
@@ -76,6 +78,7 @@ extern "C" JNIEXPORT jint JNICALL Java_dev_blobs_app_inference_NativeBridge_gene
             utf8(env, backend_directory),
             limit,
             threads,
+            context_tokens,
         };
         const auto result = blobs::generate(request, [&](const char *token, std::size_t size) {
             if (size > static_cast<std::size_t>(std::numeric_limits<jsize>::max())) {

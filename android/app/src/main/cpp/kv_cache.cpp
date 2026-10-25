@@ -26,7 +26,13 @@ KvCache::Context KvCache::create_context(llama_model *model, int capacity, int t
 
 llama_context *KvCache::prepare(llama_model *model, int capacity, int threads,
                                 ggml_abort_callback abort_callback, void *abort_callback_data) {
-    if (context_ && model_ == model && capacity_ == capacity && threads_ == threads) {
+    if (context_ && model_ == model && capacity_ == capacity) {
+        // A thread count is a scheduling choice, not a cache identity. Rebuilding the context to
+        // change it would throw away the prefix the caller is trying to reuse.
+        if (requested_threads_ != threads) {
+            llama_set_n_threads(context_.get(), threads, threads);
+            requested_threads_ = threads;
+        }
         return context_.get();
     }
 
@@ -46,7 +52,7 @@ llama_context *KvCache::prepare(llama_model *model, int capacity, int threads,
 
     model_ = model;
     capacity_ = capacity;
-    threads_ = threads;
+    requested_threads_ = threads;
     return context_.get();
 }
 
@@ -92,7 +98,7 @@ void KvCache::reset() {
     prompt_tokens_.clear();
     model_ = nullptr;
     capacity_ = 0;
-    threads_ = 0;
+    requested_threads_ = 0;
 }
 
 } // namespace blobs

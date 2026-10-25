@@ -20,6 +20,7 @@ struct GenerationRequest {
     std::string backend_directory;
     int output_token_limit;
     int threads;
+    int context_tokens;
 };
 
 using TokenSink = std::function<bool(const char *, std::size_t)>;

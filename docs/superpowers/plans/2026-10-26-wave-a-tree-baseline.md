@@ -60,6 +60,25 @@ So the finding stands — an unbounded prompt is what the model actually receive
 first time*, not restoring a regression. That makes it a behaviour change with a truncation decision to
 justify, and the same change has to amend `docs/architecture.md:251` to describe what the code now does.
 
+## Second correction found while editing: the shipped docs over-claim performance
+
+`docs/architecture.md:320-326` states, on both `release/0.4.0` and this baseline, that inference
+"threads are auto-detected from the device and clamped to 8", prompt decoding runs in "512-token
+batches with a 256-token physical ubatch", and "x86_64 builds enable AVX/AVX2/FMA/F16C/BMI2 paths".
+Commit `f5eaab7` introduced those sentences. **No committed code on any branch does any of it:**
+
+| Claim | Computed code at `81af8c7` |
+| --- | --- |
+| threads clamped to 8 | `blobs.cpp` rejects `threads > 4` (baseline `:51`) and `NativeBridge.kt` sets `MAX_INFERENCE_THREADS = 4` (baseline `:3`) |
+| 512-token batches | `kv_cache.h:10` `kKvDecodeBatchTokens = 256`, `params.n_ubatch = 128` |
+| AVX/AVX2/FMA/F16C/BMI2 enabled | `CMakeLists.txt` forces none of them; only SSE4.2 is relied on |
+
+So the published documentation describes performance work that is still uncommitted in
+`D:/rimbara/blobs`. This wave leaves those sentences alone — the pending native edits are what make
+them true, and rewriting them here would only create a conflict — but no Wave A record may cite them
+as evidence of what ships. The `verify`-time docs check does not compare prose to binaries, which is
+how this survived a release.
+
 ## Gate
 
 `git -C D:/rimbara/blobs-wave-a status --porcelain` is empty for `android/app/src/main/cpp`. If any

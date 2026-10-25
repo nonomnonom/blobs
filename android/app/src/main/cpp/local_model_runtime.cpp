@@ -20,8 +20,6 @@ namespace {
 std::atomic<bool> cancelled{false};
 std::mutex model_owner;
 std::once_flag backend_initialized;
-constexpr int kMinimumContextTokens = 512;
-constexpr int kMaximumContextTokens = 4096;
 constexpr int kMaximumTokenPieceBytes = 4096;
 constexpr int kAllModelLayers = 999;
 
@@ -78,16 +76,14 @@ bool same_identity(const ModelFileIdentity &left, const ModelFileIdentity &right
            left.modified_nanoseconds == right.modified_nanoseconds;
 }
 
-int context_capacity(int prompt_tokens, int output_tokens) {
-    const int required = prompt_tokens + output_tokens;
-    int capacity = kMinimumContextTokens;
-    while (capacity < required && capacity < kMaximumContextTokens) {
-        capacity *= 2;
-    }
-    if (capacity < required) {
+int context_capacity(int prompt_tokens, int output_tokens, int fixed_capacity) {
+    // One capacity for every turn: a bucket that moves makes KvCache::prepare free the context, and
+    // the prefix cache then never gets a hit. The Kotlin side already pins this value
+    // (inference/InferenceContextPolicy.kt), so an oversized request is a rejection, not a re-bucket.
+    if (prompt_tokens + output_tokens > fixed_capacity) {
         throw std::runtime_error("CONTEXT_FULL");
     }
-    return capacity;
+    return fixed_capacity;
 }
 
 std::string render_prompt(llama_model *model, const std::string &system, const std::string &user) {
@@ -194,6 +190,7 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     if (request.model_path.empty() || request.system_prompt.empty() ||
         request.user_prompt.empty() || request.output_token_limit < 1 ||
         request.output_token_limit > 512 || request.threads < 1 || request.threads > 4 ||
+        request.context_tokens < 1 || request.output_token_limit >= request.context_tokens ||
         grammar_without_root || !sink) {
         throw std::invalid_argument("NATIVE_ARGUMENT");
     }
@@ -223,7 +220,7 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     const auto tokenize_started = std::chrono::steady_clock::now();
     const int token_count =
         -llama_tokenize(vocab, prompt.data(), prompt.size(), nullptr, 0, true, true);
-    if (token_count <= 0 || token_count + request.output_token_limit > kMaximumContextTokens) {
+    if (token_count <= 0) {
         last_timings.tokenize_ms = elapsed_ms(tokenize_started);
         throw std::runtime_error("CONTEXT_FULL");
     }
@@ -236,7 +233,8 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     last_timings.tokenize_ms = elapsed_ms(tokenize_started);
     last_timings.prompt_tokens = token_count;
 
-    const int capacity = context_capacity(token_count, request.output_token_limit);
+    const int capacity =
+        context_capacity(token_count, request.output_token_limit, request.context_tokens);
     last_timings.context_capacity = capacity;
     const auto prepare_started = std::chrono::steady_clock::now();
     llama_context *context =
