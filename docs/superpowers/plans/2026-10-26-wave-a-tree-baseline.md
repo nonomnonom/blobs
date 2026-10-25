@@ -97,6 +97,12 @@ edits; this branch owns Wave A. Coordination settled as:
   19 s predicted, 20.8 s observed) matches, and `compare-tubeless-tubed-tyres` (1 434 chars ≈ 420 tokens
   ≈ 24 s predicted, +47 s observed) does not. **No single-run latency claim for the bound is supportable
   yet**, which is what this file's gate says; the delta is prefill-independent variance.
+- Handoff to that lane: the prompt bound is `188b1c2`; run the paired measurement against this branch's
+  tip rather than cherry-picking, because `generateNative` gained a `contextTokens` argument and
+  `lastTimingsNative` is new — a partial cherry-pick fails at the first turn with `UnsatisfiedLinkError`.
+  Attribute the bound as `prefill_ms / prompt_tokens` (≈56 ms on this profile), not as wall clock: the
+  paired data removes 335–420 tokens, which predicts 19–24 s, and one of the two pairs moves the wrong
+  way by 47 s, so run-to-run variance is larger than the saving.
 - Device split: `emulator-5554` = blobs-research (8 GB) is theirs; `emulator-5556` = blobs-e2e (2 GB) is
   this branch's. This branch left 5556 with `dev.blobs.app.debug` replaced by this build (APK digest
   `dffbbe9890554d93…`), airplane mode on (its prior state), and two extra staged run directories
