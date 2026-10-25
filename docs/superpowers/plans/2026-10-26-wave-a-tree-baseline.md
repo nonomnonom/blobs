@@ -262,6 +262,34 @@ So the owner's bar - a 0.5B turn under 30 s - is met on first text (13.7-19.1 s)
 cases end to end (30.7 and 35.4 s), and is missed by the two cases where the model keeps generating.
 The remaining path to it is output length and retrieval fan-out, not the model.
 
+### Retrieval fan-out: the seven searches now run together
+
+Each enabled library is an independent FTS search on its own connection, so the sequential loop
+added their wall-clock costs together. `LibraryStore.retrieve` now runs them on the common pool and
+writes every result back at its own index, which keeps the candidate list in library order - the
+order the ranking's last tie-break depends on - so the evidence set is unchanged by construction and
+no SQL, stop-word or ranking text was touched (the diff is the loop plus a moved `searchLibrary`
+helper). `host_replay.py`'s `LIBRARY_STORE_SHA256` pin was re-pointed at the committed file for that
+reason; the mirror still models the same policy.
+
+Measured on `emulator-5554`, same shelf, model and cases as `llamafile-1`, only the retrieval loop
+changed:
+
+| case | retrieval | first text | end to end | passages |
+| --- | --- | --- | --- | --- |
+| compare-disc-rim-brakes | 3,209 -> **1,876 ms** | 13,376 -> 13,636 ms | 31,596 -> 31,567 ms | 5 -> 5 |
+| compare-tubeless-tubed-tyres | 4,686 -> **2,606 ms** | 15,244 -> 13,106 ms | 33,982 -> 31,487 ms | 4 -> 4 |
+| compare-bangkok-hanoi | 10,969 -> **5,967 ms** | 20,294 -> 15,202 ms | 44,162 -> 39,868 ms | 6 -> 6 |
+
+**~1.8x on retrieval, identical passage counts.** Three of the four turns now finish in 31.2-31.6 s
+with LFM2-1.2B on an emulator, against a 97.6 s median two hours ago.
+
+A method note worth keeping: two captures before this one hung with the question sitting unsent in
+the composer and no ANR in logcat. That was stale app state - a turn left RUNNING by an earlier
+timed-out run - and a plain `am force-stop` cleared it. It is not a reason to distrust a change, but
+it is a reason to restart the app before blaming a build for a hang that happens before any of its
+code runs.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built

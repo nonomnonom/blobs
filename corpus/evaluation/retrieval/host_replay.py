@@ -21,7 +21,7 @@ from blobs_corpus.names import name_key
 # Single-library parity compares exact passage identities and text hashes.
 # These digests bind to the committed Kotlin, so an uncommitted edit in a shared checkout
 # cannot silently re-point the mirror; the guard fails and the policy gets reviewed first.
-LIBRARY_STORE_SHA256 = "6c44e154b496ebe2f601c74583fd2f3f3224650dff77c60a64eab4acf122354a"
+LIBRARY_STORE_SHA256 = "eef00b933acb237bef126a1cd69f92563d18a573689011c8ac7a67f714acbb33"
 QUERY_SHA256 = "c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68"
 STOP_WORDS = {
     "the",
