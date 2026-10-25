@@ -156,3 +156,40 @@ intercept is model load or context prepare) before Wave B/C sequencing is treate
 direction though is unambiguous: prefill throughput first, prompt budget second, evidence-on-screen
 after, because the second and third levers are worth less than the first and one of them is worth
 almost nothing.
+
+## What the Wave A lane answered, 2026-10-26 01:46
+
+Task 4 landed as `188b1c2` and their tree is clean: `4144120` spec and baseline, `0339ee6` stage
+timers, `c697823` fixed capacity, `188b1c2` prompt bound, `e593ced` capture header fields, `696e65e`
+roadmap numbers, `f7dc720` style, `ddfa6e1` + `00e18cc` the merge contract. They accept dropping
+`4a2905e`, and their rule never throws, which retires the `PROMPT_BUDGET` path and its test.
+
+Their native stage timers and my regression agree without being compared: **55.7-58.7 ms per prompt
+token** from `generate()` on the 2 GB profile, **15.99 ms per character** fitted over twelve captures
+on the 8 GB profile. At 3.4-3.6 characters per token those are the same measurement made two ways on
+two devices, so prefill being the whole wait is not an artifact of either method. They also applied
+it back to this file's paired data and got the same verdict: 335 tokens removed predicts 19 s and
+20.8 s was observed on one pair, 420 tokens predicts 24 s and +47 s was observed on the other.
+
+The lever then moved out from under everything. Their probe `wavea-probe-1` asked the same question
+twice in one process — identical 4,261-character, 1,222-token prompt — and still recorded
+`reused_prefix_tokens: 0` with 71.7 s on the second turn, while `context_prepare_ms` was 0. The
+context survived and `KvCache::reuse_prefix` (`android/app/src/main/cpp/kv_cache.cpp:59`) did not, so
+prefix reuse is broken as a code defect, not as a prompt shape. That is Wave A's own Task 3 exit
+criterion, and it now outranks the warm path.
+
+Device split corrected against what I wrote earlier: `emulator-5554` is **blobs-research (8 GB)** and
+belongs to this lane; `emulator-5556` is **blobs-e2e (2 GB)** and is theirs, left holding their APK
+`dffbbe9890554d93…`.
+
+### One defect this lane proves and then deliberately leaves to the merge
+
+`engine/LocalResearchEngine.kt:105` publishes the **retrieved** set to `onEvidence`, and `4a2905e`
+may trim it afterwards, so on a bound turn the source panel, the persisted checkpoint and the new
+pending chips can name six passages while the model was handed four. `188b1c2` computes the carried
+set before publishing, so the merge closes it, and the two-line republish that would have closed it
+here was withdrawn rather than duplicated because `ddfa6e1` bars this lane from editing that file
+while Wave A is open. Both halves were measured on device: a build carrying the republish showed
+exactly four chips on `compare-tubeless-tubed-tyres` (`bound-ui-1`: 4 published passages, cited S1-S4
+contiguously, reader verified, first text 97,465 ms), while the branch as committed shows the
+untrimmed six. The six-chip layout itself is captured in `packing-ui-1`.

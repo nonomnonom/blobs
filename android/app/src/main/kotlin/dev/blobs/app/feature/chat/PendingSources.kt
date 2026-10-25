@@ -58,7 +58,7 @@ internal fun PendingSources(
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = 184.dp)
+                    modifier = Modifier.widthIn(max = 120.dp)
                 )
             }
         }
