@@ -290,6 +290,27 @@ timed-out run - and a plain `am force-stop` cleared it. It is not a reason to di
 it is a reason to restart the app before blaming a build for a hang that happens before any of its
 code runs.
 
+### The 0.5B on the optimized build, and the one term left
+
+Same four cases, same shelf and device, model `qwen25-0b5-q4km`, build `6919d3a`:
+
+| case | retrieval | first text | end to end | visible answer |
+| --- | --- | --- | --- | --- |
+| compare-disc-rim-brakes | 2,335 ms | 12,688 ms | 34,996 ms | 458 chars |
+| compare-tubeless-tubed-tyres | 2,977 ms | 12,976 ms | **57,632 ms** | 400 chars |
+| compare-bangkok-hanoi | 5,612 ms | 13,985 ms | **29,894 ms** | 937 chars |
+| compare-magna-carta-bill-rights | 5,817 ms | 11,609 ms | **25,337 ms** | 384 chars |
+
+Two of four turns now finish under 30 s and every turn reaches its first character in 11.6-14.0 s,
+against 43.9 s first text and 99.1 s end to end for this same model on 2026-10-25. What is left is
+one number: the tubeless turn spent **44.7 s decoding a 400-character answer**, which means it ran to
+`MAX_RESEARCH_OUTPUT_TOKENS` and the visible prose was only the part that survived citation
+validation. Decode is no longer a cost to make faster, it is a length to stop.
+
+That constant is `engine/LocalResearchEngine.kt:17`, a file this lane agreed not to edit while Wave A
+is open (`ddfa6e1`), so the change is handed to that lane with these numbers rather than applied
+here.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
