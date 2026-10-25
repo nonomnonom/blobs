@@ -223,6 +223,23 @@ a new native run and a reviewed replay — both of which are unblocked now that 
 committed code and a volume with room exists. Neither half is decided yet; five one-passage cases and
 the porter over-stemming question (does stemming hurt a large library's ranking?) remain unmeasured.
 
+**The over-stemming question is now measured, and the answer is no.** A porter index for the whole
+Wikivoyage payload was rebuilt on the host from the retained schema-3 spans: 520,143 passages in
+79.3 seconds, file 588 MB against the original 594 MB. Terms that were invisible under
+`unicode61` now match (`trains` 12,441 passages before, 33,889 after, identical to `train`;
+`clinics` 304→787; `pharmacies` 440→1,279). Replaying the pinned 48-case suite through the same
+mirror on both indexes: **hits 45→46, rank-1 28→31, MRR 0.7108→0.7521**, 42 cases unchanged,
+4 improved (`bali-scooter-permit` missed→rank 1, `hitchhiking-legality` 2→1, `nepal-trek-permits`
+3→1, `prague-jewish-quarter` 6→5) and 2 regressed only inside the shelf
+(`mumbai-local-trains` 3→5, `rail-night-train` 3→4 — both still cited). No case lost its expected
+title and no case ended with an empty shelf in either arm. The `unicode61` arm reproduces the
+recorded 45 from `wikivoyage-en-2026-09.5-retrieval-v4-committed.json`, which validates the harness.
+Evidence: `corpus/evaluation/results/2026-10-25-stemming-ab/wikivoyage-48case-unicode61-vs-porter.json`.
+Contrast with the rejected query-side expansion, which cost two expected-title hits; stemming at the
+index is the direction the measurement supports. Building every package with porter still needs a
+native run over the affected libraries and a reviewed replay per package, plus owner approval to
+republish, and it retires every currently published edition.
+
 **Still open, in priority order:** the writer is the binding constraint (a one-sentence
 one-sided answer and a zero-citation answer both came out of six adequate sources on LFM2-1.2B);
 and 12 of the 14 suite cases have never run through the UI.
