@@ -105,7 +105,28 @@ git add android/app/src/main/kotlin/dev/blobs/app/inference/ResearchPrompt.kt \
 git commit -m "feat(engine): answer from six cited sources in one search"
 ```
 
-### Task 2: Evaluation on an available device
+### Task 2: Uncited-answer trust gate
+
+**Files:**
+- Create: `android/app/src/main/kotlin/dev/blobs/app/inference/CitedDigest.kt`
+- Test: `android/app/src/test/kotlin/dev/blobs/app/inference/CitedDigestTest.kt`
+- Modify: `android/app/src/main/kotlin/dev/blobs/app/engine/LocalResearchEngine.kt`
+
+**Interfaces:**
+- Produces: `CitedDigest.build(evidence: List<Evidence>, maximumSources: Int = 6): String?`.
+- Consumes: `AnswerText.citations`, `NativeBridge.FINISHED`, `ModelSupport`.
+
+- [x] **Step 1: Write failing tests** for one cited line per passage, passages keeping their own
+  `[S#]`, headings/fragments skipped, navigation lists skipped, duplicates collapsed, and no usable
+  passage returning null.
+- [x] **Step 2: Run the tests; expect unresolved reference.**
+- [x] **Step 3: Implement** the 240-character, six-source digest and wire the engine rule: only a
+  `FINISHED`, non-empty-evidence, zero-citation answer is replaced; cancellation and token-limit
+  keep their partial prose.
+- [x] **Step 4: Verify** unit tests, ktlint, debug and androidTest assembly.
+- [ ] **Step 5: Return to Task 3.**
+
+### Task 3: Evaluation on an available device
 
 **Files:**
 - Modify: `corpus/evaluation/README.md` only after the run is green.

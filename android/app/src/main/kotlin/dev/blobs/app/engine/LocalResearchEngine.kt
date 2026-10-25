@@ -6,6 +6,7 @@ import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.inference.CitedDigest
 import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.ResearchPrompt
@@ -162,9 +163,18 @@ internal class LocalResearchEngine(
         }
 
         val decoded = StructuredAnswer.decode(AnswerText.visible(output.completeUtf8Text()))
+        val digest = if (
+            nativeResult == NativeBridge.FINISHED &&
+            evidence.isNotEmpty() &&
+            AnswerText.citations(answer, evidence.size).isEmpty()
+        ) {
+            CitedDigest.build(evidence)
+        } else {
+            null
+        }
         return ResearchOutcome(
-            answer = answer,
-            support = decoded?.support,
+            answer = digest ?: answer,
+            support = if (digest != null) ModelSupport.SOURCED else decoded?.support,
             evidence = evidence,
             finish = when (nativeResult) {
                 NativeBridge.FINISHED -> ResearchFinish.FINISHED

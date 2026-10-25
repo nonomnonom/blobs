@@ -40,6 +40,23 @@ let both named subjects in.
   Perplexity-like: ask, search, answer with sources. Internal intent rules add failure modes
   (lowercase names, unseen phrasing) without improving the visible experience.
 
+## Trust gate
+
+A finished completion that uses none of its sources must not be presented as fact. Measured on the
+2 GB AVD, LFM2-1.2B ignored all six retrieved passages and produced a confident, uncited Japan
+itinerary. The engine now applies one deterministic rule:
+
+- if `FINISHED` and evidence is non-empty and the validated answer contains zero citations,
+  `CitedDigest` replaces the prose with one verbatim, cited sentence per usable passage;
+- the digest keeps each passage's own `[S#]`, so the citation opens the passage it came from;
+- navigation lists (two or more `•` separated items) and fragments under 40 characters are skipped;
+- cancellation and token-limited turns keep the model's partial prose, because the reader stopped
+  that turn or saw it end;
+- the digest is marked `SOURCED`, which structural coverage can then ground.
+
+This gate adds no model call and no retrieval. It is the existing "citation validation" step from
+the product contract, not a planner.
+
 ## Contract changes
 
 - `ResearchPrompt.MAX_ANSWER_SOURCES`: 3 -> 6.

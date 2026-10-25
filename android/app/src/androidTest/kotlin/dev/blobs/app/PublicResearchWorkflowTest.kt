@@ -201,7 +201,7 @@ class PublicResearchWorkflowTest {
                 results.put(result)
                 save()
                 capture("$id-chat")
-                val citation = Regex("\\[S([1-4])]").find(turn.answer)
+                val citation = Regex("\\[S([0-9]+)]").find(turn.answer)
                     ?.groupValues?.get(1)?.toInt()
                 val source = citation?.let { Evidence.decode(turn.evidence).getOrNull(it - 1) }
                 if (source != null) {
