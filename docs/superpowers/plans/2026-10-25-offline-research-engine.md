@@ -201,6 +201,28 @@ same question with the model's Bangkok sentence `[S4]` plus `Hanoi` `[S2]` and `
 six-line digest. Covered by `CitedDigestTest` (replace, top-up, subject skip, two-citation and
 same-subject-only no-ops) and `./gradlew verify`.
 
+**The plural gap is two defects, and stemming is only one of them.** Measured on
+`nairobi-health-places@2026-10.1` (200 passages, the library whose pharmacy question ships zero
+evidence). Rebuilding only the FTS index with `tokenize='porter unicode61'` fixes the term gap —
+`clinics` 0→92 matched passages, `pharmacies` 0→72, `hospitals` 2→58 — but retrieval still returns
+**no evidence at all**, on both tokenizers. The binding gate is the relevance floor: every passage in
+that library contains "nairobi", so bm25's 24-candidate window holds rows that each overlap only one
+title term while `minimumEvidenceOverlap` demands two, and `selectEvidence` discards the whole window.
+With a fallback that admits overlap ≥1 only when the strict floor leaves the shelf empty, the answers
+are right and they are right *because of stemming*: unicode61-plus-fallback returns hospitals for
+"what pharmacies are listed", while porter-plus-fallback returns `Curex Pharmacy`, `Gifted Pharmacy`,
+`Drug Safe Pharmacy`. So neither half is shippable alone.
+The fallback's blast radius is bounded by measurement: in the reviewed replay
+(`wikivoyage-en-2026-09.5-retrieval-v4-committed.json`) **0 of 48 cases finish with empty evidence**,
+so a trigger that fires only on an empty shelf cannot change a single Wikivoyage selection, which is
+also what the A/B on that suite showed (29 hits both arms, 0 selections changed under the mirror).
+Five cases do return exactly one passage, which the fallback does not touch.
+This reframes the planned stemming work: the tokenizer change is a package rebuild plus a republish,
+but the empty-shelf fallback is a `LibraryStore.kt` change, and that file is hash-pinned, so it needs
+a new native run and a reviewed replay — both of which are unblocked now that the pin binds to
+committed code and a volume with room exists. Neither half is decided yet; five one-passage cases and
+the porter over-stemming question (does stemming hurt a large library's ranking?) remain unmeasured.
+
 **Still open, in priority order:** the writer is the binding constraint (a one-sentence
 one-sided answer and a zero-citation answer both came out of six adequate sources on LFM2-1.2B);
 and 12 of the 14 suite cases have never run through the UI.
