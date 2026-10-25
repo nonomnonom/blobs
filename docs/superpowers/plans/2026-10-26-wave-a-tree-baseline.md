@@ -443,6 +443,17 @@ decisions, neither of which is mine to make silently: shorter answers (the cap i
 these use all of it), or a cheaper query shape in `RetrievalQuery.kt`, which is pinned and mirrored
 by the frozen replay.
 
+### Forced flash attention is a no-op on this backend
+
+The default is `LLAMA_FLASH_ATTN_TYPE_AUTO`, resolved by llama.cpp's fused-op probe, so it had never
+been asked for directly. Forcing `ENABLED` and running the suite (`fa-suite`, nine cases paired
+against `q554-suite`) gave a median end to end of 25,169 ms against 25,468 ms without it - **1.2 %**,
+far inside the ±20 % floor - with **all nine answers byte-identical**. Reverted.
+
+That closes every native lever the wave names except prefix reuse: llamafile and AVX2 are in and
+large, batch shape, KV type, mmap and flash attention are measured as nothing on this hardware, and
+the two decode cuts (token cap, greedy tail) are in.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
