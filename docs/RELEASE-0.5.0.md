@@ -1,7 +1,7 @@
 # Blobs 0.5.0 Release Documentation
 
-**Release Date**: 2026-10-26  
-**Version**: 0.5.0 (versionCode 20)  
+**Release Date**: 2026-10-26
+**Version**: 0.5.0 (versionCode 20)
 **Status**: Production Ready ✅
 
 ## Release Assets
@@ -32,8 +32,8 @@
 
 ### Upgrade Paths
 
-**From 0.4.0**: Installs in place, no data loss  
-**From 0.3.14 or older**: 
+**From 0.4.0**: Installs in place, no data loss
+**From 0.3.14 or older**:
 1. Export conversations from old app
 2. Uninstall old app
 3. Install 0.5.0
