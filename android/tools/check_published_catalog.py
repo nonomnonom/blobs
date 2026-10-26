@@ -2,16 +2,13 @@
 
 import base64
 import json
-import sys
 import urllib.request
 from pathlib import Path
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-URL = (
-    "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/main/catalog.signed.json"
-)
+URL = "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/main/catalog.signed.json"
 ANDROID = Path(__file__).resolve().parents[1]
 
 
@@ -19,7 +16,9 @@ def main() -> None:
     envelope = json.loads(urllib.request.urlopen(URL, timeout=120).read())
     payload = base64.b64decode(envelope["payload"])
     for name in ("catalog-public-key-v3.pem", "catalog-public-key-v2.pem"):
-        key = serialization.load_pem_public_key((ANDROID / "app/src/main/assets" / name).read_bytes())
+        key = serialization.load_pem_public_key(
+            (ANDROID / "app/src/main/assets" / name).read_bytes()
+        )
         try:
             key.verify(base64.b64decode(envelope["signature"]), payload, ec.ECDSA(hashes.SHA256()))
             print(f"signature verified with {name}")
@@ -33,7 +32,9 @@ def main() -> None:
     models = [p["manifest"] for p in catalog["packages"] if p["manifest"]["kind"] == "model"]
     libraries = [p["manifest"] for p in catalog["packages"] if p["manifest"]["kind"] == "library"]
     print("revision", catalog["revision"], "release_tag", catalog.get("release_tag"))
-    print("packages", len(catalog["packages"]), f"({len(models)} models, {len(libraries)} libraries)")
+    print(
+        "packages", len(catalog["packages"]), f"({len(models)} models, {len(libraries)} libraries)"
+    )
     for model in models:
         entry = next(p for p in catalog["packages"] if p["manifest"]["id"] == model["id"])
         print(

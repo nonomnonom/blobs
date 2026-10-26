@@ -26,8 +26,8 @@ constexpr int kAllModelLayers = 999;
 GenerationTimings last_timings{-1, -1, -1, -1, -1, -1, -1, -1, -1, false, 0, 0, 0};
 
 long long elapsed_ms(const std::chrono::steady_clock::time_point &from) {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-               std::chrono::steady_clock::now() - from)
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                 from)
         .count();
 }
 
