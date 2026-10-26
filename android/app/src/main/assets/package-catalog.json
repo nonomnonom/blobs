@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "revision": 2026102404,
+  "revision": 2026102502,
   "release_tag": "v0.4.0",
   "packages": [
     {
@@ -92,7 +92,7 @@
     },
     {
       "file_name": "wikivoyage-en-2026-09.5.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikivoyage-en-2026-09.5.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/wikivoyage-en-2026-09.5.blobs",
       "download_format": "blobs",
       "download_bytes": 290811362,
       "download_sha256": "f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc",
@@ -128,7 +128,7 @@
     },
     {
       "file_name": "howto-repair-2026-10.4.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/howto-repair-2026-10.4.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/howto-repair-2026-10.4.blobs",
       "download_format": "blobs",
       "download_bytes": 256576414,
       "download_sha256": "0b395e6eade09525f87ff61acd6a76e107fb13688be9a0a99c1b730c8e089a5c",
@@ -164,7 +164,7 @@
     },
     {
       "file_name": "howto-practical-2026-10.4.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/howto-practical-2026-10.4.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/howto-practical-2026-10.4.blobs",
       "download_format": "blobs",
       "download_bytes": 567686098,
       "download_sha256": "2c5d4867931a14fd9220990090fb21375e0fdc9255670abaeee78d0c1167d028",
@@ -200,7 +200,7 @@
     },
     {
       "file_name": "wikipedia-top1m-mini-2026-04.5.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikipedia-top1m-mini-2026-04.5.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/wikipedia-top1m-mini-2026-04.5.blobs",
       "download_format": "blobs",
       "download_bytes": 1787025308,
       "download_sha256": "a751510e64b1c845016d293e9d9af00bc393f87cdbeb01bec22f3268a5972528",
@@ -236,7 +236,7 @@
     },
     {
       "file_name": "wikisource-en-history-p000-2026-09.3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p000-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/wikisource-en-history-p000-2026-09.3.blobs",
       "download_format": "blobs",
       "download_bytes": 1323097330,
       "download_sha256": "6cf1ffb2ff7d97cc92fc2a95f5f601e51cb4be2d3f8ff981f53cff3e5267d2bc",
@@ -272,7 +272,7 @@
     },
     {
       "file_name": "wikisource-en-history-p001-2026-09.3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p001-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/wikisource-en-history-p001-2026-09.3.blobs",
       "download_format": "blobs",
       "download_bytes": 1322088523,
       "download_sha256": "370df30d8f81ef25ed75a04106e84651803a1b28cb7da3be699fe30123c4e035",
@@ -308,7 +308,7 @@
     },
     {
       "file_name": "wikisource-en-history-p002-2026-09.3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p002-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/wikisource-en-history-p002-2026-09.3.blobs",
       "download_format": "blobs",
       "download_bytes": 1335443794,
       "download_sha256": "2a9973ca9ef6f1fb3f1e851c88634eb30182bebdf021492c4980139e56fec96c",
@@ -344,7 +344,7 @@
     },
     {
       "file_name": "wikisource-en-history-p003-2026-09.3.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/wikisource-en-history-p003-2026-09.3.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/wikisource-en-history-p003-2026-09.3.blobs",
       "download_format": "blobs",
       "download_bytes": 1323294448,
       "download_sha256": "0176bb4a3ad8c5b8104a39c60620d83ea5b40a43013b50fe399a3a0987e60843",
@@ -380,7 +380,7 @@
     },
     {
       "file_name": "nairobi-health-places-2026-10.1.blobs",
-      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/56e50616d02ed9a29f86b66de09f059ba276f0d9/packages/nairobi-health-places-2026-10.1.blobs",
+      "url": "https://huggingface.co/datasets/nonomnonom/blobs-catalog/resolve/3059b4150abc5a872232d2b8bfd7327bfc7d7b77/packages/nairobi-health-places-2026-10.1.blobs",
       "download_format": "blobs",
       "download_bytes": 86458,
       "download_sha256": "2e99d33710ffb39502da6632ac230a7554e271d4f60dfab4b09258633fb79036",
@@ -411,6 +411,35 @@
         "format": "Blobs library archive",
         "corpus_schema": 3,
         "retrieval_format": "SQLite FTS5",
+        "minimum_app_version": "0.3.1"
+      }
+    },
+    {
+      "file_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "download_format": "gguf",
+      "download_bytes": 491400032,
+      "download_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+      "manifest": {
+        "format": 1,
+        "id": "qwen25-0b5-q4km",
+        "version": "9217f5db",
+        "kind": "model",
+        "title": "Qwen2.5 0.5B Q4_K_M · 32k",
+        "bytes": 491400032,
+        "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        "license": "Apache-2.0",
+        "origin": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/tree/9217f5db79a29953eb74d5343926648285ec7e67"
+      },
+      "role": "model",
+      "recommended_up_to_memory_mb": 2048,
+      "description": "Official Qwen2.5 0.5B Instruct Q4_K_M GGUF from the Qwen organisation. 32k native context; the smallest writer in the app, measured at 40.5s to first visible text against 53.2-76.5s for LFM2 1.2B on the same 2 GB profile and question. It spends the whole 320-token output budget before closing its response document, so its turns fall back to cited digest lines instead of model prose.",
+      "language": "English",
+      "publisher": "Qwen · official GGUF",
+      "compatibility": {
+        "runtime": "llama.cpp",
+        "format": "GGUF",
+        "minimum_ram_mb": 2048,
         "minimum_app_version": "0.3.1"
       }
     }

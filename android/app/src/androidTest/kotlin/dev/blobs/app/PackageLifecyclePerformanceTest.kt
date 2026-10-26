@@ -38,7 +38,16 @@ class PackageLifecyclePerformanceTest {
         )
         val ids = container.catalog.additionalLibraries.map { it.manifest.id }.toSet()
         assertTrue(
-            ids.containsAll(setOf("weather-safety", "earthquake-tsunami-safety", "emergency-food"))
+            ids.containsAll(
+                setOf(
+                    "howto-repair",
+                    "howto-practical",
+                    "wikipedia-top1m-mini",
+                    "wikisource-en-history-p000",
+                    "wikisource-en-history-p003",
+                    "nairobi-health-places"
+                )
+            )
         )
         assertEquals(installed, container.database.packages().all())
         assertEquals(

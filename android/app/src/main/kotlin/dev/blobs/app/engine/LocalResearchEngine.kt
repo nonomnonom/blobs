@@ -6,14 +6,20 @@ import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.inference.CitedDigest
 import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.NativeBridge
+import dev.blobs.app.inference.NativeTurnTimings
 import dev.blobs.app.inference.ResearchPrompt
 import dev.blobs.app.inference.StructuredAnswer
 import dev.blobs.app.inference.TokenSink
 
-// The response document costs a bounded envelope, so the prose keeps the earlier 256-token room.
-internal const val MAX_RESEARCH_OUTPUT_TOKENS = 320
+// Owner-set answer bound for every mode (2026-10-25). The worst 0.5B turn spent 44.7 s decoding to
+// the limit and kept only 400 characters after citation validation, so most of what it generated
+// was discarded, and the surviving answers run about 150 words. Once prefill stopped dominating the
+// turn this was the longest remaining tail, and the bound also frees 120 context tokens for the
+// prompt, since the request must fit prompt plus output in one fixed capacity.
+internal const val MAX_RESEARCH_OUTPUT_TOKENS = 200
 private const val STREAM_RENDER_INTERVAL_MS = 50L
 private const val MAX_RESEARCH_OUTPUT_BYTES = 32 * 1024
 
@@ -42,7 +48,8 @@ internal enum class ResearchFinish {
 internal data class ResearchTimings(
     val retrievalElapsedMs: Long,
     val firstAnswerElapsedMs: Long?,
-    val totalElapsedMs: Long
+    val totalElapsedMs: Long,
+    val native: NativeTurnTimings = NativeTurnTimings.unavailable
 )
 
 internal data class ResearchUsage(
@@ -94,13 +101,22 @@ internal class LocalResearchEngine(
 
         onPhase(ResearchPhase.SEARCHING)
         val retrievalStartedAt = SystemClock.elapsedRealtime()
-        val evidence = library.retrieve(
+        val retrieved = library.retrieve(
             packages = request.libraries,
             question = query,
             scope = request.scope,
             maximumResults = ResearchPrompt.MAX_ANSWER_SOURCES
         )
         val retrievalElapsedMs = SystemClock.elapsedRealtime() - retrievalStartedAt
+        // One trim, applied before anything is shown: the reader, the prompt, the citations and the
+        // stored turn all describe the same passage set, and no evidence is displayed that the model
+        // was not given.
+        val evidence = ResearchPrompt.carriedSources(
+            question = request.question,
+            query = query,
+            history = request.history,
+            sources = retrieved
+        )
         onEvidence(evidence)
         onPhase(if (evidence.isEmpty()) ResearchPhase.GENERATING else ResearchPhase.REVIEWING)
 
@@ -112,12 +128,14 @@ internal class LocalResearchEngine(
         var promptCharacters = 0
         var historyPairCount = 0
         var generationAttempts = 0
+        var carriedSources = evidence
+        var nativeTimings = NativeTurnTimings.unavailable
         fun renderAnswer() {
             if (renderedBytes == output.size) return
             renderedBytes = output.size
             answer = AnswerText.validSourceCitations(
                 readable(AnswerText.visible(output.completeUtf8Text())),
-                evidence.size
+                carriedSources.size
             )
             if (firstAnswerElapsedMs == null && answer.isNotBlank()) {
                 firstAnswerElapsedMs = SystemClock.elapsedRealtime() - startedAt
@@ -136,7 +154,8 @@ internal class LocalResearchEngine(
                 generationAttempts++
                 promptCharacters = prompt.text.length
                 historyPairCount = prompt.historyPairCount
-                runtime.generate(
+                carriedSources = prompt.sources
+                val result = runtime.generate(
                     modelPathBytes,
                     systemPromptBytes,
                     prompt.text.toByteArray(Charsets.UTF_8),
@@ -156,16 +175,27 @@ internal class LocalResearchEngine(
                         }
                     }
                 )
+                nativeTimings = runtime.lastTurnTimings()
+                result
             }
         } finally {
             renderAnswer()
         }
 
         val decoded = StructuredAnswer.decode(AnswerText.visible(output.completeUtf8Text()))
+        val digested = if (nativeResult == NativeBridge.CANCELLED) {
+            null
+        } else {
+            CitedDigest.gate(
+                answer,
+                carriedSources,
+                finished = nativeResult == NativeBridge.FINISHED
+            )
+        }
         return ResearchOutcome(
-            answer = answer,
-            support = decoded?.support,
-            evidence = evidence,
+            answer = digested ?: answer,
+            support = if (digested != null) ModelSupport.SOURCED else decoded?.support,
+            evidence = carriedSources,
             finish = when (nativeResult) {
                 NativeBridge.FINISHED -> ResearchFinish.FINISHED
                 NativeBridge.CANCELLED -> ResearchFinish.CANCELLED
@@ -175,10 +205,11 @@ internal class LocalResearchEngine(
             timings = ResearchTimings(
                 retrievalElapsedMs = retrievalElapsedMs,
                 firstAnswerElapsedMs = firstAnswerElapsedMs,
-                totalElapsedMs = SystemClock.elapsedRealtime() - startedAt
+                totalElapsedMs = SystemClock.elapsedRealtime() - startedAt,
+                native = nativeTimings
             ),
             usage = ResearchUsage(
-                sourceCount = evidence.size,
+                sourceCount = carriedSources.size,
                 promptCharacters = promptCharacters,
                 historyPairCount = historyPairCount,
                 generationAttempts = generationAttempts,

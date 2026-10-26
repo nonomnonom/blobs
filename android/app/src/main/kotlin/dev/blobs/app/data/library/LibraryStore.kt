@@ -1,6 +1,7 @@
 package dev.blobs.app.data.library
 
 import dev.blobs.app.data.local.PackageEntity
+import java.util.stream.IntStream
 
 data class LibraryDocument(
     val id: String,
@@ -69,28 +70,50 @@ class LibraryStore {
 
         val titleTerms = RetrievalQuery.titleTerms(searchQuestion)
         val enabledLibraries = packages.filter { it.kind == "library" && it.enabled }
-        val candidates = enabledLibraries.flatMap { pack ->
-            val selectedWholeLibrary = pack.key in scope.orEmpty()
-            val documentIds = when {
-                scope == null || selectedWholeLibrary -> null
-
-                else -> scope.filter { it.startsWith("${pack.key}/") }
-                    .map { it.substringAfter('/') }
-            }
-            if (scope != null && !selectedWholeLibrary && documentIds.isNullOrEmpty()) {
-                emptyList()
-            } else {
-                retrieveFromLibrary(
-                    pack,
-                    searchQuestion,
-                    lexicalQuery,
-                    titleTerms,
-                    documentIds,
-                    maximumResults
-                )
-            }
+        // Every library is an independent search on its own connection, so the sequential loop
+        // added their wall-clock costs together. They run concurrently instead, and each result is
+        // written back at its own index: the candidate list stays in library order, which is what
+        // the order-sensitive ranking below relies on for its last tie-break.
+        val perLibrary = arrayOfNulls<List<RetrievalCandidate>>(enabledLibraries.size)
+        IntStream.range(0, perLibrary.size).parallel().forEach { index ->
+            perLibrary[index] = searchLibrary(
+                enabledLibraries[index],
+                searchQuestion,
+                lexicalQuery,
+                titleTerms,
+                scope,
+                maximumResults
+            )
         }
-        return selectEvidence(candidates, titleTerms, maximumResults)
+        return selectEvidence(perLibrary.filterNotNull().flatten(), titleTerms, maximumResults)
+    }
+
+    private fun searchLibrary(
+        pack: PackageEntity,
+        searchQuestion: String,
+        lexicalQuery: String,
+        titleTerms: Set<String>,
+        scope: Set<String>?,
+        maximumResults: Int
+    ): List<RetrievalCandidate> {
+        val selectedWholeLibrary = pack.key in scope.orEmpty()
+        val documentIds = when {
+            scope == null || selectedWholeLibrary -> null
+
+            else -> scope.filter { it.startsWith("${pack.key}/") }
+                .map { it.substringAfter('/') }
+        }
+        if (scope != null && !selectedWholeLibrary && documentIds.isNullOrEmpty()) {
+            return emptyList()
+        }
+        return retrieveFromLibrary(
+            pack,
+            searchQuestion,
+            lexicalQuery,
+            titleTerms,
+            documentIds,
+            maximumResults
+        )
     }
 
     private fun retrieveFromLibrary(

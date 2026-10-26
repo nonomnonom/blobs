@@ -89,39 +89,40 @@ class PackageCatalogTest {
     }
 
     @Test
-    fun bundledCatalogOffersThePinnedOutdoorSafetyLibraryOffline() {
+    fun bundledCatalogOffersThePinnedRecordsLibraryOffline() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val catalog = PackageCatalog(context)
         val library = catalog.additionalLibraries.single {
-            it.manifest.id == "nps-outdoor-safety"
+            it.manifest.id == "nairobi-health-places"
         }
 
-        assertEquals("Outdoor safety · U.S. national parks", library.manifest.title)
-        assertEquals("2026-10.2", library.manifest.version)
-        assertEquals(PackageRole.OPTIONAL, library.role)
-        assertEquals(DownloadFormat.BLOBS, library.format)
-        assertEquals(39_256L, library.downloadBytes)
-        assertEquals(
-            "U.S. Government work · National Park Service (public domain unless marked)",
-            library.manifest.license
-        )
-    }
-
-    @Test
-    fun bundledCatalogOffersThePinnedEmergencyPreparednessLibraryOffline() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val catalog = PackageCatalog(context)
-        val library = catalog.additionalLibraries.single {
-            it.manifest.id == "ready-emergency-preparedness"
-        }
-
-        assertEquals("Emergency preparedness · U.S. households", library.manifest.title)
+        assertEquals("Nairobi health places", library.manifest.title)
         assertEquals("2026-10.1", library.manifest.version)
         assertEquals(PackageRole.OPTIONAL, library.role)
         assertEquals(DownloadFormat.BLOBS, library.format)
-        assertEquals(25_054L, library.downloadBytes)
+        assertEquals(86_458L, library.downloadBytes)
+        assertEquals("ODbL 1.0; © OpenStreetMap contributors", library.manifest.license)
+    }
+
+    @Test
+    fun bundledCatalogOffersThePinnedPracticalLibraryOffline() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val catalog = PackageCatalog(context)
+        val library = catalog.additionalLibraries.single {
+            it.manifest.id == "howto-repair"
+        }
+
         assertEquals(
-            "FEMA/Ready.gov text; mostly reusable subject to page-specific third-party restrictions",
+            "Repair and fixing · vehicles, bicycles, aviation, printing, woodworking",
+            library.manifest.title
+        )
+        assertEquals("2026-10.4", library.manifest.version)
+        assertEquals(PackageRole.OPTIONAL, library.role)
+        assertEquals(DownloadFormat.BLOBS, library.format)
+        assertEquals(256_576_414L, library.downloadBytes)
+        assertEquals(
+            "CC BY-SA 4.0; Stack Exchange contributors; see each post revision history " +
+                "for attribution",
             library.manifest.license
         )
     }

@@ -1,7 +1,6 @@
 package dev.blobs.app
 
 import android.app.ActivityManager
-import android.os.Build
 import android.os.Debug
 import android.os.SystemClock
 import androidx.lifecycle.ViewModelProvider
@@ -67,9 +66,9 @@ class AppJourneyPerformanceTest {
             }
             val memory = ActivityManager.MemoryInfo()
             context.getSystemService(ActivityManager::class.java).getMemoryInfo(memory)
-            report.put("format", 1).put("profile", profile)
-                .put("fingerprint", Build.FINGERPRINT).put("api", Build.VERSION.SDK_INT)
-                .put("abi", Build.SUPPORTED_ABIS.first()).put("total_memory_bytes", memory.totalMem)
+            report.putReportHeader(context, requireNotNull(profile))
+            report.put("profile", profile)
+                .put("total_memory_bytes", memory.totalMem)
                 .put("available_processors", Runtime.getRuntime().availableProcessors())
                 .put("model_sha256", model.sha256)
                 .put(
@@ -173,6 +172,15 @@ class AppJourneyPerformanceTest {
                                 performance.firstVisibleTextElapsedMs ?: JSONObject.NULL
                             )
                             .put("end_to_end_elapsed_ms", performance.endToEndElapsedMs)
+                            .put("prompt_characters", performance.promptCharacters)
+                            .put("source_count", performance.sourceCount)
+                            .put("history_pair_count", performance.historyPairCount)
+                            .put("generation_attempts", performance.generationAttempts)
+                            .put("output_token_limit", performance.outputTokenLimit)
+                            .put(
+                                "native_stages",
+                                performance.nativeStageTimings?.json() ?: JSONObject.NULL
+                            )
                             .put("pss_at_first_text_kb", responseMemory.totalPss)
                             .put("status", turn.status)
                     )

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -19,10 +20,26 @@ namespace {
 std::atomic<bool> cancelled{false};
 std::mutex model_owner;
 std::once_flag backend_initialized;
-constexpr int kMinimumContextTokens = 512;
-constexpr int kMaximumContextTokens = 4096;
 constexpr int kMaximumTokenPieceBytes = 4096;
 constexpr int kAllModelLayers = 999;
+
+GenerationTimings last_timings{-1, -1, -1, -1, -1, -1, -1, -1, -1, false, 0, 0, 0};
+
+long long elapsed_ms(const std::chrono::steady_clock::time_point &from) {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                 from)
+        .count();
+}
+
+void begin_timings() {
+    last_timings = GenerationTimings{-1, -1, -1, -1, -1, -1, -1, -1, -1, false, 0, 0, 0};
+}
+
+// Turns are serialized by the runtime, so one process-wide slot is enough and needs no lock.
+struct TotalRecorder {
+    const std::chrono::steady_clock::time_point &started;
+    ~TotalRecorder() { last_timings.total_ms = elapsed_ms(started); }
+};
 
 using Model = std::unique_ptr<llama_model, decltype(&llama_model_free)>;
 
@@ -59,16 +76,14 @@ bool same_identity(const ModelFileIdentity &left, const ModelFileIdentity &right
            left.modified_nanoseconds == right.modified_nanoseconds;
 }
 
-int context_capacity(int prompt_tokens, int output_tokens) {
-    const int required = prompt_tokens + output_tokens;
-    int capacity = kMinimumContextTokens;
-    while (capacity < required && capacity < kMaximumContextTokens) {
-        capacity *= 2;
-    }
-    if (capacity < required) {
+int context_capacity(int prompt_tokens, int output_tokens, int fixed_capacity) {
+    // One capacity for every turn: a bucket that moves makes KvCache::prepare free the context, and
+    // the prefix cache then never gets a hit. The Kotlin side already pins this value
+    // (inference/InferenceContextPolicy.kt), so an oversized request is a rejection, not a re-bucket.
+    if (prompt_tokens + output_tokens > fixed_capacity) {
         throw std::runtime_error("CONTEXT_FULL");
     }
-    return capacity;
+    return fixed_capacity;
 }
 
 std::string render_prompt(llama_model *model, const std::string &system, const std::string &user) {
@@ -100,11 +115,12 @@ std::string render_prompt(llama_model *model, const std::string &system, const s
     return prompt;
 }
 
-llama_model *load_model(const std::string &path) {
+llama_model *load_model(const std::string &path, bool *cached) {
     const auto identity = file_identity(path);
     const bool cache_hit = cached_model && identity && cached_model_identity &&
                            cached_model_path == path &&
                            same_identity(*identity, *cached_model_identity);
+    *cached = cache_hit;
     if (cache_hit) {
         return cached_model.get();
     }
@@ -174,41 +190,61 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     if (request.model_path.empty() || request.system_prompt.empty() ||
         request.user_prompt.empty() || request.output_token_limit < 1 ||
         request.output_token_limit > 512 || request.threads < 1 || request.threads > 4 ||
+        request.context_tokens < 1 || request.output_token_limit >= request.context_tokens ||
         grammar_without_root || !sink) {
         throw std::invalid_argument("NATIVE_ARGUMENT");
     }
 
     std::lock_guard<std::mutex> lock(model_owner);
+    begin_timings();
+    const auto started = std::chrono::steady_clock::now();
+    const TotalRecorder total_recorder{started};
     std::call_once(backend_initialized,
                    [&request] { initialize_backends(request.backend_directory); });
     if (cancelled.load()) {
         return kGenerationCancelled;
     }
 
-    llama_model *model = load_model(request.model_path);
+    bool model_cached = false;
+    const auto load_started = std::chrono::steady_clock::now();
+    llama_model *model = load_model(request.model_path, &model_cached);
+    last_timings.load_ms = elapsed_ms(load_started);
+    last_timings.model_cached = model_cached;
     if (!model) {
         return kGenerationCancelled;
     }
+    const auto template_started = std::chrono::steady_clock::now();
     const auto prompt = render_prompt(model, request.system_prompt, request.user_prompt);
+    last_timings.template_ms = elapsed_ms(template_started);
     const auto *vocab = llama_model_get_vocab(model);
+    const auto tokenize_started = std::chrono::steady_clock::now();
     const int token_count =
         -llama_tokenize(vocab, prompt.data(), prompt.size(), nullptr, 0, true, true);
-    if (token_count <= 0 || token_count + request.output_token_limit > kMaximumContextTokens) {
+    if (token_count <= 0) {
+        last_timings.tokenize_ms = elapsed_ms(tokenize_started);
         throw std::runtime_error("CONTEXT_FULL");
     }
     std::vector<llama_token> prompt_tokens(static_cast<std::size_t>(token_count));
     if (llama_tokenize(vocab, prompt.data(), prompt.size(), prompt_tokens.data(), token_count, true,
                        true) < 0) {
+        last_timings.tokenize_ms = elapsed_ms(tokenize_started);
         throw std::runtime_error("TOKENIZE");
     }
+    last_timings.tokenize_ms = elapsed_ms(tokenize_started);
+    last_timings.prompt_tokens = token_count;
 
-    const int capacity = context_capacity(token_count, request.output_token_limit);
+    const int capacity =
+        context_capacity(token_count, request.output_token_limit, request.context_tokens);
+    last_timings.context_capacity = capacity;
+    const auto prepare_started = std::chrono::steady_clock::now();
     llama_context *context =
         kv_cache.prepare(model, capacity, request.threads, abort_decode, nullptr);
+    last_timings.context_prepare_ms = elapsed_ms(prepare_started);
     if (!context) {
         throw std::runtime_error("CONTEXT_ALLOC");
     }
     const int prompt_start = kv_cache.reuse_prefix(prompt_tokens);
+    last_timings.reused_prefix_tokens = prompt_start;
 
     using Batch = std::unique_ptr<llama_batch_ext, decltype(&llama_batch_ext_free)>;
     Batch batch(llama_batch_ext_init(context), llama_batch_ext_free);
@@ -233,6 +269,7 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
         llama_batch_ext_set_output_logits(batch.get(), amount - 1, true);
         return llama_process(context, LLAMA_PROCESS_TYPE_DECODE, batch.get());
     };
+    const auto prefill_started = std::chrono::steady_clock::now();
     for (int position = prompt_start; position < token_count; position += kKvDecodeBatchTokens) {
         if (cancelled.load()) {
             discard_cache();
@@ -257,8 +294,10 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
         }
     }
     kv_cache.remember_prompt(prompt_tokens);
+    last_timings.prefill_ms = elapsed_ms(prefill_started);
 
     using Sampler = std::unique_ptr<llama_sampler, decltype(&llama_sampler_free)>;
+    const auto sampler_started = std::chrono::steady_clock::now();
     Sampler sampler(llama_sampler_chain_init(llama_sampler_chain_default_params()),
                     llama_sampler_free);
     if (!sampler) {
@@ -270,23 +309,29 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
         }
         llama_sampler_chain_add(sampler.get(), component);
     };
+    last_timings.sampler_ms = elapsed_ms(sampler_started);
     if (!request.grammar.empty()) {
         // Constrained decoding: the sampler can only accept a token that keeps the response
         // document valid. A grammar that fails to parse is a build fault, not a model result.
+        const auto grammar_started = std::chrono::steady_clock::now();
         llama_sampler *constraint = llama_sampler_init_grammar(vocab, request.grammar.c_str(),
                                                                request.grammar_root.c_str());
         if (!constraint) {
             throw std::runtime_error("GRAMMAR");
         }
         llama_sampler_chain_add(sampler.get(), constraint);
+        last_timings.grammar_ms = elapsed_ms(grammar_started);
     }
+    const auto tail_started = std::chrono::steady_clock::now();
     add_sampler(llama_sampler_init_penalties(llama_vocab_n_tokens(vocab), 256, 1.0f, 0.0f, 1.2f));
-    add_sampler(llama_sampler_init_top_k(20));
-    add_sampler(llama_sampler_init_top_p(0.9f, 1));
-    add_sampler(llama_sampler_init_temp(0.3f));
-    add_sampler(llama_sampler_init_dist(42));
+    // Greedy with the repetition penalty above: the removed top_k/top_p/temp passes were three
+    // vocabulary-wide scans per token (12-13 s per turn) that changed no paired answer, and the
+    // 14-case gate passed on this chain.
+    add_sampler(llama_sampler_init_greedy());
+    last_timings.sampler_ms += elapsed_ms(tail_started);
 
     std::vector<char> piece(256);
+    const auto generation_started = std::chrono::steady_clock::now();
     for (int index = 0; index < request.output_token_limit; ++index) {
         if (cancelled.load()) {
             discard_cache();
@@ -308,6 +353,9 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
         if (size < 0 || size > kMaximumTokenPieceBytes) {
             discard_cache();
             throw std::runtime_error("TOKEN_DECODE");
+        }
+        if (index == 0) {
+            last_timings.first_token_ms = elapsed_ms(generation_started);
         }
         if (!sink(piece.data(), static_cast<std::size_t>(size))) {
             if (cancelled.load()) {
@@ -336,5 +384,7 @@ int generate(const GenerationRequest &request, const TokenSink &sink) {
     }
     return kGenerationTokenLimit;
 }
+
+GenerationTimings last_generation_timings() { return last_timings; }
 
 } // namespace blobs

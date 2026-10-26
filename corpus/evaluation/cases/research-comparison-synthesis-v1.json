@@ -1,0 +1,259 @@
+{
+  "format": 1,
+  "id": "research-comparison-synthesis-v1",
+  "title": "Comparison and synthesis questions across the published libraries",
+  "intended_libraries": [
+    "wikipedia-top1m-mini",
+    "howto-repair",
+    "howto-practical",
+    "wikivoyage-en",
+    "wikisource-en-history-p000",
+    "wikisource-en-history-p001",
+    "wikisource-en-history-p002",
+    "wikisource-en-history-p003"
+  ],
+  "cases": [
+    {
+      "id": "compare-machine-learning-ai",
+      "kind": "comparison",
+      "question": "Compare artificial intelligence and machine learning. Which one is the broader field, how does the other relate to it, and where is the line between them commonly blurred?",
+      "expected_document_titles": [
+        "Artificial intelligence",
+        "Machine learning"
+      ],
+      "expected_document_ids": [
+        "wiki-aef977fc2141d0a33cb702dadf489df7",
+        "wiki-ce155af0fb1cae77bb3c831bcd50375e"
+      ],
+      "intended_libraries": [
+        "wikipedia-top1m-mini"
+      ]
+    },
+    {
+      "id": "compare-photosynthesis-solar-cell",
+      "kind": "comparison",
+      "question": "Compare photosynthesis and a solar cell as ways of capturing sunlight. What form does each store the energy in, and what limits how efficiently each converts light?",
+      "expected_document_titles": [
+        "Photosynthesis",
+        "Solar cell"
+      ],
+      "expected_document_ids": [
+        "wiki-6a61ac687d4058d4ee4c4eb6d4db7a40",
+        "wiki-03823aae214296489d43e52e78bec9c3"
+      ],
+      "intended_libraries": [
+        "wikipedia-top1m-mini"
+      ]
+    },
+    {
+      "id": "compare-disc-rim-brakes",
+      "kind": "comparison",
+      "question": "I commute by bicycle in wet weather. Compare disc brakes with rim brakes: what are the practical advantages and drawbacks of each, and which would you choose for that commute?",
+      "expected_document_titles": [
+        "What is the practical advantage of disk brakes over rim brakes?"
+      ],
+      "expected_document_ids": [
+        "wiki-865944e6ded7bc7821408a2df892f16a"
+      ],
+      "intended_libraries": [
+        "howto-repair"
+      ]
+    },
+    {
+      "id": "compare-tubeless-tubed-tyres",
+      "kind": "comparison",
+      "question": "Compare tubeless and tubed bicycle tyres for everyday commuting. Cover puncture behaviour, weight, maintenance, and roadside repair, and say when each setup makes more sense.",
+      "expected_document_titles": [
+        "Are tubeless tyres an upgrade from tubed tyres, or just different?"
+      ],
+      "expected_document_ids": [
+        "wiki-2c363e471e1ef0fdf795eabf39622190"
+      ],
+      "intended_libraries": [
+        "howto-repair"
+      ]
+    },
+    {
+      "id": "compare-bangkok-hanoi",
+      "kind": "comparison",
+      "question": "I have one week for a first trip to Southeast Asia. Compare Bangkok and Hanoi: how easy is each to navigate, what kind of trip does each suit, and which would you recommend for a first-time visitor?",
+      "expected_document_titles": [
+        "Bangkok",
+        "Hanoi"
+      ],
+      "expected_document_ids": [
+        "wiki-2762e6724004afeebc34996e226877ef",
+        "wiki-1f9aa07fe3bf42c58d31244738bb554a"
+      ],
+      "intended_libraries": [
+        "wikivoyage-en"
+      ]
+    },
+    {
+      "id": "compare-magna-carta-bill-rights",
+      "kind": "comparison",
+      "question": "Compare Magna Carta and the English Bill of Rights of 1689 as limits on royal power. What does each document establish, and in what ways does the later one go further?",
+      "expected_document_titles": [
+        "Magna Carta (trans. Davis)",
+        "Bill of Rights 1689"
+      ],
+      "expected_document_ids": [
+        "wiki-80791d8599080b60a13987d2a9235588",
+        "wiki-5360edb0b3459dcc96c563d6b333c5ca"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
+      ]
+    },
+    {
+      "id": "compare-gettysburg-drafts",
+      "kind": "comparison",
+      "question": "Compare the Nicolay and Bancroft drafts of the Gettysburg Address. What differs in wording between the two texts, and what difference does that wording make to the speech?",
+      "expected_document_titles": [
+        "Gettysburg Address (Nicolay draft)",
+        "Gettysburg Address (Bancroft draft)"
+      ],
+      "expected_document_ids": [
+        "wiki-1ff6a318deb6723ba1c9e726808a0a62",
+        "wiki-50259a13a500f796e28533f5c00a41b5"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
+      ]
+    },
+    {
+      "id": "compare-korea-indonesia-emergency-powers",
+      "kind": "comparison",
+      "question": "Compare how the 1972 Constitution of the Republic of Korea and the 1945 Constitution of Indonesia handle emergency or extraordinary executive power. What mechanism does each provide, and how do they differ?",
+      "expected_document_titles": [
+        "Constitution of the Republic of Korea (1972)",
+        "Constitution of the Republic of Indonesia"
+      ],
+      "expected_document_ids": [
+        "wiki-fe2af70687bbd8f93609721afb2c390b",
+        "wiki-afc746e4f7f380fefd2c8f02e96d211b"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
+      ]
+    },
+    {
+      "id": "synth-house-cash-mortgage",
+      "kind": "synthesis",
+      "question": "I am close to retirement and could buy a house outright. Weigh paying cash against taking a mortgage and investing the difference, include the risk each choice creates for someone nearing retirement, and end with a recommendation with conditions.",
+      "expected_document_titles": [
+        "Should I buy my house in cash, or with a mortgage and invest the rest of my money?",
+        "Why should a person approaching retirement age make their portfolio less risky?",
+        "Are Index Funds really as good as \"experts\" claim?"
+      ],
+      "expected_document_ids": [
+        "wiki-33e0f87db0e369fd54bcf0719ea9c861",
+        "wiki-5a1b43740586bd6050a48f09904e759e",
+        "wiki-6af05aea9839584b6bb55b1f62129216"
+      ],
+      "intended_libraries": [
+        "howto-practical"
+      ]
+    },
+    {
+      "id": "synth-japan-rail-week",
+      "kind": "synthesis",
+      "question": "Plan a one-week trip to Japan built around trains. Choose the bases, explain how to connect them, and list what to confirm before booking.",
+      "expected_document_titles": [
+        "Tokyo",
+        "Rail travel in Japan"
+      ],
+      "expected_document_ids": [
+        "wiki-b45baa02554cee906059bb995a2de28a",
+        "wiki-25a3d0b53450fa2de75166c8260479f8"
+      ],
+      "intended_libraries": [
+        "wikivoyage-en"
+      ]
+    },
+    {
+      "id": "synth-geneva-conventions",
+      "kind": "synthesis",
+      "question": "Trace how the Geneva Convention developed from 1864 to 1906 to 1949. What did each revision add, and what problem was each revision responding to?",
+      "expected_document_titles": [
+        "First Geneva Convention (1864)",
+        "First Geneva Convention (1906)",
+        "First Geneva Convention (1949)"
+      ],
+      "expected_document_ids": [
+        "wiki-a7bc7fa0b614a28105089c00186081ec",
+        "wiki-a980d9d950aa8b4db1792644cf9bdec9",
+        "wiki-a9bf5c188e41e5ae254c685b4a35fb62"
+      ],
+      "intended_libraries": [
+        "wikisource-en-history-p000",
+        "wikisource-en-history-p001",
+        "wikisource-en-history-p002",
+        "wikisource-en-history-p003"
+      ]
+    },
+    {
+      "id": "synth-winter-storm-home",
+      "kind": "synthesis",
+      "question": "Make a prioritised plan for protecting a house through a severe winter storm. Start with the steps that prevent a frozen or burst pipe, then say which insulation work is worth doing and why.",
+      "expected_document_titles": [
+        "How to prepare home to prevent pipe leaks during a severe winter storm?",
+        "Would sprayed insulation under the roof deck cool down a hot attic?",
+        "Is there a significant benefit to using plastic window insulation year round?"
+      ],
+      "expected_document_ids": [
+        "wiki-12a18f392b40a6794704eac28f0f87cc",
+        "wiki-f7610869bae3381e8b1093160564845a",
+        "wiki-2b69729158188f0a4ae92ef4b24b23d5"
+      ],
+      "intended_libraries": [
+        "howto-repair",
+        "howto-practical"
+      ]
+    },
+    {
+      "id": "synth-power-outage-household",
+      "kind": "synthesis",
+      "question": "Build a household plan for a long power outage or storm: what should be switched off or protected before power returns, what should stay running, and how should food and refrigeration be managed?",
+      "expected_document_titles": [
+        "What items in a house can potentially be damaged by shutting them off at the circuit breaker?",
+        "Does keeping a fridge/freezer full significantly help energy efficiency?",
+        "How to prepare home to prevent pipe leaks during a severe winter storm?"
+      ],
+      "expected_document_ids": [
+        "wiki-1aad5d7b273cdf66ce21732a5ee65e6b",
+        "wiki-48ef7ae83bd6823e6ba87081d0a34940",
+        "wiki-12a18f392b40a6794704eac28f0f87cc"
+      ],
+      "intended_libraries": [
+        "howto-repair",
+        "howto-practical"
+      ]
+    },
+    {
+      "id": "synth-bicycle-one-upgrade",
+      "kind": "synthesis",
+      "question": "I have an older commuter bicycle and can afford only one upgrade this year. Decide between better brakes and better tyres, justify the choice with the trade-offs of each, and describe what I should inspect first.",
+      "expected_document_titles": [
+        "What is the practical advantage of disk brakes over rim brakes?",
+        "Are tubeless tyres an upgrade from tubed tyres, or just different?"
+      ],
+      "expected_document_ids": [
+        "wiki-865944e6ded7bc7821408a2df892f16a",
+        "wiki-2c363e471e1ef0fdf795eabf39622190"
+      ],
+      "intended_libraries": [
+        "howto-repair"
+      ]
+    }
+  ]
+}

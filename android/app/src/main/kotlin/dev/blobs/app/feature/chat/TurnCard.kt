@@ -86,6 +86,7 @@ internal fun TurnCard(
                 MessageContent {
                     if (running) {
                         ResearchTrace(stages, researchStage, evidence?.size ?: 0)
+                        PendingSources(groups = groups, onRead = model::read)
                     }
                     if (!running && response.evidence != null && modelAnswer.isNotBlank()) {
                         GroundingChain(response)

@@ -197,7 +197,7 @@ private key.
 | Validate and reserve | `AppViewModel`, `ResearchWork`, `ConversationStore` | New Room turn and immutable library-scope snapshot | Invalid input stays a visible validation result; library changes cannot alter an active turn |
 | Resolve retrieval text | `RetrievalQuery` | Original question remains unchanged | A bounded follow-up may use earlier questions as retrieval context |
 | Retrieve | `LibraryStore` | Candidate evidence in turn scope | One bounded FTS query per selected local library, followed by local ranking and de-duplication |
-| Checkpoint evidence | `ResearchWork` | Evidence saved before model load | Sources remain inspectable if work stops before output |
+| Checkpoint evidence | `ResearchWork` | Evidence saved before model load | Sources are shown in the chat while the model writes, and remain inspectable if work stops before output |
 | Build prompt | `ResearchPrompt` | Bounded prompt representation only | History, topic, and source text are escaped as reference data |
 | Complete | `NativeBridge` and native runtime | Bounded streamed response document | One sampler-constrained completion streams prose the reader can already read |
 | Finalize | `StructuredAnswer`, `AnswerText`, `FollowUpSuggestions`, `ResearchWork`, `ConversationStore` | Canonical body, support claim, citations, grounding, finish reason, timing, next-question offers | The chat shows a completed, stopped, or error turn with the actual cited evidence |
@@ -222,7 +222,11 @@ whole document before persisting. Enforcement and cost are separate: the runtime
 samples the pruned chain first, checks that one candidate against the grammar, and
 applies the mask over the whole vocabulary only when the candidate could not
 extend the document. Choosing a token the grammar rejects is therefore impossible,
-while the vocabulary-wide pass is not paid for on every token. Streaming, cancellation, and a token-limited
+while the vocabulary-wide pass is not paid for on every token. The rest of the
+chain is greedy with a repetition penalty: the removed top-k/top-p/temperature
+passes were three vocabulary-wide scans per token — 12-13 s of a 0.5B turn — and
+three paired answers came back byte-identical without them, with the repetition
+penalty kept against loops. Streaming, cancellation, and a token-limited
 turn render the decoded prefix, so no document punctuation reaches a reader or a
 stored answer. `AnswerGrounding` then decides the disclosure: citation coverage is
 the only route to `grounded`, and a claimed `partial` or `unsourced` support can
@@ -249,13 +253,18 @@ first turn of a conversation and leaves room for passages.
 
 The request the model reads is bounded in code, not by intent.
 `ResearchPrompt.MAX_PROMPT_CHARACTERS` caps the built text at 6,000 characters:
-the question is accepted up to 2,000, every passage keeps at least 300 and at
-most 1,200 characters of body, and titles, sections, dates, and the conversation
-topic are clipped before they are escaped. Excerpts are sized from the space that
-is left after the fixed parts, measured against the escaped length because `&`,
-`<`, and `>` grow when they are written as reference data. When the request still
-cannot fit, retained history is dropped before any passage is cut, so a turn never
-silently loses a source it has to cite. Retained history carries the last two
+the question is accepted up to 4,000, each passage keeps at most 2,000 characters of
+body, and titles, sections, dates, and the conversation topic are clipped before they
+are escaped. A source is costed by what the rendered prompt carries for it, measured
+against the escaped length because `&`, `<`, and `>` grow when they are written as
+reference data. When the request cannot fit, retained history is dropped before any
+passage is cut, so a turn never silently loses a source it has to cite; after that,
+sources go from the tail of the ranked list, so the passages the model keeps are
+always its highest-ranked ones. At least one passage survives a squeeze whenever the
+retrieval returned any, because an answer the app refuses to write is worse than one
+that takes longer. A trimmed passage is not shown to the reader either: the turn's
+evidence list is the carried prefix, so `S1..Sk` label exactly what was sent. Retained
+history carries the last two
 earlier questions only: an earlier answer is this model's own prose, and a recorded
 run replayed the first answer word for word two turns later.
 

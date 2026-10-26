@@ -78,7 +78,7 @@ internal data class TurnResponse(
                 question = turn.question,
                 status = turn.statusKind,
                 finishReason = turn.finishReasonKind,
-                grounding = grounding(turn, body, sources?.size ?: 0),
+                grounding = grounding(turn, body, sources.orEmpty()),
                 body = body,
                 evidence = sources,
                 annotations = annotations,
@@ -97,20 +97,23 @@ internal data class TurnResponse(
             )
         }
 
-        private fun grounding(turn: TurnEntity, body: String, sourceCount: Int): TurnGrounding =
-            when (turn.groundingKind) {
-                TurnGrounding.GROUNDED -> TurnGrounding.GROUNDED
+        private fun grounding(
+            turn: TurnEntity,
+            body: String,
+            sources: List<Evidence>
+        ): TurnGrounding = when (turn.groundingKind) {
+            TurnGrounding.GROUNDED -> TurnGrounding.GROUNDED
 
-                TurnGrounding.UNVERIFIED -> TurnGrounding.UNVERIFIED
+            TurnGrounding.UNVERIFIED -> TurnGrounding.UNVERIFIED
 
-                TurnGrounding.NOT_REQUESTED -> TurnGrounding.NOT_REQUESTED
+            TurnGrounding.NOT_REQUESTED -> TurnGrounding.NOT_REQUESTED
 
-                else -> AnswerGrounding.decide(
-                    body,
-                    sourceCount,
-                    ModelSupport.fromStored(turn.modelSupport)
-                )
-            }
+            else -> AnswerGrounding.decide(
+                body,
+                sources.map { it.text },
+                ModelSupport.fromStored(turn.modelSupport)
+            )
+        }
     }
 }
 
