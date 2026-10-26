@@ -8,14 +8,12 @@ internal data class ResearchPrompt(
     val sources: List<Evidence>,
     val historyPairCount: Int
 ) {
+    /** The passage set and the history that fit one bounded request. */
+    data class PromptBudget(val sources: List<Evidence>, val history: List<Pair<String, String>>)
+
     companion object {
         const val MAX_ANSWER_SOURCES = 6
         const val MAX_QUESTION_CHARACTERS = 4_000
-
-        /**
-         * The whole text handed to the model. Prefill dominates a local turn, so the request is
-         * budgeted in characters and trimmed by dropping ranked passages, never by shortening one.
-         */
         const val MAX_PROMPT_CHARACTERS = 6_000
         const val MINIMUM_SOURCES_FOR_ANSWER = 1
 
@@ -50,26 +48,47 @@ internal data class ResearchPrompt(
             sources: List<Evidence>,
             promptCharacterBudget: Int
         ): ResearchPrompt {
-            val fixed = render(question, query, history, emptyList()).text.length
-            var kept = keptCount(
-                sources.map { blockCharacters(it) },
-                fixed,
+            val budget = plan(question, query, history, sources, promptCharacterBudget)
+            return render(question, query, budget.history, budget.sources)
+        }
+
+        /**
+         * Decides what the model is given. History is shed before any passage is cut, because a
+         * replayed earlier answer costs less than the source it would displace, and a turn must never
+         * lose a passage it has to cite in order to keep context it does not have to cite.
+         */
+        fun plan(
+            question: String,
+            query: String,
+            history: List<Pair<String, String>>,
+            sources: List<Evidence>,
+            promptCharacterBudget: Int = MAX_PROMPT_CHARACTERS
+        ): PromptBudget {
+            val blocks = sources.map { blockCharacters(it) }
+            if (blocks.isEmpty()) return PromptBudget(emptyList(), history)
+            val withHistory = fitCount(
+                blocks,
+                envelopeCharacters(question, query, history),
                 promptCharacterBudget
             )
-            var prompt = render(question, query, history, sources.take(kept))
-            while (
-                prompt.text.length > promptCharacterBudget && kept > MINIMUM_SOURCES_FOR_ANSWER
-            ) {
-                kept--
-                prompt = render(question, query, history, sources.take(kept))
-            }
-            // A retrieval miss is still a turn; a trimmed miss is a different claim.
-            require(sources.isEmpty() || kept >= MINIMUM_SOURCES_FOR_ANSWER) {
-                "PROMPT_BUDGET question=${question.length} sources=${sources.size} " +
-                    "budget=$promptCharacterBudget"
-            }
-            return prompt
+            if (withHistory > 0) return PromptBudget(sources.take(withHistory), history)
+            val withoutHistory = fitCount(
+                blocks,
+                envelopeCharacters(question, query, emptyList()),
+                promptCharacterBudget
+            )
+            if (withoutHistory > 0) return PromptBudget(sources.take(withoutHistory), emptyList())
+            return PromptBudget(sources.take(MINIMUM_SOURCES_FOR_ANSWER), emptyList())
         }
+
+        /** The exact passage set [plan] would render, so callers show what the model is given. */
+        fun carriedSources(
+            question: String,
+            query: String,
+            history: List<Pair<String, String>>,
+            sources: List<Evidence>,
+            promptCharacterBudget: Int = MAX_PROMPT_CHARACTERS
+        ): List<Evidence> = plan(question, query, history, sources, promptCharacterBudget).sources
 
         private fun render(
             question: String,
@@ -120,16 +139,24 @@ internal data class ResearchPrompt(
             )
         }
 
-        /** What one passage costs the model, measured after the escaping it is rendered with. */
+        /** What one source costs the rendered prompt, measured after the escaping it will get. */
         private fun blockCharacters(source: Evidence): Int =
             untrustedReferenceText(source.title).length +
                 untrustedReferenceText(source.section).length +
                 untrustedReferenceText(source.updated).length +
-                "<source id=\"S99\">\n\nSection: \nSource date: \n</source>\n".length +
-                untrustedReferenceText(excerpt(source.text, MAX_SOURCE_EXCERPT_CHARACTERS)).length
+                "\n<source id=\"S99\">\nSection: \nSource date: \n</source>\n".length +
+                untrustedReferenceText(
+                    excerpt(source.text, MAX_SOURCE_EXCERPT_CHARACTERS)
+                ).length
 
-        /** Sources arrive ranked best-first, so a budget keeps a prefix and never a middle. */
-        private fun keptCount(blockCharacters: List<Int>, fixedCharacters: Int, budget: Int): Int {
+        private fun envelopeCharacters(
+            question: String,
+            query: String,
+            history: List<Pair<String, String>>
+        ): Int = render(question, query, history, emptyList()).text.length
+
+        /** Sources arrive ranked best-first, so a budget keeps a prefix — never a middle. Zero means the history has to go first. */
+        private fun fitCount(blockCharacters: List<Int>, fixedCharacters: Int, budget: Int): Int {
             var total = fixedCharacters
             var kept = 0
             for (characters in blockCharacters) {

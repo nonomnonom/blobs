@@ -298,21 +298,22 @@ class NativeInferenceTest {
         saveReport(
             reportFile,
             JSONObject().apply {
-                put("format", 1)
-                put("run_id", runId)
+                putReportHeader(context, runId)
                 put("complete", true)
                 put(
                     "scope",
                     "Casual chat with an installed offline model and no available library sources."
                 )
-                put("application_id", context.packageName)
-                put("fingerprint", Build.FINGERPRINT)
-                put("api", Build.VERSION.SDK_INT)
                 put("question", question)
                 put("status", turn.status)
                 put("answer", turn.answer)
                 put("evidence", turn.evidence)
                 put("elapsed_ms", elapsedMs)
+                container.work.lastPerformanceSnapshot?.let { performance ->
+                    put("prompt_characters", performance.promptCharacters)
+                    put("source_count", performance.sourceCount)
+                    put("native_stages", performance.nativeStageTimings?.json() ?: JSONObject.NULL)
+                }
             }
         )
     }
@@ -364,13 +365,9 @@ class NativeInferenceTest {
         check(!output.exists())
         val id = "answer-$runId"
         val report = JSONObject().apply {
-            put("format", 1)
-            put("run_id", runId)
+            putReportHeader(context, runId)
             put("complete", false)
             put("question", question)
-            put("application_id", context.packageName)
-            put("fingerprint", Build.FINGERPRINT)
-            put("api", Build.VERSION.SDK_INT)
             put("airplane_mode_enabled", airplaneModeEnabled)
             put("generation_started", false)
             put(
@@ -605,6 +602,10 @@ class NativeInferenceTest {
                             it.firstVisibleTextElapsedMs ?: JSONObject.NULL
                         )
                         .put("end_to_end_elapsed_ms", it.endToEndElapsedMs)
+                        .put(
+                            "native_stages",
+                            it.nativeStageTimings?.json() ?: JSONObject.NULL
+                        )
                 } ?: JSONObject.NULL
             )
             save()
@@ -634,6 +635,29 @@ class NativeInferenceTest {
         val performance = requireNotNull(container.work.lastPerformanceSnapshot)
         assertTrue(performance.retrievalElapsedMs >= 0)
         assertTrue(performance.endToEndElapsedMs > 0)
+        val stages = requireNotNull(performance.nativeStageTimings) {
+            "A completed turn must carry native stage timings"
+        }
+        assertTrue("Native total was ${stages.totalMs}", stages.totalMs > 0)
+        assertTrue("Prompt tokens were ${stages.promptTokens}", stages.promptTokens > 0)
+        assertTrue(
+            "Context ${stages.contextCapacity} cannot hold ${stages.promptTokens} prompt tokens " +
+                "plus ${performance.outputTokenLimit} output tokens",
+            stages.contextCapacity >= stages.promptTokens + performance.outputTokenLimit
+        )
+        val measuredStages = listOf(
+            stages.loadMs,
+            stages.templateMs,
+            stages.tokenizeMs,
+            stages.contextPrepareMs,
+            stages.grammarMs,
+            stages.samplerMs,
+            stages.prefillMs
+        ).filter { it >= 0 }.sum()
+        assertTrue(
+            "Stage sum $measuredStages exceeds the native total ${stages.totalMs}",
+            measuredStages <= stages.totalMs
+        )
         assertEquals(
             "My next question stays here",
             container.database.conversations().find(id)?.draft

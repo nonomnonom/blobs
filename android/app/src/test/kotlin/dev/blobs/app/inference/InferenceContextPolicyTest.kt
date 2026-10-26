@@ -1,15 +1,29 @@
 package dev.blobs.app.inference
 
+import dev.blobs.app.engine.MAX_RESEARCH_OUTPUT_TOKENS
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class InferenceContextPolicyTest {
     @Test
-    fun contextWindowGrowsWithDeviceMemory() {
-        assertEquals(SMALL_CONTEXT_TOKENS, contextWindowForRam(4L shl 30))
-        assertEquals(MEDIUM_CONTEXT_TOKENS, contextWindowForRam(6L shl 30))
-        assertEquals(LARGE_CONTEXT_TOKENS, contextWindowForRam(8L shl 30))
-        assertEquals(PHONE_CONTEXT_TOKENS, contextWindowForRam(12L shl 30))
-        assertEquals(MAX_CONTEXT_TOKENS, contextWindowForRam(16L shl 30))
+    fun runtimeCapacityIsOneFixedValueSharedByEveryTier() {
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, contextWindowForRam(2L shl 30))
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, contextWindowForRam(16L shl 30))
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, SMALL_CONTEXT_TOKENS)
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, MEDIUM_CONTEXT_TOKENS)
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, LARGE_CONTEXT_TOKENS)
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, PHONE_CONTEXT_TOKENS)
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, MAX_CONTEXT_TOKENS)
+        assertEquals(LOCAL_RESEARCH_CONTEXT_TOKENS, MINIMUM_MODEL_CONTEXT_TOKENS)
+    }
+
+    @Test
+    fun theFixedCapacityIsTheNativeCeilingAndLeavesRoomForTheWholeAnswer() {
+        // The runtime asks for exactly this many tokens every turn, so the output bound has to fit
+        // inside it beside a full prompt; a prompt at the ceiling is rejected, not re-bucketed.
+        assertEquals(4096, LOCAL_RESEARCH_CONTEXT_TOKENS)
+        assertEquals(200, MAX_RESEARCH_OUTPUT_TOKENS)
+        assertTrue(LOCAL_RESEARCH_CONTEXT_TOKENS - MAX_RESEARCH_OUTPUT_TOKENS >= 3_200)
     }
 }

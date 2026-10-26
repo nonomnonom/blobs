@@ -38,7 +38,7 @@ class KvCache {
     std::vector<llama_token> prompt_tokens_;
     llama_model *model_ = nullptr;
     int capacity_ = 0;
-    int threads_ = 0;
+    int requested_threads_ = 0;   // threads applied to the live context by the last prepare()
 };
 
 } // namespace blobs
