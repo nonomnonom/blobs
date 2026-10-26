@@ -27,6 +27,15 @@
       "minimum_ram_mb": 4096,
       "recommended_up_to_memory_mb": 32768,
       "publication": "authorized"
+    },
+    "qwen25-0b5-q4km": {
+      "title": "Qwen2.5 0.5B Q4_K_M · 32k",
+      "description": "Official Qwen2.5 0.5B Instruct Q4_K_M GGUF from the Qwen organisation. 32k native context; the smallest writer in the app, measured at 40.5s to first visible text against 53.2-76.5s for LFM2 1.2B on the same 2 GB profile and question. It spends the whole 320-token output budget before closing its response document, so its turns fall back to cited digest lines instead of model prose.",
+      "language": "English",
+      "publisher": "Qwen · official GGUF",
+      "minimum_ram_mb": 2048,
+      "recommended_up_to_memory_mb": 2048,
+      "publication": "authorized"
     }
   }
 }

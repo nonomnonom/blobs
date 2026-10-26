@@ -11,6 +11,8 @@ internal object AnswerText {
     private val containsNamespacedReference = Regex("(?i)(?:^|[,;]\\s*)S\\d+(?:\\b|[,;])")
     private val numericReferenceList = Regex("^\\s*\\d+(?:\\s*[,;]\\s*\\d+)*\\s*$")
     private val namespacedSourceId = Regex("(?i)\\bS(\\d+)\\b")
+    private val distinctiveWord = Regex("[\\p{L}]{5,}")
+    private val sentenceBoundaries = setOf('\n', '.', '!', '?')
     private val textSubscript = Regex(
         """```[\s\S]*?(?:```|$)|`[^`\n]*`|\$(?:\\text|\\mathrm)\{([A-Za-z]+)\}_(?:\{([0-9]+)\}|([0-9]+))\$"""
     )
@@ -189,6 +191,68 @@ internal object AnswerText {
         }
         return covered(text.length) && foundProse
     }
+
+    /**
+     * Checks that every cited sentence mentions something its own cited passage mentions.
+     *
+     * A marker proves shape, not reference: a sentence can carry "[S4]" and still assert what the
+     * passage it points at never says. Only sentences with two or more distinctive words (five
+     * letters or more) are judged, and a sentence fails when none of those words appears in any
+     * passage it cites, so paraphrase, short replies, and verbatim digest lines pass untouched.
+     */
+    fun citationsMatchTheirPassages(text: String, passages: List<String>): Boolean {
+        val marks = citations(text, passages.size)
+        if (marks.isEmpty()) return true
+        val passageTerms = passages.map { passage ->
+            distinctiveWord.findAll(passage.lowercase()).mapTo(mutableSetOf()) { it.value }
+        }
+        return citedSentences(text, marks).all { sentence ->
+            val words = distinctiveWord.findAll(sentence.text.lowercase())
+                .map { it.value }
+                .distinct()
+                .toList()
+            words.size < 2 || sentence.sources.any { index ->
+                words.any { word -> passageTerms.getOrElse(index) { emptySet() }.contains(word) }
+            }
+        }
+    }
+
+    /**
+     * Sentences that carry at least one marker, segmented the same way the coverage rule segments
+     * them, so the two checks never disagree about where a sentence ends.
+     */
+    private fun citedSentences(text: String, marks: List<Citation>): List<CitedSentence> {
+        val found = mutableListOf<CitedSentence>()
+        var start = 0
+        var index = 0
+
+        fun collect(from: Int, to: Int) {
+            val sources = marks
+                .filter { it.range.first >= from && it.range.last < to }
+                .map { it.sourceIndex }
+            if (sources.isNotEmpty()) found += CitedSentence(text.substring(from, to), sources)
+        }
+
+        while (index < text.length) {
+            if (text[index] !in sentenceBoundaries) {
+                index++
+                continue
+            }
+            var end = index + 1
+            while (true) {
+                var next = end
+                while (next < text.length && text[next].isWhitespace()) next++
+                end = validCitationMarkerEnd(text, next, marks) ?: break
+            }
+            collect(start, end)
+            start = end
+            index = end
+        }
+        collect(start, text.length)
+        return found
+    }
+
+    private data class CitedSentence(val text: String, val sources: List<Int>)
 
     private fun validCitationMarkerEnd(text: String, start: Int, citations: List<Citation>): Int? {
         if (start >= text.length || text[start] != '[') return null

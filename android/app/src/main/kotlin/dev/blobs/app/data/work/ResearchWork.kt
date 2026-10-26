@@ -176,7 +176,7 @@ internal class ResearchWork(
                 }
                 val grounding = terminalGrounding(
                     answer,
-                    outcome.evidence.size,
+                    outcome.evidence,
                     finishReason,
                     outcome.support
                 )
@@ -222,7 +222,7 @@ internal class ResearchWork(
                                 error = "",
                                 grounding = terminalGrounding(
                                     answer,
-                                    sources.size,
+                                    sources,
                                     TurnFinishReason.CANCELLED,
                                     claimed = null
                                 ),
@@ -366,13 +366,13 @@ internal class ResearchWork(
 
     private fun terminalGrounding(
         answer: String,
-        evidenceCount: Int,
+        sources: List<Evidence>,
         finishReason: TurnFinishReason,
         claimed: ModelSupport?
     ): TurnGrounding = when {
         answer.isBlank() -> TurnGrounding.NONE
         finishReason != TurnFinishReason.STOP -> TurnGrounding.UNVERIFIED
-        else -> AnswerGrounding.decide(answer, evidenceCount, claimed)
+        else -> AnswerGrounding.decide(answer, sources.map { it.text }, claimed)
     }
 
     /**

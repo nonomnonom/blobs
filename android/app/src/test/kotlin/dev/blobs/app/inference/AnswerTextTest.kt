@@ -3,10 +3,14 @@ package dev.blobs.app.inference
 import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.RetrievalQuery
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AnswerTextTest {
+    private val constitutionClaim =
+        "The 1945 Constitution of Indonesia does not detail any emergency powers. [S1]"
+
     @Test
     fun textSubscriptsAreReadableWithoutChangingCitationIds() {
         assertEquals(
@@ -125,6 +129,52 @@ class AnswerTextTest {
     fun userOperatorsCannotBecomeSearchSyntax() {
         assertEquals("\"trees\" OR \"roofs\"", LibraryStore.searchTerms("trees OR roofs - \" ; *"))
         assertEquals("", LibraryStore.searchTerms("How does this?"))
+    }
+
+    @Test
+    fun aMarkerCitingAPassageWithTheSameSubjectIsMatched() {
+        val passages = listOf(
+            "The Constitution of Indonesia was amended several times during the century."
+        )
+
+        assertTrue(AnswerText.citationsMatchTheirPassages(constitutionClaim, passages))
+    }
+
+    @Test
+    fun aMarkerCitingAnUnrelatedPassageIsNotMatched() {
+        val passages = listOf(
+            "Rail travel in South Korea runs frequent limited express services between islands."
+        )
+
+        assertFalse(AnswerText.citationsMatchTheirPassages(constitutionClaim, passages))
+    }
+
+    @Test
+    fun aSentenceTooThinToJudgeIsLeftAlone() {
+        val passages = listOf("Compost heats in stages.")
+
+        assertTrue(AnswerText.citationsMatchTheirPassages("It is so. [S1]", passages))
+    }
+
+    @Test
+    fun everyCitedSentenceHasToMatchItsOwnPassage() {
+        val body = "Compost heats in stages. [S1] " +
+            "A sealed container keeps the fermentation odour out. [S2]"
+        val passages = listOf(
+            "Compost heats in stages.",
+            "A warm room speeds the second stage of curing."
+        )
+
+        assertFalse(AnswerText.citationsMatchTheirPassages(body, passages))
+    }
+
+    @Test
+    fun aMarkerAfterTerminalPunctuationStillJudgesItsOwnSentence() {
+        val passages = listOf("The route takes six weeks by overnight ferry and coastal rail.")
+
+        assertTrue(
+            AnswerText.citationsMatchTheirPassages("The route takes six weeks. [S1]", passages)
+        )
     }
 
     @Test

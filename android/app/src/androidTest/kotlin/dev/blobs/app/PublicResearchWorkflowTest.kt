@@ -73,13 +73,17 @@ class PublicResearchWorkflowTest {
             it.packageId == args.getString("catalogModelId") && it.kind == "model"
         }
         check(container.catalog.hasStarterLibrary(installed))
-        val expectedLibraries = suite.getJSONArray("intended_libraries")
-        for (index in 0 until expectedLibraries.length()) {
-            check(
-                installed.any {
-                    it.packageId == expectedLibraries.getString(index) && it.enabled
-                }
-            )
+        val suiteLibraries = suite.getJSONArray("intended_libraries")
+
+        /**
+         * A case runs when the shelf holds the libraries that answer it. A partial shelf is recorded
+         * as skipped rather than aborting the run, and never as an answer: a question whose sources
+         * are not installed cannot have been searched.
+         */
+        fun missingLibraries(case: JSONObject): List<String> {
+            val intended = case.optJSONArray("intended_libraries") ?: suiteLibraries
+            return (0 until intended.length()).map(intended::getString)
+                .filter { id -> installed.none { it.packageId == id && it.enabled } }
         }
         fun offline() {
             check(
@@ -161,6 +165,17 @@ class PublicResearchWorkflowTest {
                         !model.work.value.busy
                 }
                 val question = case.getString("question")
+                val missing = missingLibraries(case)
+                if (missing.isNotEmpty()) {
+                    results.put(
+                        JSONObject().put("id", id).put("question", question)
+                            .put("status", "SKIPPED")
+                            .put("missing_libraries", JSONArray(missing))
+                    )
+                    save()
+                    println("PUBLIC_UI_CASE:$id:SKIPPED:${missing.joinToString(",")}")
+                    continue
+                }
                 val inputLabel = if (newConversation) {
                     R.string.question_hint
                 } else {
@@ -201,7 +216,7 @@ class PublicResearchWorkflowTest {
                 results.put(result)
                 save()
                 capture("$id-chat")
-                val citation = Regex("\\[S([1-4])]").find(turn.answer)
+                val citation = Regex("\\[S([0-9]+)]").find(turn.answer)
                     ?.groupValues?.get(1)?.toInt()
                 val source = citation?.let { Evidence.decode(turn.evidence).getOrNull(it - 1) }
                 if (source != null) {

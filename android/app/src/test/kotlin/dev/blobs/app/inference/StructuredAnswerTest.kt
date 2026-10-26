@@ -1,6 +1,7 @@
 package dev.blobs.app.inference
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -140,6 +141,10 @@ class StructuredAnswerTest {
         val markers = (1..ResearchPrompt.MAX_ANSWER_SOURCES)
             .joinToString(" | ") { "\"$it\"" }
         assertTrue(markers, StructuredAnswer.grammar.contains("\"[S\" ($markers) \"]\""))
+        val markerRule = StructuredAnswer.grammar.lineSequence()
+            .single { it.trimStart().startsWith("marker ") }
+        assertTrue(markerRule, markerRule.contains("\"6\")"))
+        assertFalse(markerRule, markerRule.contains("\"7\""))
         listOf("answer-char", "x5B", "x5D", "x7F", "escape", "hex").forEach { token ->
             assertTrue(token, StructuredAnswer.grammar.contains(token))
         }

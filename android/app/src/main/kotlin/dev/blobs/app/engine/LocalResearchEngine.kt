@@ -6,6 +6,7 @@ import dev.blobs.app.data.library.LibraryStore
 import dev.blobs.app.data.library.RetrievalQuery
 import dev.blobs.app.data.local.PackageEntity
 import dev.blobs.app.inference.AnswerText
+import dev.blobs.app.inference.CitedDigest
 import dev.blobs.app.inference.ModelSupport
 import dev.blobs.app.inference.NativeBridge
 import dev.blobs.app.inference.ResearchPrompt
@@ -13,7 +14,11 @@ import dev.blobs.app.inference.StructuredAnswer
 import dev.blobs.app.inference.TokenSink
 
 // The response document costs a bounded envelope, so the prose keeps the earlier 256-token room.
-internal const val MAX_RESEARCH_OUTPUT_TOKENS = 320
+// 320 measured as pure cost, not as useful length: the worst 0.5B turn spent 44.7 s decoding and
+// kept only 400 characters after citation validation, i.e. it ran to the limit and most of what it
+// generated was discarded. 200 tokens is about 150 words, which is the length the surviving
+// answers on the comparison suite actually have.
+internal const val MAX_RESEARCH_OUTPUT_TOKENS = 200
 private const val STREAM_RENDER_INTERVAL_MS = 50L
 private const val MAX_RESEARCH_OUTPUT_BYTES = 32 * 1024
 
@@ -112,12 +117,13 @@ internal class LocalResearchEngine(
         var promptCharacters = 0
         var historyPairCount = 0
         var generationAttempts = 0
+        var carriedSources = evidence
         fun renderAnswer() {
             if (renderedBytes == output.size) return
             renderedBytes = output.size
             answer = AnswerText.validSourceCitations(
                 readable(AnswerText.visible(output.completeUtf8Text())),
-                evidence.size
+                carriedSources.size
             )
             if (firstAnswerElapsedMs == null && answer.isNotBlank()) {
                 firstAnswerElapsedMs = SystemClock.elapsedRealtime() - startedAt
@@ -136,6 +142,7 @@ internal class LocalResearchEngine(
                 generationAttempts++
                 promptCharacters = prompt.text.length
                 historyPairCount = prompt.historyPairCount
+                carriedSources = prompt.sources
                 runtime.generate(
                     modelPathBytes,
                     systemPromptBytes,
@@ -162,10 +169,19 @@ internal class LocalResearchEngine(
         }
 
         val decoded = StructuredAnswer.decode(AnswerText.visible(output.completeUtf8Text()))
+        val digested = if (nativeResult == NativeBridge.CANCELLED) {
+            null
+        } else {
+            CitedDigest.gate(
+                answer,
+                carriedSources,
+                finished = nativeResult == NativeBridge.FINISHED
+            )
+        }
         return ResearchOutcome(
-            answer = answer,
-            support = decoded?.support,
-            evidence = evidence,
+            answer = digested ?: answer,
+            support = if (digested != null) ModelSupport.SOURCED else decoded?.support,
+            evidence = carriedSources,
             finish = when (nativeResult) {
                 NativeBridge.FINISHED -> ResearchFinish.FINISHED
                 NativeBridge.CANCELLED -> ResearchFinish.CANCELLED
@@ -178,7 +194,7 @@ internal class LocalResearchEngine(
                 totalElapsedMs = SystemClock.elapsedRealtime() - startedAt
             ),
             usage = ResearchUsage(
-                sourceCount = evidence.size,
+                sourceCount = carriedSources.size,
                 promptCharacters = promptCharacters,
                 historyPairCount = historyPairCount,
                 generationAttempts = generationAttempts,

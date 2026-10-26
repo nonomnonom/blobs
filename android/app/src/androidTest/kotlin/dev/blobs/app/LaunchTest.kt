@@ -145,53 +145,56 @@ class LaunchTest {
     @Test
     fun firstRunCatalogIsPinnedAndSetupOffersInAppDownloads() {
         val catalog = PackageCatalog(compose.activity)
-        assertEquals(2, catalog.models.size)
+        assertEquals(4, catalog.models.size)
         assertEquals("qwen35-2b-q4km", catalog.models[0].manifest.id)
         assertEquals(DownloadFormat.GGUF, catalog.models[0].format)
         assertTrue(catalog.models[0].url.contains("/unsloth/Qwen3.5-2B-GGUF/resolve/"))
         assertEquals("phi4-mini-q4km", catalog.models[1].manifest.id)
+        assertEquals("lfm2-1b2-q4km", catalog.models[2].manifest.id)
+        assertEquals(730_893_248L, catalog.models[2].manifest.bytes)
+        assertEquals("LFM-Open-License-1.0", catalog.models[2].manifest.license)
+        assertTrue(catalog.models[2].url.contains("/LiquidAI/LFM2-1.2B-GGUF/resolve/"))
+        val small = catalog.models[3]
+        assertEquals("qwen25-0b5-q4km", small.manifest.id)
+        assertEquals(491_400_032L, small.manifest.bytes)
+        assertEquals("Apache-2.0", small.manifest.license)
+        assertTrue(small.url.contains("/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/"))
+        assertEquals(2048, small.recommendedUpToMemoryMb)
         assertEquals("model", catalog.models.first().manifest.kind)
         assertEquals("library", catalog.starterLibrary.manifest.kind)
         assertEquals("wikivoyage-en", catalog.starterLibrary.manifest.id)
         assertEquals(
             setOf(
+                "howto-repair",
+                "howto-practical",
                 "wikipedia-top1m-mini",
-                "wikipedia-starter",
-                "nps-outdoor-safety",
-                "ready-emergency-preparedness",
-                "camping-safety",
-                "backcountry-basics",
-                "weather-safety",
-                "earthquake-tsunami-safety",
-                "emergency-food",
-                "practical-living"
+                "wikisource-en-history-p000",
+                "wikisource-en-history-p001",
+                "wikisource-en-history-p002",
+                "wikisource-en-history-p003",
+                "nairobi-health-places"
             ),
             catalog.additionalLibraries.map { it.manifest.id }.toSet()
         )
         assertTrue(catalog.additionalLibraries.all { it.role == PackageRole.OPTIONAL })
-        val outdoorSafety = catalog.additionalLibraries.single {
-            it.manifest.id == "nps-outdoor-safety"
+        val repair = catalog.additionalLibraries.single { it.manifest.id == "howto-repair" }
+        assertEquals(DownloadFormat.BLOBS, repair.format)
+        assertTrue(repair.description.contains("Stack Exchange repair"))
+        val places = catalog.additionalLibraries.single {
+            it.manifest.id == "nairobi-health-places"
         }
-        assertEquals("Outdoor safety · U.S. national parks", outdoorSafety.manifest.title)
-        assertTrue(outdoorSafety.description.contains("not affiliated with or endorsed by NPS"))
-        assertEquals(DownloadFormat.BLOBS, outdoorSafety.format)
-        val emergencyPreparedness = catalog.additionalLibraries.single {
-            it.manifest.id == "ready-emergency-preparedness"
+        assertEquals("Nairobi health places", places.manifest.title)
+        assertTrue(places.description.contains("clinic"))
+        val encyclopedia = catalog.additionalLibraries.single {
+            it.manifest.id == "wikipedia-top1m-mini"
         }
+        assertEquals("Wikipedia English Top 1M introductions", encyclopedia.manifest.title)
+        assertTrue(encyclopedia.description.contains("top one million articles"))
+        // A 3 GB device cannot hold either 1.2B-class writer, so the honest recommendation is the
+        // model whose own memory gate it clears.
         assertEquals(
-            "Emergency preparedness · U.S. households",
-            emergencyPreparedness.manifest.title
-        )
-        assertEquals(DownloadFormat.BLOBS, emergencyPreparedness.format)
-        assertTrue(
-            emergencyPreparedness.description.contains("follow current local instructions")
-        )
-        assertTrue(
-            emergencyPreparedness.description.contains("not endorsed by FEMA")
-        )
-        assertEquals(
-            catalog.models.first(),
-            catalog.recommendedModel(3L * 1024 * 1024 * 1024, 2L * 1024 * 1024 * 1024)
+            "qwen25-0b5-q4km",
+            catalog.recommendedModel(3L * 1024 * 1024 * 1024, 2L * 1024 * 1024 * 1024).manifest.id
         )
         assertEquals(
             catalog.models[0],

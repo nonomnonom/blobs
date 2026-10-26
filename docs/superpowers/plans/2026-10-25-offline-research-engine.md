@@ -1,0 +1,374 @@
+# Offline research engine Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax.
+
+**Goal:** Let one broad local search feed a six-source answer with the Perplexity-like citation experience that already ships, without a planner, a second search, or a second completion.
+
+**Architecture:** Raise `ResearchPrompt.MAX_ANSWER_SOURCES` from 3 to 6. `LibraryStore.retrieve` already accepts six results and spends a fixed 6,000-character evidence budget, `StructuredAnswer` derives its marker set from the constant, and `LocalResearchEngine` already passes the constant as `maximumResults`. The change is one constant plus the system prompt's citation sentence, verified by grammar, prompt, and device tests.
+
+**Tech Stack:** Kotlin, SQLite FTS5 through the existing `LibraryStore`, llama.cpp through `NativeBridge`, JUnit4, ktlint, Gradle.
+
+**Spec:** `docs/superpowers/specs/2026-10-25-offline-research-engine-design.md`
+
+## Global Constraints
+
+- No network, local HTTP server, agent loop, tool loop, remote inference, or second retrieval in the research path.
+- No question planner, intent classifier, or entity/aspect decomposition.
+- Do not modify `LibraryStore.kt` or `RetrievalQuery.kt`; host replay is hash-pinned to them.
+- Exactly one completion per turn and the existing `StructuredAnswer` grammar.
+- Evidence budget stays 6,000 characters total and 2,000 per passage; prompt context stays under the native 4,096-token cap with 320 output tokens.
+- Work only in `.worktrees/offline-research-engine` on branch `feat/offline-research-engine`.
+- Run `./gradlew :app:testDebugUnitTest` and `./gradlew :app:ktlintCheck` before each commit.
+
+---
+
+### Task 1: Six-source answer breadth
+
+**Files:**
+- Modify: `android/app/src/main/kotlin/dev/blobs/app/inference/ResearchPrompt.kt`
+- Test: `android/app/src/test/kotlin/dev/blobs/app/inference/StructuredAnswerTest.kt`
+- Test: `android/app/src/test/kotlin/dev/blobs/app/inference/ResearchPromptTest.kt`
+
+**Interfaces:**
+- Consumes: `ResearchPrompt.MAX_ANSWER_SOURCES`, `StructuredAnswer.grammar`.
+- Produces: `MAX_ANSWER_SOURCES = 6`; grammar markers `[S1]`..`[S6]`; system prompt citing `[S1]` to `[S6]`.
+
+- [ ] **Step 1: Write the failing tests**
+
+In `StructuredAnswerTest.grammarOwnsTheShapeTheDecoderExpects`, after the existing marker assertion, add:
+
+```kotlin
+assertTrue(StructuredAnswer.grammar.contains("\"[S6]\""))
+assertFalse(StructuredAnswer.grammar.contains("\"[S7]\""))
+```
+
+In `ResearchPromptTest`, add:
+
+```kotlin
+@Test
+fun theWriterIsToldTheWholeSourceRange() {
+    assertEquals(6, ResearchPrompt.MAX_ANSWER_SOURCES)
+    assertTrue(ResearchPrompt.system.contains("[S1] to [S6]"))
+    assertFalse(ResearchPrompt.system.contains("[S3]"))
+}
+```
+
+Add the missing `org.junit.Assert.assertFalse` / `assertTrue` imports if the file does not already
+have them.
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `./gradlew --no-daemon :app:testDebugUnitTest --tests 'dev.blobs.app.inference.StructuredAnswerTest' --tests 'dev.blobs.app.inference.ResearchPromptTest'`
+
+Expected: FAIL; `MAX_ANSWER_SOURCES` is still 3, the grammar has no `[S6]`, and the prompt still
+says `[S1], [S2], or [S3]`.
+
+- [ ] **Step 3: Implement the change**
+
+In `ResearchPrompt.kt`, replace:
+
+```kotlin
+const val MAX_ANSWER_SOURCES = 3
+```
+
+with:
+
+```kotlin
+const val MAX_ANSWER_SOURCES = 6
+```
+
+and replace the citation sentence in `system`:
+
+```kotlin
+Use a source only when it supports the claim and cite it as [S1] to [S6]. Do not invent citations.
+```
+
+- [ ] **Step 4: Run the focused tests, the full unit suite, and lint**
+
+Run: `./gradlew --no-daemon :app:testDebugUnitTest :app:ktlintCheck`
+
+Expected: BUILD SUCCESSFUL, zero failures.
+
+- [ ] **Step 5: Build the debug APK**
+
+Run: `./gradlew --no-daemon :app:assembleDebug`
+
+Expected: BUILD SUCCESSFUL.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add android/app/src/main/kotlin/dev/blobs/app/inference/ResearchPrompt.kt \
+        android/app/src/test/kotlin/dev/blobs/app/inference/StructuredAnswerTest.kt \
+        android/app/src/test/kotlin/dev/blobs/app/inference/ResearchPromptTest.kt \
+        docs/superpowers/
+git commit -m "feat(engine): answer from six cited sources in one search"
+```
+
+### Task 2: Uncited-answer trust gate
+
+**Files:**
+- Create: `android/app/src/main/kotlin/dev/blobs/app/inference/CitedDigest.kt`
+- Test: `android/app/src/test/kotlin/dev/blobs/app/inference/CitedDigestTest.kt`
+- Modify: `android/app/src/main/kotlin/dev/blobs/app/engine/LocalResearchEngine.kt`
+
+**Interfaces:**
+- Produces: `CitedDigest.build(evidence: List<Evidence>, maximumSources: Int = 6): String?`.
+- Consumes: `AnswerText.citations`, `NativeBridge.FINISHED`, `ModelSupport`.
+
+- [x] **Step 1: Write failing tests** for one cited line per passage, passages keeping their own
+  `[S#]`, headings/fragments skipped, navigation lists skipped, duplicates collapsed, and no usable
+  passage returning null.
+- [x] **Step 2: Run the tests; expect unresolved reference.**
+- [x] **Step 3: Implement** the 240-character, six-source digest and wire the engine rule: only a
+  `FINISHED`, non-empty-evidence, zero-citation answer is replaced; cancellation and token-limit
+  keep their partial prose.
+- [x] **Step 4: Verify** unit tests, ktlint, debug and androidTest assembly.
+- [x] **Step 5: Return to Task 3.**
+
+### Task 3: Evaluation on an available device
+
+**Files:**
+- Modify: `corpus/evaluation/README.md` only after the run is green.
+- Results: `corpus/evaluation/results/` (git-ignored).
+
+- [ ] **Step 1: Run the suite** with the 14-case `research-comparison-synthesis-v1` file and the pinned per-library retrieval cases, in airplane mode, with all eight libraries installed. Do not use a busy emulator that another session owns.
+- [ ] **Step 2: Record** APK SHA-256, model file and size, each library edition, device/OS/ABI, per-turn source count, first-token and total timings, peak PSS, and the raw answers.
+- [ ] **Step 3: Grade** with the published rubric. Report the pass count and every miss with the retrieved titles so the corpus gap is visible.
+- [ ] **Step 4: Decide** the source count from evidence. If six harms quality or the turn budget on the default model, revert to the best measured value and record why; do not add a planner.
+- [ ] **Step 5: Update** `docs/architecture.md` only with measured facts.
+
+## Measured results, 2026-10-25
+
+Every run below is on the `blobs-e2e` emulator (2 GB RAM, 4 cores, API 36,
+`sdk_gphone64_x86_64`), airplane mode on, debug app `dev.blobs.app.debug`, model
+`lfm2-1b2-q4km-5399e76c-55175400e3f509a9` (730,893,248 bytes) and library
+`wikivoyage-en-2026-09.5-380896b48d45f1d2` (622,776,320 bytes). Under the device
+evaluation rules an emulator cannot carry a performance claim, so these are functional
+observations only.
+
+**Six sources with the trust gate (`run-6src-3`, `ui-report-3.json`).** The Japan synthesis
+turn retrieved six passages and the model still produced zero citations, so the gate replaced
+the hallucinated itinerary with six cited digest lines ("Sourced · 6 cited"). The Bangkok and
+Hanoi comparison retrieved `Bangkok`, `Hanoi` and `Southeast Asia` as S1-S3 and answered with
+one Bangkok sentence citing S4, a district page; Hanoi never appears. The same report records the
+turn timings: `retrieval_elapsed_ms` 1,988 and 1,900 ms, `first_visible_text_elapsed_ms` 76,541 and
+53,214 ms, `end_to_end_elapsed_ms` 87,628 and 80,110 ms, and runs 5 and 6 repeat them to within
+about a second, so those figures are attributed to this run set. What these captures do not record
+is the installed APK digest and peak memory.
+
+**Singular query expansion, measured and rejected.** A candidate `QueryExpansion` appended
+singular forms to the retrieval question only (never the prompt). On the device (`run-6src-4`,
+`ui-report-4-expansion.json`) it fixed the retrieval miss it targeted: the Japan sources became
+`Rail travel in Japan` (S1) and `Bus travel in Japan` (S2) and dropped `Pokémon Tour of Japan`,
+while Bangkok/Hanoi was unchanged. Run against the exact published payload over the pinned
+48-case `wikivoyage-en-retrieval-v3` set (`retrieval-48case-expansion-ab.json`), it moved 18
+selections and 6 first passages, took expected-title hits from 45 to 43, improved nothing, and
+regressed `hitchhiking-legality` and `thailand-gulf-beach-season` (`travellers` → `traveller`
+crowd out `Hitchhiking`; `beaches` → `beach` drops `Thailand`). The change was reverted and the
+retrieval policy stays frozen. The plural gap is an index property: `passages_fts` is built with
+`tokenize='unicode61'`, so the fix belongs in the package build (a stemming tokenizer), which
+means rebuilding and republishing every library, not rewriting the reader's question.
+
+**Frozen replay pin, fixed the same day.** The guard did fail: `host_replay.py` pinned
+`RetrievalQuery.kt` at `d2beec91…`, but no commit in the repository — none of the twelve versions
+that path has ever had — carries those bytes. That pinned file is an uncommitted 10-24 09:36 edit in
+the shared main checkout that adds `should`, `know`, `want` and `need` to `stopWords`, and the Python
+mirror had copied those four words, so the replay was modelling a policy that never shipped. Fixed by
+pinning to committed truth instead of the working tree: `QUERY_SHA256` is now
+`c5a6f0428e8391ef172720bd39a623165cf7759f0c436cf02cb5365132ebbb68` (HEAD, both checkouts) and the
+mirror's `STOP_WORDS` lost the same four words, which restores exact parity on all five word sets
+(`stopWords` 65, `broadTitleIntentWords` 72, `titleNoiseWords` 2, `lowSpecificityNumberWords` 25,
+`NON_TOPICAL_WORDS` 100) and on the Kotlin bounds (`6`/`4`/`3`/`6000`/`2000`).
+`package_report.py` then ran clean on the pinned package
+(`f44f582e2836db30f0091c647ac678411089a5059f390bdc0f4e9403fb90edcc`, `wikivoyage-en@2026-09.5`,
+48 cases) and its report is `corpus/work/evaluation/results/wikivoyage-en-2026-09.5-retrieval-v4-committed.json`:
+**45 of 48 expected-title hits, identical to the recorded v3 figure, no case gained or lost its
+expected title**, with 6 cases re-ordering tail passages. So the stale pin was a review hazard rather
+than a recall loss. If the uncommitted stop-word edit is ever committed, this guard will fail again by
+design and the mirror must drop those four words in the same change. The A/B quoted above stays valid:
+both arms ran through this same mirror, and the corrected baseline is still 45.
+
+**One-sided comparison coverage, shipped.** The trust gate first fired only on a zero-citation
+answer, so a Bangkok/Hanoi turn that cited one Bangkok district page stayed one-sided. The gate now
+also tops up a finished turn that marked one source out of three or more: it keeps the model's prose
+and appends up to two verbatim cited lines from sources it ignored, skipping every passage from the
+guide the answer already used. `run-6src-5` showed the first version wasting one of the two lines on
+a second Bangkok lead; `run-6src-6` (`run6-ui-report.json`) with the subject-aware rule answered the
+same question with the model's Bangkok sentence `[S4]` plus `Hanoi` `[S2]` and `Southeast Asia`
+`[S3]`, and every sentence in the turn carries a marker, which is the structural condition for
+`GROUNDED`. The Japan synthesis turn still produces zero markers, so it still takes the full
+six-line digest. Covered by `CitedDigestTest` (replace, top-up, subject skip, two-citation and
+same-subject-only no-ops) and `./gradlew verify`.
+
+**The plural gap is two defects, and stemming is only one of them.** Measured on
+`nairobi-health-places@2026-10.1` (200 passages, the library whose pharmacy question ships zero
+evidence). Rebuilding only the FTS index with `tokenize='porter unicode61'` fixes the term gap —
+`clinics` 0→92 matched passages, `pharmacies` 0→72, `hospitals` 2→58 — but retrieval still returns
+**no evidence at all**, on both tokenizers. The binding gate is the relevance floor: every passage in
+that library contains "nairobi", so bm25's 24-candidate window holds rows that each overlap only one
+title term while `minimumEvidenceOverlap` demands two, and `selectEvidence` discards the whole window.
+With a fallback that admits overlap ≥1 only when the strict floor leaves the shelf empty, the answers
+are right and they are right *because of stemming*: unicode61-plus-fallback returns hospitals for
+"what pharmacies are listed", while porter-plus-fallback returns `Curex Pharmacy`, `Gifted Pharmacy`,
+`Drug Safe Pharmacy`. So neither half is shippable alone.
+The fallback's blast radius is bounded by measurement: in the reviewed replay
+(`wikivoyage-en-2026-09.5-retrieval-v4-committed.json`) **0 of 48 cases finish with empty evidence**,
+so a trigger that fires only on an empty shelf cannot change a single Wikivoyage selection, which is
+also what the A/B on that suite showed (29 hits both arms, 0 selections changed under the mirror).
+Five cases do return exactly one passage, which the fallback does not touch.
+This reframes the planned stemming work: the tokenizer change is a package rebuild plus a republish,
+but the empty-shelf fallback is a `LibraryStore.kt` change, and that file is hash-pinned, so it needs
+a new native run and a reviewed replay — both of which are unblocked now that the pin binds to
+committed code and a volume with room exists. Neither half is decided yet; five one-passage cases and
+the porter over-stemming question (does stemming hurt a large library's ranking?) remain unmeasured.
+
+**The over-stemming question is now measured, and the answer is no.** A porter index for the whole
+Wikivoyage payload was rebuilt on the host from the retained schema-3 spans: 520,143 passages in
+79.3 seconds, file 588 MB against the original 594 MB. Terms that were invisible under
+`unicode61` now match (`trains` 12,441 passages before, 33,889 after, identical to `train`;
+`clinics` 304→787; `pharmacies` 440→1,279). Replaying the pinned 48-case suite through the same
+mirror on both indexes: **hits 45→46, rank-1 28→31, MRR 0.7108→0.7521**, 42 cases unchanged,
+4 improved (`bali-scooter-permit` missed→rank 1, `hitchhiking-legality` 2→1, `nepal-trek-permits`
+3→1, `prague-jewish-quarter` 6→5) and 2 regressed only inside the shelf
+(`mumbai-local-trains` 3→5, `rail-night-train` 3→4 — both still cited). No case lost its expected
+title and no case ended with an empty shelf in either arm. The `unicode61` arm reproduces the
+recorded 45 from `wikivoyage-en-2026-09.5-retrieval-v4-committed.json`, which validates the harness.
+Evidence: `corpus/evaluation/results/2026-10-25-stemming-ab/wikivoyage-48case-unicode61-vs-porter.json`.
+Contrast with the rejected query-side expansion, which cost two expected-title hits; stemming at the
+index is the direction the measurement supports. Building every package with porter still needs a
+native run over the affected libraries and a reviewed replay per package, plus owner approval to
+republish, and it retires every currently published edition.
+The two halves were then checked together on the small library, where the fallback is the part that
+matters: `nairobi-health-places-2026-10.1-retrieval-v1` stays **10/10 under both tokenizers with the
+fallback armed**, so neither change breaks that package's own pinned suite, and the plural questions
+behave as diagnosed — `orig` plus fallback returns hospitals for "what pharmacies are listed",
+`porter` plus fallback returns `Curex Pharmacy`, `Gifted Pharmacy`, `Drug Safe Pharmacy`.
+
+**Still open, in priority order:** the writer is the binding constraint (a one-sentence
+one-sided answer and a zero-citation answer both came out of six adequate sources on LFM2-1.2B);
+and 12 of the 14 suite cases have never run through the UI.
+
+**What blocked the other twelve cases, and what changed.** The blocker was storage, not the case
+file: `research-comparison-synthesis-v1.json` declares `intended_libraries` for the whole suite and
+`PublicResearchWorkflowTest` refuses to start unless all eight are installed and enabled, while the
+only AVD held the two packages it had staged on a 10 GB `/data` partition that was already 69 % used,
+on a host volume with single-digit gigabytes free. Two measurements during that check are worth
+keeping: `hw.ramSize` applies on a cold boot, but `disk.dataPartition.size` does **not** resize an
+existing userdata image — setting 24 G left `/data` at 9.7 GB. So a second profile was created on the
+volume with room, `blobs-research` (8 GB RAM, 24 GB `/data`), and the eight libraries plus both models
+are being staged there through the product path
+(`PackageLifecyclePerformanceTest#downloadsAndInstallsPinnedCatalogPackage`, one `packageId` per run,
+signed catalog revision 2026102404). Because all eight install together, no per-case
+`intended_libraries` hook is needed. Nothing measured on an 8 GB profile is 2 GB phone-class
+evidence: `blobs-e2e` remains the profile for latency and memory, and it is back at `hw.ramSize=2G`
+with its staged model and library intact.
+
+**Correction to an earlier claim in this plan.** `PublicResearchWorkflowTest` *does* record
+per-turn timings (`retrieval_elapsed_ms`, `first_visible_text_elapsed_ms`,
+`first_observed_work_text_ms`, `end_to_end_elapsed_ms`, `elapsed_ms`, `ui_wall_elapsed_ms`), quoted
+above from `run3-ui-report.json`. The genuinely missing identity fields in that capture are the
+installed APK digest and peak memory.
+
+### Multi-library shelf, first run (eightg-1, 2026-10-25, `blobs-research`)
+
+`wikipedia-top1m-mini` (4.75 GB) does not fit beside the other seven libraries: the shelf needs
+about 25.4 GB against a 24 GB `/data`, and its install failed with the app's `storage_failed`
+notice after completing the download. So the capture ran on seven libraries plus both models
+(16.1 GB installed) with a per-case shelf: `PublicResearchWorkflowTest` now reads an optional
+`intended_libraries` array per case, records `SKIPPED` with `missing_libraries` instead of aborting,
+and the suite file declares the mapping for all 14 cases. Offline was proven before the run
+(`ping -c 1 8.8.8.8` → `connect: Network is unreachable`), airplane mode 1, `lfm2-1b2-q4km`,
+instrumentation time 1,334 s, `complete: true`, evidence in
+`corpus/evaluation/results/2026-10-25-8g-research/`.
+
+Grade: **2 of 12 run cases cite every expected source** (`compare-tubeless-tubed-tyres` S1-S6,
+`compare-bangkok-hanoi` S2/S3/S4), 10 partial, 2 skipped. Retrieval is the new headline: with seven
+libraries enabled, `retrieval_elapsed_ms` is **3,711 / 11,595 / 16,113 ms (min/median/max)** against
+1,316-1,988 ms on a one-library shelf, and first visible text moved to 36-120 s
+(median 78.6 s), end to end 67.6-155.3 s (median 97.6 s). This is an 8 GB emulator, so it is not
+2 GB phone-class evidence, but the direction is a product problem: search cost grows with the shelf.
+
+Two distinct defects the run exposes, neither of them the writer:
+
+- **Cross-library misrouting.** For every primary-document question except Magna Carta, the sources
+  the engine surfaced were Wikivoyage *place* articles, not the Wikisource documents, which are
+  installed and verifiably present (all nine expected document ids appear in the published
+  `wikisource-en-all-nopic-2026-09.3` records). `compare-gettysburg-drafts` retrieved `Gettysburg`
+  (the borough) and `Bancroft` (a place); `synth-geneva-conventions` retrieved `Geneva` and
+  `Lake Geneva` and stopped at two passages; `compare-korea-indonesia-emergency-powers` retrieved
+  country travel guides. bm25 scores are computed per library and then merged on title/subject
+  overlap, so an exact place-name title wins against a primary source whose body is the real answer.
+- **A coverage-only grounding check can certify a nonsense citation.** In the Korea/Indonesia turn
+  the model wrote "The 1945 Constitution of Indonesia, as stated in [S4]" where S4 is
+  `Rail travel in South Korea`. Every sentence carries a marker, so `AnswerGrounding` reaches
+  `grounded` on shape alone. Markers prove form, not reference; nothing today checks that the cited
+  passage actually contains the sentence's distinctive terms.
+
+Five cases also returned fewer than six passages (1-4), which caps what the writer can cite:
+`synth-house-cash-mortgage` returned one.
+
+**Citation content guard, shipped after that capture.** `AnswerText.citationsMatchTheirPassages`
+now rejects a marker whose sentence shares no distinctive word (five letters or more, at least two of
+them) with any passage that sentence cites, and `AnswerGrounding` requires it alongside structural
+coverage, so shape alone can no longer earn the disclosure. Verified on the device against the two
+turns that motivated it (`eightg-2`, screenshots and report in
+`corpus/evaluation/results/2026-10-25-8g-research/`): the Bangkok/Hanoi badge fell from `Sourced` to
+`Partly sourced · 3 cited`, and the check is right — the model wrote "Bangkok is one of Asia's most
+cosmopolitan cities, with a vibrant nightlife … heavy traffic congestion … [S4]" while S4 is
+`Bangkok/Ramkhamhaeng`, whose text contains none of *cosmopolitan, vibrant, nightlife, high-rise,
+traffic, congestion*; those words are in S1 `Bangkok`. The Korea/Indonesia turn, which cites
+`Rail travel in South Korea` for a claim about the 1945 Constitution, dropped the same way. A turn
+made only of verbatim digest lines still reaches `GROUNDED`, because each line's words come from the
+passage it names.
+
+### Fourth model option: Qwen2.5 0.5B Q4_K_M (owner instruction 2026-10-25)
+
+Locked to the official Qwen organisation repository at revision `9217f5db79a29953eb74d5343926648285ec7e67`,
+file `qwen2.5-0.5b-instruct-q4_k_m.gguf`, 491,400,032 bytes, SHA-256
+`74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db` — read from the pinned LFS
+metadata and recomputed from the downloaded bytes, which matched. The file's own GGUF header says
+`general.architecture = qwen2`, `context_length = 32768`, 24 blocks, 896 wide, and the pinned
+llama.cpp already declares `LLM_ARCH_QWEN2`, so no runtime change was needed. It is spliced into the
+bundled `package-catalog.json` (revision `2026102501`, 13 packages) as the only model whose band is
+the 2 GB class, so it does not become the recommendation on 3 GB and above.
+
+Measured on `blobs-e2e` (2 GB profile, 4 cores, airplane mode, same APK as the LFM2 baseline) on the
+Japan rail question: retrieval 2,121 ms, first visible text **43,941 ms** against LFM2's 53,214-76,541
+ms, end to end 99,087 ms against 79,769-87,628 ms. The 0.5B does not stay inside the 320-token
+response document: it ran to `TOKEN_LIMIT` and its prose was an uncited 1,196-character list of 19
+prefectures. That exposed a real gap in the trust gate, now closed: `CitedDigest.gate` replaces an
+uncited answer even when the model ran out of tokens, so the same turn shows six cited digest lines
+(markers S1-S6, 901 characters) instead of uncited claims, and a cancelled turn still keeps whatever
+partial prose the reader was watching. `NativeInferenceTest` still fails for this model by design,
+because it asserts a closed response document.
+
+Not yet done for this option: the published remote catalog does not list it yet, so existing
+installs only see it after a catalog upload.
+
+Peak memory is now measured. Sampling `dumpsys meminfo dev.blobs.app.debug` every two seconds
+through a full turn on the 2 GB profile (`qwen25-pss-1`, same APK and question as the timing runs)
+peaked at **738,175 kB TOTAL PSS ≈ 0.70 GiB**, against the 1.30 GiB recorded for LFM2-1.2B on the
+same class of device — the number that makes a 2 GB phone plausible, and it holds while the model is
+loaded and generating, not just at idle.
+
+**Published 2026-10-25 on owner instruction.** `publish_hf_assets.py` ran against the retained
+publish folder, and because the nine package files were byte-identical to what HF already holds the
+upload transferred 0 bytes ("No files have been modified"), so only the download list changed:
+catalog revision `2026102502`, 13 packages (4 models, 9 libraries), assets pinned at
+`3059b4150abc5a872232d2b8bfd7327bfc7d7b77`, catalog commit `eb58273f3727d687f5a4a380678ad2647a593490`.
+The bundled asset was rewritten to match the published bytes (revision plus the nine re-pinned
+library URLs, nothing else). `android/tools/check_published_catalog.py` fetches the live
+`catalog.signed.json` and verifies it the way the app does — signature against
+`catalog-public-key-v3.pem`, then revision and content — and reports
+`bundled asset matches published catalog: True`. On device, an install built before this catalog
+accepted it: `refreshesPublishedLibrariesWithoutDownloadingPackages` passed in 11.0 s, which covers
+signature verification, the rollback guard, and the 13-package list without touching installed
+packages. That test had to be corrected first: it asserted three library ids retired in the 0.4.0
+supply round, the same staleness as `LaunchTest`, and its earlier failure was the stale expectation,
+not the refresh.
+
+Two things this publication does not do: it does not ship an APK (the 0.4.0 release artefacts still
+carry the older bundled list, so a released build only sees the new model after a release), and it
+does not put the weights in our own repository — the entry resolves in the upstream Qwen
+organisation, so Blobs redistributes no copy.
