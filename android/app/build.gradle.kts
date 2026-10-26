@@ -20,8 +20,8 @@ android {
         applicationId = "dev.blobs.app"
         minSdk = 28
         targetSdk = 37
-        versionCode = 19
-        versionName = "0.4.0"
+        versionCode = 20
+        versionName = "0.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["notAnnotation"] = "dev.blobs.app.ManualCheck"
         ndk {

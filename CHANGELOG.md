@@ -1,7 +1,16 @@
 # CHANGELOG
 
-## Unreleased
+## 0.5.0
 
+### Minor Changes
+
+- Faster turns end to end: the x86_64 runtime builds with AVX2 and llama.cpp's blocked GEMM, per-library
+  retrieval searches run concurrently, and the sampling chain is greedy with the repetition penalty kept.
+  With the 200-token answer bound and the real 6,000-character prompt bound that sheds history before it
+  cuts passages, the median 0.5B turn on the 8 GB emulator falls from a 97.6 s median to 25.5-28.9 s over
+  three independent captures (emulator-only, `device_acceptance: unverified`). The chat now shows the
+  turn's retrieved sources on screen while the model writes. Download list revision 2026102502 adds
+  Qwen2.5 0.5B Q4_K_M for 2 GB-class devices. Installs over 0.4.0 in place.
 - Turn attribution: every stage of a completion (model load, chat template, tokenize, context prepare,
   prefill, grammar, sampler, first token) is now timed in native code, carried across JNI, and written
   into device captures together with the APK digest, fingerprint, API, ABI and thread count of the run.
@@ -19,10 +28,10 @@
   otherwise the cited digest
   replaces it, which is the existing `CitedDigest.gate` behaviour and unchanged here.
 - Measured on the 2 GB emulator profile (LFM2-1.2B, one library, four turns, records
-  `wavea-e2e-ui-1` and `wavea-probe-ui-1`): prefill costs 55.7-58.7 ms per prompt token and is the
-  whole wait, while prefix reuse returns zero even for a byte-identical prompt — a defect in
-  `KvCache::reuse_prefix`, now the largest known speed item. `device_acceptance: unverified`: no
-  phone-class device has run these captures.
+  `wavea-e2e-ui-1` and `wavea-probe-ui-1`, taken on the scalar SSE4.2 build before the AVX2 change
+  above): prefill costs 55.7-58.7 ms per prompt token and is the whole wait on that build, while prefix
+  reuse returns zero even for a byte-identical prompt — a recorded defect in `KvCache::reuse_prefix`.
+  `device_acceptance: unverified`: no phone-class device has run these captures.
 
 ## 0.4.0
 
