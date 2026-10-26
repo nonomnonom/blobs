@@ -19,3 +19,4 @@ corpus/evaluation/baselines/
 /docs/bounty-*.json
 .rea/
 .worktrees/
+docs/superpowers/

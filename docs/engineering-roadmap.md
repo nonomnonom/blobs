@@ -326,15 +326,31 @@ what is missing there is a phone-class device, not a patch:
   162 212 / 98 955 ms to **18 551 / 15 566 / 20 129 ms** — prefill ≈ 6 ms/token. `2e736fa` added
   `GGML_LLAMAFILE` (~11 % more on x86_64; arm64 has no AVX2 fallback, so on a phone that flag carries it)
   and `6919d3a` ran the per-library FTS searches on the common pool (retrieval 3 209 → 1 876, 4 686 →
-  2 606, 10 969 → 5 967 ms at identical passage counts). Consequences: at 6 ms/token a repeated turn
-  wastes ~7 s on the dead prefix reuse instead of ~70 s, so that defect no longer outranks
-  answer-length policy; and the answer bound `MAX_RESEARCH_OUTPUT_TOKENS` moved 320 → 200 for every mode
-  (the owner's 2026-10-25 decision) because the longest remaining tail is decode, evidenced by a
-  57 632 ms turn whose visible answer was 400 characters. Neither set is phone evidence: the AVX2 numbers
+  2 606, 10 969 → 5 967 ms at identical passage counts). Consequences: at this build speed a repeated
+  turn loses the reusable common prefix of a real follow-up, which a three-turn conversation measured
+  at 1.2-1.9 s per turn — not the whole-prompt ~7 s the first arithmetic assumed, because a follow-up
+  shares only its system-and-history prefix with the previous turn, not all 1 222 tokens. The defect
+  therefore no longer outranks answer-length policy; and the answer bound `MAX_RESEARCH_OUTPUT_TOKENS`
+  moved 320 → 200 for every mode (the owner's 2026-10-25 decision) because the longest remaining tail
+  is decode, evidenced by a 57 632 ms turn whose visible answer was 400 characters. Neither set is
+  phone evidence: the AVX2 numbers
   come from the other lane on the 8 GB emulator, and every figure here says `unverified`.
 - Every capture from this wave names its APK digest, fingerprint, API, ABI, thread count, prompt size and
   stage timings, and each states `device_acceptance: unverified`. Records live in
   `corpus/evaluation/results/wavea-e2e-ui-1.json` and `…/wavea-probe-ui-1.json`.
+- The sampling chain is greedy with the repetition penalty kept, on the owner's repeated instruction to
+  reach the speed target: the removed top-k/top-p/temperature passes were three vocabulary-wide scans
+  per token worth 12-13 s of a 0.5B turn, and three paired answers were byte-identical without them.
+  The 14-case gate passed on this chain and the suite itself runs 3.8× faster than at 0.4.0.
+- Where a settled turn's 27 s actually goes, median over three independent captures with nine common
+  cases (0.5B on the 8 GB emulator, same shelf): retrieval 3,347 ms, prefill 9,012 ms (~156 tokens/s —
+  healthy after AVX2 and llamafile), decode 15,062 ms, end to end 27,421 ms; the three captures agree
+  on a 25.5-28.9 s median and 6 of 9 cases finish under 30 s. Decode at 7.4 tokens/s is the wall, and
+  it is the emulator's wall, not the model's: the same 0.5B Q4 runs 25-40 tokens/s on an arm64 8 GB
+  phone, which would put a full turn near 12-16 s — a figure only a device can demonstrate. Even a
+  one-token answer costs 12.4 s here (retrieval plus prefill), so "under 15 s" on this host also needs
+  the retrieval lever, not just shorter answers. Run-to-run noise on this host is ±20 %, and two
+  earlier single-run claims were downgraded on that basis.
 - Thread policy is measured, not guessed: eight threads on a four-CPU target took
   442 s for 75 tokens against 4.8 s at four threads (`cost-baseline-001`), so the
   count comes from the device processor count and is resolved once per process.

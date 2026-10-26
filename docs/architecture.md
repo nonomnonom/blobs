@@ -197,7 +197,7 @@ private key.
 | Validate and reserve | `AppViewModel`, `ResearchWork`, `ConversationStore` | New Room turn and immutable library-scope snapshot | Invalid input stays a visible validation result; library changes cannot alter an active turn |
 | Resolve retrieval text | `RetrievalQuery` | Original question remains unchanged | A bounded follow-up may use earlier questions as retrieval context |
 | Retrieve | `LibraryStore` | Candidate evidence in turn scope | One bounded FTS query per selected local library, followed by local ranking and de-duplication |
-| Checkpoint evidence | `ResearchWork` | Evidence saved before model load | Sources remain inspectable if work stops before output |
+| Checkpoint evidence | `ResearchWork` | Evidence saved before model load | Sources are shown in the chat while the model writes, and remain inspectable if work stops before output |
 | Build prompt | `ResearchPrompt` | Bounded prompt representation only | History, topic, and source text are escaped as reference data |
 | Complete | `NativeBridge` and native runtime | Bounded streamed response document | One sampler-constrained completion streams prose the reader can already read |
 | Finalize | `StructuredAnswer`, `AnswerText`, `FollowUpSuggestions`, `ResearchWork`, `ConversationStore` | Canonical body, support claim, citations, grounding, finish reason, timing, next-question offers | The chat shows a completed, stopped, or error turn with the actual cited evidence |
@@ -222,7 +222,11 @@ whole document before persisting. Enforcement and cost are separate: the runtime
 samples the pruned chain first, checks that one candidate against the grammar, and
 applies the mask over the whole vocabulary only when the candidate could not
 extend the document. Choosing a token the grammar rejects is therefore impossible,
-while the vocabulary-wide pass is not paid for on every token. Streaming, cancellation, and a token-limited
+while the vocabulary-wide pass is not paid for on every token. The rest of the
+chain is greedy with a repetition penalty: the removed top-k/top-p/temperature
+passes were three vocabulary-wide scans per token — 12-13 s of a 0.5B turn — and
+three paired answers came back byte-identical without them, with the repetition
+penalty kept against loops. Streaming, cancellation, and a token-limited
 turn render the decoded prefix, so no document punctuation reaches a reader or a
 stored answer. `AnswerGrounding` then decides the disclosure: citation coverage is
 the only route to `grounded`, and a claimed `partial` or `unsourced` support can
