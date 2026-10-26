@@ -21,3 +21,5 @@ corpus/evaluation/baselines/
 .freebuff/
 .worktrees/
 docs/superpowers/
+*.jks
+*.keystore
