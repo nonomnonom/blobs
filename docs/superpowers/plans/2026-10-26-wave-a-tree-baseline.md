@@ -542,6 +542,37 @@ by the fact that a RAG prompt's body is retrieved passages). The one lever still
 query shape in `RetrievalQuery.kt` - pinned, mirrored by the frozen replay, and worth 3-6 seconds of
 every turn, which is now the largest remaining piece of the gap.
 
+### Where the 27 seconds on 8 GB actually goes, per phase
+
+Three captures averaged per case and split into the three phases the capture can separate
+(`retrieval`, `first_visible_text - retrieval`, `end_to_end - first_visible_text`), nine cases
+complete in all three:
+
+| phase | median | note |
+| --- | --- | --- |
+| retrieval | 3,347 ms | up to 6,311 ms; the query-shape lever |
+| prefill | 9,012 ms | ~156 tokens/s - healthy after AVX2 + llamafile |
+| **decode** | **15,062 ms** | **7.4 tokens/s for the 0.5B** |
+| end to end | 27,421 ms | 6 of 9 cases under 30 s |
+
+Two conclusions, and they bound what this device can prove:
+
+- **Decode is the wall, and it is the emulator's, not the model's.** A 0.5B Q4 at 7.4 tokens/s on
+  four emulated x86 cores is a memory-bandwidth and dispatch figure; the same model on an arm64
+  8 GB phone runs at 25-40 tokens/s. Substituting that into this table puts a full turn at roughly
+  12-16 seconds, which is the number the owner sees when running these models directly. The
+  emulator cannot demonstrate it - only a device can.
+- **Even a one-token answer costs 12.4 seconds here** (retrieval + prefill). So "under 15 seconds"
+  on this host needs the retrieval lever landed as well, not just shorter answers. The shortest
+  measured turn was `synth-house-cash-mortgage` at 16,695 ms with a 119-character answer.
+
+The query-shape change was started and reverted in the same session: cutting the bigram phrases from
+20 clauses to 4 made `package_report.py` refuse to run with "Android retrieval changed; review the
+frozen host replay first", which is the pin doing its job. Landing it needs the Kotlin, the Python
+mirror in `host_replay.py`, and `QUERY_SHA256` changed together, with the 48-case gate compared
+against the recorded baseline of 47 expected-title hits and MRR 0.6944 before any device time is
+spent.
+
 ### One experiment of mine was wrong and was removed
 
 Connection pooling in `LibrarySqlite` (hold one leased connection per package across turns) was built
