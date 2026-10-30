@@ -52,10 +52,15 @@ def pull_request_author():
     return payload.get("pull_request", {}).get("user", {}).get("login", "")
 
 
-def changed_paths(before, after):
-    subprocess.run(["git", "diff", "--check", before, after, "--"], check=True)
+def changed_paths(before, after, cwd=None):
+    subprocess.run(
+        ["git", "-c", "core.whitespace=cr-at-eol", "diff", "--check", before, after, "--"],
+        check=True,
+        cwd=cwd,
+    )
     listing = subprocess.check_output(
-        ["git", "diff", "--name-only", "--no-renames", "-z", before, after, "--"]
+        ["git", "diff", "--name-only", "--no-renames", "-z", before, after, "--"],
+        cwd=cwd,
     ).decode("utf-8", errors="surrogateescape")
     return [path for path in listing.split("\0") if path]
 
