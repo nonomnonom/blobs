@@ -26,7 +26,7 @@ quoted source evidence, titles, URLs, licences, attribution, and user-provided
 content. Do not scatter language-specific runtime branches; future
 internationalisation needs an explicit locale and resource design.
 
-Dependency versions belong in `android/gradle/libs.versions.toml` or `corpus/pyproject.toml`, with their lockfiles. Gradle verifies dependency hashes in `android/gradle/verification-metadata.xml`. Review publisher checksums when updating those entries; generating verification metadata alone does not authenticate an artifact.
+Dependency versions belong in `android/gradle/libs.versions.toml` or `corpus/pyproject.toml`, with their lockfiles. Gradle locks resolved versions in `android/**/*.lockfile` and verifies dependency hashes in `android/gradle/verification-metadata.xml`, so a Gradle version bump needs both regenerated: from `android/`, run `.\gradlew.bat verify --write-locks --write-verification-metadata sha256`. Review publisher checksums for the entries that changed; generating verification metadata alone does not authenticate an artifact. Dependabot updates the catalog but neither file, so its Gradle pull requests fail verification until a maintainer adds both. A file generated on one host records only that host's platform artifacts, so add the other `aapt2` jars from Google Maven's published checksums.
 
 Keep models, generated packages, signing keys, caches, experiment reports, and internal review notes out of Git. Reviewed record shards use Git LFS; source locks and authored test cases belong in the repository.
 
