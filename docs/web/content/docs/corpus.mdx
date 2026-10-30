@@ -5,13 +5,12 @@ description: Turn attributed source text into a reproducible offline pack.
 
 The uv-managed `corpus/` workspace acquires pinned source material, normalizes text and attribution, exports reviewed records, builds a SQLite FTS5 database, and packages it into a `.blobs` archive. Android installs that archive through the same verified path as other libraries.
 
-The current rebuild phase does not execute corpus preparation or tests. Treat the
-commands below as the later verification procedure, not as evidence for the
-current source tree.
+The 0.5.0 release ran this workspace's test suite before publication. The
+commands below reproduce that run.
 
 ## Work from the existing pipeline
 
-When the validation gate is reopened, from `corpus/`:
+From `corpus/`:
 
 ```powershell title="Prepare the corpus workspace"
 uv sync --locked

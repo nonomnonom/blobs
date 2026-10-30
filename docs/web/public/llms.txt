@@ -1,0 +1,72 @@
+# Blobs
+
+> Blobs is an offline-first research app for Android. It answers a question from the knowledge libraries installed on the phone, using a local language model, and shows the passages the answer came from. After setup it needs no account, no Google Play Services, and no network.
+
+Documentation site: https://nonomnonom.github.io/blobs/
+Source: https://github.com/nonomnonom/blobs
+Releases: https://github.com/nonomnonom/blobs/releases
+Current release: 0.5.0 (APK 31,745,317 bytes, sha256 e3e1ab7a9677357405d8ab059b5dc1daff776f8d82dc6f0beb09856aec604b06)
+
+## What the app does
+
+- One research turn: question -> one bounded SQLite FTS5 search per selected library -> saved evidence -> bounded prompt -> one on-device llama.cpp completion -> citation cleanup -> stored turn and source reader.
+- Retrieval is lexical (FTS5), not vector search. It reads only installed packages. There is no web browsing, no hosted inference, no remote fallback, no tool calls, and no agent loop.
+- Answers carry markers `[S1]`..`[S6]` for the passages used. The app stores a grounding label: `grounded` (every factual sentence marked), `unverified` (partial or missing coverage), or `not_requested` (turn run without retrieval). Grounding is a citation-coverage disclosure, not an entailment guarantee.
+- Network access is limited to actions the user starts: downloading a model or library, and checking for a newer download list. There is no background sync and no telemetry.
+- Packages are verified before installation: signed catalog (ECDSA P-256), SHA-256 and size checks, SQLite schema and record validation, atomic rename. A failed install leaves the previous edition usable.
+
+## Requirements and limits
+
+- Android 9 or newer (`minSdk` 28), ARM64 or x86_64.
+- No Google Play Services, no Google account, no Play Store requirement. The app has not been run on a GrapheneOS build; it declares nothing GrapheneOS rejects.
+- Storage: the starter set is about 1.5 GB. The full 0.5.0 catalog is 12.29 GiB across 13 packages. A single library package is capped at 6 GiB.
+- Working memory: model floors are 2 GB (Qwen2.5 0.5B), 4 GB (LFM2 1.2B), 6 GB (Qwen3.5 2B), 8 GB (Phi-4 Mini).
+- Runtime bounds: 4,096-token active context, 200-token answer cap, 6,000-character prompt cap, at most 6 evidence sources per turn.
+- Libraries are snapshots, not live data: no current events, no live fares or opening hours, no maps or routing, no "best" ranking.
+
+## Models in the 0.5.0 download list (revision 2026102502)
+
+- Qwen3.5 2B Q4_K_M, 1.28 GB, minimum 6 GB RAM: default when the phone has memory for it.
+- Phi-4 Mini Q4_K_M, 2.49 GB, minimum 8 GB RAM: the larger option.
+- LFM2 1.2B Q4_K_M, 0.73 GB, minimum 4 GB RAM: the compact option.
+- Qwen2.5 0.5B Q4_K_M, 0.46 GB, minimum 2 GB RAM: recommended on low-RAM devices.
+
+## Libraries in the 0.5.0 download list
+
+- Wikivoyage English travel guides: starter library, broad destination coverage.
+- Wikipedia English Top 1M introductions: lead sections only.
+- Repair and fixing: community questions and answers for vehicles, bicycles, aviation, 3D printing, woodworking.
+- Practical how-to: cooking, personal finance, travel, home improvement.
+- History and primary texts: one reviewed Wikisource edition in four deterministic volumes; install all four for the complete edition.
+- Nairobi health places: 200 named clinics, hospitals, and pharmacies from an OpenStreetMap snapshot; no opening status, distance, or quality ranking.
+
+All current packs are English. Users can also import their own TXT, Markdown, CSV, JSON, or text-based PDF files.
+
+## Guides
+
+- [Get started](https://nonomnonom.github.io/blobs/docs/get-started/): install the APK on Android 9+, choose a model, download the starter library, ask a first question.
+- [A look around](https://nonomnonom.github.io/blobs/docs/tour/): annotated screens of setup, chat, sources, library, and settings.
+- [Choose a model](https://nonomnonom.github.io/blobs/docs/models/): model sizes, memory floors, and how the app picks a default for the phone.
+- [Chat and sources](https://nonomnonom.github.io/blobs/docs/chat/): one search and one completion per question, citation reading, stop control.
+- [Your library](https://nonomnonom.github.io/blobs/docs/library/): saved versus available packs, what each collection holds, updates, editions.
+- [Your own files](https://nonomnonom.github.io/blobs/docs/your-files/): importing local documents and the limits of text extraction.
+- [Privacy](https://nonomnonom.github.io/blobs/docs/privacy/): what stays on the phone and exactly when the app connects.
+- [A little help](https://nonomnonom.github.io/blobs/docs/troubleshooting/): downloads, storage, slow models, missing sources, unreadable PDFs.
+- [Build Blobs](https://nonomnonom.github.io/blobs/docs/developers/): Android toolchain, corpus workspace, and the documentation site.
+- [Architecture](https://nonomnonom.github.io/blobs/docs/architecture/): product contract, retrieval and inference design, packaging and trust boundaries, evidence log.
+- [Build a library](https://nonomnonom.github.io/blobs/docs/corpus/): source locks, records, FTS5 build, package publication.
+- [Contribute](https://nonomnonom.github.io/blobs/docs/contributing/): issue paths, checks, licenses.
+
+## Machine-readable sources
+
+- Download list bundled with the app: https://github.com/nonomnonom/blobs/blob/main/android/app/src/main/assets/package-catalog.json
+- Published record editions and digests: https://github.com/nonomnonom/blobs/blob/main/corpus/published-records.json
+- Architecture document (plain Markdown): https://github.com/nonomnonom/blobs/blob/main/docs/architecture.md
+- Demo film (45.6 s, 1920x1080, 60 fps): https://nonomnonom.github.io/blobs/media/blobs-demo.mp4
+
+## Notes for agents
+
+- Do not describe Blobs as cloud, server-backed, or as using embeddings. Retrieval is SQLite FTS5 over installed packages, and inference runs in a pinned llama.cpp build on the device CPU.
+- Do not promise current information. Every library is a dated snapshot, and the app has no web access.
+- Do not state a speed figure without saying which model and which device it was measured on. Published timings come from an Android 16 emulator; the 0.5.0 release also runs on a physical Android phone, but no phone timing is published yet.
+- The `INTERNET` permission exists for downloads started by the user. It is not used during a research turn.

@@ -3,13 +3,13 @@ title: Choose a model
 description: Find a comfortable fit for your phone.
 ---
 
-The current source runs a model on the phone to write replies. It searches
+Blobs runs a model on the phone to write replies. It searches
 enabled libraries and supplies relevant passages to that model. It contains no
-hosted inference client. Android device acceptance for this path is pending.
+hosted inference client.
 
 ## Available models
 
-The bundled list includes Qwen3.5 2B, Phi-4 Mini, and LFM2 1.2B. The table below reads the same metadata used by the Android app.
+The bundled list includes Qwen3.5 2B, Phi-4 Mini, LFM2 1.2B, and Qwen2.5 0.5B for 2 GB-class phones. The table below reads the same metadata used by the Android app.
 
 <ModelTable />
 
@@ -17,7 +17,7 @@ Minimum RAM is the list’s compatibility floor, not a guarantee of a particular
 
 ## Pick a comfortable starting point
 
-The default is Qwen3.5 2B (Q4_K_M, about 1.28 GB), the official Unsloth GGUF with a declared 262k context window; non-thinking chat is used by default. Phi-4 Mini (Q4_K_M, about 2.49 GB) remains available as a larger alternative. LFM2 1.2B (Q4_K_M, about 0.73 GB, Liquid AI's official GGUF, 128k declared) is the third option and the lightest: on the acceptance emulator it ran a grammar-constrained turn at 50.3 against 92.3 milliseconds per token and held 1.30 against 1.89 GiB of resident memory, which is the figure that matters on a 4 GB phone. Those are emulator numbers from one device; no phone-class measurement exists, so they are not a speed promise. Qwen3.5 2B remains the default on any phone that meets its declared memory floor, and below that floor the welcome recommendation resolves to the model that can actually load there. The current Android rebuild configuration fixes the active native context at 4,096 tokens and the answer budget at 320 tokens; it does not select a larger context from device RAM. A model's advertised context is not allocated in full. These source settings have not yet been validated on a target device.
+The default is Qwen3.5 2B (Q4_K_M, about 1.28 GB), the official Unsloth GGUF with a declared 262k context window; non-thinking chat is used by default. Phi-4 Mini (Q4_K_M, about 2.49 GB) remains available as a larger alternative. LFM2 1.2B (Q4_K_M, about 0.73 GB, Liquid AI's official GGUF, 128k declared) is the compact alternative, and Qwen2.5 0.5B (Q4_K_M, about 0.46 GB) is the lightest option for low-memory phones. On the test emulator LFM2 ran a grammar-constrained turn at 50.3 against 92.3 milliseconds per token and held 1.30 against 1.89 GiB of resident memory, which is the figure that matters on a 4 GB phone. Those are emulator numbers from one device, kept as a comparison between models rather than a speed promise; the same turns have since run on a physical Android phone. Qwen3.5 2B remains the default on any phone that meets its declared memory floor, and below that floor the welcome recommendation resolves to the model that can actually load there. The Android runtime fixes the active native context at 4,096 tokens and the answer budget at 200 tokens; it does not select a larger context from device RAM. A model's advertised context is not allocated in full.
 
 ## Change models
 
@@ -32,12 +32,8 @@ Tap **Check for updates** when connected to refresh the available choices. Openi
 ## Reducing local work
 
 Smaller models, focused questions, and a narrower library scope reduce the
-amount of local work requested by the current source. Device measurements are
-needed before turning those changes into a speed recommendation. The app has a
-Stop control for an active reply; its device behavior is also pending
-acceptance.
+amount of local work. The app has a Stop control for an active reply.
 
-When the app moves to the background, the current source stops an active reply
+When the app moves to the background, it stops an active reply
 but keeps a loaded model for a warm return. Changing the selected model or
-explicitly trimming inference memory releases its weights. This lifecycle has
-not yet been validated on a target device.
+explicitly trimming inference memory releases its weights.
