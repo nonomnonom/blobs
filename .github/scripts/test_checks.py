@@ -1,6 +1,9 @@
+import json
+import os
+import tempfile
 import unittest
 
-from checks import affected, changeset_missing, gate_passes
+from checks import affected, changeset_missing, gate_passes, pull_request_author
 
 
 class CheckSelectionTest(unittest.TestCase):
@@ -94,6 +97,50 @@ class ReleaseNoteCheckTest(unittest.TestCase):
         ]:
             with self.subTest(path=path):
                 self.assertFalse(changeset_missing([path]))
+
+    def test_dependency_updates_need_no_release_note(self):
+        for author in ["dependabot[bot]", "dependabot"]:
+            with self.subTest(author=author):
+                self.assertFalse(changeset_missing(["docs/web/package-lock.json"], author))
+
+    def test_a_human_change_to_a_dependency_file_still_needs_a_note(self):
+        self.assertTrue(changeset_missing(["docs/web/package-lock.json"], "nonomnonom"))
+        self.assertTrue(changeset_missing(["docs/web/package-lock.json"]))
+
+
+class PullRequestAuthorTest(unittest.TestCase):
+    def test_reads_the_author_from_the_event_payload(self):
+        self.assertEqual(
+            self.author_for({"pull_request": {"user": {"login": "dependabot[bot]"}}}),
+            "dependabot[bot]",
+        )
+
+    def test_missing_payload_does_not_relax_the_gate(self):
+        self.assertEqual(self.author_for({}), "")
+        self.assertEqual(self.author_for(None), "")
+
+    @staticmethod
+    def author_for(payload):
+        previous = os.environ.get("GITHUB_EVENT_PATH")
+        if payload is None:
+            os.environ.pop("GITHUB_EVENT_PATH", None)
+            try:
+                return pull_request_author()
+            finally:
+                if previous is not None:
+                    os.environ["GITHUB_EVENT_PATH"] = previous
+        handle, path = tempfile.mkstemp(suffix=".json")
+        try:
+            with os.fdopen(handle, "w", encoding="utf-8") as event:
+                json.dump(payload, event)
+            os.environ["GITHUB_EVENT_PATH"] = path
+            return pull_request_author()
+        finally:
+            if previous is None:
+                os.environ.pop("GITHUB_EVENT_PATH", None)
+            else:
+                os.environ["GITHUB_EVENT_PATH"] = previous
+            os.unlink(path)
 
 
 if __name__ == "__main__":

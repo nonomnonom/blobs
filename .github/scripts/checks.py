@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 RELEASE_NOTE_PREFIXES = ("android/", "corpus/", "docs/")
+DEPENDENCY_AUTHORS = ("dependabot[bot]", "dependabot")
 
 
 def affected(paths):
@@ -27,13 +28,28 @@ def affected(paths):
     }
 
 
-def changeset_missing(paths):
-    """Shipped content needs a changeset; changesets themselves need none."""
+def changeset_missing(paths, author=""):
+    """Shipped content needs a changeset; changesets and dependency updates need none."""
+    if author in DEPENDENCY_AUTHORS:
+        return False
     shipped = any(path.startswith(RELEASE_NOTE_PREFIXES) for path in paths)
     noted = any(
         path.startswith(".changeset/") and path != ".changeset/config.json" for path in paths
     )
     return shipped and not noted
+
+
+def pull_request_author():
+    """Return the pull-request author login, or an empty string when unavailable."""
+    path = os.environ.get("GITHUB_EVENT_PATH", "")
+    if not path:
+        return ""
+    try:
+        with open(path, encoding="utf-8") as event:
+            payload = json.load(event)
+    except (OSError, ValueError):
+        return ""
+    return payload.get("pull_request", {}).get("user", {}).get("login", "")
 
 
 def changed_paths(before, after):
@@ -75,7 +91,7 @@ def main():
         paths = pull_request_paths()
         if paths is None:
             print("No pull request diff to compare; skipping the release note check.")
-        elif changeset_missing(paths):
+        elif changeset_missing(paths, pull_request_author()):
             raise SystemExit(
                 "This change reaches a shipped component but carries no release note.\n"
                 "Run `npx changeset` in the repository root and commit the new .changeset file, "
