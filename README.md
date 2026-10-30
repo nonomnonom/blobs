@@ -11,9 +11,9 @@ Blobs is an offline Android research app. Search a local knowledge library, ask 
 
 ## See it
 
-<video src="https://nonomnonom.github.io/blobs/media/blobs-demo.mp4" controls muted width="1200"></video>
+[![A still from the demo film: Blobs answering a question about the districts of Lisbon offline, with six saved sources above the answer](docs/assets/demo-poster.jpg)](https://nonomnonom.github.io/blobs/media/blobs-demo.mp4)
 
-Forty-six seconds: the library and model you install, the storage they take, and one question asked of a travel library with no connection, answered with the passages it came from. Recorded on an Android emulator; the 0.5.0 release runs the same flow on a physical Android phone. If the player does not start, [open the film directly](https://nonomnonom.github.io/blobs/media/blobs-demo.mp4).
+Forty-six seconds: the library and model you install, the storage they take, and one question asked of a travel library with no connection, answered with the passages it came from. Recorded on an Android emulator; the 0.5.0 release runs the same flow on a physical Android phone. [Watch the film](https://nonomnonom.github.io/blobs/media/blobs-demo.mp4).
 
 ## Get started
 
