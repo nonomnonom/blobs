@@ -1,9 +1,17 @@
 import json
 import os
+import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 
-from checks import affected, changeset_missing, gate_passes, pull_request_author
+from checks import (
+    affected,
+    changed_paths,
+    changeset_missing,
+    gate_passes,
+    pull_request_author,
+)
 
 
 class CheckSelectionTest(unittest.TestCase):
@@ -141,6 +149,52 @@ class PullRequestAuthorTest(unittest.TestCase):
             else:
                 os.environ["GITHUB_EVENT_PATH"] = previous
             os.unlink(path)
+
+
+class ChangedPathsTest(unittest.TestCase):
+    def test_crlf_line_endings_are_not_trailing_whitespace(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.git(root, "init", "--quiet")
+            self.git(root, "config", "user.email", "test@example.com")
+            self.git(root, "config", "user.name", "Test")
+            self.git(root, "config", "core.autocrlf", "false")
+            (root / "run.bat").write_bytes(b"@rem first\n")
+            self.git(root, "add", "run.bat")
+            self.git(root, "commit", "--quiet", "-m", "first")
+            before = self.git(root, "rev-parse", "HEAD").strip()
+            (root / "run.bat").write_bytes(b"@rem second\r\n")
+            self.git(root, "add", "run.bat")
+            self.git(root, "commit", "--quiet", "-m", "second")
+            after = self.git(root, "rev-parse", "HEAD").strip()
+            self.assertEqual(changed_paths(before, after, root), ["run.bat"])
+
+    def test_trailing_spaces_still_fail_the_diff_check(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.git(root, "init", "--quiet")
+            self.git(root, "config", "user.email", "test@example.com")
+            self.git(root, "config", "user.name", "Test")
+            (root / "notes.md").write_text("first\n", encoding="utf-8")
+            self.git(root, "add", "notes.md")
+            self.git(root, "commit", "--quiet", "-m", "first")
+            before = self.git(root, "rev-parse", "HEAD").strip()
+            (root / "notes.md").write_text("second   \n", encoding="utf-8")
+            self.git(root, "add", "notes.md")
+            self.git(root, "commit", "--quiet", "-m", "second")
+            after = self.git(root, "rev-parse", "HEAD").strip()
+            with self.assertRaises(subprocess.CalledProcessError):
+                changed_paths(before, after, root)
+
+    @staticmethod
+    def git(root, *args):
+        return subprocess.run(
+            ["git", *args],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
 
 
 if __name__ == "__main__":
