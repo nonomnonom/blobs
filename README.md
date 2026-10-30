@@ -7,7 +7,13 @@
 
 Blobs is an offline Android research app compatible with GrapheneOS. Search a local knowledge library, ask questions, and read the sources inside the app. Conversations, documents, and model inference stay on your phone. No account or Google Play Services is required.
 
-**[Download the Android app](https://github.com/nonomnonom/blobs/releases/latest)** · **[Read the guides](https://nonomnonom.github.io/blobs/)** · **[See the app](https://nonomnonom.github.io/blobs/docs/tour/)**
+**[Download the Android app](https://github.com/nonomnonom/blobs/releases/latest)** · **[Read the guides](https://nonomnonom.github.io/blobs/)** · **[See the app](https://nonomnonom.github.io/blobs/docs/tour/)** · **[Agent-readable index](https://nonomnonom.github.io/blobs/llms.txt)**
+
+## See it
+
+<video src="https://github.com/nonomnonom/blobs/releases/download/v0.5.0/blobs-demo-v1.mp4" controls muted width="1200"></video>
+
+Forty-six seconds: the library and model you install, the storage they take, and one question asked of a travel library with no connection, answered with the passages it came from. Recorded on an Android emulator; the 0.5.0 release runs the same flow on a physical Android phone.
 
 ## Get started
 

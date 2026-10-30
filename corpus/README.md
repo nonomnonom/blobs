@@ -206,7 +206,7 @@ uv run --locked python -m blobs_corpus.package library `
   --origin "https://download.kiwix.org/zim/wikipedia/wikipedia_en_all_nopic_2026-06.zim"
 ```
 
-Do not run those commands during the rebuild phase. Choose the volume count
+Choose the volume count
 only after a storage plan and representative archive-size evidence exist; the
 archive contract rejects a library payload over 6 GiB (6,442,450,944 bytes).
 The example count is only a planning starting point, not size evidence. The

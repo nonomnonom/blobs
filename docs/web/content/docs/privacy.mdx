@@ -1,19 +1,18 @@
 ---
 title: Privacy and local-use design
-description: What the current source keeps on your phone, and when it connects.
+description: What Blobs keeps on your phone, and when it connects.
 ---
 
 ## On your phone
 
-The current source routes model inference, library search, citations, reading,
+Blobs routes model inference, library search, citations, reading,
 conversations, drafts, and settings through local files and app-private storage.
-It contains no hosted inference service or account flow. Device acceptance is
-still pending.
+It contains no hosted inference service or account flow.
 
-The current source routes these features through installed files after a model
-and starter library are present. Android device acceptance, including GrapheneOS
-and blocked-network checks, is still pending. The app does not declare a Google
-Play Services dependency.
+These features read installed files after a model and starter library are
+present. The 0.5.0 release was exercised in airplane mode on a physical Android
+phone. The app does not declare a Google Play Services dependency, which is what
+a GrapheneOS install requires; it has not been run on a GrapheneOS build.
 
 ## When the app connects
 

@@ -37,6 +37,11 @@ export const metadata: Metadata = {
     description:
         'Set up Blobs, choose an offline model, explore your library, and build from source. Guides for the Android app compatible with GrapheneOS.',
     applicationName: 'Blobs',
+    alternates: {
+        types: {
+            'text/plain': `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/llms.txt`,
+        },
+    },
 };
 
 export default function Layout({ children }: { children: ReactNode }) {

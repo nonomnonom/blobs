@@ -415,6 +415,14 @@ library manifest and digest, device/OS/ABI, configuration, queries, raw output,
 and measurement method. An observation without reproducible input, executable,
 device, or corpus is historical.
 
+Status report, not a measurement record: on 2026-10-30 the product owner reports
+the 0.5.0 release completing setup, model and library download, and
+airplane-mode research turns on a physical Android phone. No capture, log,
+timing, device model, or OS version from that run is stored in this repository,
+so it is not yet the reproducible record the paragraph above requires. The
+entries below remain the reproducible evidence; the owner run adds a second
+device class to the acceptance picture without replacing those numbers.
+
 A supply admission is not evidence that the runtime accepts the package. Recorded on
 2026-10-24: installing the admitted `wikivoyage-en@2026-09.4` on `sdk_gphone64_x86_64`
 (Android 16, API 36, emulator, airplane mode) failed in `LibraryValidator` as
