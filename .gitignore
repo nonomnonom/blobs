@@ -23,3 +23,6 @@ corpus/evaluation/baselines/
 docs/superpowers/
 *.jks
 *.keystore
+/demo-video/
+# Local secrets written by `elevenlabs onboard`
+/.env.local
